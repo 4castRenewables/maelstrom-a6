@@ -1,14 +1,14 @@
-from typing import Union
+import typing as t
 
 import numpy as np
 
 from . import _types
 
-Latitudes = Union[str, np.ndarray]
+Latitudes = t.Union[str, np.ndarray]
 
 
 def weight_by_latitudes(
-    data: _types.Data, latitudes: Latitudes, latitudes_in_radians: bool = False
+    data: _types.Data, latitudes: Latitudes, latitudes_in_radians: bool = False, use_sqrt: bool = False
 ) -> _types.Data:
     """Weight grid data with cosine of the latitude.
 
@@ -23,6 +23,8 @@ def weight_by_latitudes(
         coordinate.
     latitudes_in_radians : bool, default=False
         Whether the latitudes are given in radians.
+    use_sqrt : bool, default=False
+        Whether to use the square root of `cos(phi`).
 
     Returns
     -------
@@ -46,8 +48,9 @@ def weight_by_latitudes(
     weights = _calculate_latitudinal_weights(
         latitudes, is_radians=latitudes_in_radians
     )
-    weighted = data * weights
-    return weighted
+    if use_sqrt:
+        return data * np.sqrt(weights)
+    return data * weights
 
 
 def _calculate_latitudinal_weights(
@@ -59,8 +62,7 @@ def _calculate_latitudinal_weights(
         weights = np.cos(latitudes_in_radians)
     else:
         weights = np.cos(latitudes_descending)
-    # Reshape to column vector.
-    return weights[:, None]
+    return _reshape_to_column_vector(weights)
 
 
 def _order_latitudes_descending(latitudes: np.ndarray) -> np.ndarray:
@@ -71,3 +73,7 @@ def _order_latitudes_descending(latitudes: np.ndarray) -> np.ndarray:
 
 def _latitudes_in_ascending_order(latitudes: np.ndarray) -> bool:
     return latitudes[0] < latitudes[-1]
+
+
+def _reshape_to_column_vector(vector: np.ndarray) -> np.ndarray:
+    return vector[:, None]
