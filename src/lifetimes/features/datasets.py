@@ -5,6 +5,8 @@ from typing import Union
 
 import xarray as xr
 
+import lifetimes.utils
+
 
 class Dataset(abc.ABC):
     """A dataset."""
@@ -103,4 +105,8 @@ class EcmwfIfsHresDataset(FileDataset):
         recent run to overwrite the older ones.
 
         """
-        return dataset.isel({self._concat_dim: slice(None, 12)})
+        return lifetimes.utils.slice_dataset(
+            dataset,
+            dimension=self._concat_dim,
+            slice_until=12,
+        )
