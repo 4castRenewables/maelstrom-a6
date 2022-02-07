@@ -2,10 +2,11 @@ import typing as t
 
 import xarray as xr
 
-import lifetimes.coordinate_transformations.base_transformation as base_transformation
+import lifetimes.coordinate_transformations as transformations
 
 
-class InvertibleTransformation:
+
+class InvertibleTransformation(transformations.abstract_transformation.AbstractCoordinateTransformation):
     """Wrap transformation along with inverse transformation in one class."""
 
     def __init__(
@@ -13,10 +14,11 @@ class InvertibleTransformation:
         transformation_as_dataset: t.Optional[xr.Dataset] = None,
         inverse_transformation_as_dataset: t.Optional[xr.Dataset] = None,
     ):
-        self.transformation = base_transformation.BaseTransformation(
+        super().__init__()
+        self.transformation = transformations.base_transformation.BaseTransformation(
             dataset=transformation_as_dataset
         )
-        self.inverse_transformation = base_transformation.BaseTransformation(
+        self.inverse_transformation = transformations.base_transformation.BaseTransformation(
             dataset=inverse_transformation_as_dataset
         )
 
@@ -25,6 +27,14 @@ class InvertibleTransformation:
 
     def inverse_transform(self, data: xr.Dataset, target_variable):
         return self.inverse_transformation.transform(data, target_variable)
+
+    @property
+    def as_dataset(self):
+        return self.transformation.as_dataset
+
+    @property
+    def eigenvalues(self):
+        return self.transformation.eigenvalues
 
     @property
     def matrix(self):

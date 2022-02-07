@@ -2,27 +2,45 @@ import typing as t
 import abc
 import xarray as xr
 
-class AbstractCoordianteTransformation(abc.ABC):
+class AbstractCoordinateTransformation(abc.ABC):
 
-    def __init__(components: t.Optional[xr.DataSet], eignevalues: t.Optional[xr.DataSet]):
-        self.components: t.Optional[xr.DataSet] = components
-        self.eigenvalues: t.Optional[xr.DataSet] = eigenvalues
-
-    def transform(data: xr.DataSet) -> xr.DataSet:
-        if self.components is None:
-            raise RuntimeError("Transformation matrix is not available.")
-        return self._transform(data)
-
-    @abc.abstractmethod
-    def _transform(data: xr.DataSet) -> xr.DataSet:
+    def __init__(self):
         pass
 
-    def inverse_transform(data: xr.DataSet) -> xr.DataSet:
-        if self.components is None:
-            raise RuntimeError("Transformation matrix is not available.")
-        return self._inverse_transform(data)
+    def transform(self, data: xr.Dataset, target_variable: str) -> xr.Dataset:
+        """
+        Transform data by applying transformation as matrix multiplication.
 
+        Parameters
+        ----------
+        data: xr.Dataset with data. Subset of coordinates must match a subset of
+          `self.as_dataset.coords`.
+        target_variable: Variable name to apply transformation on. All others will be
+          discarded.
+
+        Returns
+        -------
+            xr.Dataset with transformed entries in new basis.
+        """
+        coefficients = (
+            self.as_dataset["transformation_matrix"]
+                .dot(data[target_variable])
+                .to_dataset(name=target_variable)
+        )
+        return coefficients
+
+
+    @property
     @abc.abstractmethod
-    def _inverse_transform(data: xr.DataSet) -> xr.DataSet:
+    def matrix(self) -> xr.DataArray:
         pass
 
+    @property
+    @abc.abstractmethod
+    def eigenvalues(self) -> t.Optional[xr.DataArray]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def as_dataset(self) -> xr.Dataset:
+        pass
