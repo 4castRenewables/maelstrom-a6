@@ -34,7 +34,7 @@ def determine_lifetimes_of_modes(
 
     """
     labels = np.unique(modes)
-    time_series = modes[time_coordinate]
+    time_series = modes[time_coordinate].values
     return [
         _find_all_mode_appearances(
             label=label,
@@ -46,7 +46,7 @@ def determine_lifetimes_of_modes(
 
 
 def _find_all_mode_appearances(
-    label: int, modes: xr.DataArray, time_series: xr.DataArray
+    label: int, modes: xr.DataArray, time_series: np.ndarray
 ) -> mode.Mode:
     appearances = _get_mode_appearances(
         label=label,
@@ -57,7 +57,7 @@ def _find_all_mode_appearances(
 
 
 def _get_mode_appearances(
-    label: int, modes: xr.DataArray, time_series: xr.DataArray
+    label: int, modes: xr.DataArray, time_series: np.ndarray
 ) -> list[mode.Appearance]:
     indexes = _get_indexes_of_mode_appearances(label=label, modes=modes)
     appearances_indexes = _find_coherent_appearances_indexes(indexes)

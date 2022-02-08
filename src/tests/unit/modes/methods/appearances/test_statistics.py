@@ -12,6 +12,7 @@ def test_determine_appearances_of_modes():
     # lasts for 3 consecutive days (time units).
     start = datetime.datetime(2000, 1, 1)
     end = datetime.datetime(2000, 1, 6)
+    time_delta = datetime.timedelta(days=1)
     modes = [0, 0, 0, 1, 1, 1]
     dates = pd.date_range(start=start, end=end, freq="1d")
     time_series = xr.DataArray(data=modes, coords={"time": dates})
@@ -21,30 +22,44 @@ def test_determine_appearances_of_modes():
             label=0,
             appearances=[
                 appearances.Appearance(
-                    start=np.datetime64(datetime.datetime(2000, 1, 1)),
-                    end=np.datetime64(datetime.datetime(2000, 1, 3)),
+                    start=datetime.datetime(2000, 1, 1),
+                    end=datetime.datetime(2000, 1, 3),
+                    time_delta=time_delta,
                     index=appearances.AppearanceIndex(start=0, end=2),
                 ),
             ],
             statistics=appearances.Statistics(
-                total=1,
-                duration_mean=3.0,
-                duration_std=0.0,
+                abundance=1,
+                duration=appearances.Duration(
+                    total=datetime.timedelta(days=3),
+                    max=datetime.timedelta(days=3),
+                    min=datetime.timedelta(days=3),
+                    mean=datetime.timedelta(days=3),
+                    std=datetime.timedelta(),
+                    median=datetime.timedelta(days=3),
+                ),
             ),
         ),
         appearances.Mode(
             label=1,
             appearances=[
                 appearances.Appearance(
-                    start=np.datetime64(datetime.datetime(2000, 1, 4)),
-                    end=np.datetime64(datetime.datetime(2000, 1, 6)),
+                    start=datetime.datetime(2000, 1, 4),
+                    end=datetime.datetime(2000, 1, 6),
+                    time_delta=time_delta,
                     index=appearances.AppearanceIndex(start=3, end=5),
                 ),
             ],
             statistics=appearances.Statistics(
-                total=1,
-                duration_mean=3.0,
-                duration_std=0.0,
+                abundance=1,
+                duration=appearances.Duration(
+                    total=datetime.timedelta(days=3),
+                    max=datetime.timedelta(days=3),
+                    min=datetime.timedelta(days=3),
+                    mean=datetime.timedelta(days=3),
+                    std=datetime.timedelta(),
+                    median=datetime.timedelta(days=3),
+                ),
             ),
         ),
     ]
@@ -55,3 +70,5 @@ def test_determine_appearances_of_modes():
     )
 
     assert result == expected
+
+    breakpoint()
