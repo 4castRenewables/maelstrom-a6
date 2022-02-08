@@ -3,3 +3,4 @@ from .mode import Mode
 from .mode import Statistics
 from .mode import Appearance
 from .mode import AppearanceIndex
+from .mode import Duration

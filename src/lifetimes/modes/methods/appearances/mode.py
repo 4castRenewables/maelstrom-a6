@@ -1,7 +1,10 @@
 import dataclasses
+import datetime
+import functools
 import typing as t
 
 import numpy as np
+import pandas as pd
 
 Sequence = t.Union[list, tuple, np.ndarray]
 
@@ -59,18 +62,21 @@ class Appearance:
 
     Parameters
     ----------
-    start : np.datetime64
+    start : datetime.datetime
         Time stamp of the start of the appearance.
-    end : np.datetime64
+    end : datetime.datetime
         Time stamp of the end of the appearance.
+    time_delta : datetime.timedelta
+        Time delta of the time steps within `start` and `end`.
     index : AppearanceIndex
         Indexes of the respective start/end time stamp in the time series.
 
     """
 
-    start: np.datetime64
-    end: np.datetime64
-    index: AppearanceIndex
+    start: datetime.datetime
+    end: datetime.datetime
+    index: AppearanceIndex = dataclasses.field(repr=False)
+    time_delta: datetime.timedelta = dataclasses.field(repr=False)
 
     @classmethod
     def from_indexes(
@@ -104,18 +110,73 @@ class Appearance:
             Corresponding time series of the given indexes.
 
         """
-        start: np.datetime64 = time_series[index.start]
-        end: np.datetime64 = time_series[index.end]
+        start_dt64: np.datetime64 = time_series[index.start]
+        end_dt64: np.datetime64 = time_series[index.end]
+        time_delta_td64: np.timedelta64 = time_series[1] - time_series[0]
+        start = _numpy_datetime64_to_datetime(start_dt64)
+        end = _numpy_datetime64_to_datetime(end_dt64)
+        time_delta = _numpy_timedelta64_to_timedelta(time_delta_td64)
         return cls(
             start=start,
             end=end,
             index=index,
+            time_delta=time_delta,
         )
 
     @property
-    def duration(self) -> int:
+    def duration(self) -> datetime.timedelta:
         """Return the duration of the appearance in time units."""
-        return self.index.duration
+        return (self.end - self.start) + self.time_delta
+
+
+@dataclasses.dataclass
+class Duration:
+    """Duration statistics of a mode.
+
+    Parameters
+    ----------
+    total : datetime.datetime
+        Total duration of the mode throughout the time series.
+    max : datetime.datetime
+        Maximum duration of an appearance.
+    min : datetime.datetime
+        Minimum duration of an appearance.
+    mean : datetime.datetime
+        Mean duration of appearance.
+    std : datetime.datetime
+        Standard deviation of appearance.
+    median : datetime.datetime
+        Median duration of appearance.
+
+    """
+
+    total: datetime.timedelta
+    max: datetime.timedelta
+    min: datetime.timedelta
+    mean: datetime.timedelta
+    std: datetime.timedelta
+    median: datetime.timedelta
+
+    @classmethod
+    def from_numeric(
+        cls, durations: np.ndarray, time_delta: datetime.timedelta
+    ) -> "Duration":
+        """Construct from an array containing time deltas as numeric values."""
+        convert = lambda x: x * time_delta
+        total = convert(durations.sum())
+        max = convert(np.max(durations))
+        min = convert(np.min(durations))
+        mean = convert(np.mean(durations))
+        std = convert(np.std(durations))
+        median = convert(np.percentile(durations, 50))
+        return cls(
+            total=total,
+            max=max,
+            min=min,
+            mean=mean,
+            std=std,
+            median=median,
+        )
 
 
 @dataclasses.dataclass
@@ -124,8 +185,9 @@ class Statistics:
 
     Parameters
     ----------
-    total : int
+    abundance : int
         Total number of appearances over the time period.
+
     duration_mean : float
         Mean duration of mode appearance.
         Given in time units of the timeseries.
@@ -135,20 +197,23 @@ class Statistics:
 
     """
 
-    total: int
-    duration_mean: float
-    duration_std: float
+    abundance: int
+    duration: Duration
 
     @classmethod
     def from_appearances(cls, appearances: list[Appearance]) -> "Statistics":
         """Create from a sequence of appearances."""
-        durations = np.array([appearance.duration for appearance in appearances])
-        mean = durations.mean()
-        std = durations.std()
+        time_delta = appearances[0].time_delta
+        durations_numeric = np.array(
+            [appearance.index.duration for appearance in appearances]
+        )
+        abundance = durations_numeric.size
+        duration = Duration.from_numeric(
+            durations=durations_numeric, time_delta=time_delta
+        )
         return cls(
-            total=durations.size,
-            duration_mean=mean,
-            duration_std=std,
+            abundance=abundance,
+            duration=duration,
         )
 
 
@@ -181,3 +246,13 @@ class Mode:
             appearances=appearances,
             statistics=statistics,
         )
+
+
+def _numpy_datetime64_to_datetime(date: np.datetime64) -> datetime.datetime:
+    ts = pd.Timestamp(date)
+    return ts.to_pydatetime()
+
+
+def _numpy_timedelta64_to_timedelta(delta: np.timedelta64) -> datetime.timedelta:
+    ts = pd.Timedelta(delta)
+    return ts.to_pytimedelta()
