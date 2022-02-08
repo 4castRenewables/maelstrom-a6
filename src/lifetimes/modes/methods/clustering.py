@@ -10,6 +10,7 @@ from . import pca as _pca
 
 class ClusterAlgorithm(abc.ABC):
     """Wrapper for `sklearn.cluster` algorithms."""
+
     pca: _pca.PCA
 
     @property
@@ -92,6 +93,8 @@ def find_principal_component_clusters(
 
     """
     kmeans = cluster.KMeans(n_clusters=n_clusters)
-    components_subspace = pca.transform(n_components=n_components)
+    components_subspace = pca.transform(n_components=n_components)[
+        pca._data_variable_name
+    ]
     result: cluster.KMeans = kmeans.fit(components_subspace)
     return KMeans(kmeans=result, pca=pca, n_components=n_components)

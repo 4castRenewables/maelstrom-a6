@@ -5,28 +5,59 @@ import xarray as xr
 import lifetimes.coordinate_transformations as transformations
 
 
-
-class InvertibleTransformation(transformations.abstract_transformation.AbstractCoordinateTransformation):
+class InvertibleTransformation(
+    transformations.abstract_transformation.AbstractCoordinateTransformation
+):
     """Wrap transformation along with inverse transformation in one class."""
 
     def __init__(
         self,
-        transformation_as_dataset: t.Optional[xr.Dataset] = None,
+        transformation_as_dataset: xr.Dataset,
         inverse_transformation_as_dataset: t.Optional[xr.Dataset] = None,
+        is_semi_orthogonal: bool = False,
     ):
         super().__init__()
         self.transformation = transformations.base_transformation.BaseTransformation(
             dataset=transformation_as_dataset
         )
-        self.inverse_transformation = transformations.base_transformation.BaseTransformation(
-            dataset=inverse_transformation_as_dataset
+        self.inverse_transformation = self._set_inverse_transformation(
+            inverse_transformation_as_dataset, is_semi_orthogonal
+        )
+        self.inverse_transformation = (
+            transformations.base_transformation.BaseTransformation(
+                dataset=inverse_transformation_as_dataset
+            )
         )
 
-    def transform(self, data: xr.Dataset, target_variable):
-        return self.transformation.transform(data, target_variable)
+    def _set_inverse_transformation(
+        self,
+        inverse_transformation_as_dataset: t.Optional[xr.Dataset],
+        is_semi_orthogonal: bool,
+    ):
+        if is_semi_orthogonal:
+            if inverse_transformation_as_dataset is not None:
+                raise Warning(
+                    "Inverse transformation and semi othogonal transformation"
+                    " are specified. Using transposed transformation as "
+                    "inverse."
+                )
+            self.inverse_transformation = (
+                transformations.base_transformation.BaseTransformation(
+                    self.transformation.as_dataset.transpose()
+                )
+            )
+        else:
+            self.inverse_transformation = (
+                transformations.base_transformation.BaseTransformation(
+                    inverse_transformation_as_dataset
+                )
+            )
 
-    def inverse_transform(self, data: xr.Dataset, target_variable):
-        return self.inverse_transformation.transform(data, target_variable)
+    def transform(self, data: xr.Dataset, target_variable: str, n_dimensions: t.Optional[int]=None) -> xr.Dataset:
+        return self.transformation.transform(data, target_variable, n_dimensions)
+
+    def inverse_transform(self, data: xr.Dataset, target_variable: str, n_dimensions: t.Optional[int] = None) -> xr.Dataset:
+        return self.inverse_transformation.transform(data, target_variable, n_dimensions)
 
     @property
     def as_dataset(self):
@@ -43,20 +74,3 @@ class InvertibleTransformation(transformations.abstract_transformation.AbstractC
     @property
     def inverse_matrix(self):
         return self.inverse_transformation.matrix
-
-    @classmethod
-    def from_SO_N(cls, so_n_transformation_as_dataset: xr.Dataset):
-        """
-        Create class from SO(N) transformation satisfying, in matrix notation, X^T*X=1.
-
-        Parameters
-        ----------
-        so_n_transformation_as_dataset: Transformation Matrix and optionally eigenvalues
-          as xarray dataset.
-
-        Returns
-        -------
-            Class instance.
-        """
-        inverse_transformation_as_dataset = so_n_transformation_as_dataset.transpose()
-        return cls(so_n_transformation_as_dataset, inverse_transformation_as_dataset)

@@ -29,7 +29,7 @@ class BaseTransformation(transformations.abstract_transformation.AbstractCoordin
         return self.as_dataset["transformation_matrix"]
 
     @property
-    def eigenvalues(self) -> np.ndarray: # TODO Maybe catch error?
+    def eigenvalues(self) -> np.ndarray:
         return self.as_dataset["eigenvalues"].values
 
 

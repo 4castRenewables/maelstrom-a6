@@ -58,7 +58,7 @@ def dataset(
         data_vars={
             data_variable_name: (
                 [timelike_coordinate_name, x_coordinate_name, y_coordinate_name],
-                [[[1.0, 2.0], [3.0, 4.0]]],
+                data_variables,
             )
         },
         coords={

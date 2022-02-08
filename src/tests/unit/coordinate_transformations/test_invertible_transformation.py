@@ -33,15 +33,4 @@ def test_inverse_transformation(invertible_transformation, dataset):
     )
     assert inverse_transformed.broadcast_equals(dataset)
 
-
-def test_from_SO_N(create_unity_transformation_dataset, dataset):
-    transformation_as_dataset = create_unity_transformation_dataset()
-    transformation = invertible_transformation_.InvertibleTransformation.from_SO_N(
-        transformation_as_dataset
-    )
-    # Test roundtrip
-    transformed = transformation.transform(dataset, target_variable="data")
-    inverse_transformed = transformation.inverse_transform(
-        transformed, target_variable="data"
-    )
-    assert inverse_transformed.broadcast_equals(dataset)
+# TODO Test case: is_semi_orthogonal
