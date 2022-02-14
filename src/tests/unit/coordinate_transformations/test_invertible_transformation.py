@@ -23,7 +23,7 @@ def test_invertible_transformation(invertible_transformation):
 
 def test_transformation(invertible_transformation, dataset):
     transformed = invertible_transformation.transform(dataset, target_variable="data")
-    np.testing.assert_equal(transformed["data"].values, [[1], [2], [3], [4]])
+    np.testing.assert_equal(transformed["data"].values, [[0], [1], [2], [3]])
 
 
 def test_inverse_transformation(invertible_transformation, dataset):

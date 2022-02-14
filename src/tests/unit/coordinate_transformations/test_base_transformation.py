@@ -18,4 +18,4 @@ def test_transform(create_unity_transformation_dataset, dataset):
     trafo_as_ds = create_unity_transformation_dataset()
     transformation = base_trafo.BaseTransformation(trafo_as_ds)
     transformed = transformation.transform(dataset, target_variable="data")
-    np.testing.assert_equal(transformed["data"].values, [[1], [2], [3], [4]])
+    np.testing.assert_equal(transformed["data"].values, [[0], [1], [2], [3]])
