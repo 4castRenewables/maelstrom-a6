@@ -1,7 +1,15 @@
+import pytest
+from sklearn import decomposition
+
 import lifetimes.modes.methods.pca as _pca
 
 
-def test_spatio_temporal_principal_component_analysis(ds):
+@pytest.fixture(params=[decomposition.PCA, decomposition.IncrementalPCA])
+def method(request):
+    return request.param
+
+
+def test_spatio_temporal_principal_component_analysis(ds, method):
     da = ds["ellipse"]
     pca = _pca.spatio_temporal_principal_component_analysis(
         data=da,
@@ -10,6 +18,7 @@ def test_spatio_temporal_principal_component_analysis(ds):
         x_coordinate="lat",
         y_coordinate="lon",
         variance_ratio=None,
+        pca_method=method,
     )
 
     # da has n = 5 time steps on a (10, 10) grid, hence PCs must be of shape (5, 100)

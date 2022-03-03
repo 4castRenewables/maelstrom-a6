@@ -1,34 +1,48 @@
 import abc
 import pathlib
-from typing import Optional
-from typing import Union
+import typing as t
 
 import xarray as xr
 
 import lifetimes.utils
 
+Path = t.Union[str, pathlib.Path]
+
 
 class Dataset(abc.ABC):
     """A dataset."""
 
-    def __init__(self):
-        self._data: Optional[xr.Dataset] = None
+    # Variables dropped when the dataset was previously
+    # converted to an `xr.Dataset`.
+    _dropped_variables: list[str]
 
-    def as_xarray(self) -> xr.Dataset:
-        """Return the dataset as an xarray Dataset."""
-        if self._data is None:
-            self._data = self._as_xarray()
-        return self._data
+    def __init__(self):
+        self._data: t.Optional[xr.Dataset] = None
+        self._dropped_variables = []
+
+    @lifetimes.utils.log_runtime
+    def as_xarray(self, drop_variables: t.Optional[list[str]] = None) -> xr.Dataset:
+        """Return the dataset as an `xr.Dataset`.
+
+        Parameters
+        ----------
+        drop_variables : list[str], optional
+            List of variables to drop from the dataset.
+
+        """
+        if self._data is not None and drop_variables == self._dropped_variables:
+            return self._data
+        return self._as_xarray(drop_variables=drop_variables)
 
     @abc.abstractmethod
-    def _as_xarray(self) -> xr.Dataset:
+    def _as_xarray(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
         ...
 
 
 class FileDataset(Dataset):
     """A dataset read from files on local storage."""
 
-    def __init__(self, paths: list[Union[str, pathlib.Path]]):
+    def __init__(self, paths: list[Path]):
         if not paths:
             raise ValueError("No source paths given")
         super().__init__()
@@ -43,8 +57,9 @@ class EcmwfIfsHresDataset(FileDataset):
 
     def __init__(
         self,
-        paths: list[Union[str, pathlib.Path]],
+        paths: list[Path],
         overlapping: bool,
+        preprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
         parallel_loading: bool = True,
     ):
         """Initialize without opening the files.
@@ -63,27 +78,27 @@ class EcmwfIfsHresDataset(FileDataset):
 
         """
         super().__init__(paths)
-        self.overlapping = overlapping
-        self.parallel = parallel_loading
+        self._overlapping = overlapping
+        self._parallel = parallel_loading
+        self._preprocessing = preprocessing
 
-    def _as_xarray(self) -> xr.Dataset:
+    def _as_xarray(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
         """Merge a set of files into a single dataset."""
         if len(self.paths) == 1:
-            return self._open_single_dataset(*self.paths)
-        return self._open_multiple_temporally_monotonous_datasets()
+            return self._open_single_dataset(drop_variables=drop_variables)
+        return self._open_multiple_temporally_monotonous_datasets(drop_variables=drop_variables)
 
-    def _open_single_dataset(
-        self, path: Union[str, pathlib.Path]
-    ) -> xr.Dataset:
-        return xr.open_dataset(
-            path,
+    def _open_single_dataset(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
+        dataset = xr.open_dataset(
+            *self.paths,
             engine=self._engine,
+            drop_variables=drop_variables,
         )
+        if self._preprocessing is not None:
+            return self._preprocessing(dataset)
+        return dataset
 
-    def _open_multiple_temporally_monotonous_datasets(self):
-        preprocessing = (
-            self._slice_first_twelve_hours if self.overlapping else None
-        )
+    def _open_multiple_temporally_monotonous_datasets(self, drop_variables: t.Optional[list[str]]):
         return xr.open_mfdataset(
             self.paths,
             engine=self._engine,
@@ -91,10 +106,18 @@ class EcmwfIfsHresDataset(FileDataset):
             combine="nested",
             coords="minimal",
             data_vars="minimal",
-            preprocess=preprocessing,
+            preprocess=self._preprocess_dataset,
             compat="override",
-            parallel=self.parallel,
+            parallel=self._parallel,
+            drop_variables=drop_variables,
         )
+
+    def _preprocess_dataset(self, dataset: xr.Dataset) -> xr.Dataset:
+        if self._overlapping:
+            dataset = self._slice_first_twelve_hours(dataset)
+        if self._preprocessing is not None:
+            return self._preprocessing(dataset)
+        return dataset
 
     def _slice_first_twelve_hours(self, dataset: xr.Dataset) -> xr.Dataset:
         """Cut an hourly dataset after the first 12 hours.

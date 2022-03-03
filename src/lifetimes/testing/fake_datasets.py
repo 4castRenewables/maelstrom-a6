@@ -1,7 +1,6 @@
 import datetime
 import functools
-from typing import Optional
-from typing import Union
+import typing as t
 
 import pandas as pd
 import xarray as xr
@@ -21,10 +20,10 @@ class FakeDataset(datasets.FileDataset):
     def __init__(
         self,
         grid: grids.Grid,
-        start: Union[str, datetime.datetime],
-        end: Union[str, datetime.datetime],
+        start: t.Union[str, datetime.datetime],
+        end: t.Union[str, datetime.datetime],
         frequency: str,
-        data: Optional[list[data_points.DataPoints]],
+        data: t.Optional[list[data_points.DataPoints]],
     ):
         """Create the dataset.
 
@@ -49,7 +48,7 @@ class FakeDataset(datasets.FileDataset):
         }
 
     @functools.lru_cache
-    def _as_xarray(self) -> xr.Dataset:
+    def _as_xarray(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
         da = xr.DataArray(
             data=0.0,
             dims=self._dimensions,
@@ -58,12 +57,15 @@ class FakeDataset(datasets.FileDataset):
 
         da = self._add_data_to_timeseries(da)
 
-        return xr.Dataset(
+        ds = xr.Dataset(
             data_vars={
                 "ellipse": da,
             },
             coords=self._coordinates,
         )
+        if drop_variables is not None:
+            return ds.drop_vars(drop_variables)
+        return ds
 
     def _add_data_to_timeseries(self, timeseries: xr.DataArray):
         if self.data is not None:
@@ -84,11 +86,11 @@ class FakeEcmwfIfsHresDataset(FakeDataset):
 
     def __init__(
         self,
-        grid: Optional[grids.Grid],
+        grid: t.Optional[grids.Grid],
         start: types.Timestamp,
         end: types.Timestamp,
         frequency: str,
-        data: Optional[list[data_points.DataPoints]] = None,
+        data: t.Optional[list[data_points.DataPoints]] = None,
     ):
         """Create IFS HRES dataset.
 

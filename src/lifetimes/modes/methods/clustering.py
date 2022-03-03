@@ -5,6 +5,7 @@ import numpy as np
 import xarray as xr
 from sklearn import cluster
 
+import lifetimes.utils
 from . import pca as _pca
 
 
@@ -66,10 +67,13 @@ class KMeans(ClusterAlgorithm):
         )
 
 
+@lifetimes.utils.log_runtime
 def find_principal_component_clusters(
     pca: _pca.PCA,
+    use_varimax: bool = False,
     n_components: t.Optional[int] = None,
     n_clusters: int = 8,
+    **clustering_kwargs,
 ) -> ClusterAlgorithm:
     """Apply a given clustering algorithm on PCs.
 
@@ -77,6 +81,8 @@ def find_principal_component_clusters(
     ----------
     pca : lifetimes.modes.methods.pca.PCA
         Result of the PCA.
+    use_varimax : bool, default=False
+        Whether to perform varimax rotation before the clustering.
     n_components : int, optional
         Number of PCs to use for the clustering.
         Represents the number of dimension of the subspace to perform the
@@ -84,6 +90,8 @@ def find_principal_component_clusters(
         If `None`, the full PC space will be used.
     n_clusters : int, default=8
         Number of clusters to find.
+    kwargs
+        Will be passed to the clustering algorithm.
 
     Returns
     -------
@@ -91,7 +99,10 @@ def find_principal_component_clusters(
         Result of the K-means.
 
     """
-    kmeans = cluster.KMeans(n_clusters=n_clusters)
-    components_subspace = pca.transform(n_components=n_components)
+    kmeans = cluster.KMeans(n_clusters=n_clusters, **clustering_kwargs)
+    if use_varimax:
+        components_subspace = pca.transform_with_varimax_rotation(n_components=n_components)
+    else:
+        components_subspace = pca.transform(n_components=n_components)
     result: cluster.KMeans = kmeans.fit(components_subspace)
     return KMeans(kmeans=result, pca=pca, n_components=n_components)
