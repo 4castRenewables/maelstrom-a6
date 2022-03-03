@@ -1,8 +1,8 @@
-from . import methods
-from .create import create_dummy_ecmwf_ifs_hres_dataset
-from .data_factories import EllipticalDataFactory
-from .data_points import DataPoints
-from .fake_datasets import FakeDataset
-from .fake_datasets import FakeEcmwfIfsHresDataset
-from .grids import EcmwfIfsHresGrid
-from .grids import TestGrid
+import lifetimes.testing.methods
+from lifetimes.testing.create import create_dummy_ecmwf_ifs_hres_dataset
+from lifetimes.testing.data_factories import EllipticalDataFactory
+from lifetimes.testing.data_points import DataPoints
+from lifetimes.testing.fake_datasets import FakeDataset
+from lifetimes.testing.fake_datasets import FakeEcmwfIfsHresDataset
+from lifetimes.testing.grids import EcmwfIfsHresGrid
+from lifetimes.testing.grids import TestGrid

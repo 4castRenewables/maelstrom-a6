@@ -1,0 +1,52 @@
+Bootstrap: docker
+
+From: python:3.9-slim
+
+%files
+    poetry.lock /opt
+    pyproject.toml /opt
+    src/lifetimes /opt/src/lifetimes
+
+%post
+    # The slurm commands are not available within the container by default.
+    # We will make use of the fact that we can ssh onto the host from within
+    # the singularity container. In doing so, we can simply re-route calls to
+    # `sbatch`, `scancel`, `squeue` etc. to batch scripts that `ssh` connect to
+    # the host system, load the bash profile and execute the calls in the host
+    # system.
+    # Procedure: SSH back to the host (var is passed through to singularity
+    # anyway). Then, source `/etc/profile` to make it feel like an interactive
+    # session and submit the job.
+    mkdir -p /bin
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sacct ${@}"' > /bin/sacct
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sacctmgr ${@}"' > /bin/sacctmgr
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; salloc ${@}"' > /bin/salloc
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sattach ${@}"' > /bin/sattach
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sbatch ${@}"' > /bin/sbatch
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sbcast ${@}"' > /bin/sbcast
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; scancel ${@}"' > /bin/scancel
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; scontrol ${@}"' > /bin/scontrol
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sinfo ${@}"' > /bin/sinfo
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sprio ${@}"' > /bin/sprio
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; squeue ${@}"' > /bin/squeue
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; srun ${@}"' > /bin/srun
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sshare ${@}"' > /bin/sshare
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sstat ${@}"' > /bin/sstat
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; strigger ${@}"' > /bin/strigger
+    echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sview ${@}"' > /bin/sview
+    chmod -R 755 /bin/s*
+    apt update -y && apt upgrade -y
+    apt install -y curl openssh-client libpcre3 openssl
+    pip install --upgrade pip
+    curl -sSL https://install.python-poetry.org | python3 -
+    export PATH="/root/.local/bin:$PATH"
+    poetry self update
+    poetry config virtualenvs.create false
+    cd /opt
+    poetry install --no-dev
+    pip install ipykernel
+    python -m ipykernel install
+
+%environment
+    # Add folder with slurm scripts to environment variable
+    PATH=$PATH:/bin

@@ -1,3 +1,3 @@
-from . import methods
-from .determination import determine_modes
-from .modes import Modes
+import lifetimes.modes.methods
+from lifetimes.modes.determination import determine_modes
+from lifetimes.modes.modes import Modes

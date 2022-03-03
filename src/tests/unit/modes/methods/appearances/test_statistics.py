@@ -70,5 +70,3 @@ def test_determine_appearances_of_modes():
     )
 
     assert result == expected
-
-    breakpoint()

@@ -1,5 +1,5 @@
 import itertools
-from typing import Optional
+import typing as t
 
 import numpy as np
 import xarray as xr
@@ -7,9 +7,9 @@ import xarray as xr
 
 def reshape_spatio_temporal_xarray_data_array(
     data: xr.DataArray,
-    time_coordinate: str = "time",
-    x_coordinate: Optional[str] = None,
-    y_coordinate: Optional[str] = None,
+    time_coordinate: t.Optional[str] = None,
+    x_coordinate: t.Optional[str] = None,
+    y_coordinate: t.Optional[str] = None,
 ) -> np.ndarray:
     """Reshape a `xr.DataArray` that has one temporal and two spatial dimensions.
 
@@ -17,8 +17,11 @@ def reshape_spatio_temporal_xarray_data_array(
     ----------
     data : xr.DataArray
         Input data.
-    time_coordinate : str, default="time"
+    time_coordinate : str, optional
         Name of the time coordinate.
+        Must only be provided if the data is not conform to the CF 1.6
+        conventions. This convention states that the coordinates (and
+        thus data) are in the order time, latitude, longitude.
     x_coordinate: str, optional
         Name of the x-coordinate.
         If `None`, the spatial data will be flattened by concatenating the rows.
@@ -35,14 +38,14 @@ def reshape_spatio_temporal_xarray_data_array(
         reshaped data are of shape (t x nm).
 
     """
-    timesteps = data[time_coordinate]
-    timesteps_data = data.sel({time_coordinate: timesteps})
-    reshaped = _flatten_spatio_temporal_grid_data(
-        timeseries=timesteps_data,
+    if time_coordinate is not None:
+        timesteps = data[time_coordinate]
+        data = data.sel({time_coordinate: timesteps})
+    return _flatten_spatio_temporal_grid_data(
+        timeseries=data,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-    return reshaped
 
 
 def _flatten_spatio_temporal_grid_data(
