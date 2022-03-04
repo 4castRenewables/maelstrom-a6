@@ -1,11 +1,10 @@
 import datetime
 
+import lifetimes.utils.averaging as averaging
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-
-import lifetimes.utils.averaging as averaging
 
 START = datetime.datetime(2000, 1, 1)
 END = datetime.datetime(2000, 2, 1)
@@ -14,9 +13,9 @@ START_DATA = [
     [1, 2],
 ]
 END_DATA = [
-            [3, 4],
-            [3, 4],
-        ]
+    [3, 4],
+    [3, 4],
+]
 LAT = [0.0, 1.0]
 LON = [0.0, 1.0]
 
@@ -33,7 +32,9 @@ def test_calculate_daily_averages(time_coordinate):
 
     expected_dates = expected.coords[time_coordinate].values
 
-    result = averaging.calculate_daily_averages(dataset, time_coordinate=time_coordinate)
+    result = averaging.calculate_daily_averages(
+        dataset, time_coordinate=time_coordinate
+    )
     result_dates = result.coords[time_coordinate].values
 
     xr.testing.assert_equal(result, expected)
@@ -52,14 +53,8 @@ def create_ingoing_dataset(time_coordinate: str) -> xr.Dataset:
     dates_1 = pd.date_range(start=START, end=START, freq="1h")
     dates_2 = pd.date_range(start=END, end=END, freq="1h")
     dates = dates_1.tolist() + dates_2.tolist()
-    data_1 = [
-        START_DATA
-        for _ in range(dates_1.size)
-    ]
-    data_2 = [
-        END_DATA
-        for _ in range(dates_1.size)
-    ]
+    data_1 = [START_DATA for _ in range(dates_1.size)]
+    data_2 = [END_DATA for _ in range(dates_1.size)]
     data = data_1 + data_2
     return _create_dataset(
         data=data,
@@ -84,7 +79,9 @@ def create_expected_dataset(time_coordinate: str) -> xr.Dataset:
     )
 
 
-def _create_dataset(data: list, time_coordinate: str, dates: list) -> xr.Dataset:
+def _create_dataset(
+    data: list, time_coordinate: str, dates: list
+) -> xr.Dataset:
     return xr.Dataset(
         data_vars={
             "t": ([time_coordinate, "lat", "lon"], np.array(data, dtype=float)),
@@ -93,5 +90,5 @@ def _create_dataset(data: list, time_coordinate: str, dates: list) -> xr.Dataset
             time_coordinate: ([time_coordinate], dates),
             "lat": (["lat"], LAT),
             "lon": (["lon"], LON),
-        }
+        },
     )

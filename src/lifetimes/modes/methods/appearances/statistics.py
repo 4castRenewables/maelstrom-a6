@@ -1,7 +1,6 @@
+import lifetimes.modes.methods.appearances.mode as mode
 import numpy as np
 import xarray as xr
-
-import lifetimes.modes.methods.appearances.mode as mode
 
 
 def determine_lifetimes_of_modes(
@@ -61,15 +60,21 @@ def _get_mode_appearances(
 ) -> list[mode.Appearance]:
     indexes = _get_indexes_of_mode_appearances(label=label, modes=modes)
     appearances_indexes = _find_coherent_appearances_indexes(indexes)
-    return mode.Appearance.from_indexes(appearances_indexes, time_series=time_series)
+    return mode.Appearance.from_indexes(
+        appearances_indexes, time_series=time_series
+    )
 
 
-def _get_indexes_of_mode_appearances(label: int, modes: xr.DataArray) -> np.ndarray:
+def _get_indexes_of_mode_appearances(
+    label: int, modes: xr.DataArray
+) -> np.ndarray:
     [indexes] = np.where(modes == label)
     return indexes
 
 
-def _find_coherent_appearances_indexes(data: np.ndarray) -> list[mode.AppearanceIndex]:
+def _find_coherent_appearances_indexes(
+    data: np.ndarray,
+) -> list[mode.AppearanceIndex]:
     indexes = _get_coherent_groups_of_equivalent_distances(data, distance=1)
     return mode.AppearanceIndex.from_sequences(indexes)
 

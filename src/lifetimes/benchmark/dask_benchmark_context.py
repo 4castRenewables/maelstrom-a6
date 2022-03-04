@@ -4,7 +4,8 @@ import dask.distributed as distributed
 
 
 class DaskBenchmarkingContext:
-    """Class providing a context manager to enable dask benchmarking utility usage."""
+    """Class providing a context manager
+    to enable dask benchmarking utility usage."""
 
     def __init__(
         self,
@@ -19,9 +20,11 @@ class DaskBenchmarkingContext:
 
         Parameters
         ----------
-        job_name: Job name. Used as prefix in all files that are written to disk.
-        memory_sampler: dask.distributed.diagnostics.MemorySampler instance.
-        log_directory: Dorectory to which logs are written.
+        job_name: Job name. Used as prefix in all files
+        that are written to disk.
+        memory_sampler: dask.distributed.diagnostics.MemorySampler
+        instance.
+        log_directory: Directory to which logs are written.
         """
         self.job_name = job_name
         self.log_directory = log_directory
@@ -34,7 +37,8 @@ class DaskBenchmarkingContext:
                 self.job_name
             )
         self.performance_report = distributed.performance_report(
-            filename=f"{self.log_directory}/dask_performance_report_{job_name}.html"
+            filename=f"{self.log_directory}/"
+            f"dask_performance_report_{job_name}.html"
         )
 
     def __enter__(self):
@@ -50,7 +54,8 @@ class DaskBenchmarkingContext:
         self.memory_sampler_context.__exit__(type, value, traceback)
         self.performance_report.__exit__(type, value, traceback)
         self._save_memory_sample(
-            memory_sample_filename=f"{self.log_directory}/dask_memory_sample_{self.job_name}.csv"
+            memory_sample_filename=f"{self.log_directory}"
+            f"/dask_memory_sample_{self.job_name}.csv"
         )
 
     def _save_memory_sample(self, memory_sample_filename: str):

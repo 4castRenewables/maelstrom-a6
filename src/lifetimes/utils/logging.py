@@ -12,12 +12,18 @@ def log_runtime(func):
     @functools.wraps(func)
     def with_logging(*args, **kwargs):
         name = func.__name__
-        logger.info("Calling function '%s' with args: %s and kwargs: %s", name, args, kwargs)
+        logger.info(
+            "Calling function '%s' with args: %s and kwargs: %s",
+            name,
+            args,
+            kwargs,
+        )
         start = time.time()
         result = func(*args, **kwargs)
         duration = time.time() - start
         logger.info("Function '%s' was executed in %s seconds", name, duration)
         return result
+
     return with_logging
 
 
@@ -31,4 +37,3 @@ def log_to_stdout(level: int = logging.INFO) -> None:
 
     """
     logging.basicConfig(stream=sys.stdout, level=level)
-

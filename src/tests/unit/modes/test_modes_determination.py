@@ -13,6 +13,8 @@ def test_determine_modes(ds):
         y_coordinate="lon",
         variance_ratio=None,
     )
-    [pca] = lifetimes.modes.determine_modes(modes=modes, method=pca_partial_method)
+    [pca] = lifetimes.modes.determine_modes(
+        modes=modes, method=pca_partial_method
+    )
 
     assert isinstance(pca, lifetimes.modes.methods.PCA)

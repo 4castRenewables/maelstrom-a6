@@ -51,7 +51,9 @@ def pca_and_kmeans(
         time_coordinate="time",
         latitude_coordinate="latitude",
     )
-    [pca] = lifetimes.modes.determine_modes(modes=modes, method=pca_partial_method)
+    [pca] = lifetimes.modes.determine_modes(
+        modes=modes, method=pca_partial_method
+    )
 
     clusters = lifetimes.modes.methods.find_principal_component_clusters(
         pca,

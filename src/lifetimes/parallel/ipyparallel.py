@@ -1,14 +1,12 @@
-import joblib
 import logging
 import os
 import typing as t
 
-import ipyparallel
 import ipyparallel.joblib
-
-import lifetimes.utils
-import lifetimes.parallel.types as types
+import joblib
 import lifetimes.parallel._client as _client
+import lifetimes.parallel.types as types
+import lifetimes.utils
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +28,7 @@ class IPyParallelClient(_client.Client):
         self._working_directory = working_directory
         self._engines_awaited = False
 
-    def __enter__(self) -> "IPyParallel":
+    def __enter__(self) -> "IPyParallelClient":
         """Wait for the engines."""
         self._wait_for_engines()
         self._ensure_engines_run_in_working_directory()
@@ -57,21 +55,29 @@ class IPyParallelClient(_client.Client):
         """Return the IDs of the client."""
         return str(self._client.ids)
 
-    def _execute(self, method: types.Method, arguments: types.Arguments) -> list:
+    def _execute(
+        self, method: types.Method, arguments: types.Arguments
+    ) -> list:
         if not self.ready:
-            raise RuntimeError("Client not ready, use context manager to execute")
+            raise RuntimeError(
+                "Client not ready, use context manager to execute"
+            )
         logger.info("Starting parallel jobs")
         result = self._execute_jobs_with_engines(method, arguments)
         logger.info("Execution finished")
         return result
 
     def _ensure_engines_run_in_working_directory(self) -> None:
-        self._client[:].map(os.chdir, [self._working_directory] * self.n_engines)
+        self._client[:].map(
+            os.chdir, [self._working_directory] * self.n_engines
+        )
         logger.info("c.ids :{0}".format(self.ids))
         balanced_view = self._client.load_balanced_view()
         joblib.register_parallel_backend(
             self._backend,
-            lambda: ipyparallel.joblib.IPythonParallelBackend(view=balanced_view),
+            lambda: ipyparallel.joblib.IPythonParallelBackend(
+                view=balanced_view
+            ),
         )
 
     def _wait_for_engines(self):

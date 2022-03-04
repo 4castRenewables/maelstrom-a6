@@ -1,7 +1,6 @@
+import lifetimes.testing as testing
 import pytest
 import xarray as xr
-
-import lifetimes.testing as testing
 
 
 @pytest.fixture()

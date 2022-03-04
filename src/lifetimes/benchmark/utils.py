@@ -19,8 +19,9 @@ def wrap_benchmark_method_with_logging(method: t.Callable) -> t.Callable:
 
     Notes
     -----
-    dask.distributed.delayed must be handed a single function; thus logging must be
-    configured in the wrapped function call. See `make_method_lazy` function.
+    dask.distributed.delayed must be handed a single function;
+    thus logging must be configured in the wrapped function call.
+    See `make_method_lazy` function.
 
     """
 

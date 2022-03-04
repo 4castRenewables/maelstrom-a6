@@ -30,6 +30,8 @@ def client(cluster):
 
 @pytest.fixture
 def benchmarking_context(client, log_directory):
-    # Note: Dask client is initialized globally and an implicit dependency of the
-    # context
-    return bench.DaskBenchmarkingContext(job_name="test", log_directory=log_directory)
+    # Note: Dask client is initialized globally
+    # and an implicit dependency of the context
+    return bench.DaskBenchmarkingContext(
+        job_name="test", log_directory=log_directory
+    )

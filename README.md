@@ -25,7 +25,7 @@ Lifetime determination of large-scale weather regimes.
    but make sure to update the `SSH_PRIVATE_KEY_FILE` and `JUDOOR_USER`
    variables in the script prior to execution. Then upload by executing
    ```commandline
-   bash notebooks/<e4 or juwels>/upload_kernel.sh 
+   bash notebooks/<e4 or juwels>/upload_kernel.sh
    ```
 
 If this worked correctly, the kernel should be available in Jupyter JSC/on the E4 system.
@@ -60,3 +60,4 @@ via `singularity exec <path to image> python <path to script>`.
    `poetry run jupyter notebook` command. The URL should look as follows:
    `http://localhost:8888/?token=<token>`.
 7. Run the notebook `notebooks/e4/parallel_lifetimes.ipynb`.
+

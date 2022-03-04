@@ -1,5 +1,5 @@
-import pathlib
 import os
+import pathlib
 import typing as t
 import unittest.mock
 
@@ -22,8 +22,6 @@ class DummyJob:
 
 
 class FakeSLURMCluster(dask_jobqueue.SLURMCluster):
-
-
     @property
     def _dummy_job(self):
         return DummyJob()
@@ -91,8 +89,8 @@ class TestDaskSlurmClient:
 
         assert result == expected
 
-    def test_enter(self, client):
-        with client(workers=1):
+    def test_scale(self, client):
+        with client.scale(workers=1):
             assert client.ready
 
     def test_job_script(self, client):
@@ -105,9 +103,15 @@ class TestDaskSlurmClient:
             (None, ["test"], ["test"]),
             (["test"], None, ["test"]),
             (["test_1"], ["test_2"], ["test_2", "test_1"]),
-        ]
+        ],
     )
-    def test_update_extra_job_commands(self, client, _extra_job_commands_attribute,extra_job_commands, expected):
+    def test_update_extra_job_commands(
+        self,
+        client,
+        _extra_job_commands_attribute,
+        extra_job_commands,
+        expected,
+    ):
         client._extra_job_commands = _extra_job_commands_attribute
 
         result = client._update_extra_job_commands(extra_job_commands)

@@ -150,6 +150,6 @@ def _theta_ferro_fit(threshold):
             / ((Ti.size - 1) * np.sum((Ti - 1) * (Ti - 2)))
         )
     else:
-        res = 2 * (np.sum(Ti) ** 2) / ((Ti.size - 1) * np.sum(Ti ** 2))
+        res = 2 * (np.sum(Ti) ** 2) / ((Ti.size - 1) * np.sum(Ti**2))
     res = min(1, res)
     return res

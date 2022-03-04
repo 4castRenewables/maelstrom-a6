@@ -13,17 +13,20 @@ netCDF4 = "^1.5.8"
 dask = {extras = ["distributed"], version = "^2022.2.0"}
 dask-jobqueue = "^0.7.3"
 scikit-learn = "^1.0.2"
-ipyparallel = "^8.2.0"
 matplotlib = "^3.5.1"
+ipyparallel = "^8.2.0"
 bokeh = "^2.4.2"
 jupyter = {version = "^1.0.0", optional = true}
-
+black = {version = "^22.1.0", optional = true}
+flake8 = {version = "^4.0.1", optional = true}
+reorder-python-imports = {version = "^2.7.1", optional = true}
 [tool.poetry.extras]
 notebooks = ["jupyter"]
+linting = ["black", "flake8", "reorder-python-imports"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
-pre-commit = "^2.16.0"
+pre-commit = "^2.17.0"
 pytest-cov = "^3.0.0"
 
 [build-system]
@@ -32,3 +35,12 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "--cov=lifetimes --cov-report term-missing"
+
+[tool.black]
+line-length = 80
+
+[flake8]
+max-line-length = 80
+per-file-ignores = """
+    __init__.py:F401,E501
+"""

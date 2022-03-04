@@ -1,0 +1,43 @@
+fail_fast: false
+default_language_version:
+  python: python3
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-added-large-files
+        args: [ "--maxkb=3000" ]
+        exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy)
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy)
+
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.6.0
+    hooks:
+      - id: reorder-python-imports
+
+  - repo: https://github.com/psf/black
+    rev: 22.1.0
+    hooks:
+      - id: black
+        args: ["--config", "pyproject.toml"]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        args: ["--config", "pyproject.toml"]
+
+  - repo: local
+    hooks:
+      - id: jupyter-nb-clear-output
+        name: jupyter-nb-clear-output
+        stages: [commit]
+        language: system
+        files: \.ipynb$
+        entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
