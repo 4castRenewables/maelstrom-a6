@@ -1,0 +1,63 @@
+Bootstrap: docker
+
+From: python:3.9-slim
+
+%files
+    poetry.lock /opt
+    pyproject.toml /opt
+    src/lifetimes /opt/src/lifetimes
+
+%post
+    # SLURM is configured to be only run by the SLURMUser, on JUWELS
+    # this is `slurm`. This is done to handle permissions on the host
+    # system and mediated by `sbatch` command etc. A singularity container,
+    # by default, knows only the user that started the container. `useradd`
+    # is not possible, due to read-only filesystem. A workaround is to
+    # manually add entries for the `slurm` user into the container's
+    # `/etc/passwd` and `/etc/group`. The `x` denotes that no password is needed.
+    echo "slurm:x:300:300::/opt/slurm/slurm:/bin/false" >> /etc/passwd
+    echo "slurm:x:300:" >> /etc/group
+    # Slurm commands are not available within the container and have
+    # to be made accessible through links to outside the container.
+    ln -s /host/usr/bin/sacct /usr/bin/sacct
+    ln -s /host/usr/bin/sacctmgr /usr/bin/sacctmgr
+    ln -s /host/usr/bin/salloc /usr/bin/salloc
+    ln -s /host/usr/bin/sattach /usr/bin/sattach
+    ln -s /host/usr/bin/sbatch /usr/bin/sbatch
+    ln -s /host/usr/bin/sbcast /usr/bin/sbcast
+    ln -s /host/usr/bin/scancel /usr/bin/scancel
+    ln -s /host/usr/bin/scontrol /usr/bin/scontrol
+    ln -s /host/usr/bin/sinfo /usr/bin/sinfo
+    ln -s /host/usr/bin/sprio /usr/bin/sprio
+    ln -s /host/usr/bin/squeue /usr/bin/squeue
+    ln -s /host/usr/bin/srun /usr/bin/srun
+    ln -s /host/usr/bin/sshare /usr/bin/sshare
+    ln -s /host/usr/bin/sstat /usr/bin/sstat
+    ln -s /host/usr/bin/strigger /usr/bin/strigger
+    ln -s /host/usr/bin/sview /usr/bin/sview
+    mkdir /usr/lib64
+    # Some symlinks are created. They are used to link host system executables
+    # to `PATH` and `LD_LIBRARY_PATH` (see `environment` section) without
+    # causing conflicts (e.g. `/usr/lib64` cannot be mounted completely).
+    # In case of conflicts, system paths are bound as `/host/<path>` and
+    # symlinked to the paths that the programs are expecting.
+    ln -s /host/usr/lib64/liblua-5.3.so /usr/lib64/liblua-5.3.so
+    ln -s /host/usr/lib64/libmunge.so.2 /usr/lib64/libmunge.so.2
+    apt update -y && apt upgrade -y
+    apt install -y curl openssh-client libpcre3 openssl
+    pip install --upgrade pip
+    curl -sSL https://install.python-poetry.org | python3 -
+    export PATH="/root/.local/bin:$PATH"
+    poetry self update
+    poetry config virtualenvs.create false
+    cd /opt
+    poetry install --no-dev
+    pip install ipykernel
+    python -m ipykernel install
+    apt --fix-broken install
+
+%environment
+    # `PATH` and `LD_LIBRARY_PATH` must be expanded to include everything necessary
+    # to run Slurm commands.
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64:/opt/parastation/lib64/slurm:/usr/lib64/slurm:/etc/slurm:/p/software/juwels/stages/2020/software/binutils/2.36.1-GCCcore-10.3.0/core-10.3.0/lib:/p/software/juwels/stages/2020/software/zlib/1.2.11-GCCcore-10.3.0/lib:/p/software/juwels/stages/2020/software/GCCcore/10.3.0/lib64:/p/software/juwels/stages/2020/software/GCCcore/10.3.0/lib
+    PATH=$PATH:/usr/lib64/slurm:/etc/slurm:/host/usr/bin/sbatch:/p/software/juwels/stages/2020/software/binutils/2.36.1-GCCcore-10.3.0/bin:/p/software/juwels/stages/2020/software/GCCcore/10.3.0/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/ddn/ime/bin:/opt/jsc/bin:/usr/local/jsc/bin:/opt/parastation/bin:/p/software/juwels/bin

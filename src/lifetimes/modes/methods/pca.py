@@ -1,13 +1,14 @@
-import functools
 import typing as t
 
 import lifetimes.utils
 import numpy as np
 import xarray as xr
-from sklearn import decomposition
+import sklearn.decomposition as decomposition
 
 import lifetimes.utils
 import lifetimes.coordinate_transformations as transformations
+
+PCAMethod = t.Union[t.Type[decomposition.PCA], t.Type[decomposition.IncrementalPCA]]
 
 
 class PCA(transformations.InvertibleTransformation):
@@ -26,10 +27,12 @@ class PCA(transformations.InvertibleTransformation):
         Parameters
         ----------
         pca : sklearn.decomposition.PCA
-        data : xr.DataArray
-            The dataset the PCA was performed for.
         reshaped : np.ndarray
             The reshaped, original data used for PCA.
+        original_shape : tuple
+            Original shape of the data the PCA was performed on.
+        time_series : xr.DataArray
+            The timeseries of the original data.
 
         """
         super().__init__(
@@ -45,31 +48,26 @@ class PCA(transformations.InvertibleTransformation):
         )
 
     @property
-    @functools.lru_cache
     def timeseries(self) -> xr.DataArray:
-        return self._data[self._time_coordinate]
+        return self._time_series
 
     @property
-    @functools.lru_cache
     def components(self) -> np.ndarray:
         """Return the principal components (EOFs)."""
         n_eigenvectors = len(self.eigenvalues)
         return self.matrix.values.reshape(n_eigenvectors, -1).copy()
 
     @property
-    @functools.lru_cache
     def n_components(self) -> int:
         """Return the number of principal components (EOFs)."""
         return self.components.shape[0]
 
     @property
-    @functools.lru_cache
     def components_in_original_shape(self) -> np.ndarray:
         """Return the principal components (EOFs)."""
         return self.matrix.values
 
     @property
-    @functools.lru_cache
     def loadings(self) -> np.ndarray:
         """Return the loadings of each PC."""
         return (
@@ -77,13 +75,11 @@ class PCA(transformations.InvertibleTransformation):
         ).T
 
     @property
-    @functools.lru_cache
     def variance_ratios(self) -> np.ndarray:
         """Return the explained variance ratios."""
-        return self._pca.explained_variance_ratio_.copy()
+        return self._pca.explained_variance_ratio_
 
     @property
-    @functools.lru_cache
     def cumulative_variance_ratios(self) -> np.ndarray:
         """Return the cumulative variance ratios."""
         return np.cumsum(self.variance_ratios)
@@ -138,7 +134,6 @@ class PCA(transformations.InvertibleTransformation):
         """Return the PCs account for given variance ratio."""
         return self._index_of_variance_excess(variance_ratio)
 
-    @functools.lru_cache
     def _index_of_variance_excess(self, variance_ratio: float) -> int:
         # Find all indexes where the cumulative variance ratio exceeds the
         # given threshold.
@@ -149,6 +144,7 @@ class PCA(transformations.InvertibleTransformation):
         return minimum_components_for_variance_ratio
 
 
+@lifetimes.utils.log_runtime
 def spatio_temporal_principal_component_analysis(
     data: xr.DataArray,
     time_coordinate: str,
@@ -156,6 +152,8 @@ def spatio_temporal_principal_component_analysis(
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
     variance_ratio: t.Optional[float] = None,
+    pca_method: PCAMethod = decomposition.PCA,
+    **kwargs,
 ) -> PCA:
     """Perform a spatio-temporal PCA.
 
@@ -177,6 +175,10 @@ def spatio_temporal_principal_component_analysis(
         If `None`, CF 1.6 convention will be assumed, i.e. `"latitude"`.
     variance_ratio : float, optional
         Variance ratio threshold at which to drop the PCs.
+    pca_method : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
+        Method to use for the PCA.
+    kwargs
+        Additional keyword arguments to pass to the PCA method.
 
     Returns
     -------
@@ -197,18 +199,20 @@ def spatio_temporal_principal_component_analysis(
     if variance_ratio is not None:
         if variance_ratio < 0.0 or variance_ratio > 1.0:
             raise ValueError("Variance ratio must be in the range [0;1]")
-        pca = decomposition.PCA(n_components=variance_ratio)
+        pca = pca_method(n_components=variance_ratio, **kwargs)
     else:
-        pca = decomposition.PCA()
+        pca = pca_method(**kwargs)
 
-    weighted = lifetimes.utils.weight_by_latitudes(
+    original_shape = data.shape
+    timeseries = data[time_coordinate]
+    data = lifetimes.utils.weight_by_latitudes(
         data=data,
         latitudes=latitude_coordinate,
         use_sqrt=True,
     )
-    reshaped = lifetimes.utils.reshape_spatio_temporal_xarray_data_array(
-        data=weighted,
-        time_coordinate=time_coordinate,
+    data = lifetimes.utils.reshape_spatio_temporal_xarray_data_array(
+        data=data,
+        time_coordinate=None,  # Set to None to avoid memory excess in the function.
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )

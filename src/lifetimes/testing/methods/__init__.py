@@ -1,1 +1,1 @@
-from .dummy import dummy_method
+from lifetimes.testing.methods.dummy import dummy_method
