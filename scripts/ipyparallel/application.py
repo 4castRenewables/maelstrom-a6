@@ -1,14 +1,13 @@
 import argparse
 import functools
 import itertools
-import joblib
 import logging
 import os
 import sys
 
-import numpy as np
-
+import joblib
 import lifetimes
+import numpy as np
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +34,10 @@ logger.info("args.profile: {0}".format(profile))
 
 n_workers = int(os.environ.get("N_WORKERS", 1))
 
-data_path = "/home/fabian/Documents/MAELSTROM/data/pca/temperature_level_128_daily_averages_2020.nc"
+data_path = (
+    "/home/fabian/Documents/MAELSTROM/data/"
+    "pca/temperature_level_128_daily_averages_2020.nc"
+)
 variance_ratio = np.arange(0.94, 0.96, 0.1)
 n_clusters = np.arange(2, 4)
 use_varimax = [False]

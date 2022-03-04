@@ -1,10 +1,8 @@
 import datetime
 
-import numpy as np
+import lifetimes.modes.methods.appearances as appearances
 import pandas as pd
 import xarray as xr
-
-import lifetimes.modes.methods.appearances as appearances
 
 
 def test_determine_appearances_of_modes():

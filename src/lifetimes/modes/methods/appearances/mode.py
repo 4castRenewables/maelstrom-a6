@@ -1,6 +1,5 @@
 import dataclasses
 import datetime
-import functools
 import typing as t
 
 import numpy as np
@@ -36,7 +35,9 @@ class AppearanceIndex:
         return list(map(cls.from_sequence, seq))
 
     @classmethod
-    def from_sequence(cls, seq: t.Union[list, tuple, np.ndarray]) -> "AppearanceIndex":
+    def from_sequence(
+        cls, seq: t.Union[list, tuple, np.ndarray]
+    ) -> "AppearanceIndex":
         """Create from a sequence of indexes.
 
         The first element in the sequence must represent the first index of
@@ -93,7 +94,8 @@ class Appearance:
 
         """
         return [
-            cls.from_index(index=index, time_series=time_series) for index in indexes
+            cls.from_index(index=index, time_series=time_series)
+            for index in indexes
         ]
 
     @classmethod
@@ -162,7 +164,10 @@ class Duration:
         cls, durations: np.ndarray, time_delta: datetime.timedelta
     ) -> "Duration":
         """Construct from an array containing time deltas as numeric values."""
-        convert = lambda x: x * time_delta
+
+        def convert(absolute: float) -> datetime.timedelta:
+            return absolute * time_delta
+
         total = convert(durations.sum())
         max = convert(np.max(durations))
         min = convert(np.min(durations))
@@ -238,7 +243,9 @@ class Mode:
     statistics: Statistics
 
     @classmethod
-    def from_appearances(cls, label: int, appearances: list[Appearance]) -> "Mode":
+    def from_appearances(
+        cls, label: int, appearances: list[Appearance]
+    ) -> "Mode":
         """Create from a sequences of appearances."""
         statistics = Statistics.from_appearances(appearances)
         return cls(
@@ -253,6 +260,8 @@ def _numpy_datetime64_to_datetime(date: np.datetime64) -> datetime.datetime:
     return ts.to_pydatetime()
 
 
-def _numpy_timedelta64_to_timedelta(delta: np.timedelta64) -> datetime.timedelta:
+def _numpy_timedelta64_to_timedelta(
+    delta: np.timedelta64,
+) -> datetime.timedelta:
     ts = pd.Timedelta(delta)
     return ts.to_pytimedelta()

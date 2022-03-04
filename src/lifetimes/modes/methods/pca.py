@@ -2,12 +2,12 @@ import typing as t
 
 import lifetimes.utils
 import numpy as np
-import xarray as xr
 import sklearn.decomposition as decomposition
+import xarray as xr
 
-import lifetimes.utils
-
-PCAMethod = t.Union[t.Type[decomposition.PCA], t.Type[decomposition.IncrementalPCA]]
+PCAMethod = t.Union[
+    t.Type[decomposition.PCA], t.Type[decomposition.IncrementalPCA]
+]
 
 
 class PCA:
@@ -96,23 +96,37 @@ class PCA:
         return self._transform(self.components, n_components=n_components)
 
     @lifetimes.utils.log_runtime
-    def transform_with_varimax_rotation(self, n_components: t.Optional[int] = None) -> np.ndarray:
-        """Transform the given data into the vector space of the varimax-rotated PCs."""
+    def transform_with_varimax_rotation(
+        self, n_components: t.Optional[int] = None
+    ) -> np.ndarray:
+        """Transform the given data into the
+        vector space of the varimax-rotated PCs."""
         # TODO: Do research on whether the varimax rotation has to be performed
         # on the reduced number of PCs to achieve `n_components` or on all PCs
         # to then select `n_copoments` of the varimax-rotated PCs. Currently,
         # the former is implemented. Thus, varimax rotation is very efficient.
-        return self._transform(self.components_varimax_rotated, n_components=n_components)
+        return self._transform(
+            self.components_varimax_rotated, n_components=n_components
+        )
 
     def _transform(self, data: np.ndarray, n_components: int) -> np.ndarray:
-        return _transform_data_into_vector_space(self._reshaped, basis_vectors=data, n_dimensions=n_components)
+        return _transform_data_into_vector_space(
+            self._reshaped, basis_vectors=data, n_dimensions=n_components
+        )
 
-    def components_sufficient_for_variance_ratio(self, variance_ratio: float) -> np.ndarray:
+    def components_sufficient_for_variance_ratio(
+        self, variance_ratio: float
+    ) -> np.ndarray:
         """Return the PCs account for given variance ratio."""
-        n_components = self.number_of_components_sufficient_for_variance_ratio(variance_ratio)
+        n_components = self.number_of_components_sufficient_for_variance_ratio(
+            variance_ratio
+        )
         return self.components[:n_components]
 
-    def number_of_components_sufficient_for_variance_ratio(self, variance_ratio: float) -> int:
+    def number_of_components_sufficient_for_variance_ratio(
+        self, variance_ratio: float
+    ) -> int:
+
         """Return the PCs account for given variance ratio."""
         return self._index_of_variance_excess(variance_ratio)
 
@@ -127,9 +141,9 @@ class PCA:
 
 
 def _perform_varimax_rotation(
-        matrix: np.ndarray,
-        tol: float = 1e-6,
-        max_iter: int = 100,
+    matrix: np.ndarray,
+    tol: float = 1e-6,
+    max_iter: int = 100,
 ):
     transposed = matrix.T
     n_row, n_col = transposed.shape
@@ -138,8 +152,8 @@ def _perform_varimax_rotation(
 
     for _ in range(max_iter):
         comp_rot = np.dot(transposed, rotation_matrix)
-        tmp = comp_rot * np.transpose((comp_rot ** 2).sum(axis=0) / n_row)
-        u, s, v = np.linalg.svd(np.dot(matrix, comp_rot ** 3 - tmp))
+        tmp = comp_rot * np.transpose((comp_rot**2).sum(axis=0) / n_row)
+        u, s, v = np.linalg.svd(np.dot(matrix, comp_rot**3 - tmp))
         rotation_matrix = np.dot(u, v)
         var_new = np.sum(s)
         if var != 0 and var_new < var * (1 + tol):
@@ -149,7 +163,11 @@ def _perform_varimax_rotation(
     return np.dot(transposed, rotation_matrix).T
 
 
-def _transform_data_into_vector_space(data: np.ndarray, basis_vectors: np.ndarray, n_dimensions: t.Optional[int] = None) -> np.ndarray:
+def _transform_data_into_vector_space(
+    data: np.ndarray,
+    basis_vectors: np.ndarray,
+    n_dimensions: t.Optional[int] = None,
+) -> np.ndarray:
     if n_dimensions is not None:
         basis_vectors = basis_vectors[:n_dimensions]
     centered = data - np.nanmean(data)
@@ -224,12 +242,15 @@ def spatio_temporal_principal_component_analysis(
     )
     data = lifetimes.utils.reshape_spatio_temporal_xarray_data_array(
         data=data,
-        time_coordinate=None,  # Set to None to avoid memory excess in the function.
+        time_coordinate=None,  # Set to None to avoid memory excess in function
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
 
     result: PCAMethod = pca.fit(data)
-    return PCA(pca=result, reshaped=data, original_shape=original_shape, time_series=timeseries)
-
-
+    return PCA(
+        pca=result,
+        reshaped=data,
+        original_shape=original_shape,
+        time_series=timeseries,
+    )

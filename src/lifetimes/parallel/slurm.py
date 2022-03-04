@@ -1,14 +1,13 @@
+import contextlib
 import logging
 import os
 import pathlib
-import contextlib
 import typing as t
 
 import dask.distributed
 import dask_jobqueue
-import lifetimes.parallel.types as types
-
 import lifetimes.parallel._client as _client
+import lifetimes.parallel.types as types
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,8 @@ class DaskSlurmClient(_client.Client):
             Additional arguments to pass to the dask worker.
         dashboard_port : int, default=56755
             Port to use for the dask dashboard.
-        python_executable : str, default="singularity run $SINGULARITY_IMAGE python"
+        python_executable : str,
+            default="singularity run $SINGULARITY_IMAGE python"
             Python executable to use in each job.
         extra_job_commands : list[str], optional
             Extra bash commands to execute in the batch script before launching
@@ -84,7 +84,9 @@ class DaskSlurmClient(_client.Client):
 
         """
         if log_directory is None:
-            log_directory = self._create_default_log_directory_path_in_home_directory()
+            log_directory = (
+                self._create_default_log_directory_path_in_home_directory()
+            )
         _create_directory_with_parents(log_directory)
 
         if python_executable is None:
@@ -203,7 +205,9 @@ class DaskSlurmClient(_client.Client):
         python_executable = self._python_executable.format(singularity_image)
         return python_executable
 
-    def _update_extra_job_commands(self, extra_job_commands: t.Optional[list[str]]) -> t.Optional[list[str]]:
+    def _update_extra_job_commands(
+        self, extra_job_commands: t.Optional[list[str]]
+    ) -> t.Optional[list[str]]:
         if extra_job_commands is None:
             extra_job_commands = []
 
@@ -239,7 +243,9 @@ class DaskSlurmClient(_client.Client):
             return f"{home_directory}/tmp"
         return self._local_directory
 
-    def _execute(self, method: types.Method, arguments: types.Arguments) -> list[t.Any]:
+    def _execute(
+        self, method: types.Method, arguments: types.Arguments
+    ) -> list[t.Any]:
         if not self.ready:
             raise RuntimeError("No worker(s) running")
 

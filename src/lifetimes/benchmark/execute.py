@@ -17,7 +17,7 @@ def execute_benchmark(
     Parameters
     ----------
     method: Method that should be benchmarked. Note: It is advised to use below
-      functions to add logging and make the function lazy for better dask support.
+     functions to add logging and make the function lazy for better dask support
     job_name: Job name; used as prefix in saved files.
     method_args: Iterable of argument tuples to hand over to method.
     cluster_scale: Kwargs to dask_jobqueue.SLURMCluster(...).scale(**kwargs).

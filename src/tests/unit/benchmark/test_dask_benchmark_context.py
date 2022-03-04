@@ -8,14 +8,17 @@ def test_dask_benchmarking_context(benchmarking_context, log_directory):
     assert benchmarking_context.job_name == "test"
     assert benchmarking_context.log_directory == log_directory
     assert isinstance(
-        benchmarking_context.memory_sampler, distributed.diagnostics.MemorySampler
+        benchmarking_context.memory_sampler,
+        distributed.diagnostics.MemorySampler,
     )
     assert isinstance(
         benchmarking_context.performance_report, distributed.performance_report
     )
 
 
-def test_dask_benchmarking_context_enter_and_exit(benchmarking_context, log_directory):
+def test_dask_benchmarking_context_enter_and_exit(
+    benchmarking_context, log_directory
+):
     with benchmarking_context:
         time.sleep(1)
     assert os.path.exists(log_directory + "/dask_memory_sample_test.csv")

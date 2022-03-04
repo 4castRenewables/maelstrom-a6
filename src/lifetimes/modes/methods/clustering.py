@@ -1,16 +1,17 @@
 import abc
 import typing as t
 
+import lifetimes.utils
 import numpy as np
 import xarray as xr
 from sklearn import cluster
 
-import lifetimes.utils
 from . import pca as _pca
 
 
 class ClusterAlgorithm(abc.ABC):
     """Wrapper for `sklearn.cluster` algorithms."""
+
     pca: _pca.PCA
 
     @property
@@ -37,7 +38,9 @@ class ClusterAlgorithm(abc.ABC):
 class KMeans(ClusterAlgorithm):
     """Wrapper for `sklearn.cluster.KMeans`."""
 
-    def __init__(self, kmeans: cluster.KMeans, pca: _pca.PCA, n_components: int):
+    def __init__(
+        self, kmeans: cluster.KMeans, pca: _pca.PCA, n_components: int
+    ):
         """Set attributes.
 
         Parameters
@@ -101,7 +104,9 @@ def find_principal_component_clusters(
     """
     kmeans = cluster.KMeans(n_clusters=n_clusters, **clustering_kwargs)
     if use_varimax:
-        components_subspace = pca.transform_with_varimax_rotation(n_components=n_components)
+        components_subspace = pca.transform_with_varimax_rotation(
+            n_components=n_components
+        )
     else:
         components_subspace = pca.transform(n_components=n_components)
     result: cluster.KMeans = kmeans.fit(components_subspace)

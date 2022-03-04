@@ -9,6 +9,6 @@ import pytest
 def test_execute_benchmark(
     mock_client, mock_cluster, dask_slurm_cluster_kwargs, log_directory
 ):
-    # Note: Test of this function is not possible since SLURMCluster requires a SLURM
-    # installation
+    # Note: Test of this function is not possible since
+    # SLURMCluster requires a SLURM installation
     pass

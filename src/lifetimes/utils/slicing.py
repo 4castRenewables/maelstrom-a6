@@ -3,7 +3,12 @@ import typing as t
 import xarray as xr
 
 
-def slice_dataset(dataset: xr.Dataset, dimension: str, slice_until: int, slice_from: t.Optional[int] = None) -> xr.Dataset:
+def slice_dataset(
+    dataset: xr.Dataset,
+    dimension: str,
+    slice_until: int,
+    slice_from: t.Optional[int] = None,
+) -> xr.Dataset:
     """Drop data before/after given indexes of given dimension.
 
     Parameters

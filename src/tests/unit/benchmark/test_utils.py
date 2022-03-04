@@ -4,7 +4,10 @@ from unittest import mock
 import lifetimes.benchmark as bench
 from dask.delayed import (
     Delayed,
-)  # Cannot be imported otherwise, because dask mixes up function delayed and submodule delayed
+)
+
+# Cannot be imported otherwise,
+# because dask mixes up function delayed and submodule delayed"""
 
 
 @mock.patch("logging.getLogger")

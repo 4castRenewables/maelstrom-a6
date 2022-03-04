@@ -1,10 +1,15 @@
-import matplotlib.pyplot as plt
 import matplotlib.animation
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 
 
-def animate_timeseries(data: xr.DataArray, time_coordinate: str = "time", is_datetime: bool = True, display: bool = True) -> matplotlib.animation.FuncAnimation:
+def animate_timeseries(
+    data: xr.DataArray,
+    time_coordinate: str = "time",
+    is_datetime: bool = True,
+    display: bool = True,
+) -> matplotlib.animation.FuncAnimation:
     """Animate time series data.
 
     Parameters
@@ -27,16 +32,24 @@ def animate_timeseries(data: xr.DataArray, time_coordinate: str = "time", is_dat
     else:
         times = data[time_coordinate]
     fig = plt.figure()
-    im_plot = plt.imshow(data.isel({time_coordinate: 0}).values, vmin=np.min(data), vmax=np.max(data))
+    im_plot = plt.imshow(
+        data.isel({time_coordinate: 0}).values,
+        vmin=np.min(data),
+        vmax=np.max(data),
+    )
     ax = plt.gca()
-    title = ax.text(0.5, 1.100, f"time step {times[0]}", transform=ax.transAxes, ha="center")
+    title = ax.text(
+        0.5, 1.100, f"time step {times[0]}", transform=ax.transAxes, ha="center"
+    )
 
     def animation(i):
         im_plot.set_data(data.isel({time_coordinate: i}).values)
         title.set_text(f"time step {times[i]}")
         return [im_plot]
 
-    anim = matplotlib.animation.FuncAnimation(fig, animation, frames=len(data[time_coordinate]))
+    anim = matplotlib.animation.FuncAnimation(
+        fig, animation, frames=len(data[time_coordinate])
+    )
     if display:
         plt.show()
     return anim

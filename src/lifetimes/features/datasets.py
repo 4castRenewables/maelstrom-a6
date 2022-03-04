@@ -2,9 +2,8 @@ import abc
 import pathlib
 import typing as t
 
-import xarray as xr
-
 import lifetimes.utils
+import xarray as xr
 
 Path = t.Union[str, pathlib.Path]
 
@@ -21,7 +20,9 @@ class Dataset(abc.ABC):
         self._dropped_variables = []
 
     @lifetimes.utils.log_runtime
-    def as_xarray(self, drop_variables: t.Optional[list[str]] = None) -> xr.Dataset:
+    def as_xarray(
+        self, drop_variables: t.Optional[list[str]] = None
+    ) -> xr.Dataset:
         """Return the dataset as an `xr.Dataset`.
 
         Parameters
@@ -86,9 +87,13 @@ class EcmwfIfsHresDataset(FileDataset):
         """Merge a set of files into a single dataset."""
         if len(self.paths) == 1:
             return self._open_single_dataset(drop_variables=drop_variables)
-        return self._open_multiple_temporally_monotonous_datasets(drop_variables=drop_variables)
+        return self._open_multiple_temporally_monotonous_datasets(
+            drop_variables=drop_variables
+        )
 
-    def _open_single_dataset(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
+    def _open_single_dataset(
+        self, drop_variables: t.Optional[list[str]]
+    ) -> xr.Dataset:
         dataset = xr.open_dataset(
             *self.paths,
             engine=self._engine,
@@ -98,7 +103,9 @@ class EcmwfIfsHresDataset(FileDataset):
             return self._preprocessing(dataset)
         return dataset
 
-    def _open_multiple_temporally_monotonous_datasets(self, drop_variables: t.Optional[list[str]]):
+    def _open_multiple_temporally_monotonous_datasets(
+        self, drop_variables: t.Optional[list[str]]
+    ):
         return xr.open_mfdataset(
             self.paths,
             engine=self._engine,
