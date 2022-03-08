@@ -1,3 +1,6 @@
+import numpy as np
+import pytest
+
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.modes.methods.pca as _pca
 
@@ -28,3 +31,9 @@ def test_find_principal_component_clusters(ds):
     # Each time step should be assigned a label and thus belong
     # to one of the two clusters.
     assert len(clusters.labels) == n_timesteps
+
+    clusters2 = clustering.find_principal_component_clusters(
+        pca=pca, n_components=n_components, n_clusters=n_clusters, use_varimax=True
+    )
+    with pytest.raises(AssertionError):
+        np.testing.assert_equal(clusters.centers, clusters2.centers)

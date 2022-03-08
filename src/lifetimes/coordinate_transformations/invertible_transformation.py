@@ -53,11 +53,23 @@ class InvertibleTransformation(
                 )
             )
 
-    def transform(self, data: xr.Dataset, target_variable: str, n_dimensions: t.Optional[int]=None) -> xr.Dataset:
+    def transform(
+        self,
+        data: xr.Dataset,
+        target_variable: str,
+        n_dimensions: t.Optional[int] = None,
+    ) -> xr.Dataset:
         return self.transformation.transform(data, target_variable, n_dimensions)
 
-    def inverse_transform(self, data: xr.Dataset, target_variable: str, n_dimensions: t.Optional[int] = None) -> xr.Dataset:
-        return self.inverse_transformation.transform(data, target_variable, n_dimensions)
+    def inverse_transform(
+        self,
+        data: xr.Dataset,
+        target_variable: str,
+        n_dimensions: t.Optional[int] = None,
+    ) -> xr.Dataset:
+        return self.inverse_transformation.transform(
+            data, target_variable, n_dimensions
+        )
 
     @property
     def as_dataset(self):

@@ -31,8 +31,8 @@ class AbstractCoordinateTransformation(abc.ABC):
         if n_dimensions is None:
             n_dimensions = len(self.as_dataset["transformation_matrix"])
         coefficients = (
-            self.as_dataset["transformation_matrix"]
-            .dot(data[target_variable][:n_dimensions])
+            self.as_dataset["transformation_matrix"][:n_dimensions]
+            .dot(data[target_variable])
             .to_dataset(name=target_variable)
         )
         return coefficients

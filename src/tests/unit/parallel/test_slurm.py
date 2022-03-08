@@ -92,7 +92,7 @@ class TestDaskSlurmClient:
         assert result == expected
 
     def test_enter(self, client):
-        with client(workers=1):
+        with client.scale(workers=1):
             assert client.ready
 
     def test_job_script(self, client):

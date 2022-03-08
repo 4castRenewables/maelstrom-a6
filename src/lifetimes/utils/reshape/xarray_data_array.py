@@ -10,7 +10,7 @@ def reshape_spatio_temporal_xarray_data_array(
     time_coordinate: t.Optional[str] = None,
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
-) -> np.ndarray:
+) -> xr.DataArray:
     """Reshape a `xr.DataArray` that has one temporal and two spatial dimensions.
 
     Parameters
@@ -38,13 +38,25 @@ def reshape_spatio_temporal_xarray_data_array(
         reshaped data are of shape (t x nm).
 
     """
+    original_shape = data.shape
     if time_coordinate is not None:
         timesteps = data[time_coordinate]
         data = data.sel({time_coordinate: timesteps})
-    return _flatten_spatio_temporal_grid_data(
+    else:
+        timesteps = original_shape[0]
+    flattened = _flatten_spatio_temporal_grid_data(
         timeseries=data,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
+    )
+    time_coordinate_name = time_coordinate or "time"
+    return xr.DataArray(
+        data=flattened,
+        dims=[time_coordinate_name, "flattened_spatial"],
+        coords=dict(
+            time_coordinate_name=timesteps,
+            flattened_spatial=range(original_shape[1] * original_shape[2]),
+        ),
     )
 
 

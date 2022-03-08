@@ -4,7 +4,7 @@ import lifetimes.modes
 
 
 def test_determine_modes(ds):
-    modes = [lifetimes.modes.Modes(feature=ds["ellipse"])]
+    modes = [lifetimes.modes.Modes(feature=ds["ellipse"])] #TODO Rather use the full dataset; but then AttributeError: Dataset object has no attribute shape
     pca_partial_method = functools.partial(
         lifetimes.modes.methods.spatio_temporal_principal_component_analysis,
         time_coordinate="time",

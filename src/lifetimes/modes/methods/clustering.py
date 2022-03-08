@@ -6,13 +6,15 @@ import xarray as xr
 from sklearn import cluster
 
 import lifetimes.utils
+import lifetimes.utils.reshape as reshape
+import lifetimes.modes.methods.varimax as varimax
 from . import pca as _pca
 
 
 class ClusterAlgorithm(abc.ABC):
     """Wrapper for `sklearn.cluster` algorithms."""
 
-    pca: _pca.PCA # TODO Maybe dis-entangle
+    pca: _pca.PCA  # TODO Maybe dis-entangle
 
     @property
     def centers(self) -> np.ndarray:
@@ -101,9 +103,16 @@ def find_principal_component_clusters(
 
     """
     kmeans = cluster.KMeans(n_clusters=n_clusters, **clustering_kwargs)
-    if use_varimax: #TODO below method does not exist anymore; also hand over the data
-        components_subspace = pca.transform_with_varimax_rotation(n_components=n_components)
+    if use_varimax:
+        varimax_rotated_pca = varimax.perform_varimax_rotation(pca.matrix[:n_components])
+        print(varimax_rotated_pca.as_dataset)
+        components_subspace = varimax_rotated_pca.transform(
+            data=pca._data,
+            target_variable="data" #TODO
+        )
     else:
         components_subspace = pca.transform(n_components=n_components)
-    result: cluster.KMeans = kmeans.fit(components_subspace)
+    result: cluster.KMeans = kmeans.fit(
+        components_subspace[pca.data_variable_name].transpose("time", "eigenvector_number")
+    )
     return KMeans(kmeans=result, pca=pca, n_components=n_components)

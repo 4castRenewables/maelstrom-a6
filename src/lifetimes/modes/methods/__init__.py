@@ -4,3 +4,4 @@ from lifetimes.modes.methods.clustering import find_principal_component_clusters
 from lifetimes.modes.methods.indicators import indicators
 from lifetimes.modes.methods.pca import spatio_temporal_principal_component_analysis
 from lifetimes.modes.methods.pca import PCA
+import lifetimes.modes.methods.varimax

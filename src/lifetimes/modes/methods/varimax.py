@@ -37,12 +37,12 @@ class Varimax(transformations.BaseTransformation):
 
 
 def perform_varimax_rotation(
-    matrix: xr.Dataset,
+    matrix: xr.DataArray,
     tol: float = 1e-6,
     max_iter: int = 100,
 ) -> Varimax:
-    n_eigenvectors = len(matrix["transformation_matrix"])
-    matrix_as_np_array = matrix["transformation_matrix"].values.reshape(n_eigenvectors, -1)
+    n_eigenvectors = len(matrix)
+    matrix_as_np_array = matrix.values.reshape(n_eigenvectors, -1)
     transposed = matrix_as_np_array.T
     n_row, n_col = transposed.shape
     rotation_matrix = np.eye(n_col)
@@ -50,8 +50,8 @@ def perform_varimax_rotation(
 
     for _ in range(max_iter):
         comp_rot = np.dot(transposed, rotation_matrix)
-        tmp = comp_rot * np.transpose((comp_rot**2).sum(axis=0) / n_row)
-        u, s, v = np.linalg.svd(np.dot(matrix_as_np_array, comp_rot**3 - tmp))
+        tmp = comp_rot * np.transpose((comp_rot ** 2).sum(axis=0) / n_row)
+        u, s, v = np.linalg.svd(np.dot(matrix_as_np_array, comp_rot ** 3 - tmp))
         rotation_matrix = np.dot(u, v)
         var_new = np.sum(s)
         if var != 0 and var_new < var * (1 + tol):
@@ -59,20 +59,28 @@ def perform_varimax_rotation(
         var = var_new
 
     as_dataset = _rotation_matrix_to_dataset(rotation_matrix, matrix)
-    return Varimax(as_dataset=as_dataset)
+    rotated_matrix = (
+        as_dataset["transformation_matrix"]
+        .dot(matrix)
+        .to_dataset()
+        .rename({"rotated_eigenvector_number": "eigenvector_number"})
+    )
+    return Varimax(as_dataset=rotated_matrix)
 
 
 def _rotation_matrix_to_dataset(
-    rotation_matrix: np.ndarray, input_dataset: xr.Dataset
+    rotation_matrix: np.ndarray, input_dataset: xr.DataArray
 ) -> xr.Dataset:
-    coordinates = dict(input_dataset.coords)
-    coordinate_shapes =  input_dataset["transformation_matrix"].shape
+    coordinates = dict(input_dataset.coords)["eigenvector_number"]
     return xr.Dataset(
         data_vars={
             "transformation_matrix": (
-                list(coordinates.keys()),
-                rotation_matrix.reshape(coordinate_shapes),
+                ["eigenvector_number", "rotated_eigenvector_number"],
+                rotation_matrix,
             ),
         },
-        coords=coordinates,
+        coords={
+            "eigenvector_number": coordinates.values,
+            "rotated_eigenvector_number": coordinates.values, #TODO Ist die Reihenfolge der Koordinaten korrekt?
+        },
     )

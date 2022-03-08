@@ -1,5 +1,5 @@
 import typing as t
-
+import functools
 import lifetimes.utils
 import numpy as np
 import xarray as xr
@@ -40,6 +40,7 @@ class PCA(transformations.InvertibleTransformation):
         )
         self._data: xr.Dataset = data.copy().to_dataset(name="data")
         self._time_coordinate = time_coordinate
+        self._time_series = data.coords[time_coordinate]
         self._reshaped = reshaped.copy()
         self._pca = pca
         self._data_variable_name = list(self._data.keys())[0]
@@ -50,6 +51,10 @@ class PCA(transformations.InvertibleTransformation):
     @property
     def timeseries(self) -> xr.DataArray:
         return self._time_series
+
+    @property
+    def data_variable_name(self):
+        return self._data_variable_name
 
     @property
     def components(self) -> np.ndarray:
@@ -203,14 +208,12 @@ def spatio_temporal_principal_component_analysis(
     else:
         pca = pca_method(**kwargs)
 
-    original_shape = data.shape
-    timeseries = data[time_coordinate]
     data = lifetimes.utils.weight_by_latitudes(
         data=data,
         latitudes=latitude_coordinate,
         use_sqrt=True,
     )
-    data = lifetimes.utils.reshape_spatio_temporal_xarray_data_array(
+    reshaped = lifetimes.utils.reshape_spatio_temporal_xarray_data_array(
         data=data,
         time_coordinate=None,  # Set to None to avoid memory excess in the function.
         x_coordinate=x_coordinate,
@@ -220,7 +223,7 @@ def spatio_temporal_principal_component_analysis(
     result: decomposition.PCA = pca.fit(reshaped)
 
     result_as_dataset = _pca_to_dataset_representation(
-        pca, weighted, x_coordinate, y_coordinate, time_coordinate
+        pca, data, x_coordinate, y_coordinate, time_coordinate
     )
     return PCA(
         transformation_as_dataset=result_as_dataset,
@@ -239,7 +242,7 @@ def _pca_to_dataset_representation(
     time_coordinate: str,
 ) -> xr.Dataset:
     """
-    Represent PCA as xr.Dataset including reshaped eigenvectors and eigenvalues.
+    Represent PCA as xr.Dataset including eigenvectors and eigenvalues.
 
     Parameters
     ----------
