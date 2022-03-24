@@ -31,7 +31,7 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
-        args: ["--config", "pyproject.toml"]
+        args: ["--config", ".flake8"]
 
   - repo: local
     hooks:

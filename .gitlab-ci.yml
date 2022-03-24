@@ -1,41 +1,52 @@
+include:
+  - project: "mq/ci-templates"
+    file: "/templates/python/ci.yml"
+
+variables:
+  POETRY_IMAGE_VERSION: "3.9-1.1.13"
+  PY_PACKAGE: "./src"
+  PY_PYTEST_DIR: "./src/tests"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+
+
 stages:
  - lint
  - test
 
-image:
-  name: mquade/poetry:3.9-1.2.0a2
-  entrypoint: [""]
-
-.lint:
-  stage: lint
-  before_script:
-    - poetry install -E linting
+.image: &image
+  image:
+      name: mquade/poetry:$POETRY_IMAGE_VERSION
+      entrypoint: [""]
 
 black:
-  extends: .lint
-  script:
-    - poetry run black --config pyproject.toml --check .
-
+  <<: *image
+  extends: .lint-black
 
 flake8:
-  extends: .lint
-  script:
-    - poetry run flake8 --config pyproject.toml .
-
+  <<: *image
+  extends: .lint-flake8
 
 reorder-imports:
-  extends: .lint
+  <<: *image
+  cache:
+    key: "pip"
+    paths:
+      - $PIP_CACHE_DIR
+  stage: lint
   script:
-    - poetry run reorder-python-imports --application-directories=.:src
+    - pip install reorder-python-imports
+    - reorder-python-imports --application-directories=.:src
+  rules:
+    - changes:
+        - '**/*.py'
 
 
 test:
-  stage: test
+  <<: *image
+  extends: .test
   before_script:
-    - poetry install
-  script:
-    - poetry run pytest --junitxml=report.xml src/tests/unit
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
+    - export PYTHONPATH=$PYTHONPATH:src
+
+
+
+
