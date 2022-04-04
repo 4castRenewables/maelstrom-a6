@@ -58,6 +58,11 @@ class KMeans(ClusterAlgorithm):
         self.pca = pca
 
     @property
+    def model(self) -> cluster.KMeans:
+        """Return the model."""
+        return self._kmeans
+
+    @property
     def _centers(self) -> np.ndarray:
         return self._kmeans.cluster_centers_
 
