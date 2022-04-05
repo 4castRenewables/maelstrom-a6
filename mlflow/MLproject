@@ -1,0 +1,20 @@
+name: lifetimes
+
+docker_env:
+  image: lifetimes-mlflow:latest
+
+entry_points:
+  main:
+    parameters:
+      data:
+        type: path
+      variance_ratio:
+        type: float
+        default: 0.95
+      n_clusters:
+        type: float
+        default: 4
+      use_varimax:
+        type: string
+        default: True
+    command: python main.py --data {data} --variance-ratios {variance_ratio} --n-clusters {n_clusters} --user-varimax {use_varimax}

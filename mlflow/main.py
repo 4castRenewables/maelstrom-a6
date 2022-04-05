@@ -1,10 +1,13 @@
+import argparse
 import functools
 import itertools
 import pathlib
 import time
 import typing as t
 
+import distutils
 import lifetimes
+
 import mlflow
 
 
@@ -71,18 +74,26 @@ def pca_and_kmeans(
 
 
 if __name__ == "__main__":
-    data_path = "data/temperature_level_128_daily_averages_2020.nc"
-    variance_ratios = [0.9, 0.95]
-    n_clusters_ = [3, 4]
-    use_varimax_ = [False]
 
-    parameters = itertools.product(variance_ratios, n_clusters_, use_varimax_)
+    def string_to_bool(s: str) -> bool:
+        return bool(distutils.util.strtobool(s))
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=str)
+    parser.add_argument("--variance-ratios", nargs="+", type=float)
+    parser.add_argument("--n-clusters", nargs="+", type=int)
+    parser.add_argument("--use-varimax", nargs="+", type=string_to_bool)
+    args = parser.parse_args()
+
+    parameters = itertools.product(
+        args.variance_ratios, args.n_clusters, args.use_varimax
+    )
 
     for variance_ratio, n_clusters, use_varimax in parameters:
         with mlflow.start_run():
             start = time.time()
             clusters, clusters_lifetimes = pca_and_kmeans(
-                path=data_path,
+                path=args.data,
                 variance_ratio=variance_ratio,
                 n_clusters=n_clusters,
                 use_varimax=use_varimax,
@@ -95,4 +106,4 @@ if __name__ == "__main__":
             mlflow.log_param("use_varimax", use_varimax)
             mlflow.log_metric("duration", duration)
             mlflow.sklearn.log_model(clusters.model, "model")
-            mlflow.log_artifact(data_path)
+            mlflow.log_artifact(args.data)

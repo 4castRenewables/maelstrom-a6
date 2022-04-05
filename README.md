@@ -63,7 +63,30 @@ via `singularity exec <path to image> python <path to script>`.
 
 # Running with MLflow
 
+## Running directly via Python
 1. Install via `poetry install`.
 2. Start the MLflow UI in a separate terminal via `poetry run mlflow ui`.
-3. Run the MLflow script via `poetry run python scripts/mlflow/main.py`.
+3. Run the MLflow script via
+   ```commandline
+   poetry run python mlflow/main.py \
+     --data data/temperature_level_128_daily_averages_2020.nc \
+     --variance-ratios 0.8 0.9 \
+     --n-clusters 3 4 \
+     --use-varimax False
+   ```
 4. Refresh the MLflow UI to see the logged parameters, metrics models and artifacts.
+
+### Running as a project
+
+1. Build the Docker image
+   ```commandline
+   docker build -f mlflow/Dockerfile -t lifetimes-mlflow .
+   ```
+2. Run the project
+   ```commandline
+   mlflow run mlflow \
+     -P data=data/temperature_level_128_daily_averages_2020.nc \
+     -P variance_ratio=0.95 \
+     -P n_clusters=4 \
+     -P use_varimax=True
+   ```
