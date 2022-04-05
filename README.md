@@ -65,5 +65,5 @@ via `singularity exec <path to image> python <path to script>`.
 
 1. Install via `poetry install`.
 2. Start the MLflow UI in a separate terminal via `poetry run mlflow ui`.
-3. Run the MLflow script via `poetry run scripts/mlflow/main.py`.
+3. Run the MLflow script via `poetry run python scripts/mlflow/main.py`.
 4. Refresh the MLflow UI to see the logged parameters, metrics models and artifacts.
