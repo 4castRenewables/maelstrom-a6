@@ -145,6 +145,5 @@ available in the container at runtime.
 
 **Note:** The above procedure (i.e. the building of the Singularity image)
 copies the source file (`main.py`) during build time into the container image.
-Thus, if `main.py` of the lifetimes package was modified, the image has to be
-rebuilt to have the changes in the image. This, of course, applies to the
-lifetimes package as well.
+Thus, if `main.py` was modified, the image has to be rebuilt to have the changes
+in the image. This, of course, applies to the lifetimes package as well.
