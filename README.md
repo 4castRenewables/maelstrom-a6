@@ -99,6 +99,10 @@ via `singularity exec <path to image> python <path to script>`.
      -P n_clusters="3 4" \
      -P use_varimax="False True"
    ```
+   **Note:** When using multiple values for the parameters, the cartesian
+   product is build from these to run every possible combination of input values.
+   This is done in the `mlflow/main.py`, though, and is not a feature of mlflow.
+
 **Note:** The lifetimes package is installed into the Docker container
 at build time. If the source code of the lifetimes package was modified,
 the Docker image has to be rebuilt (1.) in order to have the updated source code
