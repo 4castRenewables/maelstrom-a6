@@ -80,13 +80,52 @@ via `singularity exec <path to image> python <path to script>`.
 
 1. Build the Docker image
    ```commandline
-   docker build -f mlflow/Dockerfile -t lifetimes-mlflow .
+   docker build -f mlflow/Dockerfile -t lifetimes-mlflow:latest .
    ```
 2. Run the project
    ```commandline
-   mlflow run mlflow \
+   poetry run mlflow run mlflow \
      -P data=data/temperature_level_128_daily_averages_2020.nc \
      -P variance_ratio=0.95 \
      -P n_clusters=4 \
      -P use_varimax=True
    ```
+   In order to run with a set of parameters execute as follows:
+
+   ```commandline
+   poetry run mlflow run mlflow \
+     -P data=data/temperature_level_128_daily_averages_2020.nc \
+     -P variance_ratio="0.9 0.95" \
+     -P n_clusters="3 4" \
+     -P use_varimax="False True"
+   ```
+
+### Run manually on HPC
+
+1. Build the Docker image (see above).
+2. Build the Singularity image
+   ```commandline
+   sudo singularity build lifetimes-mlflow.sif mlflow/recipe.def
+   ```
+3. Test locally
+   ```commandline
+   singularity run \
+     --cleanenv \
+     --env MLFLOW_TRACKING_URI=file://${PWD}/mlruns \
+     lifetimes-mlflow.sif \
+     main.py \
+     --data /opt/data/temperature_level_128_daily_averages_2020.nc \
+     --variance-ratios 0.95 \
+     --n-clusters 4 \
+     --use-varimax True
+   ```
+4. Copy image to JUWELS
+   ```commandline
+   scp lifetimes-mlflow.sif <JUDOOR user>@juwels.fz-juelich.de:~
+   ```
+5. Run on JUWELS using the same command as in step 3 but via slurm
+   ```commandline
+   srun -A <project> -p <batch/devel> <command>
+   ```
+   The mlflow logs are then written to an `mlruns` folder located
+   at the current path (`$PWD`).
