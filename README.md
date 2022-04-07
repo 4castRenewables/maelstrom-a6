@@ -123,9 +123,9 @@ via `singularity exec <path to image> python <path to script>`.
    ```commandline
    scp lifetimes-mlflow.sif <JUDOOR user>@juwels.fz-juelich.de:~
    ```
-5. Run on JUWELS using the same command as in step 3 but via slurm
+5. SSH onto JUWELS and run using the same command as in step 3 but via Slurm
    ```commandline
-   srun -A <project> -p <batch/devel> <command>
+   srun -A <project> -p <batch/devel> <command from 3.>
    ```
    The mlflow logs are then written to an `mlruns` folder located
    at the current path (`$PWD`).
