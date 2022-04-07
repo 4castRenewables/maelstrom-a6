@@ -115,7 +115,7 @@ available in the container at runtime.
 
 ### Run manually on HPC
 
-1. Build the Docker image (see above).
+1. Build the Docker image (see step 1 above).
 2. Build the Singularity image
    ```commandline
    sudo singularity build lifetimes-mlflow.sif mlflow/recipe.def
