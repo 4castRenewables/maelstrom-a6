@@ -5,7 +5,7 @@ import pathlib
 import time
 import typing as t
 
-import distutils
+import distutils.util
 import lifetimes
 
 import mlflow
