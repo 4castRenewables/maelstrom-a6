@@ -5,13 +5,12 @@ From: lifetimes-mlflow:latest
     data/ /opt/data
     mlflow/main.py /opt/main.py
 
-%post
-    echo '. /venv/bin/activate && python "$@"' > /entrypoint.sh
-
 %runscript
     cd /opt
-    exec /bin/bash /entrypoint.sh "$@"
+    . /venv/bin/activate
+    exec python main.py "$@"
 
 %startscript
     cd /opt
-    exec /bin/bash /entrypoint.sh "$@"
+    . /venv/bin/activate
+    exec python main.py "$@"

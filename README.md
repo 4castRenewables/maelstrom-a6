@@ -130,7 +130,6 @@ available in the container at runtime.
      --cleanenv \
      --env MLFLOW_TRACKING_URI=file://${PWD}/mlruns \
      lifetimes-mlflow.sif \
-     main.py \
      --data /opt/data/temperature_level_128_daily_averages_2020.nc \
      --variance-ratios 0.95 \
      --n-clusters 4 \
