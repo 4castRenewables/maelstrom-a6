@@ -1,0 +1,16 @@
+Bootstrap: docker-daemon
+From: lifetimes-mlflow:latest
+
+%files
+    data/ /opt/data
+    mlflow/main.py /opt/main.py
+
+%runscript
+    cd /opt
+    . /venv/bin/activate
+    exec python main.py "$@"
+
+%startscript
+    cd /opt
+    . /venv/bin/activate
+    exec python main.py "$@"

@@ -63,7 +63,90 @@ via `singularity exec <path to image> python <path to script>`.
 
 # Running with MLflow
 
+## Running directly via Python
 1. Install via `poetry install`.
 2. Start the MLflow UI in a separate terminal via `poetry run mlflow ui`.
-3. Run the MLflow script via `poetry run python scripts/mlflow/main.py`.
+3. Run the MLflow script via
+   ```commandline
+   poetry run python mlflow/main.py \
+     --data data/temperature_level_128_daily_averages_2020.nc \
+     --variance-ratios 0.8 0.9 \
+     --n-clusters 3 4 \
+     --use-varimax False
+   ```
 4. Refresh the MLflow UI to see the logged parameters, metrics models and artifacts.
+
+### Running as a project
+
+1. Build the Docker image
+   ```commandline
+   docker build -f mlflow/Dockerfile -t lifetimes-mlflow:latest .
+   ```
+2. Run the project
+   ```commandline
+   poetry run mlflow run mlflow \
+     -P data=data/temperature_level_128_daily_averages_2020.nc \
+     -P variance_ratio=0.95 \
+     -P n_clusters=4 \
+     -P use_varimax=True
+   ```
+   In order to run with a set of parameters execute as follows:
+
+   ```commandline
+   poetry run mlflow run mlflow \
+     -P data=data/temperature_level_128_daily_averages_2020.nc \
+     -P variance_ratio="0.9 0.95" \
+     -P n_clusters="3 4" \
+     -P use_varimax="False True"
+   ```
+   **Note:** When using multiple values for the parameters, the cartesian
+   product is build from these to run every possible combination of input values.
+   This is done in the `mlflow/main.py`, though, and is not a feature of mlflow.
+
+**Note:** The lifetimes package is installed into the Docker container
+at build time. If the source code of the lifetimes package was modified,
+the Docker image has to be rebuilt (1.) in order to have the updated source code
+in the container image. The `main.py`, on the other hand, is copied by mlflow into
+the container when running the project and, hence, does not require rebuilding the
+Docker image manually if the file was modified.
+
+In fact, mlflow copies the whole current working directory into a new container
+image based on the image build in 1.
+(see
+[here](https://github.com/mlflow/mlflow/blob/276f71e0dfd496701774b976103dc8cce72734f2/mlflow/projects/docker.py#L60)),
+which includes the `data` directory as well. This is the reason the data are
+available in the container at runtime.
+
+### Run manually on HPC
+
+1. Build the Docker image (see step 1 above).
+2. Build the Singularity image
+   ```commandline
+   sudo singularity build lifetimes-mlflow.sif mlflow/recipe.def
+   ```
+3. Test locally
+   ```commandline
+   singularity run \
+     --cleanenv \
+     --env MLFLOW_TRACKING_URI=file://${PWD}/mlruns \
+     lifetimes-mlflow.sif \
+     --data /opt/data/temperature_level_128_daily_averages_2020.nc \
+     --variance-ratios 0.95 \
+     --n-clusters 4 \
+     --use-varimax True
+   ```
+4. Copy image to JUWELS
+   ```commandline
+   scp lifetimes-mlflow.sif <JUDOOR user>@juwels.fz-juelich.de:~
+   ```
+5. SSH onto JUWELS and run using the same command as in step 3 but via Slurm
+   ```commandline
+   srun -A <project> -p <batch/devel> <command from 3.>
+   ```
+   The mlflow logs are then written to an `mlruns` folder located
+   at the current path (`$PWD`).
+
+**Note:** The above procedure (i.e. the building of the Singularity image)
+copies the source file (`main.py`) during build time into the container image.
+Thus, if `main.py` was modified, the image has to be rebuilt to have the changes
+in the image. This, of course, applies to the lifetimes package as well.
