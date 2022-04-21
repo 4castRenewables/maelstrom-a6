@@ -41,11 +41,11 @@ RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf && \
   cd /venv && \
   find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-
 FROM python:${PYTHON_VERSION}-slim-buster
 
+# Add venv
 COPY --from=builder /venv /venv
+ENV PATH=/venv/bin:$PATH
 
-RUN echo ". /venv/bin/activate && python" > entrypoint.sh
-
-ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+# Add the data
+ADD data /data
