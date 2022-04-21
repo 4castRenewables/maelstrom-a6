@@ -7,7 +7,7 @@ entry_points:
   main:
     parameters:
       data:
-        type: path
+        type: string
       variance_ratio:
         type: float
         default: 0.95
