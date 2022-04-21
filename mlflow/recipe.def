@@ -1,16 +1,16 @@
 Bootstrap: docker-daemon
 From: lifetimes-mlflow:latest
 
+%environment
+    VENV_PATH=/venv/bin
+    export PATH=$VENV_PATH:PATH
+
 %files
     data/ /opt/data
     mlflow/main.py /opt/main.py
 
 %runscript
-    cd /opt
-    . /venv/bin/activate
-    exec python main.py "$@"
+    exec "$@"
 
 %startscript
-    cd /opt
-    . /venv/bin/activate
-    exec python main.py "$@"
+    exec "$@" 
