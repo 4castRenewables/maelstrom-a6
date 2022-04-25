@@ -85,7 +85,7 @@ via `singularity exec <path to image> python <path to script>`.
 2. Run the project
    ```commandline
    poetry run mlflow run mlflow \
-     -P data=data/temperature_level_128_daily_averages_2020.nc \
+     -P data=/data/temperature_level_128_daily_averages_2020.nc \
      -P variance_ratio=0.95 \
      -P n_clusters=4 \
      -P use_varimax=True
@@ -94,7 +94,7 @@ via `singularity exec <path to image> python <path to script>`.
 
    ```commandline
    poetry run mlflow run mlflow \
-     -P data=data/temperature_level_128_daily_averages_2020.nc \
+     -P data=/data/temperature_level_128_daily_averages_2020.nc \
      -P variance_ratio="0.9 0.95" \
      -P n_clusters="3 4" \
      -P use_varimax="False True"
@@ -110,12 +110,10 @@ in the container image. The `main.py`, on the other hand, is copied by mlflow in
 the container when running the project and, hence, does not require rebuilding the
 Docker image manually if the file was modified.
 
-In fact, mlflow copies the whole current working directory into a new container
+In fact, mlflow copies the whole project folder into a new container
 image based on the image build in 1.
 (see
-[here](https://github.com/mlflow/mlflow/blob/276f71e0dfd496701774b976103dc8cce72734f2/mlflow/projects/docker.py#L60)),
-which includes the `data` directory as well. This is the reason the data are
-available in the container at runtime.
+[here](https://github.com/mlflow/mlflow/blob/276f71e0dfd496701774b976103dc8cce72734f2/mlflow/projects/docker.py#L60)).
 
 ### Run manually on HPC
 
@@ -131,7 +129,7 @@ available in the container at runtime.
      --env MLFLOW_TRACKING_URI=file://${PWD}/mlruns \
      lifetimes-mlflow.sif \
      python /opt/main.py \
-     --data /opt/data/temperature_level_128_daily_averages_2020.nc \
+     --data /data/temperature_level_128_daily_averages_2020.nc \
      --variance-ratios 0.95 \
      --n-clusters 4 \
      --use-varimax True

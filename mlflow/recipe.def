@@ -2,8 +2,7 @@ Bootstrap: docker-daemon
 From: lifetimes-mlflow:latest
 
 %environment
-    VENV_PATH=/venv/bin
-    export PATH=$VENV_PATH:PATH
+    export PATH=/venv/bin:$PATH
 
 %files
     data/ /opt/data
@@ -13,4 +12,4 @@ From: lifetimes-mlflow:latest
     exec "$@"
 
 %startscript
-    exec "$@" 
+    exec "$@"
