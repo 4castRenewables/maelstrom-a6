@@ -3,6 +3,8 @@ From: lifetimes-mlflow:latest
 
 %environment
     export PATH=/venv/bin:$PATH
+    # Silence git warning by MLflow
+    export GIT_PYTHON_REFRESH=quiet
 
 %files
     data/ /opt/data
