@@ -63,8 +63,15 @@ via `singularity exec <path to image> python <path to script>`.
 
 # Running with MLflow
 
+## Remote Tracking with MLflow
+
+Set the `MLFLOW_TRACKING_URI` environment variable to the tracking URI, e.g.
+```commandline
+export MLFLOW_TRACKING_URI=http://<remote tracking host>
+```
+
 ## Running directly via Python
-1. Install via `poetry install`.
+1. Install via `poetry install -E mlflow`.
 2. Start the MLflow UI in a separate terminal via `poetry run mlflow ui`.
 3. Run the MLflow script via
    ```commandline
@@ -122,11 +129,22 @@ image based on the image build in 1.
    ```commandline
    sudo singularity build lifetimes-mlflow.sif mlflow/recipe.def
    ```
-3. Test locally
+3. Test locally. For local tracking run
    ```commandline
    singularity run \
      --cleanenv \
      --env MLFLOW_TRACKING_URI=file://${PWD}/mlruns \
+     ${MLFLOW_EXPERIMENT_NAME:+--env MLFLOW_EXPERIMENT_NAME=$MLFLOW_EXPERIMENT_NAME} \
+     lifetimes-mlflow.sif \
+     python /opt/main.py \
+     --data /data/temperature_level_128_daily_averages_2020.nc \
+     --variance-ratios 0.95 \
+     --n-clusters 4 \
+     --use-varimax True
+   ```
+   For remote tracking simply omit the `--cleanenv` and `--env` flags
+   ```commandline
+   singularity run \
      lifetimes-mlflow.sif \
      python /opt/main.py \
      --data /data/temperature_level_128_daily_averages_2020.nc \
@@ -138,14 +156,30 @@ image based on the image build in 1.
    ```commandline
    scp lifetimes-mlflow.sif <JUDOOR user>@juwels.fz-juelich.de:~
    ```
-5. SSH onto JUWELS and run using the same command as in step 3 but via Slurm
+5. SSH onto JUWELS and run using the same command as for local tracking in step 3 but via Slurm
    ```commandline
    srun -A <project> -p <batch/devel> <command from 3.>
    ```
    The mlflow logs are then written to an `mlruns` folder located
    at the current path (`$PWD`).
 
-**Note:** The above procedure (i.e. the building of the Singularity image)
-copies the source file (`main.py`) during build time into the container image.
-Thus, if `main.py` was modified, the image has to be rebuilt to have the changes
-in the image. This, of course, applies to the lifetimes package as well.
+   If using the `devel` queue, whose compute nodes provide internet access, MLflow can
+   also track to a remote tracking server. To do so, set the `--env MLFLOW_TRACKING_URI=<URL>`
+   flag accordingly.
+
+**Notes:**
+
+- The above procedure (i.e. the building of the Singularity image)
+  copies the source file (`main.py`) during build time into the container image.
+  Thus, if `main.py` was modified, the image has to be rebuilt to have the changes
+  in the image. This, of course, applies to the lifetimes package as well.
+- Running with Singularity (and not as an MLproject via `mlflow run`)
+  does not track the git version (git commit hash), because, when creating a new run,
+  MLflow attempts to import the git Python module and read the project repository to
+  retrieve the commit hash. This is not possible inside the Singularity container since
+  1. git is not installed within the container (error is usually logged by MLflow, but can be
+     silenced by setting the `GIT_PYTHON_REFRESH=quiet` environment variable inside the container).
+  2. the repository is not available inside the container, but only the `main.py` file.
+     Hence, installing git inside the container does not solve the issue.
+
+  As a consequence, the version (`mlflow.source.git.commit` tag) is set to `None`.
