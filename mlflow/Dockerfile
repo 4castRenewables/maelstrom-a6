@@ -32,7 +32,7 @@ WORKDIR /opt/code
 RUN python -m venv /venv && \
   /venv/bin/python -m pip install --upgrade pip && \
   . /venv/bin/activate && \
-  poetry install --no-dev --no-root --no-ansi && \
+  poetry install --no-dev --no-root --no-ansi -E mlflow && \
   poetry build && \
   pip install ${CODE_DIR}/dist/*.whl
 
