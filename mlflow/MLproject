@@ -18,7 +18,7 @@ entry_points:
         type: string
         default: True
     command: >
-      python main.py \
+      python train.py \
         --data {data} \
         --variance-ratios {variance_ratio} \
         --n-clusters {n_clusters} \

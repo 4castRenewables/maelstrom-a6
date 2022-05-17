@@ -184,7 +184,7 @@ image based on the image build in 1.
 
   As a consequence, the version (`mlflow.source.git.commit` tag) is set to `None`.
 
-### Deploying with with Amazon SageMaker
+### Deployment and Inference with Amazon SageMaker
 
 1. Register a model in the MLflow UI
 2. Build and push the MLflow image for serving with Amazon Sagemaker
@@ -195,19 +195,22 @@ image based on the image build in 1.
    [`deployments create`](https://mlflow.org/docs/latest/python_api/mlflow.sagemaker.html#mlflow-sagemaker)
    entrypoint
    ```commandline
-   mlflow deployments create --target sagemaker:/eu-central-1/<assumed_role arn> \
-        --name my-deployment \
-        --model-uri models:/<model name>/<model version> \
-        --flavor python_function\
-        -C execution_role_arn=<execution_role arn> \
-        -C bucket_name=<s3 bucket name> \
-        -C image_url="219600361565.dkr.ecr.eu-central-1.amazonaws.com/mlflow-pyfunc:1.24.0" \
-        -C region_name=eu-central-1 \
-        -C mode=create \
-        -C archive=False \
-        -C instance_type=ml.t3.medium \
-        -C instance_count=1 \
-        -C synchronous=True \
-        -C timeout_seconds=300 \
-        -C vpc_config='{"SecurityGroupIds": ["sg-123456abc"], "Subnets": ["subnet-123456abc"]}'
+   poetry run python mlflow/deploy.py \
+       --endpoint-name lifetimes \
+       --image-uri <URI to ECR image> }
+       --model-uri "models:/<registered model name>/<version>" \
+       --role <SageMaker role ARN> \
+       --bucket <S3 bucket Artifact Storage name> \
+       --vpc-config '{"SecurityGroupIds": ["<MLflow VPC security group ID>"], "Subnets": ["<MLflow VPC private subnet ID>"]
+   ```
+   The SageMaker role has to be created
+   (under `User Menu > Security credentials > Roles > Create Role > AWS account`)
+   and needs the following permissions:
+   - AmazonS3ReadOnlyAccess
+   - AmazonSageMakerFullAccess
+4. Run the inference per the deployed SageMaker endpoint
+   ```commandline
+   poetry run python mlflow/infer.py \
+       --endpoint-name lifetimes \
+       --data $PWD/data/temperature_level_128_daily_averages_2020.nc
    ```

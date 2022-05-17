@@ -106,4 +106,3 @@ if __name__ == "__main__":
             mlflow.log_param("use_varimax", use_varimax)
             mlflow.log_metric("duration", duration)
             mlflow.sklearn.log_model(clusters.model, "model")
-            mlflow.log_artifact(args.data)
