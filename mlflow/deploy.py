@@ -3,14 +3,14 @@ https://aws.amazon.com/blogs/machine-learning/managing-your-machine-learning-lif
 i.e. the notebook
 https://github.com/aws-samples/amazon-sagemaker-mlflow-fargate/blob/main/lab/3_deploy_model.ipynb  # noqa
 """
-import lifetimes.aws as aws
+import lifetimes.cli.aws as aws
 
 import mlflow.sagemaker
 
 
 if __name__ == "__main__":
 
-    parser = aws.cli.deployment_args()
+    parser = aws.sagemaker_deployment_parser()
     args = parser.parse_args()
 
     mlflow.sagemaker.deploy(

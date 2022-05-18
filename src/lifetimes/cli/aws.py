@@ -1,10 +1,18 @@
 import argparse
+import typing as t
 
 DEFAULT_SAGEMAKER_INSTANCE_TYPE = "ml.m5.large"
 
 
-def deployment_args() -> argparse.ArgumentParser:
-    """Parse args necessary for AWS SageMaker deployment of an MLflow model.
+def sagemaker_deployment_parser(
+    parser: t.Optional[argparse.ArgumentParser] = None,
+) -> argparse.ArgumentParser:
+    """Create CLI args for AWS SageMaker deployment of an MLflow model.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser, optional
+        Parser to which the arguments will be added.
 
     Returns
     -------
@@ -48,7 +56,12 @@ def deployment_args() -> argparse.ArgumentParser:
                 Number of SageMaker instances to run.
 
     """
-    parser = argparse.ArgumentParser()
+    if parser is None:
+        parser = argparse.ArgumentParser(
+            description=(
+                "Deploy a registered MLflow model as an AWS SageMaker Endpoint."
+            ),
+        )
     parser.add_argument(
         "--endpoint-name", type=str, help="Name of the SageMaker Endpoint."
     )
@@ -110,8 +123,15 @@ def deployment_args() -> argparse.ArgumentParser:
     return parser
 
 
-def inference_args() -> argparse.ArgumentParser:
-    """Parse args necessary for AWS SageMaker inference via en Endpoint.
+def sagemaker_inference_parser(
+    parser: t.Optional[argparse.ArgumentParser] = None,
+) -> argparse.ArgumentParser:
+    """Create CLI args necessary for AWS SageMaker inference via en Endpoint.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser, optional
+        Parser to which the arguments will be added.
 
     Returns
     -------
@@ -123,7 +143,10 @@ def inference_args() -> argparse.ArgumentParser:
                 Name of the SageMaker Endpoint to use for inference.
 
     """
-    parser = argparse.ArgumentParser()
+    if parser is None:
+        parser = argparse.ArgumentParser(
+            description="Use an AWS SageMaker Endpoint for inference."
+        )
     parser.add_argument(
         "--endpoint-name",
         type=str,
