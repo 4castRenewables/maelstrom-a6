@@ -186,7 +186,7 @@ image based on the image build in 1.
 
 ### Deployment and Inference with Amazon SageMaker
 
-1. Register a model in the MLflow UI
+1. Register a model in the MLflow UI.
 2. Build and push the MLflow image for serving with Amazon Sagemaker
    ```commandline
    poetry run mlflow sagemaker build-and-push-container
@@ -213,4 +213,9 @@ image based on the image build in 1.
    poetry run python mlflow/infer.py \
        --endpoint-name lifetimes \
        --data $PWD/data/temperature_level_128_daily_averages_2020.nc
+       --variance-ratio 0.95
+       --use-varimax False
    ```
+   *Note:* Take care how many input features the model requires.
+   It may be required to use the exact same `variance_ratio` as was used
+   for training the respective model.
