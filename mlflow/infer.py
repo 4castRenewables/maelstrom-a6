@@ -1,4 +1,3 @@
-import argparse
 import functools
 import json
 import pathlib
@@ -46,8 +45,7 @@ if __name__ == "__main__":
     def string_to_bool(s: str) -> bool:
         return bool(distutils.util.strtobool(s))
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--endpoint-name", type=str)
+    parser = lifetimes.aws.cli.inference_args()
     parser.add_argument("--data", type=str)
     parser.add_argument("--variance-ratio", nargs="+", default=0.95, type=float)
     parser.add_argument(

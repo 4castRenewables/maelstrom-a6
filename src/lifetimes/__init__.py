@@ -1,3 +1,4 @@
+import lifetimes.aws
 import lifetimes.benchmark
 import lifetimes.features
 import lifetimes.modes

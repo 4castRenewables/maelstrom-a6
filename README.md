@@ -201,7 +201,7 @@ image based on the image build in 1.
        --model-uri "models:/<registered model name>/<version>" \
        --role <SageMaker role ARN> \
        --bucket <S3 bucket Artifact Storage name> \
-       --vpc-config '{"SecurityGroupIds": ["<MLflow VPC security group ID>"], "Subnets": ["<MLflow VPC private subnet ID>"]
+       --vpc-config '{"SecurityGroupIds": ["<MLflow VPC security group ID>"], "Subnets": ["<MLflow VPC private subnet ID>"]}'
    ```
    The SageMaker role has to be created
    (under `User Menu > Security credentials > Roles > Create Role > AWS account`)
