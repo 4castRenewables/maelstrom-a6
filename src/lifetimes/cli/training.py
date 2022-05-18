@@ -4,7 +4,7 @@ import typing as t
 import lifetimes.cli.conversion as conversion
 
 
-def parser(
+def create_parser(
     parser: t.Optional[argparse.ArgumentParser] = None,
 ) -> argparse.ArgumentParser:
     """Create CLI parser for model training.

@@ -10,7 +10,7 @@ import mlflow.sagemaker
 
 if __name__ == "__main__":
 
-    parser = aws.sagemaker_deployment_parser()
+    parser = aws.create_sagemaker_deployment_parser()
     args = parser.parse_args()
 
     mlflow.sagemaker.deploy(

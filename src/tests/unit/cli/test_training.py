@@ -2,7 +2,7 @@ import lifetimes.cli.training as training
 
 
 def test_parser():
-    parser = training.parser()
+    parser = training.create_parser()
     args = parser.parse_args(
         [
             "--data",

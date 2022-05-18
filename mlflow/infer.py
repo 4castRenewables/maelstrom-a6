@@ -45,8 +45,8 @@ if __name__ == "__main__":
     def string_to_bool(s: str) -> bool:
         return bool(distutils.util.strtobool(s))
 
-    parser = lifetimes.cli.aws.sagemaker_inference_parser()
-    parser = lifetimes.cli.inference.parser(parser)
+    parser = lifetimes.cli.aws.create_sagemaker_inference_parser()
+    parser = lifetimes.cli.inference.create_parser(parser)
     args = parser.parse_args()
 
     df = read_data(

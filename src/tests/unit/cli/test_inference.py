@@ -2,7 +2,7 @@ import lifetimes.cli.inference as inference
 
 
 def test_parser():
-    parser = inference.parser()
+    parser = inference.create_parser()
     args = parser.parse_args(
         [
             "--data",

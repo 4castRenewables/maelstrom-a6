@@ -4,7 +4,7 @@ import typing as t
 DEFAULT_SAGEMAKER_INSTANCE_TYPE = "ml.m5.large"
 
 
-def sagemaker_deployment_parser(
+def create_sagemaker_deployment_parser(
     parser: t.Optional[argparse.ArgumentParser] = None,
 ) -> argparse.ArgumentParser:
     """Create CLI args for AWS SageMaker deployment of an MLflow model.
@@ -123,7 +123,7 @@ def sagemaker_deployment_parser(
     return parser
 
 
-def sagemaker_inference_parser(
+def create_sagemaker_inference_parser(
     parser: t.Optional[argparse.ArgumentParser] = None,
 ) -> argparse.ArgumentParser:
     """Create CLI args necessary for AWS SageMaker inference via en Endpoint.

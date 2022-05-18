@@ -73,7 +73,7 @@ def pca_and_kmeans(
 
 if __name__ == "__main__":
 
-    parser = lifetimes.cli.training.parser()
+    parser = lifetimes.cli.training.create_parser()
     args = parser.parse_args()
 
     parameters = itertools.product(

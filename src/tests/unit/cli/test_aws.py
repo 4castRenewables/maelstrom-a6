@@ -2,7 +2,7 @@ import lifetimes.cli.aws as aws
 
 
 def test_sagemaker_deployment_args():
-    parser = aws.sagemaker_deployment_parser()
+    parser = aws.create_sagemaker_deployment_parser()
     args = parser.parse_args(
         [
             "--endpoint-name",
@@ -38,7 +38,7 @@ def test_sagemaker_deployment_args():
 
 
 def test_sagemaker_inference_args():
-    parser = aws.sagemaker_inference_parser()
+    parser = aws.create_sagemaker_inference_parser()
     args = parser.parse_args(["--endpoint-name", "test"])
 
     assert args.endpoint_name == "test"
