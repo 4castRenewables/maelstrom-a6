@@ -27,8 +27,10 @@ def create_sagemaker_deployment_parser(
             model_uri : str
                 URI to the registered model.
                 Example: `models:/my-model/1`, where `1` is the model version.
+                For more details see
+                https://www.mlflow.org/docs/latest/concepts.html#artifact-locations  # noqa
             bucket : str
-                Name of the S3 bucket that is the MLflow artifact bucket.
+                Name the S3 bucket where SageMaker stores temporary model data.
             role : str
                 AWS role with the necessary permissions for SageMaker.
                 Required permissions are:
@@ -79,13 +81,14 @@ def create_sagemaker_deployment_parser(
         help=(
             "The location of the MLflow model in the MLflow Model Registry to "
             "deploy to SageMaker. Example: `models:/my-model/1`, where 1 is "
-            "the model version."
+            "the model version. For more details see "
+            "https://www.mlflow.org/docs/latest/concepts.html#artifact-locations"  # noqa
         ),
     )
     parser.add_argument(
         "--bucket",
         type=str,
-        help="Name of the MLflow Artifact Storage S3 bucket.",
+        help="Name the S3 bucket where SageMaker stores temporary model data.",
     )
     parser.add_argument(
         "--role",
