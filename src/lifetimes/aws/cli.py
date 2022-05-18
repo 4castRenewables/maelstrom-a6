@@ -64,8 +64,9 @@ def deployment_args() -> argparse.ArgumentParser:
         "--model-uri",
         type=str,
         help=(
-            "The location of the MLflow model to deploy to SageMaker."
-            "Example: `models:/my-model/1`, wher 1 is the model version."
+            "The location of the MLflow model in the MLflow Model Registry to "
+            "deploy to SageMaker. Example: `models:/my-model/1`, where 1 is "
+            "the model version."
         ),
     )
     parser.add_argument(
