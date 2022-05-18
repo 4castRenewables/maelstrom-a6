@@ -98,7 +98,7 @@ def create_sagemaker_deployment_parser(
     parser.add_argument(
         "--region",
         type=str,
-        help=("Region in which to deploy the model."),
+        help="Region in which to deploy the model.",
     )
     parser.add_argument(
         "--vpc-config",
