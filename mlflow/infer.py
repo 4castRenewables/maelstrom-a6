@@ -4,7 +4,6 @@ import pathlib
 import typing as t
 
 import boto3
-import distutils.util
 import lifetimes
 import pandas as pd
 
@@ -41,9 +40,6 @@ def read_data(
 
 
 if __name__ == "__main__":
-
-    def string_to_bool(s: str) -> bool:
-        return bool(distutils.util.strtobool(s))
 
     parser = lifetimes.cli.aws.create_sagemaker_inference_parser()
     parser = lifetimes.cli.inference.create_parser(parser)
