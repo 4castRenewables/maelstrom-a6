@@ -8,7 +8,7 @@ From: lifetimes-mlflow:latest
 
 %files
     data/ /opt/data
-    mlflow/main.py /opt/main.py
+    mlflow/train.py /opt/train.py
 
 %runscript
     exec "$@"

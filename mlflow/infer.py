@@ -1,0 +1,65 @@
+import functools
+import json
+import pathlib
+import typing as t
+
+import boto3
+import lifetimes
+import pandas as pd
+
+
+def read_data(
+    path: t.Union[str, pathlib.Path],
+    variance_ratio: float,
+    use_varimax: bool,
+) -> pd.DataFrame:
+    """Run PCA on ECMWF IFS HRES data."""
+    ds = lifetimes.features.EcmwfIfsHresDataset(
+        paths=[path],
+        overlapping=False,
+    )
+    data = ds.as_xarray()["t"]
+
+    modes = [lifetimes.modes.Modes(feature=data)]
+
+    pca_partial_method = functools.partial(
+        lifetimes.modes.methods.spatio_temporal_principal_component_analysis,
+        variance_ratio=variance_ratio,
+        time_coordinate="time",
+        latitude_coordinate="latitude",
+    )
+    [pca] = lifetimes.modes.determine_modes(
+        modes=modes, method=pca_partial_method
+    )
+
+    if use_varimax:
+        data = pca.transform_with_varimax_rotation()
+    else:
+        data = pca.transform()
+    return pd.DataFrame(data)
+
+
+if __name__ == "__main__":
+
+    parser = lifetimes.cli.aws.create_sagemaker_inference_parser()
+    parser = lifetimes.cli.inference.create_parser(parser)
+    args = parser.parse_args()
+
+    df = read_data(
+        path=args.data,
+        variance_ratio=args.variance_ratio,
+        use_varimax=args.use_varimax,
+    )
+
+    runtime = boto3.client("runtime.sagemaker")
+    payload = df.to_json(orient="split")
+
+    runtime_response = runtime.invoke_endpoint(
+        EndpointName=args.endpoint_name,
+        ContentType="application/json",
+        Body=payload,
+    )
+    result = json.loads(runtime_response["Body"].read().decode())
+
+    print(f"Payload: {payload}")
+    print(f"Prediction: {result}")

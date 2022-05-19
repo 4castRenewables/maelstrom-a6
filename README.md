@@ -32,13 +32,13 @@ If this worked correctly, the kernel should be available in Jupyter JSC/on the E
 The Singularity image may generally be used to run the package on e.g. JUWELS
 via `singularity exec <path to image> python <path to script>`.
 
-# Running on Juwels (Booster)
+## Running on Juwels (Booster)
 
 1. Start a Jupyter lab via Jupyter JSC on the respective login node (i.e. Juwels or Juwels Booster).
 2. Select the kernel (see above).
 3. Run the notebook `notebooks/juwels/parallel_lifetimes.iypnb`.
 
-# Running on E4
+## Running on E4
 
 1. Connect to the VPN.
 2. SSH onto a certain host.
@@ -61,21 +61,21 @@ via `singularity exec <path to image> python <path to script>`.
    `http://localhost:8888/?token=<token>`.
 7. Run the notebook `notebooks/e4/parallel_lifetimes.ipynb`.
 
-# Running with MLflow
+## Running with MLflow
 
-## Remote Tracking with MLflow
+### Remote Tracking with MLflow
 
 Set the `MLFLOW_TRACKING_URI` environment variable to the tracking URI, e.g.
 ```commandline
 export MLFLOW_TRACKING_URI=http://<remote tracking host>
 ```
 
-## Running directly via Python
+### Running directly via Python
 1. Install via `poetry install -E mlflow`.
 2. Start the MLflow UI in a separate terminal via `poetry run mlflow ui`.
 3. Run the MLflow script via
    ```commandline
-   poetry run python mlflow/main.py \
+   poetry run python mlflow/train.py \
      --data data/temperature_level_128_daily_averages_2020.nc \
      --variance-ratios 0.8 0.9 \
      --n-clusters 3 4 \
@@ -108,12 +108,12 @@ export MLFLOW_TRACKING_URI=http://<remote tracking host>
    ```
    **Note:** When using multiple values for the parameters, the cartesian
    product is build from these to run every possible combination of input values.
-   This is done in the `mlflow/main.py`, though, and is not a feature of mlflow.
+   This is done in the `mlflow/train.py`, though, and is not a feature of mlflow.
 
 **Note:** The lifetimes package is installed into the Docker container
 at build time. If the source code of the lifetimes package was modified,
 the Docker image has to be rebuilt (1.) in order to have the updated source code
-in the container image. The `main.py`, on the other hand, is copied by mlflow into
+in the container image. The `train.py`, on the other hand, is copied by mlflow into
 the container when running the project and, hence, does not require rebuilding the
 Docker image manually if the file was modified.
 
@@ -136,7 +136,7 @@ image based on the image build in 1.
      --env MLFLOW_TRACKING_URI=file://${PWD}/mlruns \
      ${MLFLOW_EXPERIMENT_NAME:+--env MLFLOW_EXPERIMENT_NAME=$MLFLOW_EXPERIMENT_NAME} \
      lifetimes-mlflow.sif \
-     python /opt/main.py \
+     python /opt/train.py \
      --data /data/temperature_level_128_daily_averages_2020.nc \
      --variance-ratios 0.95 \
      --n-clusters 4 \
@@ -146,7 +146,7 @@ image based on the image build in 1.
    ```commandline
    singularity run \
      lifetimes-mlflow.sif \
-     python /opt/main.py \
+     python /opt/train.py \
      --data /data/temperature_level_128_daily_averages_2020.nc \
      --variance-ratios 0.95 \
      --n-clusters 4 \
@@ -170,8 +170,8 @@ image based on the image build in 1.
 **Notes:**
 
 - The above procedure (i.e. the building of the Singularity image)
-  copies the source file (`main.py`) during build time into the container image.
-  Thus, if `main.py` was modified, the image has to be rebuilt to have the changes
+  copies the source file (`train.py`) during build time into the container image.
+  Thus, if `train.py` was modified, the image has to be rebuilt to have the changes
   in the image. This, of course, applies to the lifetimes package as well.
 - Running with Singularity (and not as an MLproject via `mlflow run`)
   does not track the git version (git commit hash), because, when creating a new run,
@@ -179,7 +179,43 @@ image based on the image build in 1.
   retrieve the commit hash. This is not possible inside the Singularity container since
   1. git is not installed within the container (error is usually logged by MLflow, but can be
      silenced by setting the `GIT_PYTHON_REFRESH=quiet` environment variable inside the container).
-  2. the repository is not available inside the container, but only the `main.py` file.
+  2. the repository is not available inside the container, but only the `train.py` file.
      Hence, installing git inside the container does not solve the issue.
 
   As a consequence, the version (`mlflow.source.git.commit` tag) is set to `None`.
+
+### Deployment and Inference with Amazon SageMaker
+
+1. Register a model in the MLflow UI.
+2. Build and push the MLflow image for serving with Amazon Sagemaker
+   ```commandline
+   poetry run mlflow sagemaker build-and-push-container
+   ```
+3. Run the MLflow
+   [`deployments create`](https://mlflow.org/docs/latest/python_api/mlflow.sagemaker.html#mlflow-sagemaker)
+   entrypoint
+   ```commandline
+   poetry run python mlflow/deploy.py \
+       --endpoint-name lifetimes \
+       --image-uri <URI to ECR image> }
+       --model-uri "models:/<registered model name>/<version>" \
+       --role <SageMaker role ARN> \
+       --bucket <S3 bucket Artifact Storage name> \
+       --vpc-config '{"SecurityGroupIds": ["<MLflow VPC security group ID>"], "Subnets": ["<MLflow VPC private subnet ID>"]}'
+   ```
+   The SageMaker role has to be created
+   (under `User Menu > Security credentials > Roles > Create Role > AWS account`)
+   and needs the following permissions:
+   - AmazonS3ReadOnlyAccess
+   - AmazonSageMakerFullAccess
+4. Run the inference per the deployed SageMaker endpoint
+   ```commandline
+   poetry run python mlflow/infer.py \
+       --endpoint-name lifetimes \
+       --data $PWD/data/temperature_level_128_daily_averages_2020.nc
+       --variance-ratio 0.95
+       --use-varimax False
+   ```
+   *Note:* Take care how many input features the model requires.
+   It may be required to use the exact same `variance_ratio` as was used
+   for training the respective model.

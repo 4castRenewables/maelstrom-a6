@@ -1,4 +1,5 @@
 import lifetimes.benchmark
+import lifetimes.cli
 import lifetimes.features
 import lifetimes.modes
 import lifetimes.parallel

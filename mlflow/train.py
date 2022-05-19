@@ -1,11 +1,9 @@
-import argparse
 import functools
 import itertools
 import pathlib
 import time
 import typing as t
 
-import distutils.util
 import lifetimes
 
 import mlflow
@@ -75,14 +73,7 @@ def pca_and_kmeans(
 
 if __name__ == "__main__":
 
-    def string_to_bool(s: str) -> bool:
-        return bool(distutils.util.strtobool(s))
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=str)
-    parser.add_argument("--variance-ratios", nargs="+", type=float)
-    parser.add_argument("--n-clusters", nargs="+", type=int)
-    parser.add_argument("--use-varimax", nargs="+", type=string_to_bool)
+    parser = lifetimes.cli.training.create_parser()
     args = parser.parse_args()
 
     parameters = itertools.product(
@@ -106,4 +97,3 @@ if __name__ == "__main__":
             mlflow.log_param("use_varimax", use_varimax)
             mlflow.log_metric("duration", duration)
             mlflow.sklearn.log_model(clusters.model, "model")
-            mlflow.log_artifact(args.data)
