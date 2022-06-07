@@ -12,7 +12,7 @@ entry_points:
         type: float
         default: 0.95
       n_clusters:
-        type: float
+        type: int
         default: 4
       use_varimax:
         type: string
