@@ -1,6 +1,7 @@
 import abc
 import typing as t
 
+import hdbscan
 import lifetimes.utils
 import numpy as np
 import xarray as xr
@@ -8,15 +9,22 @@ from sklearn import cluster
 
 from . import pca as _pca
 
+_DBSCAN = t.Union[cluster.DBSCAN, hdbscan.HDBSCAN]
+_ClusterAlgorithm = t.Union[cluster.KMeans, _DBSCAN]
+
 
 class ClusterAlgorithm(abc.ABC):
-    """Wrapper for `sklearn.cluster` algorithms."""
+    """Wrapper for `sklearn.cluster`-like algorithms."""
 
-    def __init__(self, pca: _pca.PCA, n_components: int):
+    def __init__(
+        self, model: _ClusterAlgorithm, pca: _pca.PCA, n_components: int
+    ):
         """Set attributes.
 
         Parameters
         ----------
+        model : KMeans or DBSCAN or HDBSCAN
+            The clustering model.
         pca : lifetimes.modes.methods.pca.PCA
             The result of the PCA with the selected number of PCs.
         n_components : int
@@ -24,17 +32,28 @@ class ClusterAlgorithm(abc.ABC):
 
         """
         self._n_components = n_components
+        self._model = model
         self.pca = pca
 
     @property
     @abc.abstractmethod
-    def centers(self) -> np.ndarray:
-        """Return the cluster centers."""
+    def model(self) -> _ClusterAlgorithm:
+        """Return the model."""
+        return self._model
 
     @property
-    @abc.abstractmethod
+    def centers(self) -> np.ndarray:
+        """Return the cluster centers."""
+        return self._model.cluster_centers_
+
+    @property
     def labels(self) -> xr.DataArray:
-        """Return the labels of each data point."""
+        """Return the labels of the clusters."""
+        timeseries = self.pca.timeseries
+        return xr.DataArray(
+            data=self._model.labels_,
+            coords={timeseries.name: timeseries},
+        )
 
 
 class KMeans(ClusterAlgorithm):
@@ -43,37 +62,23 @@ class KMeans(ClusterAlgorithm):
     def __init__(
         self, kmeans: cluster.KMeans, pca: _pca.PCA, n_components: int
     ):
-        """Set attributes.
-
-        Parameters
-        ----------
-        kmeans : sklearn.cluster.KMeans
-            The result of the K-means clustering.
-        pca : lifetimes.modes.methods.pca.PCA
-            The result of the PCA with the selected number of PCs.
-        n_components : int
-            Number of PCs.
-
-        """
-        super().__init__(pca=pca, n_components=n_components)
-        self._kmeans = kmeans
+        super().__init__(model=kmeans, pca=pca, n_components=n_components)
 
     @property
     def model(self) -> cluster.KMeans:
-        """Return the model."""
-        return self._kmeans
+        return super().model
+
+
+class DBSCAN(ClusterAlgorithm):
+    """Wrapper for `sklearn.cluster.DBSCAN` or `hdbscan.HDBSCAN`."""
+
+    def __init__(self, dbscan: _DBSCAN, pca: _pca.PCA, n_components: int):
+        super().__init__(pca=pca, n_components=n_components)
+        self._dbscan = dbscan
 
     @property
-    def centers(self) -> np.ndarray:
-        return self._kmeans.cluster_centers_
-
-    @property
-    def labels(self) -> xr.DataArray:
-        timeseries = self.pca.timeseries
-        return xr.DataArray(
-            data=self._kmeans.labels_,
-            coords={timeseries.name: timeseries},
-        )
+    def model(self) -> _DBSCAN:
+        return super().model
 
 
 @lifetimes.utils.log_runtime
