@@ -27,24 +27,14 @@ class ClusterAlgorithm(abc.ABC):
         self.pca = pca
 
     @property
+    @abc.abstractmethod
     def centers(self) -> np.ndarray:
         """Return the cluster centers."""
-        return self._centers
 
     @property
+    @abc.abstractmethod
     def labels(self) -> xr.DataArray:
         """Return the labels of each data point."""
-        return self._labels
-
-    @property
-    @abc.abstractmethod
-    def _centers(self) -> np.ndarray:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def _labels(self) -> xr.DataArray:
-        ...
 
 
 class KMeans(ClusterAlgorithm):
@@ -74,11 +64,11 @@ class KMeans(ClusterAlgorithm):
         return self._kmeans
 
     @property
-    def _centers(self) -> np.ndarray:
+    def centers(self) -> np.ndarray:
         return self._kmeans.cluster_centers_
 
     @property
-    def _labels(self) -> xr.DataArray:
+    def labels(self) -> xr.DataArray:
         timeseries = self.pca.timeseries
         return xr.DataArray(
             data=self._kmeans.labels_,
