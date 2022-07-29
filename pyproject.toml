@@ -19,10 +19,12 @@ bokeh = "^2.4.2"
 mlflow = {version = "^1.24.0", optional = true}
 boto3 = {version = "^1.23.0", optional = true}
 sagemaker = {version = "^2.89.0", optional = true}
+mantik = {version = "^0.1.0", optional = true}
 jupyter = {version = "^1.0.0", optional = true}
+hdbscan = "^0.8.28"
 
 [tool.poetry.extras]
-mlflow = ["mlflow", "boto3", "sagemaker"]
+mlflow = ["mlflow", "boto3", "sagemaker", "mantik"]
 notebooks = ["jupyter"]
 
 [tool.poetry.dev-dependencies]
