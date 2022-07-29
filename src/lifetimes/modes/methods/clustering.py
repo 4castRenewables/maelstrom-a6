@@ -12,7 +12,19 @@ from . import pca as _pca
 class ClusterAlgorithm(abc.ABC):
     """Wrapper for `sklearn.cluster` algorithms."""
 
-    pca: _pca.PCA
+    def __init__(self, pca: _pca.PCA, n_components: int):
+        """Set attributes.
+
+        Parameters
+        ----------
+        pca : lifetimes.modes.methods.pca.PCA
+            The result of the PCA with the selected number of PCs.
+        n_components : int
+            Number of PCs.
+
+        """
+        self._n_components = n_components
+        self.pca = pca
 
     @property
     def centers(self) -> np.ndarray:
@@ -53,9 +65,8 @@ class KMeans(ClusterAlgorithm):
             Number of PCs.
 
         """
-        self._n_components = n_components
+        super().__init__(pca=pca, n_components=n_components)
         self._kmeans = kmeans
-        self.pca = pca
 
     @property
     def model(self) -> cluster.KMeans:
