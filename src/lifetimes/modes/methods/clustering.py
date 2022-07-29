@@ -86,6 +86,11 @@ def find_principal_component_clusters(
         clustering.
         If `None`, the full PC space will be used.
 
+    Raises
+    ------
+    NotImplementedError
+        If the given clustering algorithm hasn't been implemented yet.
+
     Returns
     -------
     KMeans
@@ -101,4 +106,8 @@ def find_principal_component_clusters(
     result: _ClusterAlgorithm = algorithm.fit(components_subspace)
     if isinstance(algorithm, cluster.KMeans):
         return KMeans(model=result, pca=pca, n_components=n_components)
-    return DBSCAN(model=result, pca=pca, n_components=n_components)
+    elif isinstance(algorithm, (cluster.DBSCAN, hdbscan.HDBSCAN)):
+        return DBSCAN(model=result, pca=pca, n_components=n_components)
+    raise NotImplementedError(
+        f"Clustering algorithm {type(algorithm)} not yet implemented"
+    )
