@@ -59,7 +59,7 @@ class EcmwfIfsHresDataset(FileDataset):
     def __init__(
         self,
         paths: list[Path],
-        overlapping: bool,
+        overlapping: bool = True,
         preprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
         parallel_loading: bool = True,
     ):
@@ -69,7 +69,7 @@ class EcmwfIfsHresDataset(FileDataset):
         ----------
         paths : list[str | pathlib.Path]
             Paths to the data files.
-        overlapping : bool
+        overlapping : bool, default=True
             Whether the files are temporarily overlapping.
             The ECMWF models are usually run at 12am and 12 pm for 48 hours.
             As a consequence, the data of new models overlap with data from
