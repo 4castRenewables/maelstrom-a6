@@ -1,6 +1,9 @@
+from typing import Any
+
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.plotting.pca as pca
 import matplotlib.pyplot as plt
+import seaborn.palettes
 
 
 def plot_first_three_components_timeseries_clusters(
@@ -9,7 +12,7 @@ def plot_first_three_components_timeseries_clusters(
     """Plot the first three PCs and the clusters."""
     fig, ax = pca.plot_first_three_components_timeseries(
         pca=clusters.pca,
-        colors=clusters.labels,
+        colors=_create_colors(clusters),
         display=display,
     )
 
@@ -21,7 +24,9 @@ def plot_first_three_components_timeseries_clusters(
 
 
 def plot_condensed_tree(
-    clusters: clustering.HDBSCAN, highlight_selected_clusters: bool = True
+    clusters: clustering.HDBSCAN,
+    highlight_selected_clusters: bool = True,
+    **kwargs
 ) -> plt.Axes:
     """Plot the condensed tree of an HDBSCAN model.
 
@@ -43,11 +48,53 @@ def plot_condensed_tree(
     matplotlib.Axes
 
     """
+    _raise_if_not_hierarchical_clustering_method(clusters)
+    return clusters.model.condensed_tree_.plot(
+        select_clusters=highlight_selected_clusters,
+        selection_palette=_create_colormap(clusters),
+        **kwargs,
+    )
+
+
+def plot_single_linkage_tree(
+    clusters: clustering.HDBSCAN,
+) -> plt.Axes:
+    """Plot the single-linkage tree of an HDBSCAN model.
+
+    Parameters
+    ----------
+    clusters : clustering.HDBSCAN
+        The cluster model.
+
+    Raises
+    ------
+    ValueError
+        If the given algorithm is not a hierarchical clustering algorithm.
+
+    Returns
+    -------
+    matplotlib.Axes
+
+    """
+    _raise_if_not_hierarchical_clustering_method(clusters)
+    return clusters.model.single_linkage_tree_.plot()
+
+
+def _create_colors(clusters: clustering.ClusterAlgorithm) -> list[str]:
+    cmap = _create_colormap(clusters)
+    return [cmap[i] if i != -1 else "black" for i in clusters.labels.values]
+
+
+def _raise_if_not_hierarchical_clustering_method(clusters: Any):
     if not isinstance(clusters, clustering.HDBSCAN):
         raise ValueError(
             "Condensed tree can only be plotted for a hierarchical "
             "clustering algorithm"
         )
-    return clusters.model.condensed_tree_.plot(
-        select_clusters=highlight_selected_clusters
-    )
+
+
+def _create_colormap(
+    clusters: clustering.ClusterAlgorithm,
+) -> seaborn.palettes._ColorPalette:
+    n_labels = clusters.labels.values.max() + 1
+    return seaborn.color_palette(n_colors=n_labels)

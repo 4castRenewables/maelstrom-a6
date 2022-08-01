@@ -110,7 +110,7 @@ def find_principal_component_clusters(
     result: _ClusterAlgorithm = algorithm.fit(components_subspace)
     if isinstance(algorithm, cluster.KMeans):
         return KMeans(model=result, pca=pca, n_components=n_components)
-    elif isinstance(algorithm, (cluster.HDBSCAN, hdbscan.HDBSCAN)):
+    elif isinstance(algorithm, hdbscan.HDBSCAN):
         return HDBSCAN(model=result, pca=pca, n_components=n_components)
     raise NotImplementedError(
         f"Clustering algorithm {type(algorithm)} not yet implemented"
