@@ -1,7 +1,7 @@
 import abc
 import typing as t
 
-import hdbscan
+import hdbscan.plots
 import lifetimes.utils
 import numpy as np
 import xarray as xr
@@ -9,8 +9,7 @@ from sklearn import cluster
 
 from . import pca as _pca
 
-_DBSCAN = t.Union[cluster.DBSCAN, hdbscan.HDBSCAN]
-_ClusterAlgorithm = t.Union[cluster.KMeans, _DBSCAN]
+_ClusterAlgorithm = t.Union[cluster.KMeans, hdbscan.HDBSCAN]
 
 
 class ClusterAlgorithm(abc.ABC):
@@ -23,7 +22,7 @@ class ClusterAlgorithm(abc.ABC):
 
         Parameters
         ----------
-        model : KMeans or DBSCAN or HDBSCAN
+        model : KMeans or HDBSCAN
             The clustering model.
         pca : lifetimes.modes.methods.pca.PCA
             The result of the PCA with the selected number of PCs.
@@ -59,8 +58,13 @@ class KMeans(ClusterAlgorithm):
         return self._model.cluster_centers_
 
 
-class DBSCAN(ClusterAlgorithm):
-    """Wrapper for `sklearn.cluster.DBSCAN` or `hdbscan.HDBSCAN`."""
+class HDBSCAN(ClusterAlgorithm):
+    """Wrapper for `hdbscan.HDBSCAN`."""
+
+    @property
+    def condensed_tree(self) -> hdbscan.plots.CondensedTree:
+        """Return the cluster tree."""
+        return self.model.condensed_tree_
 
 
 @lifetimes.utils.log_runtime
@@ -74,7 +78,7 @@ def find_principal_component_clusters(
 
     Parameters
     ----------
-    algorithm : KMeans or DBSCAN or HDBSCAN
+    algorithm : KMeans or HDBSCAN
         The clustering algorithm.
     pca : lifetimes.modes.methods.pca.PCA
         Result of the PCA.
@@ -106,8 +110,8 @@ def find_principal_component_clusters(
     result: _ClusterAlgorithm = algorithm.fit(components_subspace)
     if isinstance(algorithm, cluster.KMeans):
         return KMeans(model=result, pca=pca, n_components=n_components)
-    elif isinstance(algorithm, (cluster.DBSCAN, hdbscan.HDBSCAN)):
-        return DBSCAN(model=result, pca=pca, n_components=n_components)
+    elif isinstance(algorithm, (cluster.HDBSCAN, hdbscan.HDBSCAN)):
+        return HDBSCAN(model=result, pca=pca, n_components=n_components)
     raise NotImplementedError(
         f"Clustering algorithm {type(algorithm)} not yet implemented"
     )
