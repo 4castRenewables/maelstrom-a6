@@ -48,6 +48,12 @@ class ClusterAlgorithm(abc.ABC):
             coords={timeseries.name: timeseries},
         )
 
+    @property
+    def n_clusters(self) -> int:
+        """Return the number of clusters."""
+        # Labelling of clusters starts at index 0
+        return self.labels.values.max() + 1
+
 
 class KMeans(ClusterAlgorithm):
     """Wrapper for `sklearn.cluster.KMeans`."""
