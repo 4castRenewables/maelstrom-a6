@@ -1,14 +1,22 @@
 from typing import Any
+from typing import Protocol
 
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.plotting.pca as pca
 import matplotlib.pyplot as plt
 import seaborn.palettes
 
+Plot = tuple[plt.Figure, plt.Axes]
+
+
+class AxesFactory(Protocol):
+    def __call__(self, axis: plt.Axes, *args, **kwargs) -> plt.Axes:
+        ...
+
 
 def plot_first_three_components_timeseries_clusters(
     clusters: clustering.ClusterAlgorithm, display: bool = True
-) -> tuple[plt.Figure, plt.Axes]:
+) -> Plot:
     """Plot the first three PCs and the clusters."""
     fig, ax = pca.plot_first_three_components_timeseries(
         pca=clusters.pca,
@@ -27,7 +35,7 @@ def plot_condensed_tree(
     clusters: clustering.HDBSCAN,
     highlight_selected_clusters: bool = True,
     **kwargs
-) -> plt.Axes:
+) -> Plot:
     """Plot the condensed tree of an HDBSCAN model.
 
     Parameters
@@ -45,11 +53,13 @@ def plot_condensed_tree(
 
     Returns
     -------
-    matplotlib.Axes
+    plt.Figure
+    plt.Axes
 
     """
     _raise_if_not_hierarchical_clustering_method(clusters)
-    return clusters.model.condensed_tree_.plot(
+    return _create_figure_with_axis(
+        ax_factory=clusters.model.condensed_tree_.plot,
         select_clusters=highlight_selected_clusters,
         selection_palette=_create_colormap(clusters),
         **kwargs,
@@ -58,7 +68,7 @@ def plot_condensed_tree(
 
 def plot_single_linkage_tree(
     clusters: clustering.HDBSCAN,
-) -> plt.Axes:
+) -> Plot:
     """Plot the single-linkage tree of an HDBSCAN model.
 
     Parameters
@@ -73,11 +83,20 @@ def plot_single_linkage_tree(
 
     Returns
     -------
-    matplotlib.Axes
+    plt.Figure
+    plt.Axes
 
     """
     _raise_if_not_hierarchical_clustering_method(clusters)
-    return clusters.model.single_linkage_tree_.plot()
+    return _create_figure_with_axis(
+        ax_factory=clusters.model.single_linkage_tree_.plot
+    )
+
+
+def _create_figure_with_axis(ax_factory: AxesFactory, **kwargs) -> Plot:
+    fig, ax = plt.subplots()
+    ax_factory(axis=ax, **kwargs)
+    return fig, ax
 
 
 def _create_colors(clusters: clustering.ClusterAlgorithm) -> list[str]:
