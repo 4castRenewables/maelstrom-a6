@@ -1,15 +1,15 @@
 import abc
-import typing as t
+from typing import Optional
+from typing import Union
 
 import hdbscan.plots
+import lifetimes.modes.methods.pca as _pca
 import lifetimes.utils
 import numpy as np
 import xarray as xr
 from sklearn import cluster
 
-from . import pca as _pca
-
-_ClusterAlgorithm = t.Union[cluster.KMeans, hdbscan.HDBSCAN]
+_ClusterAlgorithm = Union[cluster.KMeans, hdbscan.HDBSCAN]
 
 
 class ClusterAlgorithm(abc.ABC):
@@ -69,17 +69,15 @@ class HDBSCAN(ClusterAlgorithm):
 
 @lifetimes.utils.log_runtime
 def find_principal_component_clusters(
-    algorithm: _ClusterAlgorithm,
     pca: _pca.PCA,
     use_varimax: bool = False,
-    n_components: t.Optional[int] = None,
+    n_components: Optional[int] = None,
+    algorithm: Optional[_ClusterAlgorithm] = None,
 ) -> ClusterAlgorithm:
     """Apply a given clustering algorithm on PCs.
 
     Parameters
     ----------
-    algorithm : KMeans or HDBSCAN
-        The clustering algorithm.
     pca : lifetimes.modes.methods.pca.PCA
         Result of the PCA.
     use_varimax : bool, default=False
@@ -89,6 +87,8 @@ def find_principal_component_clusters(
         Represents the number of dimension of the subspace to perform the
         clustering.
         If `None`, the full PC space will be used.
+    algorithm : KMeans or HDBSCAN, default=hdbscan.HDBSCAN
+        The clustering algorithm.
 
     Raises
     ------
@@ -97,10 +97,13 @@ def find_principal_component_clusters(
 
     Returns
     -------
-    KMeans
+    Kmeans or HDBSCAN
         Result of the clustering algorithm's `fit` method
 
     """
+    if algorithm is None:
+        algorithm = hdbscan.HDBSCAN()
+
     if use_varimax:
         components_subspace = pca.transform_with_varimax_rotation(
             n_components=n_components
