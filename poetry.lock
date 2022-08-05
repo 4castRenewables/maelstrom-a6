@@ -3,7 +3,7 @@ name = "alembic"
 version = "1.8.1"
 description = "A database migration tool for SQLAlchemy."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -18,7 +18,7 @@ name = "anyio"
 version = "3.6.1"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6.2"
 
 [package.dependencies]
@@ -74,7 +74,7 @@ name = "asgiref"
 version = "3.5.2"
 description = "ASGI specs, helper code, and adapters"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.extras]
@@ -177,7 +177,7 @@ name = "boto3"
 version = "1.24.40"
 description = "The AWS SDK for Python"
 category = "main"
-optional = true
+optional = false
 python-versions = ">= 3.7"
 
 [package.dependencies]
@@ -193,7 +193,7 @@ name = "botocore"
 version = "1.27.40"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
-optional = true
+optional = false
 python-versions = ">= 3.7"
 
 [package.dependencies]
@@ -209,7 +209,7 @@ name = "certifi"
 version = "2022.6.15"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [[package]]
@@ -247,7 +247,7 @@ name = "charset-normalizer"
 version = "2.1.0"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6.0"
 
 [package.extras]
@@ -355,7 +355,7 @@ name = "databricks-cli"
 version = "0.17.0"
 description = "A command line interface for Databricks"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.dependencies]
@@ -439,7 +439,7 @@ name = "docker"
 version = "5.0.3"
 description = "A Python library for the Docker Engine API."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -456,7 +456,7 @@ name = "ecdsa"
 version = "0.18.0"
 description = "ECDSA cryptographic signature library (pure python)"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [package.dependencies]
@@ -487,7 +487,7 @@ name = "fastapi"
 version = "0.78.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6.1"
 
 [package.dependencies]
@@ -528,7 +528,7 @@ name = "flask"
 version = "2.1.3"
 description = "A simple framework for building complex web applications."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -600,7 +600,7 @@ name = "gitdb"
 version = "4.0.9"
 description = "Git Object Database"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -611,7 +611,7 @@ name = "gitpython"
 version = "3.1.27"
 description = "GitPython is a python library used to interact with Git repositories"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -633,7 +633,7 @@ name = "greenlet"
 version = "1.1.2"
 description = "Lightweight in-process concurrent programming"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 
 [package.extras]
@@ -644,7 +644,7 @@ name = "gunicorn"
 version = "20.1.0"
 description = "WSGI HTTP Server for UNIX"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5"
 
 [package.extras]
@@ -658,7 +658,7 @@ name = "h11"
 version = "0.13.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [[package]]
@@ -689,7 +689,7 @@ name = "httptools"
 version = "0.4.0"
 description = "A collection of framework independent HTTP protocol utils."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5.0"
 
 [package.extras]
@@ -711,7 +711,7 @@ name = "idna"
 version = "3.3"
 description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5"
 
 [[package]]
@@ -719,7 +719,7 @@ name = "importlib-metadata"
 version = "4.12.0"
 description = "Read metadata from Python packages"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -858,7 +858,7 @@ name = "itsdangerous"
 version = "2.1.2"
 description = "Safely pass data to untrusted environments and back."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [[package]]
@@ -895,7 +895,7 @@ name = "jmespath"
 version = "1.0.1"
 description = "JSON Matching Expressions"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [[package]]
@@ -1029,7 +1029,7 @@ name = "mako"
 version = "1.2.1"
 description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -1045,7 +1045,7 @@ name = "mantik"
 version = "0.1.0"
 description = "mantik for mlflow"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
@@ -1112,7 +1112,7 @@ name = "mlflow"
 version = "1.27.0"
 description = "MLflow: A Platform for ML Development and Productionization"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -1304,7 +1304,7 @@ name = "oauthlib"
 version = "3.2.0"
 description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.extras]
@@ -1491,7 +1491,7 @@ name = "prometheus-client"
 version = "0.14.1"
 description = "Python client for the Prometheus monitoring system."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.extras]
@@ -1502,7 +1502,7 @@ name = "prometheus-flask-exporter"
 version = "0.20.2"
 description = "Prometheus metrics exporter for Flask"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.dependencies]
@@ -1525,7 +1525,7 @@ name = "protobuf"
 version = "3.20.1"
 description = "Protocol Buffers"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [[package]]
@@ -1583,7 +1583,7 @@ name = "pyasn1"
 version = "0.4.8"
 description = "ASN.1 types and codecs"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [[package]]
@@ -1599,7 +1599,7 @@ name = "pydantic"
 version = "1.9.1"
 description = "Data validation and settings management using python type hints"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6.1"
 
 [package.dependencies]
@@ -1622,7 +1622,7 @@ name = "pyjwt"
 version = "2.4.0"
 description = "JSON Web Token implementation in Python"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.extras]
@@ -1702,7 +1702,7 @@ name = "python-dotenv"
 version = "0.20.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5"
 
 [package.extras]
@@ -1713,7 +1713,7 @@ name = "python-jose"
 version = "3.3.0"
 description = "JOSE implementation in Python"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.dependencies]
@@ -1731,7 +1731,7 @@ name = "python-multipart"
 version = "0.0.5"
 description = "A streaming multipart parser for Python"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.dependencies]
@@ -1750,7 +1750,7 @@ name = "pyunicore"
 version = "0.9.19"
 description = "Python library for using the UNICORE REST API"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3"
 
 [package.dependencies]
@@ -1834,7 +1834,7 @@ name = "querystring-parser"
 version = "1.2.4"
 description = "QueryString parser for Python/Django that correctly handles nested dictionaries"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.dependencies]
@@ -1845,7 +1845,7 @@ name = "requests"
 version = "2.28.1"
 description = "Python HTTP for Humans."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7, <4"
 
 [package.dependencies]
@@ -1863,7 +1863,7 @@ name = "rsa"
 version = "4.9"
 description = "Pure-Python RSA implementation"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6,<4"
 
 [package.dependencies]
@@ -1874,7 +1874,7 @@ name = "s3transfer"
 version = "0.6.0"
 description = "An Amazon S3 Transfer Manager"
 category = "main"
-optional = true
+optional = false
 python-versions = ">= 3.7"
 
 [package.dependencies]
@@ -1960,7 +1960,7 @@ name = "semver"
 version = "2.13.0"
 description = "Python helper for Semantic Versioning (http://semver.org/)"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
@@ -2014,7 +2014,7 @@ name = "smmap"
 version = "5.0.0"
 description = "A pure Python implementation of a sliding window memory map manager"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [[package]]
@@ -2022,7 +2022,7 @@ name = "sniffio"
 version = "1.2.0"
 description = "Sniff out which async library your code is running under"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5"
 
 [[package]]
@@ -2046,7 +2046,7 @@ name = "spython"
 version = "0.2.11"
 description = "Command line python tool for working with singularity."
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.dependencies]
@@ -2057,7 +2057,7 @@ name = "sqlalchemy"
 version = "1.4.39"
 description = "Database Abstraction Library"
 category = "main"
-optional = true
+optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 
 [package.dependencies]
@@ -2089,7 +2089,7 @@ name = "sqlparse"
 version = "0.4.2"
 description = "A non-validating SQL parser."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5"
 
 [[package]]
@@ -2113,7 +2113,7 @@ name = "starlette"
 version = "0.19.1"
 description = "The little ASGI library that shines."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -2128,7 +2128,7 @@ name = "tabulate"
 version = "0.8.10"
 description = "Pretty-print tabular data"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [package.extras]
@@ -2267,7 +2267,7 @@ name = "uvicorn"
 version = "0.17.6"
 description = "The lightning-fast ASGI server."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -2290,7 +2290,7 @@ name = "uvloop"
 version = "0.16.0"
 description = "Fast implementation of asyncio event loop on top of libuv"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.extras]
@@ -2320,7 +2320,7 @@ name = "waitress"
 version = "2.1.2"
 description = "Waitress WSGI server"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7.0"
 
 [package.extras]
@@ -2332,7 +2332,7 @@ name = "watchgod"
 version = "0.8.2"
 description = "Simple, modern file watching and code reload in python."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -2359,7 +2359,7 @@ name = "websocket-client"
 version = "1.3.3"
 description = "WebSocket client for Python with low level API options"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.extras]
@@ -2372,7 +2372,7 @@ name = "websockets"
 version = "10.3"
 description = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [[package]]
@@ -2380,7 +2380,7 @@ name = "werkzeug"
 version = "2.2.1"
 description = "The comprehensive WSGI web application library."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -2436,7 +2436,7 @@ name = "zipp"
 version = "3.8.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 
 [package.extras]
@@ -2444,13 +2444,13 @@ docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)", "jaraco.tideli
 testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.3)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
 
 [extras]
-mlflow = ["mlflow", "boto3", "sagemaker", "mantik"]
-notebooks = ["jupyter"]
+mlflow = ["boto3", "sagemaker"]
+notebooks = ["jupyter", "python-dotenv"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "499ee9ff0c35c0c9e7aafb59f6fdfa8290827dccff34e37a19138c000c5bbccb"
+content-hash = "c81223d99517edbcac7d5f103aefbd6050e60888f12375f42f399242942660f2"
 
 [metadata.files]
 alembic = []
