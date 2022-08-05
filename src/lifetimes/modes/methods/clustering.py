@@ -103,7 +103,7 @@ def find_principal_component_clusters(
 
     Returns
     -------
-    Kmeans or HDBSCAN
+    ClusterAlgorithm
         Result of the clustering algorithm's `fit` method
 
     """
@@ -121,6 +121,4 @@ def find_principal_component_clusters(
         return KMeans(model=result, pca=pca, n_components=n_components)
     elif isinstance(algorithm, hdbscan.HDBSCAN):
         return HDBSCAN(model=result, pca=pca, n_components=n_components)
-    raise NotImplementedError(
-        f"Clustering algorithm {type(algorithm)} not yet implemented"
-    )
+    return ClusterAlgorithm(model=result, pca=pca, n_components=n_components)
