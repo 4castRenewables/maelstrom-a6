@@ -5,9 +5,7 @@ import numpy as np
 import sklearn.decomposition as decomposition
 import xarray as xr
 
-PCAMethod = t.Union[
-    t.Type[decomposition.PCA], t.Type[decomposition.IncrementalPCA]
-]
+PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 
 class PCA:
@@ -55,7 +53,11 @@ class PCA:
     @property
     def components_in_original_shape(self) -> np.ndarray:
         """Return the principal components (EOFs)."""
-        return self._to_original_shape(self.components)
+        # The PCs are flipped along axis 1.
+        return np.flip(
+            self._to_original_shape(self.components),
+            axis=1,
+        )
 
     @property
     def components_varimax_rotated(self) -> np.ndarray:
@@ -109,9 +111,11 @@ class PCA:
             self.components_varimax_rotated, n_components=n_components
         )
 
-    def _transform(self, data: np.ndarray, n_components: int) -> np.ndarray:
+    def _transform(
+        self, components: np.ndarray, n_components: int
+    ) -> np.ndarray:
         return _transform_data_into_vector_space(
-            self._reshaped, basis_vectors=data, n_dimensions=n_components
+            self._reshaped, basis_vectors=components, n_dimensions=n_components
         )
 
     def components_sufficient_for_variance_ratio(
