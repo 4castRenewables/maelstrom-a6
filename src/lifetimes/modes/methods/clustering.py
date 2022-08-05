@@ -35,6 +35,13 @@ class ClusterAlgorithm(abc.ABC):
         self.pca = pca
 
     @property
+    def n_components(self) -> int:
+        """Return the number of PCs used for transformation prior to the
+        clustering.
+        """
+        return self._n_components
+
+    @property
     def model(self) -> _ClusterAlgorithm:
         """Return the model."""
         return self._model

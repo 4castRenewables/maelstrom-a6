@@ -53,11 +53,7 @@ class PCA:
     @property
     def components_in_original_shape(self) -> np.ndarray:
         """Return the principal components (EOFs)."""
-        # The PCs are flipped along axis 1.
-        return np.flip(
-            self._to_original_shape(self.components),
-            axis=1,
-        )
+        return self._to_original_shape(self.components)
 
     @property
     def components_varimax_rotated(self) -> np.ndarray:
@@ -69,8 +65,16 @@ class PCA:
         """Return the principal components (EOFs)."""
         return self._to_original_shape(self.components_varimax_rotated)
 
-    def _to_original_shape(self, data: np.ndarray) -> np.ndarray:
-        return data.reshape(self._original_shape)
+    def _to_original_shape(
+        self, data: np.ndarray, includes_time_dimension: bool = True
+    ) -> np.ndarray:
+        if includes_time_dimension:
+            reshaped = data.reshape(self._original_shape)
+            # The PCs are flipped long axis 1.
+            return np.flip(reshaped, axis=1)
+        reshaped = data.reshape(self._original_shape[1:])
+        # The PCs are flipped along axis 0.
+        return np.flip(reshaped, axis=0)
 
     @property
     def eigenvalues(self) -> np.ndarray:
@@ -117,6 +121,47 @@ class PCA:
         return _transform_data_into_vector_space(
             self._reshaped, basis_vectors=components, n_dimensions=n_components
         )
+
+    def inverse_transform(
+        self, data: np.ndarray, n_components: t.Optional[int] = None
+    ) -> np.ndarray:
+        """Transform data back to its original space.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            Data to transform.
+        n_components : int, optional
+            Number of PCs to use for the transformation.
+            If `None`, all PCs are used.
+
+        Notes
+        -----
+        See the implementation of `scikit-learn`:
+        https://github.com/scikit-learn/scikit-learn/blob/6894a9be371683d4d61a861554c53f268c8771ca/sklearn/decomposition/_base.py#L128  # noqa
+
+        """
+        components = (
+            self.components[:n_components]
+            if n_components is not None
+            else self.components
+        )
+        if self._pca.whiten:
+            eigenvalues = (
+                self.eigenvalues[:n_components]
+                if components is not None
+                else self.eigenvalues
+            )
+            inverse = (
+                np.dot(
+                    data,
+                    np.sqrt(eigenvalues[:, np.newaxis]) * components,
+                )
+                + self._pca.mean_
+            )
+        else:
+            inverse = np.dot(data, components) + self._pca.mean_
+        return self._to_original_shape(inverse, includes_time_dimension=False)
 
     def components_sufficient_for_variance_ratio(
         self, variance_ratio: float
