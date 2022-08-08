@@ -46,7 +46,10 @@ def plot_scree_test(
     ax2.scatter(x, pca.variance_ratios, color=color_ax2)
 
     for ax, color in [(ax1, color_ax1), (ax2, color_ax2)]:
+        # Set log scale.
         ax.set(xscale="log", yscale="log")
+        # Set left xlim such that the first tick disappears.
+        ax.set_xlim(0.91, None)
         # Color the ticks.
         ax.tick_params(axis="y", colors=color, which="both")
 
