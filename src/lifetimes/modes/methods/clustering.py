@@ -1,4 +1,5 @@
 import abc
+from typing import Iterator
 from typing import Optional
 from typing import Union
 
@@ -32,7 +33,12 @@ class ClusterAlgorithm(abc.ABC):
         """
         self._n_components = n_components
         self._model = model
-        self.pca = pca
+        self._pca = pca
+
+    @property
+    def pca(self) -> _pca.PCA:
+        """Return the PCA."""
+        return self._pca
 
     @property
     def n_components(self) -> int:
@@ -61,13 +67,25 @@ class ClusterAlgorithm(abc.ABC):
         # Labelling of clusters starts at index 0
         return self.labels.values.max() + 1
 
+    @property
+    def centers(self) -> xr.DataArray:
+        """Return the cluster centers."""
+        return xr.DataArray(
+            self._centers,
+            dims=["cluster", "component"],
+        )
+
+    @property
+    @abc.abstractmethod
+    def _centers(self) -> np.ndarray:
+        """Return the cluster centers."""
+
 
 class KMeans(ClusterAlgorithm):
     """Wrapper for `sklearn.cluster.KMeans`."""
 
     @property
-    def centers(self) -> np.ndarray:
-        """Return the cluster centers."""
+    def _centers(self) -> np.ndarray:
         return self._model.cluster_centers_
 
 
@@ -75,9 +93,33 @@ class HDBSCAN(ClusterAlgorithm):
     """Wrapper for `hdbscan.HDBSCAN`."""
 
     @property
+    def _centers(self) -> np.ndarray:
+        return np.array(list(self._get_weighted_centers()))
+
+    def _get_weighted_centers(self) -> Iterator[list]:
+        return (
+            self.model.weighted_cluster_centroid(i)
+            for i in range(self.n_clusters)
+        )
+
+    @property
     def condensed_tree(self) -> hdbscan.plots.CondensedTree:
         """Return the cluster tree."""
         return self.model.condensed_tree_
+
+    def inverse_transformed_cluster(self, cluster_id: int) -> xr.DataArray:
+        """Return the inverse transformed cluster.
+
+        The result represents the cluster center in real dimensions of the
+        original data, but transformed back with as many PCs as used for the
+        clustering. As a consequence, the data may not be identical to the
+        original data since it's missing some of the original data's variance.
+
+        """
+        center = xr.DataArray(self.model.weighted_cluster_centroid(cluster_id))
+        return self.pca.inverse_transform(
+            center, n_components=self.n_components
+        )
 
 
 @lifetimes.utils.log_runtime

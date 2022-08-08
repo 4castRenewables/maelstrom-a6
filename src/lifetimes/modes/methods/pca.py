@@ -41,9 +41,9 @@ class PCA:
         return self._time_series
 
     @property
-    def components(self) -> np.ndarray:
+    def components(self) -> xr.DataArray:
         """Return the principal components (EOFs)."""
-        return self._pca.components_
+        return xr.DataArray(self._pca.components_, dims=["component", "entry"])
 
     @property
     def n_components(self) -> int:
@@ -51,35 +51,37 @@ class PCA:
         return self._pca.components_.shape[0]
 
     @property
-    def components_in_original_shape(self) -> np.ndarray:
+    def components_in_original_shape(self) -> xr.DataArray:
         """Return the principal components (EOFs)."""
         return self._to_original_shape(self.components)
 
     @property
-    def components_varimax_rotated(self) -> np.ndarray:
+    def components_varimax_rotated(self) -> xr.DataArray:
         """Return the principal components (EOFs)."""
         return _perform_varimax_rotation(self.components)
 
     @property
-    def components_varimax_rotated_in_original_shape(self) -> np.ndarray:
+    def components_varimax_rotated_in_original_shape(self) -> xr.DataArray:
         """Return the principal components (EOFs)."""
         return self._to_original_shape(self.components_varimax_rotated)
 
     def _to_original_shape(
-        self, data: np.ndarray, includes_time_dimension: bool = True
-    ) -> np.ndarray:
+        self, data: xr.DataArray, includes_time_dimension: bool = True
+    ) -> xr.DataArray:
         if includes_time_dimension:
-            reshaped = data.reshape(self._original_shape)
-            # The PCs are flipped long axis 1.
-            return np.flip(reshaped, axis=1)
-        reshaped = data.reshape(self._original_shape[1:])
+            reshaped = data.values.reshape(self._original_shape)
+            # The PCs are flipped along axis 1.
+            return xr.DataArray(
+                np.flip(reshaped, axis=1), dims=["component", "lat", "lon"]
+            )
+        reshaped = data.values.reshape(self._original_shape[1:])
         # The PCs are flipped along axis 0.
-        return np.flip(reshaped, axis=0)
+        return xr.DataArray(np.flip(reshaped, axis=0), dims=["lat", "lon"])
 
     @property
-    def eigenvalues(self) -> np.ndarray:
+    def eigenvalues(self) -> xr.DataArray:
         """Return the corresponding eigenvalues."""
-        return self._pca.explained_variance_
+        return xr.DataArray(self._pca.explained_variance_)
 
     @property
     def loadings(self) -> np.ndarray:
@@ -87,24 +89,24 @@ class PCA:
         return (self._pca.components_.T * np.sqrt(self.eigenvalues)).T
 
     @property
-    def variance_ratios(self) -> np.ndarray:
+    def variance_ratios(self) -> xr.DataArray:
         """Return the explained variance ratios."""
-        return self._pca.explained_variance_ratio_
+        return xr.DataArray(self._pca.explained_variance_ratio_)
 
     @property
-    def cumulative_variance_ratios(self) -> np.ndarray:
+    def cumulative_variance_ratios(self) -> xr.DataArray:
         """Return the cumulative variance ratios."""
-        return np.cumsum(self.variance_ratios)
+        return xr.DataArray(np.cumsum(self.variance_ratios))
 
     @lifetimes.utils.log_runtime
-    def transform(self, n_components: t.Optional[int] = None) -> np.ndarray:
+    def transform(self, n_components: t.Optional[int] = None) -> xr.DataArray:
         """Transform the given data into the vector space of the PCs."""
         return self._transform(self.components, n_components=n_components)
 
     @lifetimes.utils.log_runtime
     def transform_with_varimax_rotation(
         self, n_components: t.Optional[int] = None
-    ) -> np.ndarray:
+    ) -> xr.DataArray:
         """Transform the given data into the
         vector space of the varimax-rotated PCs."""
         # TODO: Do research on whether the varimax rotation has to be performed
@@ -116,15 +118,15 @@ class PCA:
         )
 
     def _transform(
-        self, components: np.ndarray, n_components: int
-    ) -> np.ndarray:
+        self, components: xr.DataArray, n_components: int
+    ) -> xr.DataArray:
         return _transform_data_into_vector_space(
             self._reshaped, basis_vectors=components, n_dimensions=n_components
         )
 
     def inverse_transform(
-        self, data: np.ndarray, n_components: t.Optional[int] = None
-    ) -> np.ndarray:
+        self, data: xr.DataArray, n_components: t.Optional[int] = None
+    ) -> xr.DataArray:
         """Transform data back to its original space.
 
         Parameters
@@ -161,16 +163,18 @@ class PCA:
             )
         else:
             inverse = np.dot(data, components) + self._pca.mean_
-        return self._to_original_shape(inverse, includes_time_dimension=False)
+        return self._to_original_shape(
+            xr.DataArray(inverse), includes_time_dimension=False
+        )
 
     def components_sufficient_for_variance_ratio(
         self, variance_ratio: float
-    ) -> np.ndarray:
+    ) -> xr.DataArray:
         """Return the PCs account for given variance ratio."""
         n_components = self.number_of_components_sufficient_for_variance_ratio(
             variance_ratio
         )
-        return self.components[:n_components]
+        return xr.DataArray(self.components.values[:n_components])
 
     def number_of_components_sufficient_for_variance_ratio(
         self, variance_ratio: float
@@ -190,11 +194,11 @@ class PCA:
 
 
 def _perform_varimax_rotation(
-    matrix: np.ndarray,
+    matrix: xr.DataArray,
     tol: float = 1e-6,
     max_iter: int = 100,
-):
-    transposed = matrix.T
+) -> xr.DataArray:
+    transposed = matrix.values.T
     n_row, n_col = transposed.shape
     rotation_matrix = np.eye(n_col)
     var = 0
@@ -202,25 +206,25 @@ def _perform_varimax_rotation(
     for _ in range(max_iter):
         comp_rot = np.dot(transposed, rotation_matrix)
         tmp = comp_rot * np.transpose((comp_rot**2).sum(axis=0) / n_row)
-        u, s, v = np.linalg.svd(np.dot(matrix, comp_rot**3 - tmp))
+        u, s, v = np.linalg.svd(np.dot(matrix.values, comp_rot**3 - tmp))
         rotation_matrix = np.dot(u, v)
         var_new = np.sum(s)
         if var != 0 and var_new < var * (1 + tol):
             break
         var = var_new
 
-    return np.dot(transposed, rotation_matrix).T
+    return xr.DataArray(np.dot(transposed, rotation_matrix).T, dims=matrix.dims)
 
 
 def _transform_data_into_vector_space(
     data: np.ndarray,
-    basis_vectors: np.ndarray,
+    basis_vectors: xr.DataArray,
     n_dimensions: t.Optional[int] = None,
-) -> np.ndarray:
+) -> xr.DataArray:
     if n_dimensions is not None:
-        basis_vectors = basis_vectors[:n_dimensions]
+        basis_vectors = basis_vectors.values[:n_dimensions]
     centered = data - np.nanmean(data)
-    return np.dot(centered, basis_vectors.T)
+    return xr.DataArray(np.dot(centered, basis_vectors.T))
 
 
 @lifetimes.utils.log_runtime

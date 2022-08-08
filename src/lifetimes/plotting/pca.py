@@ -67,7 +67,7 @@ def plot_scree_test(
             color="grey",
         )
         ax2.text(
-            n_components + 0.25,
+            n_components + 0.4,
             np.min(pca.variance_ratios),
             f"$n_{{comp}} = {n_components}$",
             rotation=90,
@@ -93,7 +93,7 @@ def plot_first_three_components_timeseries(
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
-    ax.scatter(x, y, z, c=colors)
+    ax.scatter(x, y, z, c=colors, s=4)
     ax.set_xlabel("PC1")
     ax.set_ylabel("PC2")
     ax.set_zlabel("PC3")
