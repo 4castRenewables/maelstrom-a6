@@ -1,60 +1,14 @@
-import hdbscan
-import lifetimes.modes.methods.clustering as clustering
-import lifetimes.modes.methods.pca as _pca
-from sklearn import cluster
-
-
-def test_find_principal_component_clusters_with_kmeans(ds):
-    da = ds["ellipse"]
-    n_timesteps = len(da.coords["time"])
-    pca = _pca.spatio_temporal_principal_component_analysis(
-        data=da,
-        time_coordinate="time",
-        latitude_coordinate="lat",
-        x_coordinate="lat",
-        y_coordinate="lon",
-        variance_ratio=None,
-    )
-    n_components = 2
-    n_clusters = 2
-
-    algorithm = cluster.KMeans(n_clusters=n_clusters)
-
-    clusters = clustering.find_principal_component_clusters(
-        algorithm=algorithm,
-        pca=pca,
-        n_components=n_components,
-    )
-
-    # I expect 2 clusters that have positions given in a
-    # dimension that depends on my number of PCs (2 here).
-    assert clusters.centers.shape == (n_clusters, n_components)
+def test_find_principal_component_clusters_with_kmeans(kmeans):
+    # Expect 2 clusters that have positions given in a
+    # dimension that depends on my number of PCs (3 here).
+    assert kmeans.centers.shape == (2, 3)
     # Each time step should be assigned a label and thus belong
     # to one of the two clusters.
-    assert len(clusters.labels) == n_timesteps
-    assert clusters.n_clusters == 2
+    assert len(kmeans.labels) == 5
+    assert kmeans.n_clusters == 2
 
 
-def test_find_principal_component_clusters_with_hdbscan(ds):
-    da = ds["ellipse"]
-    pca = _pca.spatio_temporal_principal_component_analysis(
-        data=da,
-        time_coordinate="time",
-        latitude_coordinate="lat",
-        x_coordinate="lat",
-        y_coordinate="lon",
-        variance_ratio=None,
-    )
-    n_components = 2
-    n_clusters = 2
-
-    algorithm = hdbscan.HDBSCAN(min_cluster_size=2)
-
-    clusters = clustering.find_principal_component_clusters(
-        algorithm=algorithm,
-        pca=pca,
-        n_components=n_components,
-    )
-
-    # I expect 2 clusters
-    assert clusters.n_clusters == n_clusters
+def test_find_principal_component_clusters_with_hdbscan(hdbscan):
+    # Expect 2 clusters
+    assert hdbscan.n_clusters == 2
+    assert hdbscan.inverse_transformed_cluster(0).shape == (10, 10)

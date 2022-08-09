@@ -86,7 +86,7 @@ class PCA:
     @property
     def loadings(self) -> np.ndarray:
         """Return the loadings of each PC."""
-        return (self._pca.components_.T * np.sqrt(self.eigenvalues)).T
+        return (self._pca.components_.T * np.sqrt(self.eigenvalues.values)).T
 
     @property
     def variance_ratios(self) -> xr.DataArray:
@@ -235,7 +235,7 @@ def spatio_temporal_principal_component_analysis(
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
     variance_ratio: t.Optional[float] = None,
-    pca_method: PCAMethod = decomposition.PCA,
+    pca_method: t.Type[PCAMethod] = decomposition.PCA,
     **kwargs,
 ) -> PCA:
     """Perform a spatio-temporal PCA.
