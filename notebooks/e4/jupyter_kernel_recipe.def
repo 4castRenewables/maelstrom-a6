@@ -36,14 +36,11 @@ From: python:3.9-slim
     echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sview ${@}"' > /bin/sview
     chmod -R 755 /bin/s*
     apt update -y && apt upgrade -y
-    apt install -y curl openssh-client libpcre3 openssl
+    apt install -y openssh-client libpcre3 openssl build-essential
     pip install --upgrade pip
-    curl -sSL https://install.python-poetry.org | python3 -
     export PATH="/root/.local/bin:$PATH"
-    poetry self update
-    poetry config virtualenvs.create false
     cd /opt
-    poetry install --no-dev
+    pip install .
     pip install ipykernel
     python -m ipykernel install
 
