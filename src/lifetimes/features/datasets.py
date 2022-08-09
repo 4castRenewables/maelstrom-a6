@@ -23,7 +23,16 @@ class Dataset(abc.ABC):
     def to_netcdf(
         self, path: Path, drop_variables: t.Optional[list[str]] = None
     ) -> None:
-        """Save as netCDF file."""
+        """Save as netCDF file.
+
+        Parameters
+        ----------
+        path : str or pathlib.Path
+            Path (including file extension) where to save to file.
+        drop_variables : list[str], optional
+            List of variables to drop from the dataset.
+
+        """
         self.as_xarray(drop_variables).to_netcdf(path)
 
     @lifetimes.utils.log_runtime
