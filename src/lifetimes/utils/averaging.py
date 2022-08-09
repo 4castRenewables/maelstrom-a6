@@ -1,7 +1,7 @@
 import xarray as xr
 
 
-def calculate_daily_averages(
+def calculate_daily_mean(
     dataset: xr.Dataset, time_coordinate: str = "time"
 ) -> xr.Dataset:
     """Calculate daily averages for all parameters in a dataset.
