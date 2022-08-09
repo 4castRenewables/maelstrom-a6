@@ -1,3 +1,4 @@
+import lifetimes.modes.methods.pca as _pca
 import pytest
 import xarray as xr
 from sklearn import decomposition
@@ -32,3 +33,25 @@ def test_spatio_temporal_principal_component_analysis(ds, pcas):
     assert pcas.inverse_transform(
         xr.DataArray([1, 2, 3]), n_components=3
     ).shape == (10, 10)
+
+
+def test_multi_variable_spatio_temporal_principal_component_analysis(da):
+    # Create multi-variable dataset
+    ds = xr.Dataset(
+        data_vars={"ellipse_1": da, "ellipse_2": da},
+        coords=da.coords,
+        attrs=da.attrs,
+    )
+    pca = _pca.spatio_temporal_principal_component_analysis(
+        data=ds,
+        time_coordinate="time",
+        latitude_coordinate="lat",
+        x_coordinate="lat",
+        y_coordinate="lon",
+        variance_ratio=None,
+        pca_method=decomposition.PCA,
+    )
+
+    # da has n = 5 time steps on a (10, 10) grid, hence PCs must be of shape
+    # (5, 100)
+    assert pca.components.shape == (5, 100**2)

@@ -6,6 +6,7 @@ import sklearn.decomposition as decomposition
 import xarray as xr
 
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
+Data = t.Union[xr.Dataset, xr.DataArray]
 
 
 class PCA:
@@ -229,8 +230,8 @@ def _transform_data_into_vector_space(
 
 @lifetimes.utils.log_runtime
 def spatio_temporal_principal_component_analysis(
-    data: xr.DataArray,
-    time_coordinate: str,
+    data: Data,
+    time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
@@ -242,7 +243,7 @@ def spatio_temporal_principal_component_analysis(
 
     Parameters
     ----------
-    data : xr.DataArray
+    data : xr.Dataset or xr.DataArray
         Spatial timeseries data.
     time_coordinate : str
         Name of the time coordinate.
@@ -286,6 +287,33 @@ def spatio_temporal_principal_component_analysis(
     else:
         pca = pca_method(**kwargs)
 
+    if isinstance(data, xr.DataArray):
+        (original_shape, timeseries, data,) = _reshape_data_array(
+            data=data,
+            time_coordinate=time_coordinate,
+            latitude_coordinate=latitude_coordinate,
+            x_coordinate=x_coordinate,
+            y_coordinate=y_coordinate,
+        )
+    elif isinstance(data, xr.Dataset):
+        raise NotImplementedError()
+
+    result: PCAMethod = pca.fit(data)
+    return PCA(
+        pca=result,
+        reshaped=data,
+        original_shape=original_shape,
+        time_series=timeseries,
+    )
+
+
+def _reshape_data_array(
+    data: xr.DataArray,
+    time_coordinate: str,
+    latitude_coordinate: str,
+    x_coordinate: t.Optional[str],
+    y_coordinate: t.Optional[str],
+) -> tuple[tuple, xr.DataArray, np.ndarray]:
     original_shape = data.shape
     timeseries = data[time_coordinate]
     data = lifetimes.utils.weight_by_latitudes(
@@ -299,11 +327,8 @@ def spatio_temporal_principal_component_analysis(
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-
-    result: PCAMethod = pca.fit(data)
-    return PCA(
-        pca=result,
-        reshaped=data,
-        original_shape=original_shape,
-        time_series=timeseries,
+    return (
+        original_shape,
+        timeseries,
+        data,
     )
