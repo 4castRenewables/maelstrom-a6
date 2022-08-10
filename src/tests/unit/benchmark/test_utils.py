@@ -1,10 +1,8 @@
 import typing as t
-from unittest import mock
+import unittest.mock as mock
 
+import dask.delayed as delayed
 import lifetimes.benchmark as bench
-from dask.delayed import (
-    Delayed,
-)
 
 # Cannot be imported otherwise,
 # because dask mixes up function delayed and submodule delayed"""
@@ -21,4 +19,4 @@ def test_make_method_lazy():
     lazy_print = bench.utils.make_method_lazy(print)
     result = lazy_print("A")
     assert isinstance(lazy_print, t.Callable)
-    assert isinstance(result, Delayed)
+    assert isinstance(result, delayed.Delayed)

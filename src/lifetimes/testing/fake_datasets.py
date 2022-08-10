@@ -2,9 +2,9 @@ import datetime
 import functools
 import typing as t
 
+import lifetimes.features.datasets as datasets
 import pandas as pd
 import xarray as xr
-from lifetimes.features import datasets
 
 from . import data_points
 from . import grids

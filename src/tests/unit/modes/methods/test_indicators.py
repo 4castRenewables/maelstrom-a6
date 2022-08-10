@@ -1,5 +1,5 @@
+import lifetimes.modes.methods.indicators as indicators
 import numpy as np
-from lifetimes.modes.methods import indicators
 
 
 def test_indicators():

@@ -1,9 +1,9 @@
 from contextlib import nullcontext as doesnotraise
 
+import lifetimes.features as features
+import lifetimes.testing as testing
 import pytest
 import xarray as xr
-from lifetimes import features
-from lifetimes import testing
 
 
 @pytest.fixture()

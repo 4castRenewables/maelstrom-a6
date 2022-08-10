@@ -1,10 +1,10 @@
 import pathlib
 from contextlib import nullcontext as doesnotraise
 
+import lifetimes.features.datasets as datasets
 import numpy as np
 import pandas as pd
 import pytest
-from lifetimes.features import datasets
 
 FILE_PATH = pathlib.Path(__file__).parent
 DATA_DIR = FILE_PATH / "../../data"

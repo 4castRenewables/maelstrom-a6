@@ -1,7 +1,7 @@
+import lifetimes.utils.weighting as weighting
 import numpy as np
 import pytest
 import xarray as xr
-from lifetimes.utils import weighting
 
 
 def create_data_array(data) -> xr.DataArray:

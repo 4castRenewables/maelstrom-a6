@@ -1,8 +1,8 @@
 import datetime
 
+import lifetimes.testing as testing
 import numpy as np
 import xarray as xr
-from lifetimes import testing
 
 
 def test_generate_ecmwf_ifs_hres_data():

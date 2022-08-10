@@ -3,9 +3,9 @@ import lifetimes.modes.methods.clustering as clustering
 import lifetimes.modes.methods.pca as _pca
 import lifetimes.testing as testing
 import pytest
+import sklearn.cluster as cluster
+import sklearn.decomposition as decomposition
 import xarray as xr
-from sklearn import cluster
-from sklearn import decomposition
 
 
 @pytest.fixture()

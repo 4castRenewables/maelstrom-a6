@@ -1,6 +1,6 @@
 import pytest
+import sklearn.decomposition as decomposition
 import xarray as xr
-from sklearn import decomposition
 
 
 @pytest.fixture(params=[decomposition.PCA, decomposition.IncrementalPCA])

@@ -13,9 +13,7 @@ See e.g.
 Code from https://github.com/FabriFalasca/climate-and-dynamical-systems
 """
 import sys
-from typing import Callable
-from typing import Optional
-from typing import Union
+import typing as t
 
 import numpy as np
 import scipy.stats
@@ -24,12 +22,12 @@ import sklearn.metrics.pairwise
 
 def indicators(
     X: np.ndarray,
-    Y: Optional[np.ndarray] = None,
-    metric: Union[str, Callable] = "euclidean",
+    Y: t.Optional[np.ndarray] = None,
+    metric: t.Union[str, t.Callable] = "euclidean",
     q: float = 0.98,
     pareto_fit: str = "scipy",
     theta_fit: str = "ferro",
-    distances: Optional[np.ndarray] = None,
+    distances: t.Optional[np.ndarray] = None,
 ):
     """Fit a dataset to find its local dimension and persistence index.
 
@@ -101,9 +99,9 @@ def indicators(
 
 def _calculate_logarithmic_distances(
     X: np.ndarray,
-    Y: Optional[np.ndarray],
+    Y: t.Optional[np.ndarray],
     metric: str,
-    distances: Optional[np.ndarray],
+    distances: t.Optional[np.ndarray],
 ) -> np.ndarray:
     if distances is None:
         distances = sklearn.metrics.pairwise.pairwise_distances(

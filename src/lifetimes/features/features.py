@@ -1,11 +1,9 @@
-from typing import Callable
-from typing import Optional
+import typing as t
 
+import lifetimes.features.datasets as datasets
 import xarray as xr
 
-from . import datasets
-
-FeatureGenerator = Callable[[xr.DataArray, ...], xr.DataArray]
+FeatureGenerator = t.Callable[[xr.DataArray, ...], xr.DataArray]
 
 
 class Feature:
@@ -15,7 +13,7 @@ class Feature:
         self,
         name: str,
         variables: list[str],
-        generator: Optional[FeatureGenerator] = None,
+        generator: t.Optional[FeatureGenerator] = None,
     ):
         """Initialize without generating the feature.
 

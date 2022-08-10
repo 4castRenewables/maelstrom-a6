@@ -1,7 +1,6 @@
+import lifetimes.features.datasets as datasets
+import lifetimes.features.features as _features
 import xarray as xr
-
-from . import datasets
-from . import features as _features
 
 
 def determine_features(
