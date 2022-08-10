@@ -9,7 +9,7 @@ def method(request):
     return request.param
 
 
-def test_spatio_temporal_principal_component_analysis(ds, pcas):
+def test_spatio_temporal_pca(ds, pcas):
     # da has n = 5 time steps on a (10, 10) grid, hence PCs must be of shape
     # (5, 100)
     assert pcas.components.shape == (5, 100)
@@ -35,14 +35,14 @@ def test_spatio_temporal_principal_component_analysis(ds, pcas):
     ).shape == (10, 10)
 
 
-def test_multi_variable_spatio_temporal_principal_component_analysis(da):
+def test_multi_variable_spatio_temporal_pca(da):
     # Create multi-variable dataset
     ds = xr.Dataset(
         data_vars={"ellipse_1": da, "ellipse_2": da},
         coords=da.coords,
         attrs=da.attrs,
     )
-    pca = _pca.spatio_temporal_principal_component_analysis(
+    pca = _pca.spatio_temporal_pca(
         data=ds,
         time_coordinate="time",
         latitude_coordinate="lat",

@@ -23,7 +23,7 @@ def read_data(
     modes = [lifetimes.modes.Modes(feature=data)]
 
     pca_partial_method = functools.partial(
-        lifetimes.modes.methods.spatio_temporal_principal_component_analysis,
+        lifetimes.modes.methods.spatio_temporal_pca,
         variance_ratio=variance_ratio,
         time_coordinate="time",
         latitude_coordinate="latitude",

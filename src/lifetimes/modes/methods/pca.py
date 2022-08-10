@@ -229,7 +229,7 @@ def _transform_data_into_vector_space(
 
 
 @lifetimes.utils.log_runtime
-def spatio_temporal_principal_component_analysis(
+def spatio_temporal_pca(
     data: _types.Data,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",

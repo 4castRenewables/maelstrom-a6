@@ -53,7 +53,7 @@ def da(ds) -> xr.DataArray:
 
 @pytest.fixture()
 def pca(da):
-    return _pca.spatio_temporal_principal_component_analysis(
+    return _pca.spatio_temporal_pca(
         data=da,
         time_coordinate="time",
         latitude_coordinate="lat",
