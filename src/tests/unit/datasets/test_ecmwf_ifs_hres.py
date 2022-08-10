@@ -1,7 +1,7 @@
 import pathlib
 from contextlib import nullcontext as doesnotraise
 
-import lifetimes.features.datasets as datasets
+import lifetimes.datasets.ecmwf_ifs_hres as ecmwf_ifs_hres
 import numpy as np
 import pandas as pd
 import pytest
@@ -38,7 +38,7 @@ class TestEcmwfIfsHresDataset:
         with pytest.raises(type(expected)) if isinstance(
             expected, Exception
         ) else doesnotraise():
-            dataset = datasets.EcmwfIfsHresDataset(
+            dataset = ecmwf_ifs_hres.EcmwfIfsHres(
                 paths, overlapping=overlapping, parallel_loading=False
             )
             result = dataset.as_xarray()

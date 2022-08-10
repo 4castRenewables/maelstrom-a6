@@ -1,5 +1,6 @@
 from contextlib import nullcontext as doesnotraise
 
+import lifetimes.datasets as datasets
 import lifetimes.features as features
 import lifetimes.testing as testing
 import pytest
@@ -7,7 +8,7 @@ import xarray as xr
 
 
 @pytest.fixture()
-def dataset() -> features.Dataset:
+def dataset() -> datasets.EcmwfIfsHres:
     grid = testing.TestGrid(rows=3, columns=3)
     a = 2 / 3
     b = 2 / 3

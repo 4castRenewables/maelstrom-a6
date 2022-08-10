@@ -1,6 +1,6 @@
 import typing as t
 
-import lifetimes.features.datasets as datasets
+import lifetimes.datasets.ecmwf_ifs_hres as datasets
 import xarray as xr
 
 FeatureGenerator = t.Callable[[xr.DataArray, ...], xr.DataArray]
@@ -41,7 +41,7 @@ class Feature:
         self.variables = variables
         self.generator = generator
 
-    def generate_from(self, dataset: datasets.Dataset) -> xr.DataArray:
+    def generate_from(self, dataset: datasets.EcmwfIfsHres) -> xr.DataArray:
         """Generate the feature from a given dataset."""
         data = dataset.as_xarray()
         result = self._generate_feature_from_dataset(data)

@@ -1,6 +1,6 @@
 import pathlib
 
-import lifetimes.features.methods.ecmwf_ifs_hres as ecmwf_ifs_hres
+import lifetimes.datasets.methods.select as select
 import numpy as np
 import pytest
 import xarray as xr
@@ -14,7 +14,7 @@ def pl_ds() -> xr.Dataset:
 
 
 def test_select_level(pl_ds):
-    result = ecmwf_ifs_hres.select_level(pl_ds, level=500)
+    result = select.select_level(pl_ds, level=500)
 
     assert result["level"].values == 500
 
@@ -41,9 +41,7 @@ def test_select_level_and_calculate_daily_mean(pl_ds):
         dtype=np.float32,
     )
 
-    result = ecmwf_ifs_hres.select_level_and_calculate_daily_mean(
-        pl_ds, level=500
-    )
+    result = select.select_level_and_calculate_daily_mean(pl_ds, level=500)
 
     assert result["level"].values == 500
 
