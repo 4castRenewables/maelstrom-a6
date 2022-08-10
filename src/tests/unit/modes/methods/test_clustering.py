@@ -1,4 +1,4 @@
-def test_find_principal_component_clusters_with_kmeans(kmeans):
+def test_find_pc_space_clusters_with_kmeans(kmeans):
     # Expect 2 clusters that have positions given in a
     # dimension that depends on my number of PCs (3 here).
     assert kmeans.centers.shape == (2, 3)
@@ -8,7 +8,7 @@ def test_find_principal_component_clusters_with_kmeans(kmeans):
     assert kmeans.n_clusters == 2
 
 
-def test_find_principal_component_clusters_with_hdbscan(hdbscan):
+def test_find_pc_space_clusters_with_hdbscan(hdbscan):
     # Expect 2 clusters
     assert hdbscan.n_clusters == 2
     assert hdbscan.inverse_transformed_cluster(0).shape == (10, 10)

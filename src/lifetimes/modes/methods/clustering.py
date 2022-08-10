@@ -123,7 +123,7 @@ class HDBSCAN(ClusterAlgorithm):
 
 
 @lifetimes.utils.log_runtime
-def find_principal_component_clusters(
+def find_pc_space_clusters(
     pca: _pca.PCA,
     use_varimax: bool = False,
     n_components: Optional[int] = None,

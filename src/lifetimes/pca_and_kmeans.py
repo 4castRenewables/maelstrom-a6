@@ -55,7 +55,7 @@ def pca_and_kmeans(
         modes=modes, method=pca_partial_method
     )
 
-    clusters = lifetimes.modes.methods.find_principal_component_clusters(
+    clusters = lifetimes.modes.methods.find_pc_space_clusters(
         pca,
         use_varimax=use_varimax,
         n_clusters=n_clusters,
