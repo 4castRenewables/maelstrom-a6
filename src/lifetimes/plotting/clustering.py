@@ -57,7 +57,7 @@ def plot_condensed_tree(
 
     """
     _raise_if_not_hierarchical_clustering_method(clusters)
-    return _create_figure_with_axis(
+    return _create_plot(
         ax_factory=clusters.model.condensed_tree_.plot,
         select_clusters=highlight_selected_clusters,
         selection_palette=_create_colormap(clusters),
@@ -87,9 +87,7 @@ def plot_single_linkage_tree(
 
     """
     _raise_if_not_hierarchical_clustering_method(clusters)
-    return _create_figure_with_axis(
-        ax_factory=clusters.model.single_linkage_tree_.plot
-    )
+    return _create_plot(ax_factory=clusters.model.single_linkage_tree_.plot)
 
 
 def _create_plot(ax_factory: AxesFactory, **kwargs) -> Plot:
