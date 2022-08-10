@@ -25,7 +25,8 @@ class DataPoints:
         time_coordinate: str,
         grid: grids.Grid,
     ) -> xr.DataArray:
-        """Add the data points to a 3-D array representing a 2-D grid timeseries.
+        """Add the data points to a 3-D array representing a 2-D grid
+        timeseries.
 
         Parameters
         ----------
