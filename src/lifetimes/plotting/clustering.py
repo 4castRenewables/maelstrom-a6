@@ -1,5 +1,4 @@
-from typing import Any
-from typing import Protocol
+import typing as t
 
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.plotting.pca as pca
@@ -9,7 +8,7 @@ import seaborn.palettes
 Plot = tuple[plt.Figure, plt.Axes]
 
 
-class AxesFactory(Protocol):
+class AxesFactory(t.Protocol):
     def __call__(self, axis: plt.Axes, *args, **kwargs) -> plt.Axes:
         ...
 
@@ -58,7 +57,7 @@ def plot_condensed_tree(
 
     """
     _raise_if_not_hierarchical_clustering_method(clusters)
-    return _create_figure_with_axis(
+    return _create_plot(
         ax_factory=clusters.model.condensed_tree_.plot,
         select_clusters=highlight_selected_clusters,
         selection_palette=_create_colormap(clusters),
@@ -88,12 +87,10 @@ def plot_single_linkage_tree(
 
     """
     _raise_if_not_hierarchical_clustering_method(clusters)
-    return _create_figure_with_axis(
-        ax_factory=clusters.model.single_linkage_tree_.plot
-    )
+    return _create_plot(ax_factory=clusters.model.single_linkage_tree_.plot)
 
 
-def _create_figure_with_axis(ax_factory: AxesFactory, **kwargs) -> Plot:
+def _create_plot(ax_factory: AxesFactory, **kwargs) -> Plot:
     fig, ax = plt.subplots()
     ax_factory(axis=ax, **kwargs)
     return fig, ax
@@ -104,7 +101,7 @@ def _create_colors(clusters: clustering.ClusterAlgorithm) -> list[str]:
     return [cmap[i] if i != -1 else "black" for i in clusters.labels.values]
 
 
-def _raise_if_not_hierarchical_clustering_method(clusters: Any):
+def _raise_if_not_hierarchical_clustering_method(clusters: t.Any):
     if not isinstance(clusters, clustering.HDBSCAN):
         raise ValueError(
             "Condensed tree can only be plotted for a hierarchical "

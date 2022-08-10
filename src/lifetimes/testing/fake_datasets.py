@@ -2,16 +2,15 @@ import datetime
 import functools
 import typing as t
 
+import lifetimes.datasets.ecmwf_ifs_hres as datasets
+import lifetimes.testing.data_points as data_points
+import lifetimes.testing.grids as grids
+import lifetimes.testing.types as types
 import pandas as pd
 import xarray as xr
-from lifetimes.features import datasets
-
-from . import data_points
-from . import grids
-from . import types
 
 
-class FakeDataset(datasets.FileDataset):
+class FakeDataset(datasets.EcmwfIfsHres):
     """A fake timeseries dataset for grid data."""
 
     grid: grids.Grid

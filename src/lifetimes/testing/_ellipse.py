@@ -1,8 +1,7 @@
+import lifetimes.testing.grids as grids
+import lifetimes.testing.types as types
 import numpy as np
 import xarray as xr
-
-from . import grids
-from . import types
 
 
 def create_ellipse_on_grid(

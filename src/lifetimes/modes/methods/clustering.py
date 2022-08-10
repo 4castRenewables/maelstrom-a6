@@ -1,16 +1,14 @@
 import abc
-from typing import Iterator
-from typing import Optional
-from typing import Union
+import typing as t
 
 import hdbscan.plots
 import lifetimes.modes.methods.pca as _pca
 import lifetimes.utils
 import numpy as np
+import sklearn.cluster as cluster
 import xarray as xr
-from sklearn import cluster
 
-_ClusterAlgorithm = Union[cluster.KMeans, hdbscan.HDBSCAN]
+_ClusterAlgorithm = t.Union[cluster.KMeans, hdbscan.HDBSCAN]
 
 
 class ClusterAlgorithm(abc.ABC):
@@ -96,7 +94,7 @@ class HDBSCAN(ClusterAlgorithm):
     def _centers(self) -> np.ndarray:
         return np.array(list(self._get_weighted_centers()))
 
-    def _get_weighted_centers(self) -> Iterator[list]:
+    def _get_weighted_centers(self) -> t.Iterator[list]:
         return (
             self.model.weighted_cluster_centroid(i)
             for i in range(self.n_clusters)
@@ -126,8 +124,8 @@ class HDBSCAN(ClusterAlgorithm):
 def find_pc_space_clusters(
     pca: _pca.PCA,
     use_varimax: bool = False,
-    n_components: Optional[int] = None,
-    algorithm: Optional[_ClusterAlgorithm] = None,
+    n_components: t.Optional[int] = None,
+    algorithm: t.Optional[_ClusterAlgorithm] = None,
 ) -> ClusterAlgorithm:
     """Apply a given clustering algorithm on PCs.
 

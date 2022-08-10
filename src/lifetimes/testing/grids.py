@@ -1,9 +1,8 @@
 import abc
 import functools
 
+import lifetimes.testing.types as types
 import numpy as np
-
-from . import types
 
 
 class Grid(abc.ABC):

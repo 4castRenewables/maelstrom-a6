@@ -1,8 +1,8 @@
+import lifetimes.testing as testing
+import lifetimes.testing._ellipse as _ellipse
 import numpy as np
 import pytest
 import xarray as xr
-from lifetimes import testing
-from lifetimes.testing import _ellipse
 
 
 def create_data_array_with_data(

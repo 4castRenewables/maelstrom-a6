@@ -1,11 +1,9 @@
-from typing import Callable
-from typing import Optional
+import typing as t
 
+import lifetimes.datasets.ecmwf_ifs_hres as datasets
 import xarray as xr
 
-from . import datasets
-
-FeatureGenerator = Callable[[xr.DataArray, ...], xr.DataArray]
+FeatureGenerator = t.Callable[[xr.DataArray, ...], xr.DataArray]
 
 
 class Feature:
@@ -15,7 +13,7 @@ class Feature:
         self,
         name: str,
         variables: list[str],
-        generator: Optional[FeatureGenerator] = None,
+        generator: t.Optional[FeatureGenerator] = None,
     ):
         """Initialize without generating the feature.
 
@@ -43,7 +41,7 @@ class Feature:
         self.variables = variables
         self.generator = generator
 
-    def generate_from(self, dataset: datasets.Dataset) -> xr.DataArray:
+    def generate_from(self, dataset: datasets.EcmwfIfsHres) -> xr.DataArray:
         """Generate the feature from a given dataset."""
         data = dataset.as_xarray()
         result = self._generate_feature_from_dataset(data)

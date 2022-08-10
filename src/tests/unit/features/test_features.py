@@ -1,7 +1,7 @@
 from contextlib import nullcontext as doesnotraise
 
+import lifetimes.features.features as features
 import pytest
-from lifetimes.features import features
 
 
 class TestFeature:

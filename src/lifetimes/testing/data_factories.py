@@ -1,12 +1,11 @@
 import abc
 import functools
-from typing import Optional
+import typing as t
 
+import lifetimes.testing._ellipse as _ellipse
+import lifetimes.testing.grids as grids
+import lifetimes.testing.types as types
 import xarray as xr
-
-from . import _ellipse
-from . import grids
-from . import types
 
 
 class GridDataFactory(abc.ABC):
@@ -24,7 +23,7 @@ class EllipticalDataFactory(GridDataFactory):
         self,
         a: float,
         b: float,
-        center: Optional[types.Coordinate] = None,
+        center: t.Optional[types.Coordinate] = None,
         rotate: bool = False,
     ):
         """Set the ellipse properties.

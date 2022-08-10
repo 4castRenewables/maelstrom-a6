@@ -1,6 +1,5 @@
+import lifetimes.modes.modes as _modes
 import xarray as xr
-
-from . import modes as _modes
 
 
 def determine_modes(

@@ -33,19 +33,19 @@ def plot_scree_test(
     x = list(range(1, pca.n_components + 1))
 
     # Plot cumulative variance on first axis
-    color_ax1 = "tab:red"
-    ax1.set_ylabel("cumulative explained variance", color=color_ax1)
-    ax1.scatter(x, pca.cumulative_variance_ratios, color=color_ax1)
+    ax1_color = "tab:red"
+    ax1.set_ylabel("cumulative explained variance", color=ax1_color)
+    ax1.scatter(x, pca.cumulative_variance_ratios, color=ax1_color)
 
     # Create right axis.
     ax2 = ax1.twinx()
 
     # Plot the explained variance ratios.
-    color_ax2 = "tab:blue"
-    ax2.set_ylabel("explained variance ratio", color=color_ax2)
-    ax2.scatter(x, pca.variance_ratios, color=color_ax2)
+    ax2_color = "tab:blue"
+    ax2.set_ylabel("explained variance ratio", color=ax2_color)
+    ax2.scatter(x, pca.variance_ratios, color=ax2_color)
 
-    for ax, color in [(ax1, color_ax1), (ax2, color_ax2)]:
+    for ax, color in [(ax1, ax1_color), (ax2, ax2_color)]:
         # Set log scale.
         ax.set(xscale="log", yscale="log")
         # Set left xlim such that the first tick disappears.
@@ -67,7 +67,7 @@ def plot_scree_test(
             color="grey",
         )
         ax2.text(
-            n_components + 0.4,
+            1.03 * n_components,
             np.min(pca.variance_ratios),
             f"$n_{{comp}} = {n_components}$",
             rotation=90,

@@ -1,6 +1,5 @@
+import lifetimes.utils._types as _types
 import numpy as np
-
-from . import _types
 
 
 def standardize(data: _types.Data) -> _types.Data:
