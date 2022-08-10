@@ -13,10 +13,11 @@ def pl_ds() -> xr.Dataset:
     return xr.open_dataset(FILE_DIR / "../../../data/pl_20201201_00.nc")
 
 
-def test_select_level(pl_ds):
-    result = ecmwf_ifs_hres.select_level(pl_ds, level=500)
+@pytest.mark.parametrize("level", [500, [500, 1000]])
+def test_select_level(pl_ds, level):
+    result = ecmwf_ifs_hres.select_level(pl_ds, level=level)
 
-    assert result["level"].values == 500
+    assert result["level"].values.tolist() == level
 
 
 def test_select_level_and_calculate_daily_mean(pl_ds):
