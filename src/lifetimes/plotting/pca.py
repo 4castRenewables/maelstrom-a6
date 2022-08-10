@@ -67,7 +67,7 @@ def plot_scree_test(
             color="grey",
         )
         ax2.text(
-            n_components + 0.4,
+            1.03 * n_components,
             np.min(pca.variance_ratios),
             f"$n_{{comp}} = {n_components}$",
             rotation=90,
