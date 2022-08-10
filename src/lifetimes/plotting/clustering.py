@@ -92,7 +92,7 @@ def plot_single_linkage_tree(
     )
 
 
-def _create_figure_with_axis(ax_factory: AxesFactory, **kwargs) -> Plot:
+def _create_plot(ax_factory: AxesFactory, **kwargs) -> Plot:
     fig, ax = plt.subplots()
     ax_factory(axis=ax, **kwargs)
     return fig, ax
