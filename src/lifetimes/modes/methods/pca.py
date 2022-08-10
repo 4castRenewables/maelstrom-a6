@@ -195,7 +195,7 @@ class PCA:
 
 def _perform_varimax_rotation(
     matrix: xr.DataArray,
-    tol: float = 1e-6,
+    tolerance: float = 1e-6,
     max_iter: int = 100,
 ) -> xr.DataArray:
     transposed = matrix.values.T
@@ -209,7 +209,7 @@ def _perform_varimax_rotation(
         u, s, v = np.linalg.svd(np.dot(matrix.values, comp_rot**3 - tmp))
         rotation_matrix = np.dot(u, v)
         var_new = np.sum(s)
-        if var != 0 and var_new < var * (1 + tol):
+        if var != 0 and var_new < var * (1 + tolerance):
             break
         var = var_new
 
