@@ -1,9 +1,8 @@
+import lifetimes.testing.data_factories as data_factories
+import lifetimes.testing.grids as grids
+import lifetimes.testing.types as types
 import pandas as pd
 import xarray as xr
-
-from . import data_factories
-from . import grids
-from . import types
 
 
 class DataPoints:
