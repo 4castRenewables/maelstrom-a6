@@ -3,7 +3,8 @@ from lifetimes.utils.logging import log_runtime
 from lifetimes.utils.logging import log_to_stdout
 from lifetimes.utils.paths import list_files
 from lifetimes.utils.reshape import reshape_spatio_temporal_numpy_array
-from lifetimes.utils.reshape import reshape_spatio_temporal_xarray_data_array
+from lifetimes.utils.reshape import reshape_spatio_temporal_xarray_data
+from lifetimes.utils.shape import get_xarray_data_shape
 from lifetimes.utils.slicing import slice_dataset
 from lifetimes.utils.standardization import standardize
 from lifetimes.utils.weighting import weight_by_latitudes

@@ -1,12 +1,12 @@
 import typing as t
 
 import lifetimes.utils
+import lifetimes.utils._types as _types
 import numpy as np
 import sklearn.decomposition as decomposition
 import xarray as xr
 
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
-Data = t.Union[xr.Dataset, xr.DataArray]
 
 
 class PCA:
@@ -230,7 +230,7 @@ def _transform_data_into_vector_space(
 
 @lifetimes.utils.log_runtime
 def spatio_temporal_principal_component_analysis(
-    data: Data,
+    data: _types.Data,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
@@ -287,16 +287,13 @@ def spatio_temporal_principal_component_analysis(
     else:
         pca = pca_method(**kwargs)
 
-    if isinstance(data, xr.DataArray):
-        (original_shape, timeseries, data,) = _reshape_data_array(
-            data=data,
-            time_coordinate=time_coordinate,
-            latitude_coordinate=latitude_coordinate,
-            x_coordinate=x_coordinate,
-            y_coordinate=y_coordinate,
-        )
-    elif isinstance(data, xr.Dataset):
-        raise NotImplementedError()
+    (original_shape, timeseries, data) = _reshape_data(
+        data=data,
+        time_coordinate=time_coordinate,
+        latitude_coordinate=latitude_coordinate,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+    )
 
     result: PCAMethod = pca.fit(data)
     return PCA(
@@ -307,21 +304,21 @@ def spatio_temporal_principal_component_analysis(
     )
 
 
-def _reshape_data_array(
-    data: xr.DataArray,
+def _reshape_data(
+    data: _types.Data,
     time_coordinate: str,
     latitude_coordinate: str,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
 ) -> tuple[tuple, xr.DataArray, np.ndarray]:
-    original_shape = data.shape
     timeseries = data[time_coordinate]
+    original_shape = lifetimes.utils.get_xarray_data_shape(data)
     data = lifetimes.utils.weight_by_latitudes(
         data=data,
         latitudes=latitude_coordinate,
         use_sqrt=True,
     )
-    data = lifetimes.utils.reshape_spatio_temporal_xarray_data_array(
+    data = lifetimes.utils.reshape_spatio_temporal_xarray_data(
         data=data,
         time_coordinate=None,  # Set to None to avoid memory excess in function
         x_coordinate=x_coordinate,
