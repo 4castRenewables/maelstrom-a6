@@ -13,6 +13,7 @@ def pl_ds() -> xr.Dataset:
     return xr.open_dataset(FILE_DIR / "../../../data/pl_20201201_00.nc")
 
 
+@pytest.mark.parametrize("level", [500, [500, 1000]])
 def test_select_level(pl_ds, level):
     result = select.select_level(pl_ds, level=level)
 
