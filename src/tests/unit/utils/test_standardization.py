@@ -1,5 +1,5 @@
+import lifetimes.utils.standardization as standardization
 import numpy as np
-from lifetimes.utils import standardization
 
 
 def test_standarize():

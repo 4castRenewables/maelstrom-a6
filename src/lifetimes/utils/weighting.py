@@ -1,8 +1,7 @@
 import typing as t
 
+import lifetimes.utils._types as _types
 import numpy as np
-
-from . import _types
 
 Latitudes = t.Union[str, np.ndarray]
 

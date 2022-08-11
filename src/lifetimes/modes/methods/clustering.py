@@ -1,52 +1,28 @@
 import abc
 import typing as t
 
+import hdbscan.plots
+import lifetimes.modes.methods.pca as _pca
 import lifetimes.utils
 import numpy as np
+import sklearn.cluster as cluster
 import xarray as xr
-from sklearn import cluster
 
-from . import pca as _pca
+_ClusterAlgorithm = t.Union[cluster.KMeans, hdbscan.HDBSCAN]
 
 
 class ClusterAlgorithm(abc.ABC):
-    """Wrapper for `sklearn.cluster` algorithms."""
-
-    pca: _pca.PCA
-
-    @property
-    def centers(self) -> np.ndarray:
-        """Return the cluster centers."""
-        return self._centers
-
-    @property
-    def labels(self) -> xr.DataArray:
-        """Return the labels of each data point."""
-        return self._labels
-
-    @property
-    @abc.abstractmethod
-    def _centers(self) -> np.ndarray:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def _labels(self) -> xr.DataArray:
-        ...
-
-
-class KMeans(ClusterAlgorithm):
-    """Wrapper for `sklearn.cluster.KMeans`."""
+    """Wrapper for `sklearn.cluster`-like algorithms."""
 
     def __init__(
-        self, kmeans: cluster.KMeans, pca: _pca.PCA, n_components: int
+        self, model: _ClusterAlgorithm, pca: _pca.PCA, n_components: int
     ):
         """Set attributes.
 
         Parameters
         ----------
-        kmeans : sklearn.cluster.KMeans
-            The result of the K-means clustering.
+        model : KMeans or HDBSCAN
+            The clustering model.
         pca : lifetimes.modes.methods.pca.PCA
             The result of the PCA with the selected number of PCs.
         n_components : int
@@ -54,34 +30,102 @@ class KMeans(ClusterAlgorithm):
 
         """
         self._n_components = n_components
-        self._kmeans = kmeans
-        self.pca = pca
+        self._model = model
+        self._pca = pca
 
     @property
-    def model(self) -> cluster.KMeans:
+    def pca(self) -> _pca.PCA:
+        """Return the PCA."""
+        return self._pca
+
+    @property
+    def n_components(self) -> int:
+        """Return the number of PCs used for transformation prior to the
+        clustering.
+        """
+        return self._n_components
+
+    @property
+    def model(self) -> _ClusterAlgorithm:
         """Return the model."""
-        return self._kmeans
+        return self._model
+
+    @property
+    def labels(self) -> xr.DataArray:
+        """Return the labels of the clusters."""
+        timeseries = self.pca.timeseries
+        return xr.DataArray(
+            data=self._model.labels_,
+            coords={timeseries.name: timeseries},
+        )
+
+    @property
+    def n_clusters(self) -> int:
+        """Return the number of clusters."""
+        # Labelling of clusters starts at index 0
+        return self.labels.values.max() + 1
+
+    @property
+    def centers(self) -> xr.DataArray:
+        """Return the cluster centers."""
+        return xr.DataArray(
+            self._centers,
+            dims=["cluster", "component"],
+        )
+
+    @property
+    @abc.abstractmethod
+    def _centers(self) -> np.ndarray:
+        """Return the cluster centers."""
+
+
+class KMeans(ClusterAlgorithm):
+    """Wrapper for `sklearn.cluster.KMeans`."""
 
     @property
     def _centers(self) -> np.ndarray:
-        return self._kmeans.cluster_centers_
+        return self._model.cluster_centers_
+
+
+class HDBSCAN(ClusterAlgorithm):
+    """Wrapper for `hdbscan.HDBSCAN`."""
 
     @property
-    def _labels(self) -> xr.DataArray:
-        timeseries = self.pca.timeseries
-        return xr.DataArray(
-            data=self._kmeans.labels_,
-            coords={timeseries.name: timeseries},
+    def _centers(self) -> np.ndarray:
+        return np.array(list(self._get_weighted_centers()))
+
+    def _get_weighted_centers(self) -> t.Iterator[list]:
+        return (
+            self.model.weighted_cluster_centroid(i)
+            for i in range(self.n_clusters)
+        )
+
+    @property
+    def condensed_tree(self) -> hdbscan.plots.CondensedTree:
+        """Return the cluster tree."""
+        return self.model.condensed_tree_
+
+    def inverse_transformed_cluster(self, cluster_id: int) -> xr.DataArray:
+        """Return the inverse transformed cluster.
+
+        The result represents the cluster center in real dimensions of the
+        original data, but transformed back with as many PCs as used for the
+        clustering. As a consequence, the data may not be identical to the
+        original data since it's missing some of the original data's variance.
+
+        """
+        center = xr.DataArray(self.model.weighted_cluster_centroid(cluster_id))
+        return self.pca.inverse_transform(
+            center, n_components=self.n_components
         )
 
 
 @lifetimes.utils.log_runtime
-def find_principal_component_clusters(
+def find_pc_space_clusters(
     pca: _pca.PCA,
     use_varimax: bool = False,
     n_components: t.Optional[int] = None,
-    n_clusters: int = 8,
-    **clustering_kwargs,
+    algorithm: t.Optional[_ClusterAlgorithm] = None,
 ) -> ClusterAlgorithm:
     """Apply a given clustering algorithm on PCs.
 
@@ -96,23 +140,32 @@ def find_principal_component_clusters(
         Represents the number of dimension of the subspace to perform the
         clustering.
         If `None`, the full PC space will be used.
-    n_clusters : int, default=8
-        Number of clusters to find.
-    kwargs
-        Will be passed to the clustering algorithm.
+    algorithm : KMeans or HDBSCAN, default=hdbscan.HDBSCAN
+        The clustering algorithm.
+
+    Raises
+    ------
+    NotImplementedError
+        If the given clustering algorithm hasn't been implemented yet.
 
     Returns
     -------
-    KMeans
-        Result of the K-means.
+    ClusterAlgorithm
+        Result of the clustering algorithm's `fit` method
 
     """
-    kmeans = cluster.KMeans(n_clusters=n_clusters, **clustering_kwargs)
+    if algorithm is None:
+        algorithm = hdbscan.HDBSCAN()
+
     if use_varimax:
         components_subspace = pca.transform_with_varimax_rotation(
             n_components=n_components
         )
     else:
         components_subspace = pca.transform(n_components=n_components)
-    result: cluster.KMeans = kmeans.fit(components_subspace)
-    return KMeans(kmeans=result, pca=pca, n_components=n_components)
+    result: _ClusterAlgorithm = algorithm.fit(components_subspace)
+    if isinstance(algorithm, cluster.KMeans):
+        return KMeans(model=result, pca=pca, n_components=n_components)
+    elif isinstance(algorithm, hdbscan.HDBSCAN):
+        return HDBSCAN(model=result, pca=pca, n_components=n_components)
+    return ClusterAlgorithm(model=result, pca=pca, n_components=n_components)

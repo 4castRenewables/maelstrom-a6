@@ -1,8 +1,8 @@
 import datetime
-from typing import Union
+import typing as t
 
 import numpy as np
 
-Timestamp = Union[str, datetime.datetime]
+Timestamp = t.Union[str, datetime.datetime]
 CoordinateDict = dict[str, np.ndarray]
 Coordinate = tuple[float, float]

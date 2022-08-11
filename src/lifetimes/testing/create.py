@@ -1,12 +1,12 @@
 import dataclasses
 import datetime
-from typing import Optional
+import typing as t
 
-from . import data_factories
-from . import data_points
-from . import fake_datasets
-from . import grids
-from . import types
+import lifetimes.testing.data_factories as data_factories
+import lifetimes.testing.data_points as data_points
+import lifetimes.testing.fake_datasets as fake_datasets
+import lifetimes.testing.grids as grids
+import lifetimes.testing.types as types
 
 DEFAULT_START = datetime.datetime(2000, 1, 1)
 DEFAULT_END = datetime.datetime(2000, 2, 28)
@@ -56,7 +56,7 @@ def create_dummy_ecmwf_ifs_hres_dataset(
     start: types.Timestamp = DEFAULT_START,
     end: types.Timestamp = DEFAULT_END,
     frequency: str = "1d",
-    ellipses: Optional[list[Ellipse]] = None,
+    ellipses: t.Optional[list[Ellipse]] = None,
 ) -> fake_datasets.FakeEcmwfIfsHresDataset:
     """Create a dummy dataset like ECMWF IFS HRES with elliptical data regions.
 

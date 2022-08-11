@@ -25,14 +25,14 @@ LON = [0.0, 1.0]
     # Test function with different time coordinate names.
     ["time", "time2"],
 )
-def test_calculate_daily_averages(time_coordinate):
+def test_calculate_daily_mean(time_coordinate):
     # Rename time coordinate.
     dataset = create_ingoing_dataset(time_coordinate)
     expected = create_expected_dataset(time_coordinate)
 
     expected_dates = expected.coords[time_coordinate].values
 
-    result = averaging.calculate_daily_averages(
+    result = averaging.calculate_daily_mean(
         dataset, time_coordinate=time_coordinate
     )
     result_dates = result.coords[time_coordinate].values

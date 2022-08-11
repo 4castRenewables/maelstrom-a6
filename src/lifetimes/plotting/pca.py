@@ -2,6 +2,7 @@ import typing as t
 
 import lifetimes.modes.methods.pca as _pca
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_scree_test(
@@ -30,24 +31,27 @@ def plot_scree_test(
     ax1.set_xlabel("number of components")
 
     x = list(range(1, pca.n_components + 1))
-    y_min, y_max = (0.0, 1.05)
 
     # Plot cumulative variance on first axis
-    y1 = pca.cumulative_variance_ratios
-    color = "tab:red"
-    ax1.set_ylabel("cumulative explained variance", color=color)
-    ax1.scatter(x, y1, color=color)
-    ax1.tick_params(axis="y", labelcolor=color)
+    ax1_color = "tab:red"
+    ax1.set_ylabel("cumulative explained variance", color=ax1_color)
+    ax1.scatter(x, pca.cumulative_variance_ratio, color=ax1_color)
 
     # Create right axis.
     ax2 = ax1.twinx()
 
     # Plot the explained variance ratios.
-    color = "tab:blue"
-    y2 = pca.variance_ratios
-    ax2.set_ylabel("explained variance ratio", color=color)
-    ax2.scatter(x, y2, color=color)
-    ax2.tick_params(axis="y", labelcolor=color)
+    ax2_color = "tab:blue"
+    ax2.set_ylabel("explained variance ratio", color=ax2_color)
+    ax2.scatter(x, pca.explained_variance_ratio, color=ax2_color)
+
+    for ax, color in [(ax1, ax1_color), (ax2, ax2_color)]:
+        # Set log scale.
+        ax.set(xscale="log", yscale="log")
+        # Set left xlim such that the first tick disappears.
+        ax.set_xlim(0.91, None)
+        # Color the ticks.
+        ax.tick_params(axis="y", colors=color, which="both")
 
     # Plot vertical lince indicating variance excess.
     if variance_ratio is not None:
@@ -55,24 +59,20 @@ def plot_scree_test(
             variance_ratio
         )
         # Dashed line indicating the threshold.
-        plt.vlines(
+        ax2.axvline(
             n_components,
-            ymin=y_min - 0.05,
-            ymax=y_max + 0.05,
-            linestyles="dashed",
+            ymin=0,
+            ymax=2 * np.max(pca.explained_variance_ratio.values),
+            linestyle="dashed",
             color="grey",
         )
         ax2.text(
-            n_components + 0.5,
-            0.3,
+            1.03 * n_components,
+            np.min(pca.explained_variance_ratio),
             f"$n_{{comp}} = {n_components}$",
             rotation=90,
             color="grey",
         )
-
-    # Scale y-axes identical.
-    ax1.set_ylim(y_min, y_max)
-    ax2.set_ylim(y_min, y_max)
 
     fig.tight_layout()
 
@@ -93,7 +93,7 @@ def plot_first_three_components_timeseries(
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
-    ax.scatter(x, y, z, c=colors)
+    ax.scatter(x, y, z, c=colors, s=4)
     ax.set_xlabel("PC1")
     ax.set_ylabel("PC2")
     ax.set_zlabel("PC3")

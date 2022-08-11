@@ -1,6 +1,6 @@
+import lifetimes.utils.slicing as slicing
 import pytest
 import xarray as xr
-from lifetimes.utils import slicing
 
 
 @pytest.mark.parametrize(

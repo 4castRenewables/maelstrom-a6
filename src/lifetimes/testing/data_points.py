@@ -1,13 +1,22 @@
+import lifetimes.testing.data_factories as data_factories
+import lifetimes.testing.grids as grids
+import lifetimes.testing.types as types
 import pandas as pd
 import xarray as xr
 
-from . import data_factories
-from . import grids
-from . import types
-
 
 class DataPoints:
-    """A set of data points on a certain grid with a certain lifetime."""
+    """A set of data points on an arbitrary grid with a certain lifetime.
+
+    Extends an `xarray.Dataset`, which represents a timeseries with grid data,
+    with values (on that same grid) at certain time steps.
+
+    Values are defined via `GridDataFactory`, which enable adding values at
+    specific spatial coordinates to a grid. The given timeseries grid data are
+    then extended by adding the values at each time step starting at `start`
+    until `end` at intervals `frequency` (given as `string`).
+
+    """
 
     def __init__(
         self,
@@ -19,13 +28,14 @@ class DataPoints:
         self.factory = data_factory
         self.dates = pd.date_range(start, end, freq=frequency)
 
-    def add_to_grid_timeseries(
+    def add_grid_to_timeseries(
         self,
         timeseries: xr.DataArray,
         time_coordinate: str,
         grid: grids.Grid,
     ) -> xr.DataArray:
-        """Add the data points to a 3-D array representing a 2-D grid timeseries.
+        """Adds data points (values defined on a grid) to a timeseries at
+        overlapping times of `DataPoints` and `timeseries`.
 
         Parameters
         ----------
@@ -46,7 +56,7 @@ class DataPoints:
         timesteps_within_range = self._determine_timesteps_within_range(
             timeseries=timeseries, time_coordinate=time_coordinate
         )
-        timeseries = self._add_data_to_timesteps(
+        timeseries = self._add_data_to_timeseries(
             timeseries=timeseries,
             time_coordinate=time_coordinate,
             timesteps=timesteps_within_range,
@@ -65,7 +75,7 @@ class DataPoints:
         timesteps_within_range = timeseries[time_coordinate][condition]
         return timesteps_within_range
 
-    def _add_data_to_timesteps(
+    def _add_data_to_timeseries(
         self,
         timeseries: xr.DataArray,
         time_coordinate: str,

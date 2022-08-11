@@ -11,7 +11,8 @@ def reshape_spatio_temporal_xarray_data_array(
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
 ) -> np.ndarray:
-    """Reshape a `xr.DataArray` that has one temporal and two spatial dimensions.
+    """Reshape a `xr.DataArray` that has one temporal and two spatial
+    dimensions.
 
     Parameters
     ----------

@@ -1,10 +1,10 @@
 import xarray as xr
 
 
-def calculate_daily_averages(
+def calculate_daily_mean(
     dataset: xr.Dataset, time_coordinate: str = "time"
 ) -> xr.Dataset:
-    """Calculate daily averages for all parameters in a dataset.
+    """Calculate daily mean for all parameters in a dataset.
 
     The below implementation works well for both monotonous and non-monotonous
     timeseries data. However, it might not be the most efficient. For mono-

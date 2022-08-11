@@ -1,10 +1,8 @@
 import typing as t
-from unittest import mock
+import unittest.mock as mock
 
 import lifetimes.benchmark as bench
-from dask.delayed import (
-    Delayed,
-)
+from dask.delayed import Delayed
 
 # Cannot be imported otherwise,
 # because dask mixes up function delayed and submodule delayed"""
