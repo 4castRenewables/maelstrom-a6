@@ -69,7 +69,7 @@ class FakeDataset(datasets.EcmwfIfsHres):
     def _add_data_to_timeseries(self, timeseries: xr.DataArray):
         if self.data is not None:
             for data in self.data:
-                timeseries = data.add_to_grid_timeseries(
+                timeseries = data.add_grid_to_timeseries(
                     timeseries=timeseries,
                     grid=self.grid,
                     time_coordinate=self.time_coordinate,

@@ -53,7 +53,7 @@ def da(ds) -> xr.DataArray:
 
 @pytest.fixture()
 def pca(da):
-    return _pca.spatio_temporal_principal_component_analysis(
+    return _pca.spatio_temporal_pca(
         data=da,
         time_coordinate="time",
         latitude_coordinate="lat",
@@ -67,7 +67,7 @@ def pca(da):
 @pytest.fixture()
 def kmeans(pca) -> clustering.KMeans:
     algorithm = cluster.KMeans(n_clusters=2)
-    return clustering.find_principal_component_clusters(
+    return clustering.find_pc_space_clusters(
         algorithm=algorithm,
         pca=pca,
         n_components=3,
@@ -77,7 +77,7 @@ def kmeans(pca) -> clustering.KMeans:
 @pytest.fixture()
 def hdbscan(pca) -> clustering.HDBSCAN:
     algorithm = _hdbscan.HDBSCAN(min_cluster_size=2)
-    return clustering.find_principal_component_clusters(
+    return clustering.find_pc_space_clusters(
         algorithm=algorithm,
         pca=pca,
         n_components=3,

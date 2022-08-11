@@ -35,7 +35,7 @@ def plot_scree_test(
     # Plot cumulative variance on first axis
     ax1_color = "tab:red"
     ax1.set_ylabel("cumulative explained variance", color=ax1_color)
-    ax1.scatter(x, pca.cumulative_variance_ratios, color=ax1_color)
+    ax1.scatter(x, pca.cumulative_variance_ratio, color=ax1_color)
 
     # Create right axis.
     ax2 = ax1.twinx()
@@ -43,7 +43,7 @@ def plot_scree_test(
     # Plot the explained variance ratios.
     ax2_color = "tab:blue"
     ax2.set_ylabel("explained variance ratio", color=ax2_color)
-    ax2.scatter(x, pca.variance_ratios, color=ax2_color)
+    ax2.scatter(x, pca.explained_variance_ratio, color=ax2_color)
 
     for ax, color in [(ax1, ax1_color), (ax2, ax2_color)]:
         # Set log scale.
@@ -62,13 +62,13 @@ def plot_scree_test(
         ax2.axvline(
             n_components,
             ymin=0,
-            ymax=2 * np.max(pca.variance_ratios.values),
+            ymax=2 * np.max(pca.explained_variance_ratio.values),
             linestyle="dashed",
             color="grey",
         )
         ax2.text(
             1.03 * n_components,
-            np.min(pca.variance_ratios),
+            np.min(pca.explained_variance_ratio),
             f"$n_{{comp}} = {n_components}$",
             rotation=90,
             color="grey",

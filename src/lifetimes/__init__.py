@@ -2,6 +2,7 @@ import lifetimes.benchmark
 import lifetimes.cli
 import lifetimes.datasets
 import lifetimes.features
+import lifetimes.hyperparameters
 import lifetimes.modes
 import lifetimes.parallel
 import lifetimes.plotting

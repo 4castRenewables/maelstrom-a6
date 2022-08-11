@@ -10,7 +10,7 @@ def method(request):
 
 @pytest.fixture()
 def pcas(da, method):
-    return _pca.spatio_temporal_principal_component_analysis(
+    return _pca.spatio_temporal_pca(
         data=da,
         time_coordinate="time",
         latitude_coordinate="lat",
