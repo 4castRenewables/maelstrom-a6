@@ -44,14 +44,17 @@ From: python:3.9-slim
     ln -s /host/usr/lib64/liblua-5.3.so /usr/lib64/liblua-5.3.so
     ln -s /host/usr/lib64/libmunge.so.2 /usr/lib64/libmunge.so.2
     apt update -y && apt upgrade -y
-    #apt install -y openssh-client libpcre3 openssl build-essential
-    apt install -y build-essential
+    apt install -y \
+        openssh-client \
+        libpcre3 \
+        openssl \
+        build-essential  # installs gcc, required for hdbscan
     pip install --upgrade pip
     export PATH="/root/.local/bin:$PATH"
     cd /opt
     pip install .
-    #pip install ipykernel
-    #python -m ipykernel install
+    pip install ipykernel
+    python -m ipykernel install
     apt --fix-broken install
     cd /
     rm -rf /opt

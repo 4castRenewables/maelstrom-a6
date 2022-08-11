@@ -36,13 +36,19 @@ From: python:3.9-slim
     echo '#!/usr/bin/env bash\n\nssh $(hostname) -q -t ". /etc/profile ; module load slurm ; sview ${@}"' > /bin/sview
     chmod -R 755 /bin/s*
     apt update -y && apt upgrade -y
-    apt install -y openssh-client libpcre3 openssl build-essential
+    apt install -y \
+        openssh-client \
+        libpcre3 \
+        openssl \
+        build-essential  # installs gcc, required for hdbscan
     pip install --upgrade pip
     export PATH="/root/.local/bin:$PATH"
     cd /opt
     pip install .
     pip install ipykernel
     python -m ipykernel install
+    cd /
+    rm -rf /opt
 
 %environment
     # Add folder with slurm scripts to environment variable
