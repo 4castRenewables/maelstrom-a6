@@ -48,8 +48,8 @@ class PCA:
         self._time_series = time_series
         self._time_dims = time_series.dims
         self._spatial_dims = [
-            x_coordinate or "latitude",
-            y_coordinate or "longitude",
+            x_coordinate or "longitude",
+            y_coordinate or "latitude",
         ]
 
         self._components = xr.DataArray(
