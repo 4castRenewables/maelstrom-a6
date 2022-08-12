@@ -17,10 +17,7 @@ class PCA:
         self,
         pca: PCAMethod,
         reshaped: np.ndarray,
-        original_shape: utils.Dimensions,
-        time_series: xr.DataArray,
-        x_coordinate: t.Optional[str] = None,
-        y_coordinate: t.Optional[str] = None,
+        dimensions: utils.Dimensions,
     ):
         """Wrap `sklearn.decomposition.PCA`.
 
@@ -29,27 +26,15 @@ class PCA:
         pca : sklearn.decomposition.PCA
         reshaped : np.ndarray
             The reshaped, original data used for PCA.
-        original_shape : lifetimes.utils.dimensions.Dimensions
+        dimensions : lifetimes.utils.dimensions.Dimensions
             Original shape of the data the PCA was performed on.
-        time_series : xr.DataArray
-            The timeseries of the original data.
-        x_coordinate : str, optional
-            Name of the x coordinate in the original dataset.
-        y_coordinate : str, optional
-            Name of the y coordinate in the original dataset.
 
         """
         self._pca = pca
         self._original_reshaped = xr.DataArray(
-            reshaped, dims=[*time_series.dims, "flattened_data"]
+            reshaped, dims=[dimensions.time.name, "flattened_data"]
         )
-        self._original_shape = original_shape
-        self._time_series = time_series
-        self._time_dims = time_series.dims
-        self._spatial_dims = [
-            x_coordinate or "longitude",
-            y_coordinate or "latitude",
-        ]
+        self._dimensions = dimensions
 
         self._components = xr.DataArray(
             self._pca.components_, dims=[PC_DIM, "entry"]
@@ -67,7 +52,7 @@ class PCA:
 
     @property
     def timeseries(self) -> xr.DataArray:
-        return self._time_series
+        return self._dimensions.time.values
 
     @property
     def components(self) -> xr.DataArray:
@@ -205,16 +190,20 @@ class PCA:
     ) -> xr.DataArray:
         # x
         if includes_time_dimension:
-            reshaped = data.data.reshape(self._original_shape.to_tuple())
+            reshaped = data.data.reshape(self._dimensions.to_tuple())
             # The PCs are flipped along axis 1.
             return xr.DataArray(
-                np.flip(reshaped, axis=1), dims=[PC_DIM, *self._spatial_dims]
+                np.flip(reshaped, axis=1),
+                dims=[PC_DIM, *self._dimensions.spatial_dimension_names],
             )
         reshaped = data.data.reshape(
-            self._original_shape.to_tuple(include_time_dim=False)
+            self._dimensions.to_tuple(include_time_dim=False)
         )
         # The PCs are flipped along axis 0.
-        return xr.DataArray(np.flip(reshaped, axis=0), dims=self._spatial_dims)
+        return xr.DataArray(
+            np.flip(reshaped, axis=0),
+            dims=self._dimensions.spatial_dimension_names,
+        )
 
     def components_sufficient_for_variance_ratio(
         self, variance_ratio: float

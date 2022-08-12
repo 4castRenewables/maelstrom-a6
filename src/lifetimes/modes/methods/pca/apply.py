@@ -5,7 +5,6 @@ import lifetimes.utils as utils
 import lifetimes.utils._types as _types
 import numpy as np
 import sklearn.decomposition as decomposition
-import xarray as xr
 
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
@@ -69,7 +68,7 @@ def spatio_temporal_pca(
     else:
         pca = pca_method(**kwargs)
 
-    (original_shape, timeseries, data) = _reshape_data(
+    (dimensions, data) = _reshape_data(
         data=data,
         time_coordinate=time_coordinate,
         latitude_coordinate=latitude_coordinate,
@@ -81,10 +80,7 @@ def spatio_temporal_pca(
     return single_variable_pca.PCA(
         pca=result,
         reshaped=data,
-        original_shape=original_shape,
-        time_series=timeseries,
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
+        dimensions=dimensions,
     )
 
 
@@ -94,9 +90,10 @@ def _reshape_data(
     latitude_coordinate: str,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
-) -> tuple[utils.Dimensions, xr.DataArray, np.ndarray]:
-    timeseries = data[time_coordinate]
-    original_shape = utils.Dimensions.from_xarray(data)
+) -> tuple[utils.Dimensions, np.ndarray]:
+    dimensions = utils.Dimensions.from_xarray(
+        data, time_dimension=time_coordinate
+    )
     data = utils.weight_by_latitudes(
         data=data,
         latitudes=latitude_coordinate,
@@ -109,7 +106,6 @@ def _reshape_data(
         y_coordinate=y_coordinate,
     )
     return (
-        original_shape,
-        timeseries,
+        dimensions,
         data,
     )

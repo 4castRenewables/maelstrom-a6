@@ -3,71 +3,102 @@ import typing as t
 
 import xarray as xr
 
+XarrayData = t.Union[xr.DataArray, xr.Dataset]
+
+
+@dataclasses.dataclass
+class Dimension:
+    """A dimension of a dataset."""
+
+    name: str
+    size: int
+
+
+@dataclasses.dataclass
+class TimeDimension:
+    """The time dimension of a dataset."""
+
+    name: str
+    size: int
+    values: xr.DataArray
+
+
+@dataclasses.dataclass
+class Variable:
+    """A variable of a dataset."""
+
+    name: str
+
 
 @dataclasses.dataclass
 class Dimensions:
     """Dimensions of a given dataset."""
 
-    time: int
-    x: int
-    y: int
-    n_vars: t.Optional[int] = None
+    time: TimeDimension
+    x: Dimension
+    y: Dimension
+    variables: tuple[Variable]
 
     @classmethod
-    def from_xarray(
-        cls, data: t.Union[xr.DataArray, xr.Dataset]
-    ) -> "Dimensions":
+    def from_xarray(cls, data: XarrayData, time_dimension: str) -> "Dimensions":
         """Construct from `xarray` data object."""
-        if isinstance(data, xr.DataArray):
-            return cls.from_data_array(data)
-        elif isinstance(data, xr.Dataset):
-            return cls.from_dataset(data)
-        raise NotImplementedError(
-            f"Cannot construct {cls.__name__} from {type(data)}"
+        time, x, y = _get_temporal_and_spatial_dimension(
+            data, time_dimension=time_dimension
         )
-
-    @classmethod
-    def from_data_array(cls, data: xr.DataArray) -> "Dimensions":
-        """Construct from `xarray.DataArray`."""
-        time, x, y = data.shape
+        variables = _get_variables(data)
         return cls(
             time=time,
             x=x,
             y=y,
-        )
-
-    @classmethod
-    def from_dataset(cls, data: xr.Dataset) -> "Dimensions":
-        """Construct from `xarray.Dataset`."""
-        time, x, y = tuple(data.sizes.values())
-        n_vars = len(data.data_vars)
-        return cls(
-            time=time,
-            x=x,
-            y=y,
-            n_vars=n_vars,
+            variables=variables,
         )
 
     @property
     def is_multi_variable(self) -> bool:
         """Return whether the shape represents a multi-variable dataset."""
-        return self.n_vars is not None
+        return len(self.variables) > 1
+
+    @property
+    def spatial_dimension_names(self) -> tuple[str, str]:
+        """Return the names of the sptial dimensions in order (x, y)."""
+        return self.x.name, self.y.name
 
     def to_tuple(self, include_time_dim: bool = True) -> tuple[int, ...]:
         """Return as a tuple."""
         if include_time_dim:
-            return self.time, self.x, self.y
-        return self.x, self.y
+            return self.time.size, self.x.size, self.y.size
+        return self.x.size, self.y.size
 
-    def to_slices(self) -> t.Iterator[slice]:
+    def to_variable_name_and_slices(
+        self,
+    ) -> tuple[t.Iterator[str], t.Iterator[slice]]:
         """Return a set of `slice` that allows iterating over a flattened array
         containing multiple variables"""
-        flattened_size = self.x * self.y
+        flattened_size = self.x.size * self.y.size
 
-        if self.n_vars is None:
-            yield slice(flattened_size)
+        if not self.is_multi_variable:
+            [variable] = self.variables
+            yield variable.name, slice(flattened_size)
+        else:
+            for i, variable in enumerate(self.variables):
+                start = flattened_size * i
+                end = flattened_size * (i + 1)
+                yield variable.name, slice(start, end)
 
-        for i in range(self.n_vars):
-            start = flattened_size * i
-            end = flattened_size * (i + 1)
-            yield slice(start, end)
+
+def _get_temporal_and_spatial_dimension(
+    data: XarrayData, time_dimension: str
+) -> t.Iterator[Dimension]:
+    for name, size in data.sizes.items():
+        if name == time_dimension:
+            yield TimeDimension(
+                name=str(name), size=size, values=data[time_dimension]
+            )
+        else:
+            yield Dimension(name=str(name), size=size)
+
+
+def _get_variables(data: XarrayData) -> tuple[Variable]:
+    if isinstance(data, xr.DataArray):
+        return (Variable(name=str(data.name)),)
+    return tuple(Variable(name=str(var)) for var in data.data_vars)
