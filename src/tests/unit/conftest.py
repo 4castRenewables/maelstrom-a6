@@ -54,13 +54,12 @@ def da(ds) -> xr.DataArray:
 @pytest.fixture()
 def pca(da):
     return _pca.spatio_temporal_pca(
-        data=da,
+        da,
+        algorithm=decomposition.PCA(),
         time_coordinate="time",
         latitude_coordinate="lat",
         x_coordinate="lat",
         y_coordinate="lon",
-        variance_ratio=None,
-        pca_method=decomposition.PCA,
     )
 
 

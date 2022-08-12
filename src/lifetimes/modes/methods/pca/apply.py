@@ -1,31 +1,42 @@
+import functools
 import typing as t
 
+import lifetimes.modes.methods.pca.multi_variable_pca as multi_variable_pca
+import lifetimes.modes.methods.pca.pca_abc as pca_abc
 import lifetimes.modes.methods.pca.single_variable_pca as single_variable_pca
 import lifetimes.utils as utils
 import lifetimes.utils._types as _types
 import numpy as np
 import sklearn.decomposition as decomposition
+import xarray as xr
 
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 
 @utils.log_runtime
+@functools.singledispatch
 def spatio_temporal_pca(
-    data: _types.Data,
+    data: t.Any,
+    algorithm: PCAMethod,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
-    variance_ratio: t.Optional[float] = None,
-    pca_method: t.Type[PCAMethod] = decomposition.PCA,
-    **kwargs,
-) -> single_variable_pca.PCA:
+) -> pca_abc.PCA:
     """Perform a spatio-temporal PCA.
 
     Parameters
     ----------
     data : xr.Dataset or xr.DataArray
         Spatial timeseries data.
+        Must be passed as an positional argument, i.e. as
+        ```python
+        spatio_temporal_pca(data, ...)
+        ```
+        Passing as a keyword argument (i.e. `data=data`) will raise a
+        `TypeError`.
+    algorithm : sklearn.decomposition.PCA or IncrementalPCA
+        Method to use for the PCA.
     time_coordinate : str, default="time"
         Name of the time coordinate.
         This is required to reshape the data for the PCA.
@@ -38,12 +49,6 @@ def spatio_temporal_pca(
     y_coordinate : str, optional
         Name of the y-coordinate of the grid.
         If `None`, CF 1.6 convention will be assumed, i.e. `"latitude"`.
-    variance_ratio : float, optional
-        Variance ratio threshold at which to drop the PCs.
-    pca_method : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
-        Method to use for the PCA.
-    kwargs
-        Additional keyword arguments to pass to the PCA method.
 
     Returns
     -------
@@ -61,13 +66,68 @@ def spatio_temporal_pca(
     Springer, 2002, page 302 ff.
 
     """
-    if variance_ratio is not None:
-        if variance_ratio < 0.0 or variance_ratio > 1.0:
-            raise ValueError("Variance ratio must be in the range [0;1]")
-        pca = pca_method(n_components=variance_ratio, **kwargs)
-    else:
-        pca = pca_method(**kwargs)
+    return NotImplemented
 
+
+@utils.log_runtime
+@spatio_temporal_pca.register
+def _(
+    data: xr.DataArray,
+    algorithm: PCAMethod,
+    time_coordinate: str = "time",
+    latitude_coordinate: str = "latitude",
+    x_coordinate: t.Optional[str] = None,
+    y_coordinate: t.Optional[str] = None,
+) -> single_variable_pca.SingleVariablePCA:
+
+    dimensions, data, pca = _apply_pca(
+        data=data,
+        algorithm=algorithm,
+        time_coordinate=time_coordinate,
+        latitude_coordinate=latitude_coordinate,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+    )
+    return single_variable_pca.SingleVariablePCA(
+        pca=pca,
+        reshaped=data,
+        dimensions=dimensions,
+    )
+
+
+@utils.log_runtime
+@spatio_temporal_pca.register
+def _(
+    data: xr.Dataset,
+    algorithm: PCAMethod,
+    time_coordinate: str = "time",
+    latitude_coordinate: str = "latitude",
+    x_coordinate: t.Optional[str] = None,
+    y_coordinate: t.Optional[str] = None,
+) -> multi_variable_pca.MultiVariablePCA:
+    dimensions, data, pca = _apply_pca(
+        data=data,
+        algorithm=algorithm,
+        time_coordinate=time_coordinate,
+        latitude_coordinate=latitude_coordinate,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+    )
+    return multi_variable_pca.MultiVariablePCA(
+        pca=pca,
+        reshaped=data,
+        dimensions=dimensions,
+    )
+
+
+def _apply_pca(
+    data: _types.Data,
+    algorithm: PCAMethod,
+    time_coordinate: str = "time",
+    latitude_coordinate: str = "latitude",
+    x_coordinate: t.Optional[str] = None,
+    y_coordinate: t.Optional[str] = None,
+) -> tuple[utils.Dimensions, np.ndarray, PCAMethod]:
     (dimensions, data) = _reshape_data(
         data=data,
         time_coordinate=time_coordinate,
@@ -75,13 +135,8 @@ def spatio_temporal_pca(
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-
-    result: PCAMethod = pca.fit(data)
-    return single_variable_pca.PCA(
-        pca=result,
-        reshaped=data,
-        dimensions=dimensions,
-    )
+    pca: PCAMethod = algorithm.fit(data)
+    return dimensions, data, pca
 
 
 def _reshape_data(
