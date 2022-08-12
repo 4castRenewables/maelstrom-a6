@@ -1,4 +1,4 @@
-import lifetimes.utils.shape as shape
+import lifetimes.utils.dimensions as shape
 import pytest
 
 
@@ -9,9 +9,9 @@ import pytest
         ("ds", (5, 10, 10, 1)),
     ],
 )
-def test_get_xarray_data_shape(request, data, expected):
+def test_get_xarray_data_dimensions(request, data, expected):
     data = request.getfixturevalue(data)
 
-    result = shape.get_xarray_data_shape(data)
+    result = shape.get_xarray_data_dimensions(data)
 
     assert result == expected
