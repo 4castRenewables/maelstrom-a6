@@ -1,6 +1,7 @@
 import typing as t
 
 import lifetimes.utils as utils
+import lifetimes.utils._types as _types
 import numpy as np
 import sklearn.decomposition as decomposition
 import xarray as xr
@@ -272,8 +273,8 @@ def _select_components(
 
 @utils.log_runtime
 def spatio_temporal_pca(
-    data: xr.DataArray,
-    time_coordinate: str,
+    data: _types.Data,
+    time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
@@ -285,9 +286,9 @@ def spatio_temporal_pca(
 
     Parameters
     ----------
-    data : xr.DataArray
+    data : xr.Dataset or xr.DataArray
         Spatial timeseries data.
-    time_coordinate : str
+    time_coordinate : str, default="time"
         Name of the time coordinate.
         This is required to reshape the data for the PCA.
     latitude_coordinate : str, default="latitude"
@@ -329,16 +330,10 @@ def spatio_temporal_pca(
     else:
         pca = pca_method(**kwargs)
 
-    original_shape = data.shape
-    timeseries = data[time_coordinate]
-    data = utils.weight_by_latitudes(
+    (original_shape, timeseries, data) = _reshape_data(
         data=data,
-        latitudes=latitude_coordinate,
-        use_sqrt=True,
-    )
-    data = utils.reshape_spatio_temporal_xarray_data_array(
-        data=data,
-        time_coordinate=None,  # Set to None to avoid memory excess in function
+        time_coordinate=time_coordinate,
+        latitude_coordinate=latitude_coordinate,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
@@ -351,4 +346,31 @@ def spatio_temporal_pca(
         time_series=timeseries,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
+    )
+
+
+def _reshape_data(
+    data: _types.Data,
+    time_coordinate: str,
+    latitude_coordinate: str,
+    x_coordinate: t.Optional[str],
+    y_coordinate: t.Optional[str],
+) -> tuple[tuple, xr.DataArray, np.ndarray]:
+    timeseries = data[time_coordinate]
+    original_shape = utils.get_xarray_data_shape(data)
+    data = utils.weight_by_latitudes(
+        data=data,
+        latitudes=latitude_coordinate,
+        use_sqrt=True,
+    )
+    data = utils.reshape_spatio_temporal_xarray_data(
+        data=data,
+        time_coordinate=None,  # Set to None to avoid memory excess in function
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+    )
+    return (
+        original_shape,
+        timeseries,
+        data,
     )
