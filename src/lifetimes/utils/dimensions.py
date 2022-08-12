@@ -42,7 +42,9 @@ class Dimensions:
     @classmethod
     def from_xarray(cls, data: XarrayData, time_dimension: str) -> "Dimensions":
         """Construct from `xarray` data object."""
-        time, x, y = _get_temporal_and_spatial_dimension(
+        # According to CF 1.6 conventions, the order of dimensions is:
+        # T, Z, Y, X
+        time, y, x = _get_temporal_and_spatial_dimension(
             data, time_dimension=time_dimension
         )
         variables = _get_variables(data)
