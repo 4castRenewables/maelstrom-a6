@@ -4,16 +4,17 @@ import lifetimes.utils
 import xarray as xr
 
 
-def select_level(
-    dataset: xr.Dataset, level: t.Union[int, t.Sequence[int]]
-) -> xr.Dataset:
+Level = t.Union[int, t.Sequence[int]]
+
+
+def select_level(dataset: xr.Dataset, level: Level) -> xr.Dataset:
     """Select given level from the dataset."""
     return dataset.sel(level=level)
 
 
 def select_level_and_calculate_daily_mean(
     dataset: xr.Dataset,
-    level: t.Union[int, t.Sequence[int]],
+    level: Level,
     time_coordinate: str = "time",
 ) -> xr.Dataset:
     """Select given level from the dataset and calculate daily means."""
