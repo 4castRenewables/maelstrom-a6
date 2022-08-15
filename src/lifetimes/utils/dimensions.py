@@ -1,7 +1,10 @@
 import dataclasses
+import logging
 import typing as t
 
 import xarray as xr
+
+logger = logging.getLogger(__name__)
 
 XarrayData = t.Union[xr.DataArray, xr.Dataset]
 
@@ -47,6 +50,13 @@ class Dimensions:
         time, y, x = _get_temporal_and_spatial_dimension(
             data, time_dimension=time_dimension
         )
+        logger.debug(
+            "Got temporal dim %s and spatial dims y % and x % from data %s",
+            time,
+            y,
+            x,
+            data,
+        )
         variables = _get_variables(data)
         return cls(
             time=time,
@@ -62,7 +72,7 @@ class Dimensions:
 
     @property
     def spatial_dimension_names(self) -> tuple[str, str]:
-        """Return the names of the sptial dimensions in order (x, y)."""
+        """Return the names of the spatial dimensions in order (x, y)."""
         return self.x.name, self.y.name
 
     def to_tuple(self, include_time_dim: bool = True) -> tuple[int, ...]:

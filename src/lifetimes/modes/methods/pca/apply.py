@@ -17,7 +17,7 @@ PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 @functools.singledispatch
 def spatio_temporal_pca(
     data: t.Any,
-    algorithm: PCAMethod,
+    algorithm: t.Optional[PCAMethod] = None,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
@@ -35,7 +35,7 @@ def spatio_temporal_pca(
         ```
         Passing as a keyword argument (i.e. `data=data`) will raise a
         `TypeError`.
-    algorithm : sklearn.decomposition.PCA or IncrementalPCA
+    algorithm : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
         Method to use for the PCA.
     time_coordinate : str, default="time"
         Name of the time coordinate.
@@ -73,13 +73,12 @@ def spatio_temporal_pca(
 @spatio_temporal_pca.register
 def _(
     data: xr.DataArray,
-    algorithm: PCAMethod,
+    algorithm: t.Optional[PCAMethod] = None,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
 ) -> single_variable_pca.SingleVariablePCA:
-
     dimensions, data, pca = _apply_pca(
         data=data,
         algorithm=algorithm,
@@ -99,7 +98,7 @@ def _(
 @spatio_temporal_pca.register
 def _(
     data: xr.Dataset,
-    algorithm: PCAMethod,
+    algorithm: t.Optional[PCAMethod] = None,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
@@ -122,12 +121,15 @@ def _(
 
 def _apply_pca(
     data: _types.Data,
-    algorithm: PCAMethod,
+    algorithm: t.Optional[PCAMethod] = None,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
 ) -> tuple[utils.Dimensions, np.ndarray, PCAMethod]:
+    if algorithm is None:
+        algorithm = decomposition.PCA()
+
     (dimensions, data) = _reshape_data(
         data=data,
         time_coordinate=time_coordinate,

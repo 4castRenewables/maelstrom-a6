@@ -2,8 +2,8 @@ import lifetimes.plotting.clustering as clustering
 import pytest
 
 
-@pytest.fixture(params=["kmeans", "hdbscan"])
-def clusters(request):
+@pytest.fixture(params=["kmeans", "hdbscan"], scope="session")
+def clusters(request, kmeans, hdbscan):
     return request.getfixturevalue(request.param)
 
 
