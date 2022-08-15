@@ -1,6 +1,6 @@
-import abc
 import typing as t
 
+import lifetimes.modes.methods.pca._reshape as _reshape
 import lifetimes.utils as utils
 import numpy as np
 import sklearn.decomposition as decomposition
@@ -12,7 +12,7 @@ PC_DIM = "component"
 PC_VALUES_DIM = "entry"
 
 
-class PCA(abc.ABC):
+class PCA:
     """Wrapper for `sklearn.decomposition.PCA`."""
 
     def __init__(
@@ -37,6 +37,7 @@ class PCA(abc.ABC):
             reshaped, dims=[dimensions.time.name, "flattened_data"]
         )
         self._dimensions = dimensions
+        self.reshaper = _reshape.Reshaper(dimensions)
 
         self._components = xr.DataArray(
             self._pca.components_, dims=[PC_DIM, PC_VALUES_DIM]
@@ -82,9 +83,9 @@ class PCA(abc.ABC):
         return self._cumulative_variance_ratio
 
     @property
-    def components_in_original_shape(self) -> xr.DataArray:
+    def components_in_original_shape(self) -> xr.Dataset:
         """Return the principal components (EOFs)."""
-        return self._to_original_shape(self.components)
+        return self.reshaper(self.components)
 
     @property
     def components_varimax_rotated(self) -> xr.DataArray:
@@ -92,9 +93,9 @@ class PCA(abc.ABC):
         return _perform_varimax_rotation(self.components)
 
     @property
-    def components_varimax_rotated_in_original_shape(self) -> xr.DataArray:
+    def components_varimax_rotated_in_original_shape(self) -> xr.Dataset:
         """Return the principal components (EOFs)."""
-        return self._to_original_shape(self.components_varimax_rotated)
+        return self.reshaper(self.components_varimax_rotated)
 
     @utils.log_runtime
     def transform(self, n_components: t.Optional[int] = None) -> xr.DataArray:
@@ -139,12 +140,13 @@ class PCA(abc.ABC):
 
         return transformed
 
+    @utils.log_runtime
     def inverse_transform(
         self,
         data: xr.DataArray,
         n_components: t.Optional[int] = None,
         in_original_shape: bool = True,
-    ) -> xr.DataArray:
+    ) -> xr.Dataset:
         """Transform data back to its original space.
 
         Parameters
@@ -182,30 +184,15 @@ class PCA(abc.ABC):
             inverse = utils.np_dot(data, components) + self._pca.mean_
 
         if in_original_shape:
-            return self._to_original_shape(
-                _rename_1d_data_array_dimension(inverse),
+            # If the given data is unlabeled, the name of the dimension is
+            # `dim_0`.
+            return self.reshaper(
+                inverse,
                 includes_time_dimension=False,
+                rename_dim_0=True,
             )
-        return inverse
-
-    def _to_original_shape(
-        self, data: xr.DataArray, includes_time_dimension: bool = True
-    ) -> xr.DataArray:
-        if includes_time_dimension:
-            reshaped = data.data.reshape(self._dimensions.to_tuple())
-            # The PCs are flipped along axis 1.
-            return xr.DataArray(
-                np.flip(reshaped, axis=1),
-                dims=[PC_DIM, *self._dimensions.spatial_dimension_names],
-            )
-        reshaped = data.data.reshape(
-            self._dimensions.to_tuple(include_time_dim=False)
-        )
-        # The PCs are flipped along axis 0.
-        return xr.DataArray(
-            np.flip(reshaped, axis=0),
-            dims=self._dimensions.spatial_dimension_names,
-        )
+        name = inverse.name or "_".join(self._dimensions.variable_names)
+        return xr.Dataset(data_vars={name: inverse}, coords=inverse.coords)
 
     def components_sufficient_for_variance_ratio(
         self, variance_ratio: float
@@ -262,11 +249,3 @@ def _select_components(
     if n_components is None:
         return data
     return data.sel({PC_DIM: slice(n_components)})
-
-
-def _rename_1d_data_array_dimension(data: xr.DataArray) -> xr.DataArray:
-    try:
-        [dim] = data.dims
-    except ValueError:
-        raise ValueError(f"Data has more than 1 dimension: {data.dims}")
-    return data.rename({dim: PC_VALUES_DIM})

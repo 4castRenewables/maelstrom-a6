@@ -15,4 +15,6 @@ def np_dot(left: xr.DataArray, right: xr.DataArray) -> xr.DataArray:
     equally named dimensions are used for dot products.
 
     """
-    return xr.DataArray(left.data.dot(right.data), dims=left.dims)
+    return xr.DataArray(
+        left.data.dot(right.data), dims=left.dims, name=left.name
+    )

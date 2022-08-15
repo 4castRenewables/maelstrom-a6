@@ -1,14 +1,11 @@
 import functools
 import typing as t
 
-import lifetimes.modes.methods.pca.multi_variable_pca as multi_variable_pca
-import lifetimes.modes.methods.pca.pca_abc as pca_abc
-import lifetimes.modes.methods.pca.single_variable_pca as single_variable_pca
+import lifetimes.modes.methods.pca.pca as _pca
 import lifetimes.utils as utils
 import lifetimes.utils._types as _types
 import numpy as np
 import sklearn.decomposition as decomposition
-import xarray as xr
 
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
@@ -22,7 +19,7 @@ def spatio_temporal_pca(
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
-) -> pca_abc.PCA:
+) -> _pca.PCA:
     """Perform a spatio-temporal PCA.
 
     Parameters
@@ -66,19 +63,6 @@ def spatio_temporal_pca(
     Springer, 2002, page 302 ff.
 
     """
-    return NotImplemented
-
-
-@utils.log_runtime
-@spatio_temporal_pca.register
-def _(
-    data: xr.DataArray,
-    algorithm: t.Optional[PCAMethod] = None,
-    time_coordinate: str = "time",
-    latitude_coordinate: str = "latitude",
-    x_coordinate: t.Optional[str] = None,
-    y_coordinate: t.Optional[str] = None,
-) -> single_variable_pca.SingleVariablePCA:
     dimensions, data, pca = _apply_pca(
         data=data,
         algorithm=algorithm,
@@ -87,32 +71,7 @@ def _(
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-    return single_variable_pca.SingleVariablePCA(
-        pca=pca,
-        reshaped=data,
-        dimensions=dimensions,
-    )
-
-
-@utils.log_runtime
-@spatio_temporal_pca.register
-def _(
-    data: xr.Dataset,
-    algorithm: t.Optional[PCAMethod] = None,
-    time_coordinate: str = "time",
-    latitude_coordinate: str = "latitude",
-    x_coordinate: t.Optional[str] = None,
-    y_coordinate: t.Optional[str] = None,
-) -> multi_variable_pca.MultiVariablePCA:
-    dimensions, data, pca = _apply_pca(
-        data=data,
-        algorithm=algorithm,
-        time_coordinate=time_coordinate,
-        latitude_coordinate=latitude_coordinate,
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-    )
-    return multi_variable_pca.MultiVariablePCA(
+    return _pca.PCA(
         pca=pca,
         reshaped=data,
         dimensions=dimensions,

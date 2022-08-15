@@ -3,30 +3,6 @@ import pytest
 import xarray as xr
 
 
-def test_spatio_temporal_pca(ds, single_variable_pca):
-    # da has n = 5 time steps on a (10, 10) grid, hence PCs must be of shape
-    # (5, 100)
-    assert single_variable_pca.components_in_original_shape.shape == (5, 10, 10)
-    assert single_variable_pca.inverse_transform(
-        xr.DataArray([1, 2, 3]), n_components=3
-    ).shape == (10, 10)
-
-
-def test_multi_variable_spatio_temporal_pca(multi_variable_pca):
-
-    # da has n = 5 time steps for 2 variables on a (10, 10) grid, hence PCs
-    # must be of shape (5, 2*100)
-    assert multi_variable_pca.components_in_original_shape.shape == (
-        5,
-        10,
-        10,
-        2,
-    )
-    assert multi_variable_pca.inverse_transform(
-        xr.DataArray([1, 2, 3]), n_components=3
-    ).shape == (10, 10, 2)
-
-
 class TestPCA:
     @pytest.mark.parametrize(
         ("pca_", "expected"),
@@ -61,18 +37,24 @@ class TestPCA:
         assert result.shape == expected
 
     @pytest.mark.parametrize(
-        ("pca_", "expected"),
+        ("pca_", "expected_n_vars", "expected_shape"),
         [
-            ("single_variable_pca", (5, 10, 10)),
-            ("multi_variable_pca", (5, 10, 10, 2)),
+            ("single_variable_pca", 1, (5, 10, 10)),
+            ("multi_variable_pca", 2, (5, 10, 10)),
         ],
     )
-    def test_components_in_original_shape(self, request, pca_, expected):
+    def test_components_in_original_shape(
+        self, request, pca_, expected_n_vars, expected_shape
+    ):
         pca_ = request.getfixturevalue(pca_)
 
         result = pca_.components_in_original_shape
 
-        assert result.shape == expected
+        result_shape = tuple(result.sizes.values())
+
+        result_n_vars = len(result.data_vars)
+        assert result_n_vars == expected_n_vars
+        assert result_shape == expected_shape
 
     @pytest.mark.parametrize(
         ("pca_", "expected"),
@@ -207,9 +189,8 @@ class TestPCA:
         result = pca_.inverse_transform(data, n_components=n_components)
         result_shape = tuple(result.sizes.values())
 
-        if expected_n_vars > 1:
-            result_n_vars = len(result.data_vars)
-            assert result_n_vars == expected_n_vars
+        result_n_vars = len(result.data_vars)
+        assert result_n_vars == expected_n_vars
         assert result_shape == expected_shape
 
     def test_inverse_transform(self, da, pca):
@@ -218,5 +199,9 @@ class TestPCA:
 
         transformed = pca.transform()
         result = pca.inverse_transform(transformed, in_original_shape=False)
+        [var] = tuple(result.data_vars)
+        result_da = result[var]
 
-        np.testing.assert_allclose(np.abs(result.data), np.abs(sklearn_result))
+        np.testing.assert_allclose(
+            np.abs(result_da.data), np.abs(sklearn_result)
+        )

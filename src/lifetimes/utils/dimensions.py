@@ -80,6 +80,11 @@ class Dimensions:
         """Return the names of the spatial dimensions in order (y, x)."""
         return self.y.name, self.x.name
 
+    @property
+    def variable_names(self) -> t.Iterator[str]:
+        """Return the names of the variables."""
+        return (variable.name for variable in self.variables)
+
     def to_tuple(self, include_time_dim: bool = True) -> tuple[int, ...]:
         """Return as a tuple."""
         if include_time_dim:

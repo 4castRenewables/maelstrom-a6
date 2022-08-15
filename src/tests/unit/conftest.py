@@ -61,7 +61,7 @@ def ds2(da) -> xr.Dataset:
 
 
 @pytest.fixture(scope="session")
-def single_variable_pca(da):
+def single_variable_pca(da) -> _pca.PCA:
     return _pca.spatio_temporal_pca(
         da,
         time_coordinate="time",
@@ -72,7 +72,7 @@ def single_variable_pca(da):
 
 
 @pytest.fixture(scope="session")
-def multi_variable_pca(ds2) -> _pca.multi_variable_pca.MultiVariablePCA:
+def multi_variable_pca(ds2) -> _pca.PCA:
     return _pca.spatio_temporal_pca(
         ds2,
         time_coordinate="time",
@@ -85,7 +85,7 @@ def multi_variable_pca(ds2) -> _pca.multi_variable_pca.MultiVariablePCA:
 @pytest.fixture(
     params=["single_variable_pca", "multi_variable_pca"], scope="session"
 )
-def pca(request, single_variable_pca, multi_variable_pca) -> _pca.pca_abc.PCA:
+def pca(request, single_variable_pca, multi_variable_pca) -> _pca.PCA:
     return request.getfixturevalue(request.param)
 
 

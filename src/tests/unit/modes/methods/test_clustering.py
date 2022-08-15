@@ -9,6 +9,12 @@ def test_find_pc_space_clusters_with_kmeans(kmeans):
 
 
 def test_find_pc_space_clusters_with_hdbscan(hdbscan):
-    # Expect 2 clusters
     assert hdbscan.n_clusters == 2
-    assert hdbscan.inverse_transformed_cluster(0).shape == (10, 10)
+
+    cluster = hdbscan.inverse_transformed_cluster(0)
+
+    n_vars = len(cluster.data_vars)
+    assert n_vars == len(hdbscan.pca._dimensions.variables)
+
+    shape = tuple(cluster.sizes.values())
+    assert shape == (10, 10)
