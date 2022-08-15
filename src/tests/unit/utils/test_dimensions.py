@@ -36,8 +36,24 @@ class TestDimensions:
     @pytest.mark.parametrize(
         ("dimensions", "expected"),
         [
+            ("da_dimensions", ("lat", "lon")),
+            ("ds_dimensions", ("lat", "lon")),
+            ("ds_dimensions2", ("lat", "lon")),
+        ],
+    )
+    def test_spatial_dimension_names(self, request, dimensions, expected):
+        dimensions = request.getfixturevalue(dimensions)
+
+        result = dimensions.spatial_dimension_names
+
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        ("dimensions", "expected"),
+        [
             ("da_dimensions", (5, 10, 10)),
             ("ds_dimensions", (5, 10, 10)),
+            ("ds_dimensions2", (5, 10, 10)),
         ],
     )
     def test_to_tuple(self, request, dimensions, expected):

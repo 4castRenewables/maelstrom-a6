@@ -35,18 +35,23 @@ class Variable:
 
 @dataclasses.dataclass
 class Dimensions:
-    """Dimensions of a given dataset."""
+    """Dimensions of a given dataset.
+
+    Notes
+    -----
+    According to CF 1.6 conventions, the order of dimensions is:
+    T, Z, Y, X
+
+    """
 
     time: TimeDimension
-    x: Dimension
     y: Dimension
+    x: Dimension
     variables: tuple[Variable]
 
     @classmethod
     def from_xarray(cls, data: XarrayData, time_dimension: str) -> "Dimensions":
         """Construct from `xarray` data object."""
-        # According to CF 1.6 conventions, the order of dimensions is:
-        # T, Z, Y, X
         time, y, x = _get_temporal_and_spatial_dimension(
             data, time_dimension=time_dimension
         )
@@ -60,8 +65,8 @@ class Dimensions:
         variables = _get_variables(data)
         return cls(
             time=time,
-            x=x,
             y=y,
+            x=x,
             variables=variables,
         )
 
@@ -72,14 +77,14 @@ class Dimensions:
 
     @property
     def spatial_dimension_names(self) -> tuple[str, str]:
-        """Return the names of the spatial dimensions in order (x, y)."""
-        return self.x.name, self.y.name
+        """Return the names of the spatial dimensions in order (y, x)."""
+        return self.y.name, self.x.name
 
     def to_tuple(self, include_time_dim: bool = True) -> tuple[int, ...]:
         """Return as a tuple."""
         if include_time_dim:
-            return self.time.size, self.x.size, self.y.size
-        return self.x.size, self.y.size
+            return self.time.size, self.y.size, self.x.size
+        return self.y.size, self.x.size
 
     def to_variable_name_and_slices(
         self,

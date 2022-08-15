@@ -9,6 +9,7 @@ import xarray as xr
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 PC_DIM = "component"
+PC_VALUES_DIM = "entry"
 
 
 class PCA(abc.ABC):
@@ -38,7 +39,7 @@ class PCA(abc.ABC):
         self._dimensions = dimensions
 
         self._components = xr.DataArray(
-            self._pca.components_, dims=[PC_DIM, "entry"]
+            self._pca.components_, dims=[PC_DIM, PC_VALUES_DIM]
         )
         self._n_components: int = self._components.sizes[PC_DIM]
         self._explained_variance = xr.DataArray(
@@ -172,7 +173,7 @@ class PCA(abc.ABC):
             inverse = utils.np_dot(
                 data,
                 utils.np_dot(
-                    np.sqrt(explained_variance.values[:, np.newaxis]),
+                    np.sqrt(explained_variance.data[:, np.newaxis]),
                     components,
                 ),
             )
@@ -182,14 +183,14 @@ class PCA(abc.ABC):
 
         if in_original_shape:
             return self._to_original_shape(
-                inverse, includes_time_dimension=False
+                _rename_1d_data_array_dimension(inverse),
+                includes_time_dimension=False,
             )
         return inverse
 
     def _to_original_shape(
         self, data: xr.DataArray, includes_time_dimension: bool = True
     ) -> xr.DataArray:
-        # x
         if includes_time_dimension:
             reshaped = data.data.reshape(self._dimensions.to_tuple())
             # The PCs are flipped along axis 1.
@@ -261,3 +262,11 @@ def _select_components(
     if n_components is None:
         return data
     return data.sel({PC_DIM: slice(n_components)})
+
+
+def _rename_1d_data_array_dimension(data: xr.DataArray) -> xr.DataArray:
+    try:
+        [dim] = data.dims
+    except ValueError:
+        raise ValueError(f"Data has more than 1 dimension: {data.dims}")
+    return data.rename({dim: PC_VALUES_DIM})
