@@ -1,3 +1,5 @@
+import pathlib
+
 import hdbscan as _hdbscan
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.modes.methods.pca as _pca
@@ -5,6 +7,13 @@ import lifetimes.testing as testing
 import pytest
 import sklearn.cluster as cluster
 import xarray as xr
+
+FILE_DIR = pathlib.Path(__file__).parent
+
+
+@pytest.fixture(scope="session")
+def pl_ds() -> xr.Dataset:
+    return xr.open_dataset(FILE_DIR / "../data/pl_20201201_00.nc")
 
 
 @pytest.fixture(scope="session")
@@ -66,8 +75,8 @@ def single_variable_pca(da) -> _pca.PCA:
         da,
         time_coordinate="time",
         latitude_coordinate="lat",
-        x_coordinate="lat",
-        y_coordinate="lon",
+        x_coordinate="lon",
+        y_coordinate="lat",
     )
 
 
@@ -77,8 +86,8 @@ def multi_variable_pca(ds2) -> _pca.PCA:
         ds2,
         time_coordinate="time",
         latitude_coordinate="lat",
-        x_coordinate="lat",
-        y_coordinate="lon",
+        x_coordinate="lon",
+        y_coordinate="lat",
     )
 
 

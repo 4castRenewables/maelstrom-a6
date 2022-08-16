@@ -39,8 +39,9 @@ class Dimensions:
 
     Notes
     -----
-    According to CF 1.6 conventions, the order of dimensions is:
-    T, Z, Y, X
+    According to CF 1.6 conventions, the order of dimensions is
+    T, Z, Y, X. When accessing `data.sizes` of an xarray data object,
+    it will be returned as `Frozen({'x': 10, 'y': 10, 'time': 5})`.
 
     """
 
@@ -52,11 +53,11 @@ class Dimensions:
     @classmethod
     def from_xarray(cls, data: XarrayData, time_dimension: str) -> "Dimensions":
         """Construct from `xarray` data object."""
-        time, y, x = _get_temporal_and_spatial_dimension(
+        x, y, time = _get_temporal_and_spatial_dimension(
             data, time_dimension=time_dimension
         )
         logger.debug(
-            "Got temporal dim %s and spatial dims y % and x % from data %s",
+            "Got time dim %s and spatial dims y % and x % from data %s",
             time,
             y,
             x,
@@ -111,13 +112,18 @@ class Dimensions:
 def _get_temporal_and_spatial_dimension(
     data: XarrayData, time_dimension: str
 ) -> t.Iterator[Dimension]:
-    for name, size in data.sizes.items():
-        if name == time_dimension:
+    # According to CF 1.6, `xr.Dataset/DataArray.coords` will always be in the
+    # order X, Y, Z, T.
+    for name, coord in data.coords.items():
+        if name == "level":
+            # TODO: Skip level coord - we are not yet doing multi-level PCA.
+            pass
+        elif name == time_dimension:
             yield TimeDimension(
-                name=str(name), size=size, values=data[time_dimension]
+                name=str(name), size=coord.size, values=data[time_dimension]
             )
         else:
-            yield Dimension(name=str(name), size=size)
+            yield Dimension(name=str(name), size=coord.size)
 
 
 def _get_variables(data: XarrayData) -> tuple[Variable]:

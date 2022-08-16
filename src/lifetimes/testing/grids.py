@@ -52,7 +52,7 @@ class Grid(abc.ABC):
     @property
     def coordinates(self) -> list[str]:
         """Return the dimension names."""
-        return list(self.xarray_coords_dict)
+        return [self.y_coordinate, self.x_coordinate]
 
     @property
     @functools.lru_cache
@@ -66,8 +66,8 @@ class Grid(abc.ABC):
 
         """
         return {
-            self.y_coordinate: self.y_values,
             self.x_coordinate: self.x_values,
+            self.y_coordinate: self.y_values,
         }
 
 

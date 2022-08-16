@@ -1,16 +1,6 @@
-import pathlib
-
 import lifetimes.datasets.methods.select as select
 import numpy as np
 import pytest
-import xarray as xr
-
-FILE_DIR = pathlib.Path(__file__).parent
-
-
-@pytest.fixture()
-def pl_ds() -> xr.Dataset:
-    return xr.open_dataset(FILE_DIR / "../../../data/pl_20201201_00.nc")
 
 
 @pytest.mark.parametrize("level", [500, [500, 1000]])

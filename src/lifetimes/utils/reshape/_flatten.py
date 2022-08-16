@@ -7,7 +7,7 @@ import xarray as xr
 def flatten_timeseries_with_unlabeled_grid_data(
     timeseries: xr.DataArray,
 ) -> np.ndarray:
-    flattened = [step.values.flatten() for step in timeseries]
+    flattened = [step.data.flatten() for step in timeseries]
     return np.array(flattened)
 
 

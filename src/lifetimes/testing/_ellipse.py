@@ -39,7 +39,7 @@ def create_ellipse_on_grid(
     """
     data = xr.DataArray(
         data=0.0,
-        dims=list(grid.xarray_coords_dict),
+        dims=grid.coordinates,
         coords=grid.xarray_coords_dict,
     )
     inside_ellipse = _determine_grid_points_inside_ellipse(

@@ -17,6 +17,13 @@ def ds_dimensions2(ds2):
     return _dimensions.Dimensions.from_xarray(ds2, time_dimension="time")
 
 
+@pytest.fixture(scope="session")
+def ds_dimensions_in_real_order(pl_ds):
+    return _dimensions.Dimensions.from_xarray(
+        pl_ds.sel(level=500), time_dimension="time"
+    )
+
+
 class TestDimensions:
     @pytest.mark.parametrize(
         ("dimensions", "expected"),
@@ -39,6 +46,7 @@ class TestDimensions:
             ("da_dimensions", ("lat", "lon")),
             ("ds_dimensions", ("lat", "lon")),
             ("ds_dimensions2", ("lat", "lon")),
+            ("ds_dimensions_in_real_order", ("latitude", "longitude")),
         ],
     )
     def test_spatial_dimension_names(self, request, dimensions, expected):
@@ -54,6 +62,7 @@ class TestDimensions:
             ("da_dimensions", (5, 10, 10)),
             ("ds_dimensions", (5, 10, 10)),
             ("ds_dimensions2", (5, 10, 10)),
+            ("ds_dimensions_in_real_order", (49, 3, 2)),
         ],
     )
     def test_to_tuple(self, request, dimensions, expected):
