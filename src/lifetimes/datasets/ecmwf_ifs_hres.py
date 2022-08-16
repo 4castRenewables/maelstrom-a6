@@ -18,6 +18,7 @@ class EcmwfIfsHres:
         paths: list[Path],
         overlapping: bool = True,
         preprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
+        postprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
         parallel_loading: bool = True,
     ):
         """Initialize without opening the files.
@@ -31,6 +32,11 @@ class EcmwfIfsHres:
             The ECMWF models are usually run at 12am and 12 pm for 48 hours.
             As a consequence, the data of new models overlap with data from
             older models by 12 hours.
+        preprocessing : Callable, optional
+            Pre-processing to apply to each data file before appending it.
+        postprocessing : Callable, optional
+            Post-processing to apply to the entire dataset after reading
+            individual files.
         parallel_loading : bool, default True
             Whether to load the data files parallely.
 
@@ -42,6 +48,7 @@ class EcmwfIfsHres:
         self._overlapping = overlapping
         self._parallel = parallel_loading
         self._preprocessing = preprocessing
+        self._postprocessing = postprocessing
 
         self._data: t.Optional[xr.Dataset] = None
         self._dropped_variables = []
@@ -81,10 +88,15 @@ class EcmwfIfsHres:
     def _as_xarray(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
         """Merge a set of files into a single dataset."""
         if len(self.paths) == 1:
-            return self._open_single_dataset(drop_variables=drop_variables)
-        return self._open_multiple_temporally_monotonous_datasets(
-            drop_variables=drop_variables
-        )
+            ds = self._open_single_dataset(drop_variables=drop_variables)
+        else:
+            ds = self._open_multiple_temporally_monotonous_datasets(
+                drop_variables=drop_variables
+            )
+
+        if self._postprocessing is not None:
+            return self._postprocessing(ds)
+        return ds
 
     def _open_single_dataset(
         self, drop_variables: t.Optional[list[str]]

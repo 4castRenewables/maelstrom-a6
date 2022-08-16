@@ -8,4 +8,5 @@ from lifetimes.utils.reshape import reshape_spatio_temporal_numpy_array
 from lifetimes.utils.reshape import reshape_spatio_temporal_xarray_data
 from lifetimes.utils.slicing import slice_dataset
 from lifetimes.utils.standardization import standardize
+from lifetimes.utils.time_measurement import print_execution_time
 from lifetimes.utils.weighting import weight_by_latitudes
