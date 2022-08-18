@@ -3,8 +3,8 @@ import typing as t
 import lifetimes.modes.methods.pca.pca as _pca
 import lifetimes.utils as utils
 import lifetimes.utils._types as _types
-import numpy as np
 import sklearn.decomposition as decomposition
+import xarray as xr
 
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
@@ -77,7 +77,7 @@ def _apply_pca(
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
-) -> tuple[utils.SpatioTemporalDimensions, np.ndarray, PCAMethod]:
+) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray, PCAMethod]:
     if algorithm is None:
         algorithm = decomposition.PCA()
 
@@ -98,7 +98,7 @@ def _reshape_data(
     latitude_coordinate: str,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
-) -> tuple[utils.SpatioTemporalDimensions, np.ndarray]:
+) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray]:
     dimensions = utils.SpatioTemporalDimensions.from_xarray(
         data, time_dimension=time_coordinate
     )

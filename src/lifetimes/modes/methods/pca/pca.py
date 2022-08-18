@@ -18,7 +18,7 @@ class PCA:
     def __init__(
         self,
         pca: PCAMethod,
-        reshaped: np.ndarray,
+        reshaped: xr.DataArray,
         dimensions: utils.SpatioTemporalDimensions,
     ):
         """Wrap `sklearn.decomposition.PCA`.
@@ -33,8 +33,8 @@ class PCA:
 
         """
         self._pca = pca
-        self._original_reshaped = xr.DataArray(
-            reshaped, dims=[dimensions.time.name, "flattened_data"]
+        self._original_reshaped = reshaped.rename(
+            {"dim_0": dimensions.time.name, "dim_1": "flattened_data"}
         )
         self._dimensions = dimensions
         self.reshaper = _reshape.Reshaper(dimensions)

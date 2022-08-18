@@ -2,7 +2,6 @@ import functools
 import typing as t
 
 import lifetimes.utils.reshape._flatten as _flatten
-import numpy as np
 import xarray as xr
 
 Data = t.Union[xr.Dataset, xr.DataArray]
@@ -13,7 +12,7 @@ def reshape_spatio_temporal_xarray_data(
     time_coordinate: t.Optional[str] = None,
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
-) -> np.ndarray:
+) -> xr.DataArray:
     """Reshape an `xarray` data object that has one temporal and two spatial
     dimensions.
 
@@ -35,7 +34,7 @@ def reshape_spatio_temporal_xarray_data(
 
     Returns
     -------
-    np.ndarray
+    xr.DataArray
         Reshaped data with the temporal steps as rows and the spatial points
         as columns (i.e., their respective value).
         If the data has t time steps and consists of a (n, m) grid, the
@@ -57,7 +56,7 @@ def _flatten_spatio_temporal_grid_data(
     data: xr.DataArray,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
-) -> np.ndarray:
+) -> xr.DataArray:
     if x_coordinate is None and y_coordinate is None:
         return _flatten.flatten_timeseries_with_unlabeled_grid_data(data)
     return _flatten.flatten_timeseries_with_labeled_grid_data(
@@ -72,7 +71,7 @@ def _(
     data: xr.Dataset,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
-) -> np.ndarray:
+) -> xr.DataArray:
     if x_coordinate is None and y_coordinate is None:
         return _flatten.flatten_dataset_with_unlabeled_grid_data(data)
 
