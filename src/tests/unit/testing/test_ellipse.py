@@ -10,6 +10,7 @@ def create_data_array_with_data(
 ) -> xr.DataArray:
     da = xr.DataArray(
         data=data,
+        dims=grid.coordinates,
         coords=grid.xarray_coords_dict,
     )
     return da

@@ -105,7 +105,7 @@ class HDBSCAN(ClusterAlgorithm):
         """Return the cluster tree."""
         return self.model.condensed_tree_
 
-    def inverse_transformed_cluster(self, cluster_id: int) -> xr.DataArray:
+    def inverse_transformed_cluster(self, cluster_id: int) -> xr.Dataset:
         """Return the inverse transformed cluster.
 
         The result represents the cluster center in real dimensions of the

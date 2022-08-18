@@ -2,17 +2,31 @@ import xarray as xr
 
 
 def calculate_daily_mean(
-    dataset: xr.Dataset, time_coordinate: str = "time"
+    dataset: xr.Dataset,
+    time_coordinate: str = "time",
+    is_temporally_monotonous: bool = True,
 ) -> xr.Dataset:
     """Calculate daily mean for all parameters in a dataset.
 
-    The below implementation works well for both monotonous and non-monotonous
-    timeseries data. However, it might not be the most efficient. For mono-
-    tonous data, a simple call of `dataset.resample.resample(time='1D').mean()`
-    might be more efficient. For non-monotonous data, though, this procedure
-    fills the temporal gaps with `NaNs`.
+    Parameters
+    ----------
+    dataset : xr.Dataset
+        The dataset to calculate the daily mean for.
+    time_coordinate : str, default="time"
+        Name of the time coordinate.
+    is_temporally_monotonous : bool, default=True
+        Whether the dataset is temporally monotonous.
+
+    For temporally monotonous timeseries data, a simple call of
+    `dataset.resample(time='1D').mean("time")` is most efficient. For
+    non-monotonous datasets, though, this procedure fills the temporal
+    gaps with `NaNs`. Hence, there is an alternative implementation for
+    temporally non-monotonous datasets.
 
     """
+    if is_temporally_monotonous:
+        return dataset.resample({time_coordinate: "1D"}).mean(time_coordinate)
+
     grouped: xr.Dataset = dataset.groupby(f"{time_coordinate}.date")
     mean: xr.Dataset = grouped.mean()
     # groupy renames the time dimension.

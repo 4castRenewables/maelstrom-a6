@@ -1,25 +1,16 @@
-import pathlib
-
 import lifetimes.datasets.methods.select as select
 import numpy as np
 import pytest
-import xarray as xr
-
-FILE_DIR = pathlib.Path(__file__).parent
 
 
-@pytest.fixture()
-def pl_ds() -> xr.Dataset:
-    return xr.open_dataset(FILE_DIR / "../../../data/pl_20201201_00.nc")
+@pytest.mark.parametrize("levels", [500, [500, 1000]])
+def test_select_levels(pl_ds, levels):
+    result = select.select_levels(pl_ds, levels=levels)
+
+    assert result["level"].values.tolist() == levels
 
 
-def test_select_level(pl_ds):
-    result = select.select_level(pl_ds, level=500)
-
-    assert result["level"].values == 500
-
-
-def test_select_level_and_calculate_daily_mean(pl_ds):
+def test_select_levels_and_calculate_daily_mean(pl_ds):
     expected = np.array(
         [
             [
@@ -41,7 +32,7 @@ def test_select_level_and_calculate_daily_mean(pl_ds):
         dtype=np.float32,
     )
 
-    result = select.select_level_and_calculate_daily_mean(pl_ds, level=500)
+    result = select.select_levels_and_calculate_daily_mean(pl_ds, levels=500)
 
     assert result["level"].values == 500
 

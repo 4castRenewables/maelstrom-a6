@@ -30,7 +30,7 @@ class HyperParameters:
             self.n_components_start, n_components_end + 1
         )
 
-        if self.n_components_end is None:
+        if self.min_cluster_size_end is None:
             min_cluster_size_end = self.min_cluster_size_start
         else:
             min_cluster_size_end = self.min_cluster_size_end

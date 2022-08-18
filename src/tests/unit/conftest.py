@@ -1,14 +1,22 @@
+import pathlib
+
 import hdbscan as _hdbscan
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.modes.methods.pca as _pca
 import lifetimes.testing as testing
 import pytest
 import sklearn.cluster as cluster
-import sklearn.decomposition as decomposition
 import xarray as xr
 
+FILE_DIR = pathlib.Path(__file__).parent
 
-@pytest.fixture()
+
+@pytest.fixture(scope="session")
+def pl_ds() -> xr.Dataset:
+    return xr.open_dataset(FILE_DIR / "../data/pl_20201201_00.nc")
+
+
+@pytest.fixture(scope="session")
 def ds() -> xr.Dataset:
     grid = testing.TestGrid(rows=10, columns=10)
     ellipse_1 = testing.EllipticalDataFactory(
@@ -46,25 +54,51 @@ def ds() -> xr.Dataset:
     return ds
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def da(ds) -> xr.DataArray:
     return ds["ellipse"]
 
 
-@pytest.fixture()
-def pca(da):
-    return _pca.spatio_temporal_pca(
-        data=da,
-        time_coordinate="time",
-        latitude_coordinate="lat",
-        x_coordinate="lat",
-        y_coordinate="lon",
-        variance_ratio=None,
-        pca_method=decomposition.PCA,
+@pytest.fixture(scope="session")
+def ds2(da) -> xr.Dataset:
+    # Create multi-variable dataset
+    return xr.Dataset(
+        data_vars={"ellipse_1": da, "ellipse_2": da},
+        coords=da.coords,
+        attrs=da.attrs,
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
+def single_variable_pca(da) -> _pca.PCA:
+    return _pca.spatio_temporal_pca(
+        da,
+        time_coordinate="time",
+        latitude_coordinate="lat",
+        x_coordinate="lon",
+        y_coordinate="lat",
+    )
+
+
+@pytest.fixture(scope="session")
+def multi_variable_pca(ds2) -> _pca.PCA:
+    return _pca.spatio_temporal_pca(
+        ds2,
+        time_coordinate="time",
+        latitude_coordinate="lat",
+        x_coordinate="lon",
+        y_coordinate="lat",
+    )
+
+
+@pytest.fixture(
+    params=["single_variable_pca", "multi_variable_pca"], scope="session"
+)
+def pca(request, single_variable_pca, multi_variable_pca) -> _pca.PCA:
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture(scope="session")
 def kmeans(pca) -> clustering.KMeans:
     algorithm = cluster.KMeans(n_clusters=2)
     return clustering.find_pc_space_clusters(
@@ -74,7 +108,7 @@ def kmeans(pca) -> clustering.KMeans:
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def hdbscan(pca) -> clustering.HDBSCAN:
     algorithm = _hdbscan.HDBSCAN(min_cluster_size=2)
     return clustering.find_pc_space_clusters(

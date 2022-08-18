@@ -6,6 +6,7 @@ import typing as t
 import boto3
 import lifetimes
 import pandas as pd
+import sklearn.decomposition as decomposition
 
 
 def read_data(
@@ -14,7 +15,7 @@ def read_data(
     use_varimax: bool,
 ) -> pd.DataFrame:
     """Run PCA on ECMWF IFS HRES data."""
-    ds = lifetimes.features.EcmwfIfsHresDataset(
+    ds = lifetimes.datasets.EcmwfIfsHres(
         paths=[path],
         overlapping=False,
     )
@@ -24,7 +25,7 @@ def read_data(
 
     pca_partial_method = functools.partial(
         lifetimes.modes.methods.spatio_temporal_pca,
-        variance_ratio=variance_ratio,
+        algorithm=decomposition.PCA(n_components=variance_ratio),
         time_coordinate="time",
         latitude_coordinate="latitude",
     )

@@ -5,6 +5,7 @@ import time
 import typing as t
 
 import lifetimes
+import sklearn.decomposition as decomposition
 
 import mlflow
 
@@ -36,7 +37,7 @@ def pca_and_kmeans(
         All modes and their lifetime statistics.
 
     """
-    ds = lifetimes.features.EcmwfIfsHresDataset(
+    ds = lifetimes.datasets.EcmwfIfsHres(
         paths=[path],
         overlapping=False,
     )
@@ -46,7 +47,7 @@ def pca_and_kmeans(
 
     pca_partial_method = functools.partial(
         lifetimes.modes.methods.spatio_temporal_pca,
-        variance_ratio=variance_ratio,
+        algorithm=decomposition.PCA(n_components=variance_ratio),
         time_coordinate="time",
         latitude_coordinate="latitude",
     )

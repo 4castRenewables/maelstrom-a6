@@ -37,7 +37,7 @@ def pca_and_kmeans(
     """
     start_single_job = time.time()
 
-    ds = lifetimes.features.EcmwfIfsHresDataset(
+    ds = lifetimes.datasets.EcmwfIfsHres(
         paths=[path],
         overlapping=False,
     )

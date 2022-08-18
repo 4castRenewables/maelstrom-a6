@@ -1,5 +1,6 @@
 import typing as t
 
+import lifetimes.modes.methods.pca._reshape as _reshape
 import lifetimes.utils as utils
 import numpy as np
 import sklearn.decomposition as decomposition
@@ -8,6 +9,7 @@ import xarray as xr
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 PC_DIM = "component"
+PC_VALUES_DIM = "entry"
 
 
 class PCA:
@@ -15,12 +17,9 @@ class PCA:
 
     def __init__(
         self,
-        pca: PCAMethod,
-        reshaped: np.ndarray,
-        original_shape: tuple,
-        time_series: xr.DataArray,
-        x_coordinate: t.Optional[str] = None,
-        y_coordinate: t.Optional[str] = None,
+        sklearn_pca: PCAMethod,
+        reshaped: xr.DataArray,
+        dimensions: utils.SpatioTemporalDimensions,
     ):
         """Wrap `sklearn.decomposition.PCA`.
 
@@ -29,30 +28,19 @@ class PCA:
         pca : sklearn.decomposition.PCA
         reshaped : np.ndarray
             The reshaped, original data used for PCA.
-        original_shape : tuple
+        dimensions : lifetimes.utils.dimensions.SpatioTemporalDimensions
             Original shape of the data the PCA was performed on.
-        time_series : xr.DataArray
-            The timeseries of the original data.
-        x_coordinate : str, optional
-            Name of the x coordinate in the original dataset.
-        y_coordinate : str, optional
-            Name of the y coordinate in the original dataset.
 
         """
-        self._pca = pca
-        self._original_reshaped = xr.DataArray(
-            reshaped, dims=[*time_series.dims, "flattened_data"]
+        self._pca = sklearn_pca
+        self._original_reshaped = reshaped.rename(
+            {"dim_0": dimensions.time.name, "dim_1": "flattened_data"}
         )
-        self._original_shape = original_shape
-        self._time_series = time_series
-        self._time_dims = time_series.dims
-        self._spatial_dims = [
-            x_coordinate or "latitude",
-            y_coordinate or "longitude",
-        ]
+        self._dimensions = dimensions
+        self.reshaper = _reshape.Reshaper(dimensions)
 
         self._components = xr.DataArray(
-            self._pca.components_, dims=[PC_DIM, "entry"]
+            self._pca.components_, dims=[PC_DIM, PC_VALUES_DIM]
         )
         self._n_components: int = self._components.sizes[PC_DIM]
         self._explained_variance = xr.DataArray(
@@ -67,7 +55,7 @@ class PCA:
 
     @property
     def timeseries(self) -> xr.DataArray:
-        return self._time_series
+        return self._dimensions.time.values
 
     @property
     def components(self) -> xr.DataArray:
@@ -95,9 +83,9 @@ class PCA:
         return self._cumulative_variance_ratio
 
     @property
-    def components_in_original_shape(self) -> xr.DataArray:
+    def components_in_original_shape(self) -> xr.Dataset:
         """Return the principal components (EOFs)."""
-        return self._to_original_shape(self.components)
+        return self.reshaper(self.components)
 
     @property
     def components_varimax_rotated(self) -> xr.DataArray:
@@ -105,9 +93,9 @@ class PCA:
         return _perform_varimax_rotation(self.components)
 
     @property
-    def components_varimax_rotated_in_original_shape(self) -> xr.DataArray:
+    def components_varimax_rotated_in_original_shape(self) -> xr.Dataset:
         """Return the principal components (EOFs)."""
-        return self._to_original_shape(self.components_varimax_rotated)
+        return self.reshaper(self.components_varimax_rotated)
 
     @utils.log_runtime
     def transform(self, n_components: t.Optional[int] = None) -> xr.DataArray:
@@ -152,12 +140,13 @@ class PCA:
 
         return transformed
 
+    @utils.log_runtime
     def inverse_transform(
         self,
         data: xr.DataArray,
         n_components: t.Optional[int] = None,
         in_original_shape: bool = True,
-    ) -> xr.DataArray:
+    ) -> xr.Dataset:
         """Transform data back to its original space.
 
         Parameters
@@ -186,7 +175,7 @@ class PCA:
             inverse = utils.np_dot(
                 data,
                 utils.np_dot(
-                    np.sqrt(explained_variance.values[:, np.newaxis]),
+                    np.sqrt(explained_variance.data[:, np.newaxis]),
                     components,
                 ),
             )
@@ -195,23 +184,15 @@ class PCA:
             inverse = utils.np_dot(data, components) + self._pca.mean_
 
         if in_original_shape:
-            return self._to_original_shape(
-                inverse, includes_time_dimension=False
+            # If the given data is unlabeled, the name of the dimension is
+            # `dim_0`.
+            return self.reshaper(
+                inverse,
+                includes_time_dimension=False,
+                rename_dim_0=True,
             )
-        return inverse
-
-    def _to_original_shape(
-        self, data: xr.DataArray, includes_time_dimension: bool = True
-    ) -> xr.DataArray:
-        if includes_time_dimension:
-            reshaped = data.data.reshape(self._original_shape)
-            # The PCs are flipped along axis 1.
-            return xr.DataArray(
-                np.flip(reshaped, axis=1), dims=[PC_DIM, *self._spatial_dims]
-            )
-        reshaped = data.data.reshape(self._original_shape[1:])
-        # The PCs are flipped along axis 0.
-        return xr.DataArray(np.flip(reshaped, axis=0), dims=self._spatial_dims)
+        name = inverse.name or "_".join(self._dimensions.variable_names)
+        return xr.Dataset(data_vars={name: inverse}, coords=inverse.coords)
 
     def components_sufficient_for_variance_ratio(
         self, variance_ratio: float
@@ -268,87 +249,3 @@ def _select_components(
     if n_components is None:
         return data
     return data.sel({PC_DIM: slice(n_components)})
-
-
-@utils.log_runtime
-def spatio_temporal_pca(
-    data: xr.DataArray,
-    time_coordinate: str,
-    latitude_coordinate: str = "latitude",
-    x_coordinate: t.Optional[str] = None,
-    y_coordinate: t.Optional[str] = None,
-    variance_ratio: t.Optional[float] = None,
-    pca_method: t.Type[PCAMethod] = decomposition.PCA,
-    **kwargs,
-) -> PCA:
-    """Perform a spatio-temporal PCA.
-
-    Parameters
-    ----------
-    data : xr.DataArray
-        Spatial timeseries data.
-    time_coordinate : str
-        Name of the time coordinate.
-        This is required to reshape the data for the PCA.
-    latitude_coordinate : str, default="latitude"
-        Name of the latitudinal coordinate.
-        This is required for weighting the data by latitude before the PCA.
-    x_coordinate : str, optional
-        Name of the x-coordinate of the grid.
-        If `None`, CF 1.6 convention will be assumed, i.e. `"longitude"`.
-    y_coordinate : str, optional
-        Name of the y-coordinate of the grid.
-        If `None`, CF 1.6 convention will be assumed, i.e. `"latitude"`.
-    variance_ratio : float, optional
-        Variance ratio threshold at which to drop the PCs.
-    pca_method : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
-        Method to use for the PCA.
-    kwargs
-        Additional keyword arguments to pass to the PCA method.
-
-    Returns
-    -------
-    PCA
-        Contains the PCs, eigenvalues, variance ratios etc.
-        Also holds an instance of the original data.
-
-    Performs a Singular Spectrum Analysis. To do so, the data have to be
-    reshaped into a matrix consisting of the locations and their respective
-    value as columns, and the time steps as rows. I.e., if the data consist of
-    a measured quantity on a (m x n) grid with p time steps, the resulting
-    matrix is of size (p x mn).
-
-    For reference see e.g. Jolliffe I. T., Principal Component Analysis, 2ed.,
-    Springer, 2002, page 302 ff.
-
-    """
-    if variance_ratio is not None:
-        if variance_ratio < 0.0 or variance_ratio > 1.0:
-            raise ValueError("Variance ratio must be in the range [0;1]")
-        pca = pca_method(n_components=variance_ratio, **kwargs)
-    else:
-        pca = pca_method(**kwargs)
-
-    original_shape = data.shape
-    timeseries = data[time_coordinate]
-    data = utils.weight_by_latitudes(
-        data=data,
-        latitudes=latitude_coordinate,
-        use_sqrt=True,
-    )
-    data = utils.reshape_spatio_temporal_xarray_data_array(
-        data=data,
-        time_coordinate=None,  # Set to None to avoid memory excess in function
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-    )
-
-    result: PCAMethod = pca.fit(data)
-    return PCA(
-        pca=result,
-        reshaped=data,
-        original_shape=original_shape,
-        time_series=timeseries,
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-    )

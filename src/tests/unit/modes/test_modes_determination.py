@@ -11,7 +11,6 @@ def test_determine_modes(ds):
         latitude_coordinate="lat",
         x_coordinate="lat",
         y_coordinate="lon",
-        variance_ratio=None,
     )
     [pca] = lifetimes.modes.determine_modes(
         modes=modes, method=pca_partial_method
