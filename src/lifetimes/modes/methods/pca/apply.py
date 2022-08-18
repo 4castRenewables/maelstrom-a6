@@ -1,4 +1,3 @@
-import functools
 import typing as t
 
 import lifetimes.modes.methods.pca.pca as _pca
@@ -11,9 +10,8 @@ PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 
 @utils.log_runtime
-@functools.singledispatch
 def spatio_temporal_pca(
-    data: t.Any,
+    data: _types.Data,
     algorithm: t.Optional[PCAMethod] = None,
     time_coordinate: str = "time",
     latitude_coordinate: str = "latitude",
