@@ -10,14 +10,17 @@ def print_execution_time(description: t.Optional[str] = None) -> None:
     Parameters
     ----------
     description : str
+        Description to print with the message.
 
     """
     start = time.time()
+
     yield
+
     end = time.time()
     duration = end - start
 
     if description is None:
-        print(f"Execution took {duration} seconds")
+        print(f"Execution of took {duration} seconds")
     else:
-        print(f"Execution ({description}) took {duration} seconds")
+        print(f"Execution of {description} took {duration} seconds")
