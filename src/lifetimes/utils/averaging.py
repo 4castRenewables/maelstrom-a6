@@ -25,7 +25,7 @@ def calculate_daily_mean(
 
     """
     if is_temporally_monotonous:
-        return dataset.resample(time="1D").mean(time_coordinate)
+        return dataset.resample({time_coordinate: "1D"}).mean(time_coordinate)
 
     grouped: xr.Dataset = dataset.groupby(f"{time_coordinate}.date")
     mean: xr.Dataset = grouped.mean()
