@@ -9,6 +9,16 @@ However, calculating the daily mean on a large dataset takes extremely long.
 Calculating it on each fragment first and then on the entire dataset is much
 more efficient.
 
+As a result, the data are processed in the order:
+
+1. Preprocessing applied to each individual data source file:
+   1. Cut off after first 12 hours.
+   2. Given levels are selected.
+   3. Mean is calculated.
+   4. Data Concatenated to the dataset.
+2. Postprocessing applied to the entire dataset:
+   - Daily mean is calculated.
+
 """
 import functools
 import pathlib
