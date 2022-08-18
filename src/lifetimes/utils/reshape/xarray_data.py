@@ -54,14 +54,14 @@ def reshape_spatio_temporal_xarray_data(
 
 @functools.singledispatch
 def _flatten_spatio_temporal_grid_data(
-    timeseries: xr.DataArray,
+    data: xr.DataArray,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
 ) -> np.ndarray:
     if x_coordinate is None and y_coordinate is None:
-        return _flatten.flatten_timeseries_with_unlabeled_grid_data(timeseries)
+        return _flatten.flatten_timeseries_with_unlabeled_grid_data(data)
     return _flatten.flatten_timeseries_with_labeled_grid_data(
-        timeseries=timeseries,
+        data=data,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
@@ -69,40 +69,15 @@ def _flatten_spatio_temporal_grid_data(
 
 @_flatten_spatio_temporal_grid_data.register
 def _(
-    timeseries: xr.Dataset,
+    data: xr.Dataset,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
 ) -> np.ndarray:
     if x_coordinate is None and y_coordinate is None:
-        return _flatten_dataset_with_unlabeled_grid_data(timeseries)
-    return _flatten_dataset_with_labeled_grid_data(
-        data=timeseries,
+        return _flatten.flatten_dataset_with_unlabeled_grid_data(data)
+
+    return _flatten.flatten_dataset_with_labeled_grid_data(
+        data=data,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-
-
-def _flatten_dataset_with_unlabeled_grid_data(
-    data: xr.Dataset,
-) -> np.ndarray:
-    """Flatten each data var individually and then concatenate rows."""
-    flattened = [
-        _flatten.flatten_timeseries_with_unlabeled_grid_data(data[var])
-        for var in data.data_vars
-    ]
-    return np.concatenate(flattened, axis=1)
-
-
-def _flatten_dataset_with_labeled_grid_data(
-    data: xr.Dataset, x_coordinate: str, y_coordinate: str
-) -> np.ndarray:
-    """Flatten each data var individually and then concatenate rows."""
-    flattened = [
-        _flatten.flatten_timeseries_with_labeled_grid_data(
-            timeseries=data[var],
-            x_coordinate=x_coordinate,
-            y_coordinate=y_coordinate,
-        )
-        for var in data.data_vars
-    ]
-    return np.concatenate(flattened, axis=1)
