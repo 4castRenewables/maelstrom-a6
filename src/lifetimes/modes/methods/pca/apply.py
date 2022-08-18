@@ -24,12 +24,6 @@ def spatio_temporal_pca(
     ----------
     data : xr.Dataset or xr.DataArray
         Spatial timeseries data.
-        Must be passed as an positional argument, i.e. as
-        ```python
-        spatio_temporal_pca(data, ...)
-        ```
-        Passing as a keyword argument (i.e. `data=data`) will raise a
-        `TypeError`.
     algorithm : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
         Method to use for the PCA.
     time_coordinate : str, default="time"
