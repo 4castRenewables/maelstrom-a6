@@ -1,5 +1,5 @@
 from lifetimes.utils.averaging import calculate_daily_mean
-from lifetimes.utils.dimensions import Dimensions
+from lifetimes.utils.dimensions import SpatioTemporalDimensions
 from lifetimes.utils.logging import log_runtime
 from lifetimes.utils.logging import log_to_stdout
 from lifetimes.utils.matrix import np_dot

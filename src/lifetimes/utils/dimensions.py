@@ -18,7 +18,12 @@ class Dimension:
 
 
 @dataclasses.dataclass
-class TimeDimension:
+class SpatialDimension(Dimension):
+    """A spatial dimension of a dataset."""
+
+
+@dataclasses.dataclass
+class TimeDimension(Dimension):
     """The time dimension of a dataset."""
 
     name: str
@@ -34,8 +39,8 @@ class Variable:
 
 
 @dataclasses.dataclass
-class Dimensions:
-    """Dimensions of a given dataset.
+class SpatioTemporalDimensions:
+    """SpatioTemporalDimensions of a given dataset.
 
     Notes
     -----
@@ -46,12 +51,14 @@ class Dimensions:
     """
 
     time: TimeDimension
-    y: Dimension
-    x: Dimension
+    y: SpatialDimension
+    x: SpatialDimension
     variables: tuple[Variable]
 
     @classmethod
-    def from_xarray(cls, data: XarrayData, time_dimension: str) -> "Dimensions":
+    def from_xarray(
+        cls, data: XarrayData, time_dimension: str
+    ) -> "SpatioTemporalDimensions":
         """Construct from `xarray` data object."""
         x, y, time = _get_temporal_and_spatial_dimension(
             data, time_dimension=time_dimension
@@ -123,7 +130,7 @@ def _get_temporal_and_spatial_dimension(
                 name=str(name), size=coord.size, values=data[time_dimension]
             )
         else:
-            yield Dimension(name=str(name), size=coord.size)
+            yield SpatialDimension(name=str(name), size=coord.size)
 
 
 def _get_variables(data: XarrayData) -> tuple[Variable]:

@@ -19,7 +19,7 @@ class PCA:
         self,
         pca: PCAMethod,
         reshaped: np.ndarray,
-        dimensions: utils.Dimensions,
+        dimensions: utils.SpatioTemporalDimensions,
     ):
         """Wrap `sklearn.decomposition.PCA`.
 
@@ -28,7 +28,7 @@ class PCA:
         pca : sklearn.decomposition.PCA
         reshaped : np.ndarray
             The reshaped, original data used for PCA.
-        dimensions : lifetimes.utils.dimensions.Dimensions
+        dimensions : lifetimes.utils.dimensions.SpatioTemporalDimensions
             Original shape of the data the PCA was performed on.
 
         """

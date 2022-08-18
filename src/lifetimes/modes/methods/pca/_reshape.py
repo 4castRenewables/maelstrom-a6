@@ -9,7 +9,7 @@ import xarray as xr
 class Reshaper:
     """Reshapes given PCA data to the according dimensions."""
 
-    def __init__(self, dimensions: utils.dimensions.Dimensions):
+    def __init__(self, dimensions: utils.dimensions.SpatioTemporalDimensions):
         self._dimensions = dimensions
 
     def __call__(

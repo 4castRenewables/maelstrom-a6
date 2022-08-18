@@ -4,27 +4,33 @@ import pytest
 
 @pytest.fixture(scope="session")
 def da_dimensions(da):
-    return _dimensions.Dimensions.from_xarray(da, time_dimension="time")
+    return _dimensions.SpatioTemporalDimensions.from_xarray(
+        da, time_dimension="time"
+    )
 
 
 @pytest.fixture(scope="session")
 def ds_dimensions(ds):
-    return _dimensions.Dimensions.from_xarray(ds, time_dimension="time")
+    return _dimensions.SpatioTemporalDimensions.from_xarray(
+        ds, time_dimension="time"
+    )
 
 
 @pytest.fixture(scope="session")
 def ds_dimensions2(ds2):
-    return _dimensions.Dimensions.from_xarray(ds2, time_dimension="time")
+    return _dimensions.SpatioTemporalDimensions.from_xarray(
+        ds2, time_dimension="time"
+    )
 
 
 @pytest.fixture(scope="session")
 def ds_dimensions_in_real_order(pl_ds):
-    return _dimensions.Dimensions.from_xarray(
+    return _dimensions.SpatioTemporalDimensions.from_xarray(
         pl_ds.sel(level=500), time_dimension="time"
     )
 
 
-class TestDimensions:
+class TestSpatioTemporalDimensions:
     @pytest.mark.parametrize(
         ("dimensions", "expected"),
         [

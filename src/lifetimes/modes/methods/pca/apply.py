@@ -77,7 +77,7 @@ def _apply_pca(
     latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
-) -> tuple[utils.Dimensions, np.ndarray, PCAMethod]:
+) -> tuple[utils.SpatioTemporalDimensions, np.ndarray, PCAMethod]:
     if algorithm is None:
         algorithm = decomposition.PCA()
 
@@ -98,8 +98,8 @@ def _reshape_data(
     latitude_coordinate: str,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
-) -> tuple[utils.Dimensions, np.ndarray]:
-    dimensions = utils.Dimensions.from_xarray(
+) -> tuple[utils.SpatioTemporalDimensions, np.ndarray]:
+    dimensions = utils.SpatioTemporalDimensions.from_xarray(
         data, time_dimension=time_coordinate
     )
     data = utils.weight_by_latitudes(
