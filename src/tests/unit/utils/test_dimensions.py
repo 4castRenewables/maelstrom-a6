@@ -71,9 +71,9 @@ class TestSpatioTemporalDimensions:
             ("ds_dimensions_in_real_order", (49, 3, 2)),
         ],
     )
-    def test_to_tuple(self, request, dimensions, expected):
+    def test_shape(self, request, dimensions, expected):
         dimensions = request.getfixturevalue(dimensions)
 
-        result = dimensions.to_tuple()
+        result = dimensions.shape()
 
         assert result == expected

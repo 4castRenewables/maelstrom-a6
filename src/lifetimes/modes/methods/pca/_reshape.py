@@ -73,7 +73,7 @@ class Reshaper:
     def _reshape_spatio_temporal_entries(
         self, data: xr.DataArray, name: str
     ) -> xr.DataArray:
-        reshaped = data.data.reshape(self._dimensions.to_tuple())
+        reshaped = data.data.reshape(self._dimensions.shape())
         # The PCs are flipped along axis 1.
         return xr.DataArray(
             np.flip(reshaped, axis=1),
@@ -88,7 +88,7 @@ class Reshaper:
         self, data: xr.DataArray, name: str
     ) -> xr.DataArray:
         reshaped = data.data.reshape(
-            self._dimensions.to_tuple(include_time_dim=False)
+            self._dimensions.shape(include_time_dim=False)
         )
         # The PCs are flipped along axis 0.
         return xr.DataArray(

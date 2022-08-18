@@ -93,8 +93,8 @@ class SpatioTemporalDimensions:
         """Return the names of the variables."""
         return (variable.name for variable in self.variables)
 
-    def to_tuple(self, include_time_dim: bool = True) -> tuple[int, ...]:
-        """Return as a tuple."""
+    def shape(self, include_time_dim: bool = True) -> tuple[int, ...]:
+        """Return the shape as a tuple."""
         if include_time_dim:
             return self.time.size, self.y.size, self.x.size
         return self.y.size, self.x.size
