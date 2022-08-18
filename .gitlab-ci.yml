@@ -46,6 +46,9 @@ test:
   extends: .test
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
+    - apt update -y && apt upgrade -y
+    # Install gcc, required for HDBSCAN.
+    - apt install -y build-essential
 
 
 
