@@ -55,7 +55,7 @@ def spatio_temporal_pca(
     Springer, 2002, page 302 ff.
 
     """
-    dimensions, data, pca = _apply_pca(
+    dimensions, data, sklearn_pca = _apply_pca(
         data=data,
         algorithm=algorithm,
         time_coordinate=time_coordinate,
@@ -64,7 +64,7 @@ def spatio_temporal_pca(
         y_coordinate=y_coordinate,
     )
     return _pca.PCA(
-        pca=pca,
+        sklearn_pca=sklearn_pca,
         reshaped=data,
         dimensions=dimensions,
     )
@@ -88,8 +88,8 @@ def _apply_pca(
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-    pca: PCAMethod = algorithm.fit(data)
-    return dimensions, data, pca
+    sklearn_pca: PCAMethod = algorithm.fit(data)
+    return dimensions, data, sklearn_pca
 
 
 def _reshape_data(

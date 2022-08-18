@@ -17,7 +17,7 @@ class PCA:
 
     def __init__(
         self,
-        pca: PCAMethod,
+        sklearn_pca: PCAMethod,
         reshaped: xr.DataArray,
         dimensions: utils.SpatioTemporalDimensions,
     ):
@@ -32,7 +32,7 @@ class PCA:
             Original shape of the data the PCA was performed on.
 
         """
-        self._pca = pca
+        self._pca = sklearn_pca
         self._original_reshaped = reshaped.rename(
             {"dim_0": dimensions.time.name, "dim_1": "flattened_data"}
         )
