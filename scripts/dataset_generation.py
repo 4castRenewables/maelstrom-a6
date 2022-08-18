@@ -26,13 +26,15 @@ import pathlib
 import lifetimes
 
 path = pathlib.Path("/home/fabian/Documents/MAELSTROM/data/pca")
-level = 500
-outfile = path / f"pressure_level_{level}_daily_averages_2020.nc"
+levels = [500]
+outfile = (
+    path / f"pressure_level_{'_'.join(map(str, levels))}_daily_averages_2020.nc"
+)
 paths = lifetimes.utils.list_files(path, pattern="pl*.nc")
 
 preprocess = functools.partial(
-    lifetimes.datasets.methods.select_level_and_calculate_daily_mean,
-    level=level,
+    lifetimes.datasets.methods.select_levels_and_calculate_daily_mean,
+    levels=levels,
 )
 ds = lifetimes.datasets.EcmwfIfsHres(
     paths=paths,
