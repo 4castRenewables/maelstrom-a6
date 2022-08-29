@@ -39,70 +39,66 @@ class PCA:
         self._dimensions = dimensions
         self.reshaper = _reshape.Reshaper(dimensions)
 
-        self._components = xr.DataArray(
-            self._pca.components_, dims=[PC_DIM, PC_VALUES_DIM]
-        )
-        self._n_components: int = self._components.sizes[PC_DIM]
-        self._explained_variance = xr.DataArray(
-            self._pca.explained_variance_, dims=[PC_DIM]
-        )
-        self._explained_variance_ratio = xr.DataArray(
-            self._pca.explained_variance_ratio_, dims=[PC_DIM]
-        )
-        self._cumulative_variance_ratio = xr.DataArray(
-            np.cumsum(self._explained_variance_ratio), dims=[PC_DIM]
-        )
-
     @property
     def timeseries(self) -> xr.DataArray:
         return self._dimensions.time.values
 
     @property
+    @utils.log_consumption
     def components(self) -> xr.DataArray:
         """Return the principal components (EOFs)."""
-        return self._components
+        return xr.DataArray(self._pca.components_, dims=[PC_DIM, PC_VALUES_DIM])
 
     @property
+    @utils.log_consumption
     def n_components(self) -> int:
         """Return the number of principal components (EOFs)."""
-        return self._n_components
+        return self.components.sizes[PC_DIM]
 
     @property
+    @utils.log_consumption
     def explained_variance(self) -> xr.DataArray:
         """Return the corresponding eigenvalues."""
-        return self._explained_variance
+        return xr.DataArray(self._pca.explained_variance_, dims=[PC_DIM])
 
     @property
+    @utils.log_consumption
     def explained_variance_ratio(self) -> xr.DataArray:
         """Return the explained variance ratios."""
-        return self._explained_variance_ratio
+        return xr.DataArray(self._pca.explained_variance_ratio_, dims=[PC_DIM])
 
     @property
+    @utils.log_consumption
     def cumulative_variance_ratio(self) -> xr.DataArray:
         """Return the cumulative variance ratios."""
-        return self._cumulative_variance_ratio
+        return xr.DataArray(
+            np.cumsum(self.explained_variance_ratio), dims=[PC_DIM]
+        )
 
     @property
+    @utils.log_consumption
     def components_in_original_shape(self) -> xr.Dataset:
         """Return the principal components (EOFs)."""
         return self.reshaper(self.components)
 
     @property
+    @utils.log_consumption
     def components_varimax_rotated(self) -> xr.DataArray:
         """Return the principal components (EOFs)."""
         return _perform_varimax_rotation(self.components)
 
     @property
+    @utils.log_consumption
     def components_varimax_rotated_in_original_shape(self) -> xr.Dataset:
         """Return the principal components (EOFs)."""
         return self.reshaper(self.components_varimax_rotated)
 
-    @utils.log_runtime
+    @utils.log_consumption
     def transform(self, n_components: t.Optional[int] = None) -> xr.DataArray:
         """Transform the given data into the vector space of the PCs."""
         return self._transform(self.components, n_components=n_components)
 
-    @utils.log_runtime
+    @utils.log_consumption
     def transform_with_varimax_rotation(
         self, n_components: t.Optional[int] = None
     ) -> xr.DataArray:
@@ -140,7 +136,7 @@ class PCA:
 
         return transformed
 
-    @utils.log_runtime
+    @utils.log_consumption
     def inverse_transform(
         self,
         data: xr.DataArray,
@@ -194,6 +190,7 @@ class PCA:
         name = inverse.name or "_".join(self._dimensions.variable_names)
         return xr.Dataset(data_vars={name: inverse}, coords=inverse.coords)
 
+    @utils.log_consumption
     def components_sufficient_for_variance_ratio(
         self, variance_ratio: float
     ) -> xr.DataArray:
@@ -203,6 +200,7 @@ class PCA:
         )
         return _select_components(self.components, n_components=n_components)
 
+    @utils.log_consumption
     def number_of_components_sufficient_for_variance_ratio(
         self, variance_ratio: float
     ) -> int:

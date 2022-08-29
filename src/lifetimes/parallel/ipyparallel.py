@@ -94,7 +94,7 @@ class IPyParallelClient(_client.Client):
         return result
 
 
-@lifetimes.utils.log_runtime
+@lifetimes.utils.log_consumption
 def execute_parallel(
     method: types.Method,
     args: types.Arguments,

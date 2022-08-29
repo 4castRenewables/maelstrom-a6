@@ -2,6 +2,7 @@ import dataclasses
 import logging
 import typing as t
 
+import lifetimes.utils.coordinates as _coordinates
 import xarray as xr
 
 logger = logging.getLogger(__name__)
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 XarrayData = t.Union[xr.DataArray, xr.Dataset]
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Dimension:
     """A dimension of a dataset."""
 
@@ -17,13 +18,13 @@ class Dimension:
     size: int
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class SpatialDimension(Dimension):
     """A spatial dimension of a dataset."""
 
 
-@dataclasses.dataclass
-class TimeDimension(Dimension):
+@dataclasses.dataclass(frozen=True)
+class TemporalDimension(Dimension):
     """The time dimension of a dataset."""
 
     name: str
@@ -31,50 +32,54 @@ class TimeDimension(Dimension):
     values: xr.DataArray
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Variable:
     """A variable of a dataset."""
 
     name: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
+class _Dimensions:
+    time: TemporalDimension
+    latitude: SpatialDimension
+    longitude: SpatialDimension
+
+
+@dataclasses.dataclass(frozen=True)
 class SpatioTemporalDimensions:
     """SpatioTemporalDimensions of a given dataset.
 
     Notes
     -----
     According to CF 1.6 conventions, the order of dimensions is
-    T, Z, Y, X. When accessing `data.sizes` of an xarray data object,
-    it will be returned as `Frozen({'x': 10, 'y': 10, 'time': 5})`.
+    T, Z (level), Y (latitude), X (longitude). When accessing `data.sizes` of
+    an xarray data object, it will be returned as
+    `Frozen({'x': 10, 'y': 10, 'time': 5})`.
 
     """
 
-    time: TimeDimension
+    time: TemporalDimension
     y: SpatialDimension
     x: SpatialDimension
     variables: tuple[Variable]
 
     @classmethod
     def from_xarray(
-        cls, data: XarrayData, time_dimension: str
+        cls,
+        data: XarrayData,
+        coordinates: _coordinates.CoordinateNames,
     ) -> "SpatioTemporalDimensions":
         """Construct from `xarray` data object."""
-        x, y, time = _get_temporal_and_spatial_dimension(
-            data, time_dimension=time_dimension
+        dimensions = _get_temporal_and_spatial_dimension(
+            data, coordinates=coordinates
         )
-        logger.debug(
-            "Got time dim %s and spatial dims y % and x % from data %s",
-            time,
-            y,
-            x,
-            data,
-        )
+        logger.info("Got dimensions %s", dimensions)
         variables = _get_variables(data)
         return cls(
-            time=time,
-            y=y,
-            x=x,
+            time=dimensions.time,
+            y=dimensions.latitude,
+            x=dimensions.longitude,
             variables=variables,
         )
 
@@ -117,20 +122,23 @@ class SpatioTemporalDimensions:
 
 
 def _get_temporal_and_spatial_dimension(
-    data: XarrayData, time_dimension: str
-) -> t.Iterator[Dimension]:
-    # According to CF 1.6, `xr.Dataset/DataArray.coords` will always be in the
-    # order X, Y, Z, T.
-    for name, coord in data.coords.items():
-        if name == "level":
-            # TODO: Skip level coord - we are not yet doing multi-level PCA.
-            pass
-        elif name == time_dimension:
-            yield TimeDimension(
-                name=str(name), size=coord.size, values=data[time_dimension]
-            )
-        else:
-            yield SpatialDimension(name=str(name), size=coord.size)
+    data: XarrayData, coordinates: _coordinates.CoordinateNames
+) -> _Dimensions:
+    return _Dimensions(
+        time=TemporalDimension(
+            name=coordinates.time,
+            size=data.coords[coordinates.time].size,
+            values=data[coordinates.time],
+        ),
+        latitude=SpatialDimension(
+            name=coordinates.latitude,
+            size=data.coords[coordinates.latitude].size,
+        ),
+        longitude=SpatialDimension(
+            name=coordinates.longitude,
+            size=data.coords[coordinates.longitude].size,
+        ),
+    )
 
 
 def _get_variables(data: XarrayData) -> tuple[Variable]:

@@ -4,16 +4,22 @@ import hdbscan as _hdbscan
 import lifetimes.modes.methods.clustering as clustering
 import lifetimes.modes.methods.pca as _pca
 import lifetimes.testing as testing
+import lifetimes.utils as utils
 import pytest
 import sklearn.cluster as cluster
 import xarray as xr
 
-FILE_DIR = pathlib.Path(__file__).parent
+DATA_DIR = pathlib.Path(__file__).parent / "../data"
 
 
 @pytest.fixture(scope="session")
-def pl_ds() -> xr.Dataset:
-    return xr.open_dataset(FILE_DIR / "../data/pl_20201201_00.nc")
+def pl_path() -> pathlib.Path:
+    return DATA_DIR / "pl_20201201_00.nc"
+
+
+@pytest.fixture(scope="session")
+def pl_ds(pl_path) -> xr.Dataset:
+    return xr.open_dataset(pl_path)
 
 
 @pytest.fixture(scope="session")
@@ -70,22 +76,29 @@ def ds2(da) -> xr.Dataset:
 
 
 @pytest.fixture(scope="session")
-def single_variable_pca(da) -> _pca.PCA:
+def coordinates() -> utils.CoordinateNames:
+    return utils.CoordinateNames(
+        time="time",
+        latitude="lat",
+        longitude="lon",
+    )
+
+
+@pytest.fixture(scope="session")
+def single_variable_pca(da, coordinates) -> _pca.PCA:
     return _pca.spatio_temporal_pca(
         da,
-        time_coordinate="time",
-        latitude_coordinate="lat",
+        coordinates=coordinates,
         x_coordinate="lon",
         y_coordinate="lat",
     )
 
 
 @pytest.fixture(scope="session")
-def multi_variable_pca(ds2) -> _pca.PCA:
+def multi_variable_pca(ds2, coordinates) -> _pca.PCA:
     return _pca.spatio_temporal_pca(
         ds2,
-        time_coordinate="time",
-        latitude_coordinate="lat",
+        coordinates=coordinates,
         x_coordinate="lon",
         y_coordinate="lat",
     )

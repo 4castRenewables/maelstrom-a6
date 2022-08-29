@@ -2,24 +2,100 @@ name: lifetimes
 
 docker_env:
   image: lifetimes-mlflow:latest
+  volumes: ["${PWD}/../data:/data"]
+  environment: ["MLFLOW_TRACKING_TOKEN"]
 
 entry_points:
-  main:
+  kmeans:
     parameters:
       data:
         type: string
-      variance_ratio:
-        type: float
-        default: 0.95
+      level:
+        type: int
+        default: None
+      n_components:
+        type: int
+        default: 3
       n_clusters:
         type: int
         default: 4
       use_varimax:
-        type: string
+        type: bool
+        default: False
+      log_to_mantik:
+        type: bool
         default: True
     command: >
-      python train.py \
+      python train_kmeans.py \
         --data {data} \
-        --variance-ratios {variance_ratio} \
+        --level {level} \
+        --n-components {n_components} \
         --n-clusters {n_clusters} \
-        --use-varimax {use_varimax}
+        --use-varimax {use_varimax} \
+        --log-to-mantik {log_to_mantik}
+  hdbscan:
+    parameters:
+      data:
+        type: string
+      vary_data_variables:
+        type: bool
+        default: False
+      level:
+        type: int
+        default: None
+      n_components_start:
+        type: int
+        default: 3
+      n_components_end:
+        type: int
+        default: None
+      min_cluster_size_start:
+        type: int
+        default: 2
+      min_cluster_size_end:
+        type: int
+        default: None
+      use_varimax:
+        type: bool
+        default: False
+      log_to_mantik:
+        type: bool
+        default: True
+    command: >
+      python train_hdbscan.py \
+        --data {data} \
+        --vary-data-variables {vary_data_variables} \
+        --level {level} \
+        --n-components-start {n_components_start} \
+        --n-components-end {n_components_end} \
+        --min-cluster-size-start {min_cluster_size_start} \
+        --min-cluster-size-end {min_cluster_size_end} \
+        --use-varimax {use_varimax} \
+        --log-to-mantik {log_to_mantik}
+  temporal:
+    parameters:
+      data:
+        type: string
+      level:
+        type: int
+        default: None
+      n_components:
+        type: int
+        default: 3
+      min_cluster_size:
+        type: int
+        default: 2
+      use_varimax:
+        type: bool
+        default: False
+      log_to_mantik:
+        type: bool
+        default: True
+    command: >
+      python train_temporal.py \
+        --data {data} \
+        --level {level} \
+        --n-components {n_components} \
+        --min-cluster-size {min_cluster_size} \
+        --use-varimax {use_varimax} \
+        --log-to-mantik {log_to_mantik}

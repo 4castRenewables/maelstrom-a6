@@ -28,7 +28,8 @@ import lifetimes
 path = pathlib.Path("/home/fabian/Documents/MAELSTROM/data/pca")
 levels = [500]
 outfile = (
-    path / f"pressure_level_{'_'.join(map(str, levels))}_daily_averages_2020.nc"
+    path
+    / f"pressure_level_{'_'.join(map(str, levels))}_daily_mean_2017_2020.nc"
 )
 paths = lifetimes.utils.list_files(path, pattern="pl*.nc")
 

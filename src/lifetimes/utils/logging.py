@@ -1,30 +1,64 @@
 import functools
 import logging
+import os
 import sys
 import time
+
+import psutil
 
 logger = logging.getLogger(__name__)
 
 
-def log_runtime(func):
-    """Log the runtime of the given function."""
+def log_consumption(func):
+    """Log the consumption of the given function.
+
+    Notes
+    -----
+    Logs consumption of:
+        - memory
+        - runtime
+
+    """
 
     @functools.wraps(func)
     def with_logging(*args, **kwargs):
-        name = func.__name__
         logger.info(
             "Calling function '%s' with args: %s and kwargs: %s",
-            name,
+            func.__name__,
             args,
             kwargs,
         )
+        before = _get_process_memory()
         start = time.time()
         result = func(*args, **kwargs)
-        duration = time.time() - start
-        logger.info("Function '%s' was executed in %s seconds", name, duration)
+        after = _get_process_memory()
+        logger.info(
+            (
+                "Memory consumption of function '%s': before: %s, after: %s, "
+                "consumed: %s, exec time: %s"
+            ),
+            func.__name__,
+            _separate_powers_of_10(before),
+            _separate_powers_of_10(after),
+            _separate_powers_of_10(after - before),
+            _elapsed_time_since(start),
+        )
         return result
 
     return with_logging
+
+
+def _get_process_memory():
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss
+
+
+def _elapsed_time_since(start):
+    return time.strftime("%H:%M:%S", time.gmtime(time.time() - start))
+
+
+def _separate_powers_of_10(number: int) -> str:
+    return format(number, ",")
 
 
 def log_to_stdout(level: int = logging.INFO) -> None:

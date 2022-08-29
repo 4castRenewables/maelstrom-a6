@@ -9,12 +9,11 @@ import xarray as xr
 PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 
-@utils.log_runtime
+@utils.log_consumption
 def spatio_temporal_pca(
     data: _types.Data,
     algorithm: t.Optional[PCAMethod] = None,
-    time_coordinate: str = "time",
-    latitude_coordinate: str = "latitude",
+    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
 ) -> _pca.PCA:
@@ -26,12 +25,11 @@ def spatio_temporal_pca(
         Spatial timeseries data.
     algorithm : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
         Method to use for the PCA.
-    time_coordinate : str, default="time"
-        Name of the time coordinate.
-        This is required to reshape the data for the PCA.
-    latitude_coordinate : str, default="latitude"
-        Name of the latitudinal coordinate.
-        This is required for weighting the data by latitude before the PCA.
+    coordinates : lifetimes.utils.CoordinateNames
+        Names of the coordinates.
+        These are required
+            - to reshape the data for the PCA.
+            - for weighting the data by latitude before the PCA.
     x_coordinate : str, optional
         Name of the x-coordinate of the grid.
         If `None`, CF 1.6 convention will be assumed, i.e. `"longitude"`.
@@ -58,8 +56,7 @@ def spatio_temporal_pca(
     dimensions, data, sklearn_pca = _apply_pca(
         data=data,
         algorithm=algorithm,
-        time_coordinate=time_coordinate,
-        latitude_coordinate=latitude_coordinate,
+        coordinates=coordinates,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
@@ -72,9 +69,8 @@ def spatio_temporal_pca(
 
 def _apply_pca(
     data: _types.Data,
+    coordinates: utils.CoordinateNames,
     algorithm: t.Optional[PCAMethod] = None,
-    time_coordinate: str = "time",
-    latitude_coordinate: str = "latitude",
     x_coordinate: t.Optional[str] = None,
     y_coordinate: t.Optional[str] = None,
 ) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray, PCAMethod]:
@@ -83,8 +79,7 @@ def _apply_pca(
 
     (dimensions, data) = _reshape_data(
         data=data,
-        time_coordinate=time_coordinate,
-        latitude_coordinate=latitude_coordinate,
+        coordinates=coordinates,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
@@ -94,17 +89,17 @@ def _apply_pca(
 
 def _reshape_data(
     data: _types.Data,
-    time_coordinate: str,
-    latitude_coordinate: str,
+    coordinates: utils.CoordinateNames,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],
 ) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray]:
     dimensions = utils.SpatioTemporalDimensions.from_xarray(
-        data, time_dimension=time_coordinate
+        data,
+        coordinates=coordinates,
     )
     data = utils.weight_by_latitudes(
         data=data,
-        latitudes=latitude_coordinate,
+        latitudes=coordinates.latitude,
         use_sqrt=True,
     )
     data = utils.reshape_spatio_temporal_xarray_data(

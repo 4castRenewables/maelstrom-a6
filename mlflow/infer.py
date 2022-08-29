@@ -11,7 +11,7 @@ import sklearn.decomposition as decomposition
 
 def read_data(
     path: t.Union[str, pathlib.Path],
-    variance_ratio: float,
+    n_components: int,
     use_varimax: bool,
 ) -> pd.DataFrame:
     """Run PCA on ECMWF IFS HRES data."""
@@ -25,7 +25,7 @@ def read_data(
 
     pca_partial_method = functools.partial(
         lifetimes.modes.methods.spatio_temporal_pca,
-        algorithm=decomposition.PCA(n_components=variance_ratio),
+        algorithm=decomposition.PCA(n_components=n_components),
         time_coordinate="time",
         latitude_coordinate="latitude",
     )
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     df = read_data(
         path=args.data,
-        variance_ratio=args.variance_ratio,
+        n_components=args.n_components,
         use_varimax=args.use_varimax,
     )
 

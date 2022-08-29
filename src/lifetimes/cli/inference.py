@@ -31,14 +31,22 @@ def create_parser(
     if parser is None:
         parser = argparse.ArgumentParser("Use a model for inference.")
     parser.add_argument(
-        "--data", type=str, help="Local or remote path to the data."
+        "--data",
+        type=str,
+        required=True,
+        help="Local or remote path to the data.",
     )
     parser.add_argument(
-        "--variance-ratio", type=float, help="Variance ratio to use for PCA."
+        "--n-components",
+        type=int,
+        required=True,
+        help="Variance ratio to use for PCA.",
     )
     parser.add_argument(
         "--use-varimax",
         type=conversion.string_to_bool,
+        default=False,
+        required=False,
         help="Whether to use varimax rotation for the PCs.",
     )
     return parser
