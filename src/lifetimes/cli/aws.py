@@ -65,11 +65,15 @@ def create_sagemaker_deployment_parser(
             ),
         )
     parser.add_argument(
-        "--endpoint-name", type=str, help="Name of the SageMaker Endpoint."
+        "--endpoint-name",
+        type=str,
+        required=True,
+        help="Name of the SageMaker Endpoint.",
     )
     parser.add_argument(
         "--image-uri",
         type=str,
+        required=True,
         help=(
             "URL of the ECR-hosted Docker image the model should be deployed "
             "into."
@@ -78,6 +82,7 @@ def create_sagemaker_deployment_parser(
     parser.add_argument(
         "--model-uri",
         type=str,
+        required=True,
         help=(
             "The location of the MLflow model in the MLflow Model Registry to "
             "deploy to SageMaker. Example: `models:/my-model/1`, where 1 is "
@@ -88,11 +93,13 @@ def create_sagemaker_deployment_parser(
     parser.add_argument(
         "--bucket",
         type=str,
+        required=True,
         help="Name the S3 bucket where SageMaker stores temporary model data.",
     )
     parser.add_argument(
         "--role",
         type=str,
+        required=True,
         help=(
             "Role (ARN) with access to the specified Docker image and S3 "
             "bucket container the MLflow model artifacts."
@@ -101,17 +108,20 @@ def create_sagemaker_deployment_parser(
     parser.add_argument(
         "--region",
         type=str,
+        required=True,
         help="Region in which to deploy the model.",
     )
     parser.add_argument(
         "--vpc-config",
         type=str,
+        required=True,
         help="VPC configuration for the SageMaker instance.",
     )
     parser.add_argument(
         "--instance-type",
         type=str,
         default=DEFAULT_SAGEMAKER_INSTANCE_TYPE,
+        required=False,
         help=(
             "The Amazon SageMaker instance type. Defaults to "
             f"`{DEFAULT_SAGEMAKER_INSTANCE_TYPE}`."
@@ -121,6 +131,7 @@ def create_sagemaker_deployment_parser(
         "--instance-count",
         type=int,
         default=1,
+        required=False,
         help="Number of instances to run. Defaults to 1.",
     )
     return parser

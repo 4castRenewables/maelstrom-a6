@@ -7,13 +7,13 @@ def test_parser():
         [
             "--data",
             "test-path",
-            "--variance-ratio",
-            "1.0",
+            "--n-components",
+            "1",
             "--use-varimax",
             "True",
         ]
     )
 
     assert args.data == "test-path"
-    assert args.variance_ratio == 1.0
+    assert args.n_components == 1
     assert args.use_varimax

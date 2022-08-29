@@ -1,11 +1,13 @@
 import typing as t
 
 import lifetimes.utils._types as _types
+import lifetimes.utils.logging as logging
 import numpy as np
 
 Latitudes = t.Union[str, np.ndarray]
 
 
+@logging.log_consumption
 def weight_by_latitudes(
     data: _types.Data,
     latitudes: Latitudes,

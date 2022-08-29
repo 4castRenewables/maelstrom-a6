@@ -1,12 +1,14 @@
 import functools
 import typing as t
 
+import lifetimes.utils.logging as logging
 import lifetimes.utils.reshape._flatten as _flatten
 import xarray as xr
 
 Data = t.Union[xr.Dataset, xr.DataArray]
 
 
+@logging.log_consumption
 def reshape_spatio_temporal_xarray_data(
     data: Data,
     time_coordinate: t.Optional[str] = None,

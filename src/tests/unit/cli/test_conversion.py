@@ -39,3 +39,22 @@ def test_string_to_bool(s, expected):
         result = conversion.string_to_bool(s)
 
         assert result == expected
+
+
+@pytest.mark.parametrize(
+    ("s", "type_", "expected"),
+    [
+        ("1", int, 1),
+        ("None", int, None),
+        ("none", int, None),
+        ("invalid", int, ValueError()),
+    ],
+)
+def test_parse_optional_value(s, type_, expected):
+    with pytest.raises(type(expected)) if isinstance(
+        expected, Exception
+    ) else contextlib.nullcontext():
+        func = conversion.cast_optional(type_)
+        result = func(s)
+
+        assert result == expected

@@ -1,11 +1,12 @@
 import lifetimes.modes.methods.appearances.mode as mode
+import lifetimes.utils as utils
 import numpy as np
 import xarray as xr
 
 
 def determine_lifetimes_of_modes(
     modes: xr.DataArray,
-    time_coordinate: str = "time",
+    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
 ) -> list[mode.Mode]:
     """For a given set of weather modes, calculate their lifetimes.
 
@@ -15,8 +16,8 @@ def determine_lifetimes_of_modes(
         A timeseries containing the mode labels as a timeseries.
         E.g. if weather modes with labels 1, 2 and 3 exist, a timeseries
         with `N=6` time steps could have the shape `[1, 1, 1, 2, 2, 3]`.
-    time_coordinate : str, default="time"
-        Name of the time coordinate.
+    coordinates : lifetimes.utils.CoordinateNames, optional
+        Names of the coordinates.
         This is needed to get the time stamps of the appearance and
         disappearance of a weather mode.
 
@@ -33,7 +34,7 @@ def determine_lifetimes_of_modes(
 
     """
     labels = np.unique(modes)
-    time_series = modes[time_coordinate].values
+    time_series = modes[coordinates.time].values
     return [
         _find_all_mode_appearances(
             label=label,

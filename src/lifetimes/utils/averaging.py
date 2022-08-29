@@ -1,6 +1,8 @@
+import lifetimes.utils.logging as logging
 import xarray as xr
 
 
+@logging.log_consumption
 def calculate_daily_mean(
     dataset: xr.Dataset,
     time_coordinate: str = "time",

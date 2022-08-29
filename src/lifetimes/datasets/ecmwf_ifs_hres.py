@@ -53,7 +53,7 @@ class EcmwfIfsHres:
         self._data: t.Optional[xr.Dataset] = None
         self._dropped_variables = []
 
-    @lifetimes.utils.log_runtime
+    @lifetimes.utils.log_consumption
     def to_netcdf(
         self, path: Path, drop_variables: t.Optional[list[str]] = None
     ) -> None:
@@ -69,7 +69,7 @@ class EcmwfIfsHres:
         """
         self.as_xarray(drop_variables).to_netcdf(path)
 
-    @lifetimes.utils.log_runtime
+    @lifetimes.utils.log_consumption
     def as_xarray(
         self, drop_variables: t.Optional[list[str]] = None
     ) -> xr.Dataset:

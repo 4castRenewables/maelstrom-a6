@@ -8,4 +8,4 @@ def list_files(
     """List all files in a given path matching the pattern."""
     if isinstance(path, str):
         path = pathlib.Path(path)
-    return sorted(path.glob(pattern))
+    return sorted(f for f in path.glob(pattern) if f.is_file())

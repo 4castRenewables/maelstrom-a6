@@ -1,3 +1,6 @@
+import typing as t
+
+
 def string_to_bool(s: str) -> bool:
     """Convert string to respective bool.
 
@@ -24,3 +27,24 @@ def string_to_bool(s: str) -> bool:
             f"Given value not valid for boolean. "
             f"Valid booleans: {all_valid_booleans}"
         )
+
+
+def cast_optional(type_: t.Type) -> t.Callable[[str], t.Optional[t.Any]]:
+    """Create a function to cast an optional value.
+
+    Returns a function that allows casting an optional value to the given type.
+
+
+    """
+
+    def parse(s: str) -> type_:
+        if s.lower() == "none":
+            return None
+        try:
+            return type_(s)
+        except ValueError:
+            raise ValueError(
+                f"Invalid argument: Could not convert {s} to type {type_}"
+            )
+
+    return parse

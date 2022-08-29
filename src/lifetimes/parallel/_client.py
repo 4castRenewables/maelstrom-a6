@@ -21,7 +21,7 @@ class Client(abc.ABC):
     def ready(self) -> bool:
         """Return whether the client and workers are ready."""
 
-    @lifetimes.utils.log_runtime
+    @lifetimes.utils.log_consumption
     def execute(self, method: types.Method, arguments: types.Arguments) -> list:
         """Execute a method in parallel.
 

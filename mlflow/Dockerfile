@@ -1,51 +1,31 @@
 ARG PYTHON_VERSION="3.9"
-ARG POETRY_VERSION="1.1.13"
 
-FROM python:${PYTHON_VERSION}-slim-buster as builder
+FROM mquade/poetry:${PYTHON_VERSION}-1.1.13 as builder
 
-# Install poetry for Python.
-ENV PYTHONFAULTHANDLER=1 \
-  PYTHONUNBUFFERED=1 \
-  PYTHONHASHSEED=random \
-  PIP_NO_CACHE_DIR=off \
-  PIP_DISABLE_PIP_VERSION_CHECK=on \
-  PIP_DEFAULT_TIMEOUT=100 \
-  POETRY_VERSION=$POETRY_VERSION \
-  POETRY_HOME=/opt/poetry \
-  POETRY_VIRTUALENVS_CREATE=false
+ADD src/lifetimes /opt/src/lifetimes
+ADD poetry.lock pyproject.toml /opt/
 
-ENV PATH="${POETRY_HOME}/bin:${PATH}"
+WORKDIR /opt
 
-RUN apt-get update && apt-get install -y curl && \
-  curl -sSL https://install.python-poetry.org | python
+# Install gcc, which is required for HDBSCAN
+RUN apt-get update -y \
+ && apt-get install -y build-essential
 
-# Install the local package.
-ENV CODE_DIR=/opt/code
+# Install Python package
+RUN python -m venv /venv \
+ && /venv/bin/python -m pip install --upgrade pip \
+ && . /venv/bin/activate \
+ && poetry install --no-dev --no-root --no-ansi -E mlflow \
+ && poetry build \
+ && pip install /opt/dist/*.whl
 
-ADD src/lifetimes ${CODE_DIR}/src/lifetimes
-ADD poetry.lock ${CODE_DIR}
-ADD pyproject.toml ${CODE_DIR}
-
-WORKDIR /opt/code
-
-# Install with poetry
-RUN python -m venv /venv && \
-  /venv/bin/python -m pip install --upgrade pip && \
-  . /venv/bin/activate && \
-  poetry install --no-dev --no-root --no-ansi -E mlflow && \
-  poetry build && \
-  pip install ${CODE_DIR}/dist/*.whl
-
-# Killing Python Cache
-RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf && \
-  cd /venv && \
-  find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+# Delete Python cache
+RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
+ && cd /venv \
+ && find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 FROM python:${PYTHON_VERSION}-slim-buster
 
 # Add venv
 COPY --from=builder /venv /venv
 ENV PATH=/venv/bin:$PATH
-
-# Add the data
-ADD data /data

@@ -1,32 +1,35 @@
+import lifetimes.utils.coordinates as _coordinates
 import lifetimes.utils.dimensions as _dimensions
 import pytest
 
 
 @pytest.fixture(scope="session")
-def da_dimensions(da):
+def da_dimensions(da, coordinates):
     return _dimensions.SpatioTemporalDimensions.from_xarray(
-        da, time_dimension="time"
+        da,
+        coordinates=coordinates,
     )
 
 
 @pytest.fixture(scope="session")
-def ds_dimensions(ds):
+def ds_dimensions(ds, coordinates):
     return _dimensions.SpatioTemporalDimensions.from_xarray(
-        ds, time_dimension="time"
+        ds,
+        coordinates=coordinates,
     )
 
 
 @pytest.fixture(scope="session")
-def ds_dimensions2(ds2):
+def ds_dimensions2(ds2, coordinates):
     return _dimensions.SpatioTemporalDimensions.from_xarray(
-        ds2, time_dimension="time"
+        ds2, coordinates=coordinates
     )
 
 
 @pytest.fixture(scope="session")
 def ds_dimensions_in_real_order(pl_ds):
     return _dimensions.SpatioTemporalDimensions.from_xarray(
-        pl_ds.sel(level=500), time_dimension="time"
+        pl_ds.sel(level=500), coordinates=_coordinates.CoordinateNames()
     )
 
 

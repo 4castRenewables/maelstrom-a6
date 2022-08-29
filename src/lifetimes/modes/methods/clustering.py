@@ -120,7 +120,7 @@ class HDBSCAN(ClusterAlgorithm):
         )
 
 
-@lifetimes.utils.log_runtime
+@lifetimes.utils.log_consumption
 def find_pc_space_clusters(
     pca: _pca.PCA,
     use_varimax: bool = False,

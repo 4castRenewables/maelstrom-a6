@@ -6,3 +6,4 @@ from lifetimes.testing.fake_datasets import FakeDataset
 from lifetimes.testing.fake_datasets import FakeEcmwfIfsHresDataset
 from lifetimes.testing.grids import EcmwfIfsHresGrid
 from lifetimes.testing.grids import TestGrid
+from lifetimes.testing.log import log_text
