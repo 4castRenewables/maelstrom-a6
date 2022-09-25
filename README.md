@@ -30,6 +30,8 @@ Lifetime determination of large-scale weather regimes.
      --n-clusters 3 4 \
      --use-varimax False
    ```
+   **Note:** Running with the above data file requires git-lfs.
+   When executing for the first time, the data file has to be pulled via `git-lfs pull`.
 4. Refresh the mantik UI to see the logged parameters, metrics models and artifacts.
 
 ### Running as a project

@@ -1042,7 +1042,7 @@ testing = ["pytest"]
 
 [[package]]
 name = "mantik"
-version = "0.1.0"
+version = "0.1.1"
 description = "mantik for mlflow"
 category = "main"
 optional = false
@@ -1050,6 +1050,7 @@ python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
 boto3 = ">=1.23.6,<2.0.0"
+click = ">=8.1.3,<9.0.0"
 fastapi = ">=0.78.0,<0.79.0"
 Flask = ">=2.1.2,<3.0.0"
 mlflow = ">=1.24.0,<2.0.0"
@@ -2450,7 +2451,7 @@ notebooks = ["jupyter"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "237a71b48b7fefe937b23962b5286ef56d7d0a45598533b00c50ca7874f4ff70"
+content-hash = "2bcafb7f4d44ca45e4b9ecbce6b672996d648d72da3a2a6d35c1366f961e9ebf"
 
 [metadata.files]
 alembic = []
