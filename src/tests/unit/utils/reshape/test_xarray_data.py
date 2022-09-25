@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import xarray as xr
-from lifetimes.utils.reshape import xarray_data
+from a6.utils.reshape import xarray_data
 
 
 @pytest.mark.parametrize(

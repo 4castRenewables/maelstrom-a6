@@ -1,4 +1,4 @@
-import lifetimes.plotting.animation as animation
+import a6.plotting.animation as animation
 
 
 def test_animate_timeseries(da):

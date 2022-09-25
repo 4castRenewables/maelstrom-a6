@@ -1,6 +1,6 @@
 import contextlib
 
-import lifetimes.cli.conversion as conversion
+import a6.cli.conversion as conversion
 import pytest
 
 

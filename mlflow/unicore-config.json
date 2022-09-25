@@ -1,5 +1,5 @@
 {
-  "SingularityImage": "lifetimes-mlflow.sif",
+  "SingularityImage": "a6-mlflow.sif",
   "UnicoreApiUrl": "https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core",
   "Resources": {
     "Runtime": "1h",

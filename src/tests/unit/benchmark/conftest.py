@@ -1,6 +1,6 @@
+import a6.benchmark as bench
 import dask.distributed
 import dask_jobqueue
-import lifetimes.benchmark as bench
 import pytest
 
 

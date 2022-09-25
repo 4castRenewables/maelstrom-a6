@@ -1,5 +1,5 @@
 import numpy as np
-from lifetimes.utils.reshape import numpy_array
+from a6.utils.reshape import numpy_array
 
 
 def test_reshape_spatio_temporal_xarray_data_array():

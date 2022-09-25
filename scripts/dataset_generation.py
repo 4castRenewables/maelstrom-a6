@@ -23,7 +23,7 @@ As a result, the data are processed in the order:
 import functools
 import pathlib
 
-import lifetimes
+import a6
 
 path = pathlib.Path("/home/fabian/Documents/MAELSTROM/data/pca")
 levels = [500]
@@ -31,17 +31,17 @@ outfile = (
     path
     / f"pressure_level_{'_'.join(map(str, levels))}_daily_mean_2017_2020.nc"
 )
-paths = lifetimes.utils.list_files(path, pattern="pl*.nc")
+paths = a6.utils.list_files(path, pattern="pl*.nc")
 
 preprocess = functools.partial(
-    lifetimes.datasets.methods.select_levels_and_calculate_daily_mean,
+    a6.datasets.methods.select_levels_and_calculate_daily_mean,
     levels=levels,
 )
-ds = lifetimes.datasets.EcmwfIfsHres(
+ds = a6.datasets.EcmwfIfsHres(
     paths=paths,
     preprocessing=preprocess,
-    postprocessing=lifetimes.utils.calculate_daily_mean,
+    postprocessing=a6.utils.calculate_daily_mean,
 )
 
-with lifetimes.utils.print_execution_time(description="converting to netcdf"):
+with a6.utils.print_execution_time(description="converting to netcdf"):
     ds.to_netcdf(outfile)

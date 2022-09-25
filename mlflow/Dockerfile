@@ -2,7 +2,7 @@ ARG PYTHON_VERSION="3.9"
 
 FROM mquade/poetry:${PYTHON_VERSION}-1.1.13 as builder
 
-ADD src/lifetimes /opt/src/lifetimes
+ADD src/a6 /opt/src/a6
 ADD poetry.lock pyproject.toml /opt/
 
 WORKDIR /opt

@@ -1,7 +1,7 @@
 import pathlib
 from contextlib import nullcontext as doesnotraise
 
-import lifetimes.datasets.ecmwf_ifs_hres as ecmwf_ifs_hres
+import a6.datasets.ecmwf_ifs_hres as ecmwf_ifs_hres
 import numpy as np
 import pandas as pd
 import pytest

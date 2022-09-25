@@ -1,4 +1,4 @@
-import lifetimes.datasets.methods.select as select
+import a6.datasets.methods.select as select
 import numpy as np
 import pytest
 

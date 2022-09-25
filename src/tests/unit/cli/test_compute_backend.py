@@ -1,6 +1,6 @@
 import os
 
-import lifetimes.cli.compute_backend as compute_backend
+import a6.cli.compute_backend as compute_backend
 import mantik.utils.mlflow as mlflow
 import pytest
 

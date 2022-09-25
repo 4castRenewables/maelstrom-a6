@@ -1,4 +1,4 @@
-import lifetimes.utils.slicing as slicing
+import a6.utils.slicing as slicing
 import pytest
 import xarray as xr
 

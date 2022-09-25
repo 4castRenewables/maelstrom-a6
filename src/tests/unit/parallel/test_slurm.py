@@ -3,10 +3,10 @@ import pathlib
 import typing as t
 import unittest.mock
 
+import a6.parallel.slurm as slurm
 import dask.distributed
 import dask.utils
 import dask_jobqueue
-import lifetimes.parallel.slurm as slurm
 import pytest
 
 FILE_DIR = pathlib.Path(__file__).parent

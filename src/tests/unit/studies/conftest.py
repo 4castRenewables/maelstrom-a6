@@ -1,4 +1,4 @@
-import lifetimes.studies.hyperparameters as _hyperparameters
+import a6.studies.hyperparameters as _hyperparameters
 import pytest
 
 

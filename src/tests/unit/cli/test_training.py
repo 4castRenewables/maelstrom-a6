@@ -1,4 +1,4 @@
-import lifetimes.cli.training as training
+import a6.cli.training as training
 import pytest
 
 

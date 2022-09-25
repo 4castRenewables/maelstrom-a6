@@ -1,4 +1,4 @@
-import lifetimes.modes.methods.indicators as indicators
+import a6.modes.methods.indicators as indicators
 import numpy as np
 
 

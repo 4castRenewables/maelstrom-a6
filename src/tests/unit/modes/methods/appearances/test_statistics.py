@@ -1,7 +1,7 @@
 import datetime
 
-import lifetimes.modes.methods.appearances as appearances
-import lifetimes.utils as utils
+import a6.modes.methods.appearances as appearances
+import a6.utils as utils
 import pandas as pd
 import xarray as xr
 
@@ -63,7 +63,7 @@ def test_determine_appearances_of_modes():
         ),
     ]
 
-    result = appearances.determine_lifetimes_of_modes(
+    result = appearances.determine_a6_of_modes(
         time_series, coordinates=utils.CoordinateNames()
     )
 

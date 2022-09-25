@@ -5,7 +5,7 @@ From: python:3.9-slim
 %files
     poetry.lock /opt
     pyproject.toml /opt
-    src/lifetimes /opt/src/lifetimes
+    src/a6 /opt/src/a6
 
 %post
     # The slurm commands are not available within the container by default.

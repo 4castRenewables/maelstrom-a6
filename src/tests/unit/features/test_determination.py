@@ -1,8 +1,8 @@
 from contextlib import nullcontext as doesnotraise
 
-import lifetimes.datasets as datasets
-import lifetimes.features as features
-import lifetimes.testing as testing
+import a6.datasets as datasets
+import a6.features as features
+import a6.testing as testing
 import pytest
 import xarray as xr
 

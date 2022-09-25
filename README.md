@@ -64,8 +64,8 @@ Lifetime determination of large-scale weather regimes.
    product is build from these to run every possible combination of input values.
    This is done in the `mlflow/train_kmeans.py`, though, and is not a feature of mlflow.
 
-**Note:** The lifetimes package is installed into the Docker container
-at build time. If the source code of the lifetimes package was modified,
+**Note:** The a6 package is installed into the Docker container
+at build time. If the source code of the a6 package was modified,
 the Docker image has to be rebuilt (see 1.) in order to have the updated source code
 in the container image. The `train_kmeans.py`, on the other hand, is copied by mlflow into
 the container when running the project and, hence, does not require rebuilding the
@@ -86,7 +86,7 @@ image based on the image build in 1.
 3. Test locally with remote tracking:
    ```commandline
    singularity run \
-     mlflow/lifetimes-mlflow.sif \
+     mlflow/a6-mlflow.sif \
      python /opt/train_kmeans.py \
      --data ${PWD}/data/temperature_level_128_daily_averages_2020.nc \
      --n-components 3 \
@@ -116,7 +116,7 @@ image based on the image build in 1.
 - The above procedure (i.e. the building of the Singularity image)
   copies the source files (`train_kmeans.py` etc.) during build time into the container image.
   Thus, if any of these files were modified, the image has to be rebuilt to have the changes
-  in the image. This, of course, applies to the lifetimes package as well.
+  in the image. This, of course, applies to the a6 package as well.
 - Running with Singularity (and not as an MLproject via `mlflow run`)
   does not track the git version (git commit hash), because, when creating a new run,
   MLflow attempts to import the git Python module and read the project repository to
@@ -140,7 +140,7 @@ image based on the image build in 1.
    entrypoint
    ```commandline
    poetry run python mlflow/deploy.py \
-       --endpoint-name lifetimes \
+       --endpoint-name a6 \
        --image-uri <URI to ECR image> }
        --model-uri "models:/<registered model name>/<version>" \
        --role <SageMaker role ARN> \
@@ -155,7 +155,7 @@ image based on the image build in 1.
 4. Run the inference per the deployed SageMaker endpoint
    ```commandline
    poetry run python mlflow/infer.py \
-       --endpoint-name lifetimes \
+       --endpoint-name a6 \
        --data $PWD/data/temperature_level_128_daily_averages_2020.nc
        --variance-ratio 0.95
        --use-varimax False
@@ -191,7 +191,7 @@ image based on the image build in 1.
    For E4, use the `deploy-e4-kernel` target.
 
 If this worked correctly, the kernel should be available in Jupyter JSC/on the E4 system
-under the name `lifetimes`.
+under the name `a6`.
 The Singularity image may generally be used to run the package on e.g. JUWELS
 via `singularity exec <path to image> python <path to script>`.
 
@@ -199,7 +199,7 @@ via `singularity exec <path to image> python <path to script>`.
 
 1. Start a Jupyter lab via Jupyter JSC on the respective login node (i.e. Juwels or Juwels Booster).
 2. Select the kernel (see above).
-3. Run the notebook `notebooks/jsc/parallel_lifetimes.iypnb`.
+3. Run the notebook `notebooks/jsc/parallel_a6.iypnb`.
 
 ## Running on E4
 
@@ -222,4 +222,4 @@ via `singularity exec <path to image> python <path to script>`.
 6. Access Jupyter from your local browser by copying the token or URL from the output of
    `poetry run jupyter notebook` command. The URL should look as follows:
    `http://localhost:8888/?token=<token>`.
-7. Run the notebook `notebooks/e4/parallel_lifetimes.ipynb`.
+7. Run the notebook `notebooks/e4/parallel_a6.ipynb`.

@@ -1,5 +1,5 @@
 Bootstrap: docker-daemon
-From: lifetimes-mlflow:latest
+From: a6-mlflow:latest
 
 %environment
     export PATH=/venv/bin:$PATH

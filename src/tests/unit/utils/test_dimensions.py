@@ -1,5 +1,5 @@
-import lifetimes.utils.coordinates as _coordinates
-import lifetimes.utils.dimensions as _dimensions
+import a6.utils.coordinates as _coordinates
+import a6.utils.dimensions as _dimensions
 import pytest
 
 

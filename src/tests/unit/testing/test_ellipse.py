@@ -1,5 +1,5 @@
-import lifetimes.testing as testing
-import lifetimes.testing._ellipse as _ellipse
+import a6.testing as testing
+import a6.testing._ellipse as _ellipse
 import numpy as np
 import pytest
 import xarray as xr

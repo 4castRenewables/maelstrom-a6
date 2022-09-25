@@ -1,12 +1,12 @@
 import itertools
 
-import lifetimes
+import a6
 
 if __name__ == "__main__":
-    parser = lifetimes.cli.training.create_kmeans_parser()
+    parser = a6.cli.training.create_kmeans_parser()
     args = parser.parse_args()
 
-    data = lifetimes.cli.data.read_ecmwf_ifs_hres_data(
+    data = a6.cli.data.read_ecmwf_ifs_hres_data(
         path=args.data,
         level=args.level,
     )
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     )
 
     for n_components, n_clusters, use_varimax in parameters:
-        lifetimes.studies.perform_pca_and_kmeans(
+        a6.studies.perform_pca_and_kmeans(
             data=data,
             n_components=n_components,
             n_clusters=n_clusters,

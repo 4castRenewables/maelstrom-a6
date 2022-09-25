@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "lifetimes"
+name = "a6"
 version = "0.1.0"
-description = "Tool to determine mode lifetimes in datasets"
-packages = [{ include = "lifetimes", from = "src" }]
+description = "Tool to determine mode a6 in datasets"
+packages = [{ include = "a6", from = "src" }]
 authors = ["Fabian Emmerich <fabian.emmerich@4-cast.de>"]
 
 [tool.poetry.dependencies]
@@ -39,7 +39,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-addopts = "--cov=lifetimes --cov-report term-missing"
+addopts = "--cov=a6 --cov-report term-missing"
 
 [tool.black]
 line-length = 80

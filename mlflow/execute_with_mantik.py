@@ -1,17 +1,17 @@
 import pathlib
 
-import lifetimes
+import a6
 import mantik
 
 if __name__ == "__main__":
     path = pathlib.Path(__file__).parent
 
-    parser = lifetimes.cli.compute_backend.create_parser()
+    parser = a6.cli.compute_backend.create_parser()
     args = parser.parse_args()
 
     experiment_id = (
         args.experiment_id
-        or lifetimes.cli.compute_backend.read_experiment_id_from_env()
+        or a6.cli.compute_backend.read_experiment_id_from_env()
     )
 
     client = mantik.ComputeBackendClient.from_env()
