@@ -187,7 +187,7 @@ def create_kmeans_parser(
         "--n-components",
         nargs="+",
         type=int,
-        default=3,
+        default=[3],
         required=True,
         help="Number of components to use for PCA.",
     )
@@ -195,15 +195,15 @@ def create_kmeans_parser(
         "--n-clusters",
         nargs="+",
         type=int,
-        default=4,
-        required=True,
+        default=[4],
+        required=False,
         help="Number of clusters to use for the clustering algorithm.",
     )
     parser.add_argument(
         "--use-varimax",
         nargs="+",
         type=conversion.string_to_bool,
-        default=False,
+        default=[False],
         required=False,
         help="Whether to use varimax rotation for the PCs.",
     )

@@ -3,9 +3,7 @@ Bootstrap: docker
 From: python:3.9-slim
 
 %files
-    poetry.lock /opt
-    pyproject.toml /opt
-    src/a6 /opt/src/a6
+    dist/ /opt
 
 %post
     # The slurm commands are not available within the container by default.
@@ -44,7 +42,7 @@ From: python:3.9-slim
     pip install --upgrade pip
     export PATH="/root/.local/bin:$PATH"
     cd /opt
-    pip install .
+    pip install dist/*.whl
     pip install ipykernel
     python -m ipykernel install
     cd /

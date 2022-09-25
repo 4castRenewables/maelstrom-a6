@@ -13,11 +13,18 @@ E4_IP = ${E4_SERVER_IP}
 E4_SSH = $(E4_USER)@$(E4_IP)
 E4_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/e4
 
+install:
+	poetry install
 
-build-docker:
+build-python:
+	# Remove old build
+	rm -r dist/
+	poetry build -f wheel
+
+build-docker: build-python
 	sudo docker build -t a6-mlflow:latest -f mlflow/Dockerfile .
 
-build-apptainer:
+build-apptainer: build-python
 	sudo apptainer build --force mlflow/a6-mlflow.sif mlflow/recipe.def
 
 build: build-docker build-apptainer
