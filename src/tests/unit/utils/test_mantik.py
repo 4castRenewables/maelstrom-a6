@@ -2,7 +2,7 @@ import dataclasses
 import logging
 import pathlib
 
-import lifetimes.utils.mantik as mantik
+import a6.utils.mantik as mantik
 
 import mlflow
 

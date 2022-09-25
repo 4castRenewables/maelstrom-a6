@@ -1,3 +1,4 @@
 *.sif
 *.env
 kernel.json
+dist/

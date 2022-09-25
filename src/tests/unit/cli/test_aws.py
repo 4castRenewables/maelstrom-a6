@@ -1,4 +1,4 @@
-import lifetimes.cli.aws as aws
+import a6.cli.aws as aws
 
 
 def test_sagemaker_deployment_args():

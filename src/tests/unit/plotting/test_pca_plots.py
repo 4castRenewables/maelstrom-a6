@@ -1,4 +1,4 @@
-import lifetimes.plotting.pca as _pca
+import a6.plotting.pca as _pca
 import pytest
 
 

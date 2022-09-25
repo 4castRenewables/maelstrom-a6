@@ -1,7 +1,7 @@
-name: lifetimes
+name: a6
 
 docker_env:
-  image: lifetimes-mlflow:latest
+  image: a6-mlflow:latest
   volumes: ["${PWD}/../data:/data"]
   environment: ["MLFLOW_TRACKING_TOKEN"]
 

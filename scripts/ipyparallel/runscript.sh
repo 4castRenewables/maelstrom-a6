@@ -7,7 +7,7 @@
 #SBATCH -c 1                # 1 cpu per task
 #SBATCH -t 1:00:00         # Job is killed after 1h
 
-SINGULARITY_IMAGE=/p/scratch/deepacf/${USER}/jupyter-lifetimes/jupyter-kernel.sif
+SINGULARITY_IMAGE=/p/scratch/deepacf/${USER}/jupyter-a6/jupyter-kernel.sif
 
 #create a new ipython profile appended with the job id number
 PROFILE=job_${SLURM_JOB_ID}

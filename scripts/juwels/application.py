@@ -3,16 +3,16 @@ import itertools
 import logging
 import os
 
-import lifetimes
+import a6
 
 logger = logging.getLogger(__name__)
 
-lifetimes.utils.log_to_stdout()
+a6.utils.log_to_stdout()
 
 # Should not need to be changed.
 os.environ[
-    lifetimes.parallel.slurm.SINGULARITY_IMAGE_ENV_VAR
-] = "/p/scratch/deepacf/emmerich1/jupyter-lifetimes/jupyter-kernel.sif"
+    a6.parallel.slurm.SINGULARITY_IMAGE_ENV_VAR
+] = "/p/scratch/deepacf/emmerich1/jupyter-a6/jupyter-kernel.sif"
 data_path = (
     "/p/scratch/deepacf/maelstrom/maelstrom_data/4cast-application6"
     "/ml/temperature_level_128_daily_averages_2017_2020.nc"
@@ -28,7 +28,7 @@ cores = 16
 # Set list of desired nodes to run on.
 nodes = []
 
-client = lifetimes.parallel.slurm.JuwelsClient(
+client = a6.parallel.slurm.JuwelsClient(
     queue=queue,
     project=project,
     cores=cores,
@@ -43,9 +43,7 @@ n_clusters = [29]
 use_varimax = [True]
 
 method = functools.partial(
-    lifetimes.benchmark.wrap_benchmark_method_with_logging(
-        lifetimes.pca_and_kmeans
-    ),
+    a6.benchmark.wrap_benchmark_method_with_logging(a6.pca_and_kmeans),
     data_path,
 )
 arguments = itertools.product(variance_ratio, n_clusters, use_varimax)

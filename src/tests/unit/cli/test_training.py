@@ -1,4 +1,4 @@
-import lifetimes.cli.training as training
+import a6.cli.training as training
 import pytest
 
 
@@ -227,7 +227,7 @@ def test_hdbscan_parser(
             1,
             [3, 4],
             [1, 2],
-            False,
+            [False],
         ),
         (
             [

@@ -1,10 +1,10 @@
 import pathlib
 
+import a6.modes.methods.clustering as clustering
+import a6.modes.methods.pca as _pca
+import a6.testing as testing
+import a6.utils as utils
 import hdbscan as _hdbscan
-import lifetimes.modes.methods.clustering as clustering
-import lifetimes.modes.methods.pca as _pca
-import lifetimes.testing as testing
-import lifetimes.utils as utils
 import pytest
 import sklearn.cluster as cluster
 import xarray as xr

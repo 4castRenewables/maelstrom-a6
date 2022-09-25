@@ -1,9 +1,8 @@
 ARG PYTHON_VERSION="3.9"
 
-FROM mquade/poetry:${PYTHON_VERSION}-1.1.13 as builder
+FROM python:${PYTHON_VERSION}-slim-buster as builder
 
-ADD src/lifetimes /opt/src/lifetimes
-ADD poetry.lock pyproject.toml /opt/
+ADD dist/ /opt/
 
 WORKDIR /opt
 
@@ -15,9 +14,7 @@ RUN apt-get update -y \
 RUN python -m venv /venv \
  && /venv/bin/python -m pip install --upgrade pip \
  && . /venv/bin/activate \
- && poetry install --no-dev --no-root --no-ansi -E mlflow \
- && poetry build \
- && pip install /opt/dist/*.whl
+ && pip install *.whl
 
 # Delete Python cache
 RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \

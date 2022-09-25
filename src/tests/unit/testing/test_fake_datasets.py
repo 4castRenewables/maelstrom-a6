@@ -1,6 +1,6 @@
 import datetime
 
-import lifetimes.testing as testing
+import a6.testing as testing
 import numpy as np
 import xarray as xr
 

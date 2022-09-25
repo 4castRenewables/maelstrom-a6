@@ -1,18 +1,16 @@
 import functools
 
-import lifetimes.modes
+import a6.modes
 
 
 def test_determine_modes(ds, coordinates):
-    modes = [lifetimes.modes.Modes(feature=ds["ellipse"])]
+    modes = [a6.modes.Modes(feature=ds["ellipse"])]
     pca_partial_method = functools.partial(
-        lifetimes.modes.methods.spatio_temporal_pca,
+        a6.modes.methods.spatio_temporal_pca,
         coordinates=coordinates,
         x_coordinate="lat",
         y_coordinate="lon",
     )
-    [pca] = lifetimes.modes.determine_modes(
-        modes=modes, method=pca_partial_method
-    )
+    [pca] = a6.modes.determine_modes(modes=modes, method=pca_partial_method)
 
-    assert isinstance(pca, lifetimes.modes.methods.PCA)
+    assert isinstance(pca, a6.modes.methods.PCA)

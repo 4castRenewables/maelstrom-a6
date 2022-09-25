@@ -3,7 +3,7 @@ https://aws.amazon.com/blogs/machine-learning/managing-your-machine-learning-lif
 i.e. the notebook
 https://github.com/aws-samples/amazon-sagemaker-mlflow-fargate/blob/main/lab/3_deploy_model.ipynb  # noqa
 """
-import lifetimes.cli.aws as aws
+import a6.cli.aws as aws
 
 import mlflow.sagemaker
 

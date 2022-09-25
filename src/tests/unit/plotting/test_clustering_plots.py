@@ -1,4 +1,4 @@
-import lifetimes.plotting.clustering as clustering
+import a6.plotting.clustering as clustering
 import pytest
 
 

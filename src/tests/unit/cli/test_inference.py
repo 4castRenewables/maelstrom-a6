@@ -1,4 +1,4 @@
-import lifetimes.cli.inference as inference
+import a6.cli.inference as inference
 
 
 def test_parser():

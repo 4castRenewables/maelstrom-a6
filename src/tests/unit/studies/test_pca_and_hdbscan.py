@@ -1,4 +1,4 @@
-import lifetimes.studies.pca_and_hdbscan as pca_and_hdbscan
+import a6.studies.pca_and_hdbscan as pca_and_hdbscan
 import pytest
 
 

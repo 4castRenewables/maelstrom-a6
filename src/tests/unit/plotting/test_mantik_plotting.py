@@ -1,4 +1,4 @@
-import lifetimes.plotting.mantik as mantik
+import a6.plotting.mantik as mantik
 
 import mlflow
 

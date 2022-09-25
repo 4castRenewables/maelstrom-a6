@@ -5,8 +5,8 @@ import logging
 import os
 import sys
 
+import a6
 import joblib
-import lifetimes
 import numpy as np
 
 
@@ -42,11 +42,11 @@ variance_ratio = np.arange(0.94, 0.96, 0.1)
 n_clusters = np.arange(2, 4)
 use_varimax = [False]
 method = functools.partial(
-    lifetimes.pca_and_kmeans,
+    a6.pca_and_kmeans,
     data_path,
 )
 arguments = itertools.product(variance_ratio, n_clusters, use_varimax)
-result = lifetimes.parallel.ipyparallel.execute_parallel(
+result = a6.parallel.ipyparallel.execute_parallel(
     method=method,
     args=arguments,
     ipython_profile=profile,

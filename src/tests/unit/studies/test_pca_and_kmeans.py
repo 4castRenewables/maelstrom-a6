@@ -1,4 +1,4 @@
-import lifetimes.studies.pca_and_kmeans as pca_and_kmeans
+import a6.studies.pca_and_kmeans as pca_and_kmeans
 import pytest
 
 

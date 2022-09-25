@@ -1,4 +1,4 @@
-import lifetimes.studies.temporal as temporal
+import a6.studies.temporal as temporal
 import pytest
 
 

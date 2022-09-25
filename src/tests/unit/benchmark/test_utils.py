@@ -1,7 +1,7 @@
 import typing as t
 import unittest.mock as mock
 
-import lifetimes.benchmark as bench
+import a6.benchmark as bench
 from dask.delayed import Delayed
 
 # Cannot be imported otherwise,

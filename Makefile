@@ -13,12 +13,19 @@ E4_IP = ${E4_SERVER_IP}
 E4_SSH = $(E4_USER)@$(E4_IP)
 E4_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/e4
 
+install:
+	poetry install
 
-build-docker:
-	sudo docker build -t lifetimes-mlflow:latest -f mlflow/Dockerfile .
+build-python:
+	# Remove old build
+	rm -r dist/
+	poetry build -f wheel
 
-build-apptainer:
-	sudo apptainer build --force mlflow/lifetimes-mlflow.sif mlflow/recipe.def
+build-docker: build-python
+	sudo docker build -t a6-mlflow:latest -f mlflow/Dockerfile .
+
+build-apptainer: build-python
+	sudo apptainer build --force mlflow/a6-mlflow.sif mlflow/recipe.def
 
 build: build-docker build-apptainer
 
@@ -47,7 +54,7 @@ define JSC_KERNEL_JSON
    "{connection_file}"
  ],
  "language": "python",
- "display_name": "lifetimes"
+ "display_name": "a6"
 }
 endef
 
@@ -64,7 +71,7 @@ upload-jsc-kernel:
 	echo "$${JSC_KERNEL_JSON}" > $(KERNEL_FILE)
 
 	# Upload kernel.json file
-	$(eval KERNEL_PATH="/p/home/jusers/$(JSC_USER)/juwels/.local/share/jupyter/kernels/lifetimes/")
+	$(eval KERNEL_PATH="/p/home/jusers/$(JSC_USER)/juwels/.local/share/jupyter/kernels/a6/")
 	ssh $(JSC_SSH_PRIVATE_KEY_FILE) $(JSC_SSH) "mkdir -p $(KERNEL_PATH)"
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) $(KERNEL_FILE) $(JSC_SSH):$(KERNEL_PATH)
 	rm $(KERNEL_FILE)
@@ -86,7 +93,7 @@ define E4_KERNEL_JSON
    "{connection_file}"
  ],
  "language": "python",
- "display_name": "lifetimes"
+ "display_name": "a6"
 }
 endef
 
@@ -103,7 +110,7 @@ upload-e4-kernel:
 	echo "$${E4_KERNEL_JSON}" > $(KERNEL_FILE)
 
 	# Upload kernel.json file
-	$(eval KERNEL_PATH="/home/${E4_USER}/.local/share/jupyter/kernels/lifetimes")
+	$(eval KERNEL_PATH="/home/${E4_USER}/.local/share/jupyter/kernels/a6")
 	ssh $(E4_SSH_PRIVATE_KEY_FILE) $(E4_SSH) "mkdir -p $(KERNEL_PATH)"
 	scp $(E4_SSH_PRIVATE_KEY_FILE) $(KERNEL_FILE) $(E4_SSH):$(KERNEL_PATH)
 	rm $(KERNEL_FILE)

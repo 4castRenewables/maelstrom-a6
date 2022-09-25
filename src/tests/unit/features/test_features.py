@@ -1,6 +1,6 @@
 from contextlib import nullcontext as doesnotraise
 
-import lifetimes.features.features as features
+import a6.features.features as features
 import pytest
 
 
