@@ -18,7 +18,7 @@ install:
 
 build-python:
 	# Remove old build
-	rm -r dist/
+	rm -rf dist/
 	poetry build -f wheel
 
 build-docker: build-python
@@ -29,12 +29,12 @@ build-apptainer: build-python
 
 build: build-docker build-apptainer
 
-build-jsc-kernel:
+build-jsc-kernel: build-python
 	sudo apptainer build --force \
 		$(JSC_DIR)/jupyter-kernel.sif \
 		$(JSC_DIR)/jupyter_kernel_recipe.def
 
-build-e4-kernel:
+build-e4-kernel: build-python
 	sudo apptainer build --force \
 		$(E4_DIR)/jupyter-kernel.sif \
 		$(E4_DIR)/jupyter_kernel_recipe.def

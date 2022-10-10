@@ -4,11 +4,11 @@ import numpy as np
 import xarray as xr
 
 
-def determine_a6_of_modes(
+def determine_lifetimes_of_modes(
     modes: xr.DataArray,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
 ) -> list[mode.Mode]:
-    """For a given set of weather modes, calculate their a6.
+    """For a given set of modes, calculate their lifetimes.
 
     Parameters
     ----------

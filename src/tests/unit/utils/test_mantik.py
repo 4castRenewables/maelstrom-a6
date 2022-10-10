@@ -19,7 +19,7 @@ def test_log_logs_file_to_mantik(caplog, monkeypatch, tmp_path):
 
     def grab_logged_test_file(path) -> None:
         test_file.path = path
-        with open(path, "r") as f:
+        with open(path) as f:
             test_file.content = f.read()
 
     monkeypatch.setattr(mlflow, "log_artifact", grab_logged_test_file)

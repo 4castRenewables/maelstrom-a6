@@ -71,7 +71,7 @@ class IPyParallelClient(_client.Client):
         self._client[:].map(
             os.chdir, [self._working_directory] * self.n_engines
         )
-        logger.info("c.ids :{0}".format(self.ids))
+        logger.info(f"c.ids :{self.ids}")
         balanced_view = self._client.load_balanced_view()
         joblib.register_parallel_backend(
             self._backend,
