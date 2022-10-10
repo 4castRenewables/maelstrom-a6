@@ -59,7 +59,7 @@ def perform_pca_and_kmeans(
             use_varimax=use_varimax,
         )
 
-        cluster_a6 = a6.modes.methods.determine_a6_of_modes(
+        cluster_lifetimes = a6.modes.methods.determine_lifetimes_of_modes(
             modes=clusters.labels,
             coordinates=coordinates,
         )
@@ -74,4 +74,4 @@ def perform_pca_and_kmeans(
             mlflow.log_metric("n_kmeans_iterations", clusters.model.n_iter_)
             mlflow.sklearn.log_model(clusters.model, "model")
 
-    return cluster_a6
+    return cluster_lifetimes

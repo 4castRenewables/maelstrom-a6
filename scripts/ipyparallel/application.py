@@ -12,7 +12,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILE_DIR = os.path.dirname(__file__)
 sys.path.append(FILE_DIR)
 
 # prepare the logger
@@ -29,8 +29,8 @@ logging.basicConfig(
     filemode="w",
     level=logging.DEBUG,
 )
-logger.info("number of CPUs found: {0}".format(joblib.cpu_count()))
-logger.info("args.profile: {0}".format(profile))
+logger.info(f"number of CPUs found: {joblib.cpu_count()}")
+logger.info(f"args.profile: {profile}")
 
 n_workers = int(os.environ.get("N_WORKERS", 1))
 

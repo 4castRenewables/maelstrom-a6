@@ -3,7 +3,7 @@ Bootstrap: docker
 From: python:3.9-slim
 
 %files
-    dist/ /opt
+    dist/ /opt/dist
 
 %post
     # The slurm commands are not available within the container by default.
@@ -42,8 +42,10 @@ From: python:3.9-slim
     pip install --upgrade pip
     export PATH="/root/.local/bin:$PATH"
     cd /opt
-    pip install dist/*.whl
+    pip install /opt/dist/*.whl
     pip install ipykernel
+    # HDBSCAN import fails for joblib>1.1.0
+    pip install joblib==1.1.0
     python -m ipykernel install
     cd /
     rm -rf /opt

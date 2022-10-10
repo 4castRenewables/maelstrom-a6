@@ -28,8 +28,6 @@ fraction_lost = (
 )
 percentage_lost = round(100 * fraction_lost, 2)
 print(
-    (
-        f"{round(percentage_lost, 2)}% of the original data were removed by "
-        "the cleaning procedure"
-    )
+    f"{round(percentage_lost, 2)}% of the original data were removed by "
+    "the cleaning procedure"
 )

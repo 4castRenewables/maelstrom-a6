@@ -63,7 +63,7 @@ def test_determine_appearances_of_modes():
         ),
     ]
 
-    result = appearances.determine_a6_of_modes(
+    result = appearances.determine_lifetimes_of_modes(
         time_series, coordinates=utils.CoordinateNames()
     )
 

@@ -1,60 +1,65 @@
 include:
-  - project: "mq/ci-templates"
-    file: "/templates/python/ci.yml"
-
-workflow:
-  rules:
-    - if: "$CI_MERGE_REQUEST_ID"
-    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+  - project: 4cast1/ci-templates
+    ref: create-python-templates
+    file: /python/default-lint.yml
+  - project: 4cast1/ci-templates
+    ref: create-python-templates
+    file: /python/templates.yml
+  - project: 4cast1/ci-templates
+    ref: create-docker-templates
+    file: /docker/templates.yml
 
 variables:
-  POETRY_IMAGE_VERSION: "3.9-1.1.13"
-  PY_PACKAGE: "./src"
-  PY_PYTEST_DIR: "./src/tests"
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+  POETRY_IMAGE_VERSION: 3.9-1.2.1
+  PY_SRC: src/a6
+  PY_PYTEST_DIR: src/tests
+  PY_LINT_DIRS: src/a6 src/tests scripts mlflow
+  PY_PYUPGRADE_ARGS: |
+    --py3-plus
+    --py36-plus
+    --py37-plus
+    --py38-plus
+    --py39-plus
+  DOCKER_FILE: mlflow/Dockerfile
 
 
 stages:
  - lint
  - test
+ - validate
+ - build
 
-.image: &image
-  image:
-      name: mquade/poetry:$POETRY_IMAGE_VERSION
-      entrypoint: [""]
+mypy:
+  extends: .lint-mypy
+  allow_failure: true
 
-black:
-  <<: *image
-  extends: .lint-black
+pylint:
+  extends: .lint-pylint
+  allow_failure: true
 
-flake8:
-  <<: *image
-  extends: .lint-flake8
-
-reorder-imports:
-  <<: *image
-  cache:
-    key: "pip"
-    paths:
-      - $PIP_CACHE_DIR
-  stage: lint
-  script:
-    - pip install reorder-python-imports
-    - reorder-python-imports --application-directories=.:src
-  rules:
-    - changes:
-        - '**/*.py'
-
-
-test:
-  <<: *image
+test-unit:
   extends: .test
+  needs: []
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - apt update -y && apt upgrade -y
     # Install gcc, required for HDBSCAN.
     - apt install -y build-essential
 
+coverage:
+  extends: .coverage
+  needs:
+    - job: test-unit
+      artifacts: true
 
+build-python:
+  needs: []
+  extends: .build-python
 
-
+build-docker:
+  extends: .build-docker
+  needs:
+    - job: test-unit
+      artifacts: true
+    - job: build-python
+      artifacts: true

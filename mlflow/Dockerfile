@@ -2,7 +2,7 @@ ARG PYTHON_VERSION="3.9"
 
 FROM python:${PYTHON_VERSION}-slim-buster as builder
 
-ADD dist/ /opt/
+ADD dist/ /opt/dist/
 
 WORKDIR /opt
 
@@ -14,7 +14,9 @@ RUN apt-get update -y \
 RUN python -m venv /venv \
  && /venv/bin/python -m pip install --upgrade pip \
  && . /venv/bin/activate \
- && pip install *.whl
+ && pip install /opt/dist/*.whl \
+ # HDBSCAN import fails for joblib>1.1.0
+ && pip install joblib==1.1.0
 
 # Delete Python cache
 RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
