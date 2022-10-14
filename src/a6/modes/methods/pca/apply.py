@@ -11,7 +11,7 @@ PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 @utils.log_consumption
 def spatio_temporal_pca(
-    data: types.Data,
+    data: types.DataND,
     algorithm: t.Optional[PCAMethod] = None,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     x_coordinate: t.Optional[str] = None,
@@ -68,7 +68,7 @@ def spatio_temporal_pca(
 
 
 def _apply_pca(
-    data: types.Data,
+    data: types.DataND,
     coordinates: utils.CoordinateNames,
     algorithm: t.Optional[PCAMethod] = None,
     x_coordinate: t.Optional[str] = None,
@@ -88,7 +88,7 @@ def _apply_pca(
 
 
 def _reshape_and_standardize_data(
-    data: types.Data,
+    data: types.DataND,
     coordinates: utils.CoordinateNames,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],

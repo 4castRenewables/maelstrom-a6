@@ -9,11 +9,11 @@ Latitudes = t.Union[str, np.ndarray]
 
 @logging.log_consumption
 def weight_by_latitudes(
-    data: types.Data,
+    data: types.DataND,
     latitudes: Latitudes,
     latitudes_in_radians: bool = False,
     use_sqrt: bool = False,
-) -> types.Data:
+) -> types.DataND:
     """Weight grid data with cosine of the latitude.
 
     Parameters

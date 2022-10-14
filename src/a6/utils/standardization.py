@@ -4,7 +4,7 @@ import sklearn.preprocessing as preprocessing
 import xarray as xr
 
 
-def standardize(data: types.Data) -> types.Data:
+def standardize(data: types.DataND) -> types.DataND:
     """Standardize to zero mean and unit variance (standard deviation).
 
     Standardizing to zero mean and unit variance is important when using more
@@ -16,7 +16,7 @@ def standardize(data: types.Data) -> types.Data:
     return standardized
 
 
-def standardize_features(data: types.Data) -> xr.DataArray:
+def standardize_features(data: types.DataND) -> xr.DataArray:
     """Standardize features of a (n_samples x n_features) dataset."""
     scaler = preprocessing.StandardScaler(
         with_mean=True, with_std=True, copy=False

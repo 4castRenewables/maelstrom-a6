@@ -3,8 +3,8 @@ import scipy.constants as constants
 
 
 def calculate_geopotential_height(
-    data: types.Data, scaling: float = 10.0
-) -> types.Data:
+    data: types.DataND, scaling: float = 10.0
+) -> types.DataND:
     """Calculate the geopotential height from the geopotential.
 
     Parameter
