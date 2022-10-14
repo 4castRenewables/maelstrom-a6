@@ -1,10 +1,10 @@
+import a6.types as types
 import scipy.constants as constants
-import xarray as xr
 
 
 def calculate_geopotential_height(
-    data: xr.Dataset, scaling: float = 10.0
-) -> xr.Dataset:
+    data: types.Data, scaling: float = 10.0
+) -> types.Data:
     """Calculate the geopotential height from the geopotential.
 
     Parameter

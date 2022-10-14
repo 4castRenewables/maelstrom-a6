@@ -1,8 +1,8 @@
 import typing as t
 
 import a6.modes.methods.pca.pca as _pca
+import a6.types as types
 import a6.utils as utils
-import a6.utils._types as _types
 import sklearn.decomposition as decomposition
 import xarray as xr
 
@@ -11,7 +11,7 @@ PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
 
 @utils.log_consumption
 def spatio_temporal_pca(
-    data: _types.Data,
+    data: types.Data,
     algorithm: t.Optional[PCAMethod] = None,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     x_coordinate: t.Optional[str] = None,
@@ -68,7 +68,7 @@ def spatio_temporal_pca(
 
 
 def _apply_pca(
-    data: _types.Data,
+    data: types.Data,
     coordinates: utils.CoordinateNames,
     algorithm: t.Optional[PCAMethod] = None,
     x_coordinate: t.Optional[str] = None,
@@ -88,7 +88,7 @@ def _apply_pca(
 
 
 def _reshape_and_standardize_data(
-    data: _types.Data,
+    data: types.Data,
     coordinates: utils.CoordinateNames,
     x_coordinate: t.Optional[str],
     y_coordinate: t.Optional[str],

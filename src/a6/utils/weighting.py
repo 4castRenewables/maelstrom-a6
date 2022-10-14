@@ -1,6 +1,6 @@
 import typing as t
 
-import a6.utils._types as _types
+import a6.types as types
 import a6.utils.logging as logging
 import numpy as np
 
@@ -9,11 +9,11 @@ Latitudes = t.Union[str, np.ndarray]
 
 @logging.log_consumption
 def weight_by_latitudes(
-    data: _types.Data,
+    data: types.Data,
     latitudes: Latitudes,
     latitudes_in_radians: bool = False,
     use_sqrt: bool = False,
-) -> _types.Data:
+) -> types.Data:
     """Weight grid data with cosine of the latitude.
 
     Parameters
