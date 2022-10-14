@@ -1,5 +1,7 @@
+import datetime
 import pathlib
 
+import a6.modes.methods.appearances as appearances
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
 import a6.testing as testing
@@ -10,6 +12,16 @@ import sklearn.cluster as cluster
 import xarray as xr
 
 DATA_DIR = pathlib.Path(__file__).parent / "../data"
+
+
+@pytest.fixture(scope="session")
+def ml_path() -> pathlib.Path:
+    return DATA_DIR / "ml_20190101_00.nc"
+
+
+@pytest.fixture(scope="session")
+def ml_ds(ml_path) -> xr.Dataset:
+    return xr.open_dataset(ml_path)
 
 
 @pytest.fixture(scope="session")
@@ -129,3 +141,55 @@ def hdbscan(pca) -> clustering.HDBSCAN:
         pca=pca,
         n_components=3,
     )
+
+
+@pytest.fixture()
+def mode_appearances() -> list[appearances.Mode]:
+    time_delta = datetime.timedelta(days=1)
+
+    return [
+        appearances.Mode(
+            label=0,
+            appearances=[
+                appearances.Appearance(
+                    start=datetime.datetime(2000, 1, 1),
+                    end=datetime.datetime(2000, 1, 3),
+                    time_delta=time_delta,
+                    index=appearances.AppearanceIndex(start=0, end=2),
+                ),
+            ],
+            statistics=appearances.Statistics(
+                abundance=1,
+                duration=appearances.Duration(
+                    total=datetime.timedelta(days=3),
+                    max=datetime.timedelta(days=3),
+                    min=datetime.timedelta(days=3),
+                    mean=datetime.timedelta(days=3),
+                    std=datetime.timedelta(),
+                    median=datetime.timedelta(days=3),
+                ),
+            ),
+        ),
+        appearances.Mode(
+            label=1,
+            appearances=[
+                appearances.Appearance(
+                    start=datetime.datetime(2000, 1, 4),
+                    end=datetime.datetime(2000, 1, 6),
+                    time_delta=time_delta,
+                    index=appearances.AppearanceIndex(start=3, end=5),
+                ),
+            ],
+            statistics=appearances.Statistics(
+                abundance=1,
+                duration=appearances.Duration(
+                    total=datetime.timedelta(days=3),
+                    max=datetime.timedelta(days=3),
+                    min=datetime.timedelta(days=3),
+                    mean=datetime.timedelta(days=3),
+                    std=datetime.timedelta(),
+                    median=datetime.timedelta(days=3),
+                ),
+            ),
+        ),
+    ]
