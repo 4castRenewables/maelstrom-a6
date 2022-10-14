@@ -77,7 +77,7 @@ def _apply_pca(
     if algorithm is None:
         algorithm = decomposition.PCA()
 
-    (dimensions, data) = _reshape_data(
+    (dimensions, data) = _reshape_and_scale_data(
         data=data,
         coordinates=coordinates,
         x_coordinate=x_coordinate,
@@ -87,7 +87,7 @@ def _apply_pca(
     return dimensions, data, sklearn_pca
 
 
-def _reshape_data(
+def _reshape_and_scale_data(
     data: _types.Data,
     coordinates: utils.CoordinateNames,
     x_coordinate: t.Optional[str],
@@ -108,6 +108,7 @@ def _reshape_data(
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
+    data = utils.standardize_features(data)
     return (
         dimensions,
         data,

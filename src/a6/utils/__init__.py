@@ -10,5 +10,6 @@ from a6.utils.reshape import reshape_spatio_temporal_numpy_array
 from a6.utils.reshape import reshape_spatio_temporal_xarray_data
 from a6.utils.slicing import slice_dataset
 from a6.utils.standardization import standardize
+from a6.utils.standardization import standardize_features
 from a6.utils.time_measurement import print_execution_time
 from a6.utils.weighting import weight_by_latitudes
