@@ -55,3 +55,22 @@ per-file-ignores = [
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.coverage]
+
+[tool.coverage.report]
+omit = [
+    "*/testing/*",
+    "*/benchmark/*",
+    "*/parallel/*",
+]
+exclude_lines = [
+    'def __repr__',
+    # Don't complain if tests don't hit defensive assertion code:
+    'raise NotImplementedError',
+    'return NotImplementedError',
+    # Don't complain if non-runnable code isn't run:
+    'if __name__ == .__main__.:',
+    # Don't complain about abstract methods, they aren't run:
+    '@(abc\.)?abstractmethod',
+]
