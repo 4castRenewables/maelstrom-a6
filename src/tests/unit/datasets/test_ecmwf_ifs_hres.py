@@ -1,7 +1,7 @@
 import pathlib
-from contextlib import nullcontext as doesnotraise
 
 import a6.datasets.ecmwf_ifs_hres as ecmwf_ifs_hres
+import a6.testing as testing
 import numpy as np
 import pandas as pd
 import pytest
@@ -35,9 +35,7 @@ class TestEcmwfIfsHresDataset:
         ],
     )
     def test_as_xarray(self, paths, overlapping, expected):
-        with pytest.raises(type(expected)) if isinstance(
-            expected, Exception
-        ) else doesnotraise():
+        with testing.expect_raise_if_exception(expected):
             dataset = ecmwf_ifs_hres.EcmwfIfsHres(
                 paths, overlapping=overlapping, parallel_loading=False
             )

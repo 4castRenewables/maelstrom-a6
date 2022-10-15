@@ -14,6 +14,8 @@ class AppearanceIndex:
 
     Parameters
     ----------
+    label : int
+        Label of the respective mode.
     start : int
         Index where the appearance starts.
     end : int
@@ -21,22 +23,25 @@ class AppearanceIndex:
 
     """
 
+    label: int
     start: int
     end: int
 
     @classmethod
-    def from_sequences(cls, seq: list[Sequence]) -> list["AppearanceIndex"]:
+    def from_sequences(
+        cls, label: int, seq: list[Sequence]
+    ) -> list["AppearanceIndex"]:
         """Create from a sequence of indexes.
 
         The first element in the sequence must represent the first index of
         appearance and the last element the last index of appearance.
 
         """
-        return list(map(cls.from_sequence, seq))
+        return [cls.from_sequence(label=label, seq=s) for s in seq]
 
     @classmethod
     def from_sequence(
-        cls, seq: t.Union[list, tuple, np.ndarray]
+        cls, label: int, seq: t.Union[list, tuple, np.ndarray]
     ) -> "AppearanceIndex":
         """Create from a sequence of indexes.
 
@@ -44,7 +49,7 @@ class AppearanceIndex:
         appearance and the last element the last index of appearance.
 
         """
-        return cls(start=seq[0], end=seq[-1])
+        return cls(label=label, start=seq[0], end=seq[-1])
 
     @property
     def duration(self) -> int:
@@ -63,6 +68,8 @@ class Appearance:
 
     Parameters
     ----------
+    label : int
+        Label of the respective mode.
     start : datetime.datetime
         Time stamp of the start of the appearance.
     end : datetime.datetime
@@ -74,6 +81,7 @@ class Appearance:
 
     """
 
+    label: int
     start: datetime.datetime
     end: datetime.datetime
     index: AppearanceIndex = dataclasses.field(repr=False)
@@ -81,12 +89,14 @@ class Appearance:
 
     @classmethod
     def from_indexes(
-        cls, indexes: list[AppearanceIndex], time_series: np.ndarray
+        cls, label: int, indexes: list[AppearanceIndex], time_series: np.ndarray
     ) -> list["Appearance"]:
         """Create from sequence of `AppearanceIndex`.
 
         Parameters
         ----------
+        label : int
+            Label of the respective mode.
         indexes : list[AppearanceIndex]
             The indexes of appearance.
         time_series : np.ndarray
@@ -94,18 +104,20 @@ class Appearance:
 
         """
         return [
-            cls.from_index(index=index, time_series=time_series)
+            cls.from_index(label=label, index=index, time_series=time_series)
             for index in indexes
         ]
 
     @classmethod
     def from_index(
-        cls, index: AppearanceIndex, time_series: np.ndarray
+        cls, label: int, index: AppearanceIndex, time_series: np.ndarray
     ) -> "Appearance":
         """Create from `AppearanceIndex`.
 
         Parameters
         ----------
+        label : int
+            Label of the respective mode.
         index : AppearanceIndex
             The indexes of appearance.
         time_series : np.ndarray
@@ -119,6 +131,7 @@ class Appearance:
         end = _numpy_datetime64_to_datetime(end_dt64)
         time_delta = _numpy_timedelta64_to_timedelta(time_delta_td64)
         return cls(
+            label=label,
             start=start,
             end=end,
             index=index,
@@ -137,6 +150,8 @@ class Duration:
 
     Parameters
     ----------
+    label : int
+        Label of the respective mode.
     total : datetime.datetime
         Total duration of the mode throughout the time series.
     max : datetime.datetime
@@ -152,6 +167,7 @@ class Duration:
 
     """
 
+    label: int
     total: datetime.timedelta
     max: datetime.timedelta
     min: datetime.timedelta
@@ -161,7 +177,7 @@ class Duration:
 
     @classmethod
     def from_numeric(
-        cls, durations: np.ndarray, time_delta: datetime.timedelta
+        cls, label: int, durations: np.ndarray, time_delta: datetime.timedelta
     ) -> "Duration":
         """Construct from an array containing time deltas as numeric values."""
 
@@ -175,6 +191,7 @@ class Duration:
         std = convert(np.std(durations))
         median = convert(np.percentile(durations, 50))
         return cls(
+            label=label,
             total=total,
             max=max,
             min=min,
@@ -190,9 +207,10 @@ class Statistics:
 
     Parameters
     ----------
+    label : int
+        Label of the respective mode.
     abundance : int
         Total number of appearances over the time period.
-
     duration_mean : float
         Mean duration of mode appearance.
         Given in time units of the timeseries.
@@ -202,11 +220,14 @@ class Statistics:
 
     """
 
+    label: int
     abundance: int
     duration: Duration
 
     @classmethod
-    def from_appearances(cls, appearances: list[Appearance]) -> "Statistics":
+    def from_appearances(
+        cls, label: int, appearances: list[Appearance]
+    ) -> "Statistics":
         """Create from a sequence of appearances."""
         time_delta = appearances[0].time_delta
         durations_numeric = np.array(
@@ -214,9 +235,10 @@ class Statistics:
         )
         abundance = durations_numeric.size
         duration = Duration.from_numeric(
-            durations=durations_numeric, time_delta=time_delta
+            label=label, durations=durations_numeric, time_delta=time_delta
         )
         return cls(
+            label=label,
             abundance=abundance,
             duration=duration,
         )
@@ -247,7 +269,9 @@ class Mode:
         cls, label: int, appearances: list[Appearance]
     ) -> "Mode":
         """Create from a sequences of appearances."""
-        statistics = Statistics.from_appearances(appearances)
+        statistics = Statistics.from_appearances(
+            label=label, appearances=appearances
+        )
         return cls(
             label=label,
             appearances=appearances,

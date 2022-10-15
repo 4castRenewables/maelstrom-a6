@@ -1,5 +1,3 @@
-from contextlib import nullcontext as doesnotraise
-
 import a6.datasets as datasets
 import a6.features as features
 import a6.testing as testing
@@ -57,8 +55,6 @@ def test_determine_features(dataset, features_, expected):
     if expected is None:
         expected = dataset.as_xarray()["ellipse"]
 
-    with pytest.raises(type(expected)) if isinstance(
-        expected, Exception
-    ) else doesnotraise():
+    with testing.expect_raise_if_exception(expected):
         [result] = features.determine_features(dataset, features_)
         xr.testing.assert_equal(result, expected)

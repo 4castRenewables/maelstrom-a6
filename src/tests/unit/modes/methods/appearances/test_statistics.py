@@ -6,7 +6,7 @@ import pandas as pd
 import xarray as xr
 
 
-def test_determine_appearances_of_modes(mode_appearances):
+def test_determine_lifetimes_of_modes(mode_appearances):
     # Assume a time series with 6 time steps and 2 different modes that each
     # lasts for 3 consecutive days (time units).
     start = datetime.datetime(2000, 1, 1)
@@ -19,4 +19,4 @@ def test_determine_appearances_of_modes(mode_appearances):
         time_series, coordinates=utils.CoordinateNames()
     )
 
-    assert result == mode_appearances
+    assert result.modes == mode_appearances.modes

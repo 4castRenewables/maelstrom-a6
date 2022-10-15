@@ -1,4 +1,5 @@
 import a6.modes.methods.appearances.mode as mode
+import a6.modes.methods.appearances.modes as _modes
 import a6.utils as utils
 import numpy as np
 import xarray as xr
@@ -7,7 +8,7 @@ import xarray as xr
 def determine_lifetimes_of_modes(
     modes: xr.DataArray,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
-) -> list[mode.Mode]:
+) -> _modes.Modes:
     """For a given set of modes, calculate their lifetimes.
 
     Parameters
@@ -23,7 +24,7 @@ def determine_lifetimes_of_modes(
 
     Returns
     -------
-    list[a6.modes.methods.a6.Mode]
+    a6.modes.methods.a6.Modes
         Each mode (label) and the respective lifetime statistics.
 
     Notes
@@ -35,14 +36,16 @@ def determine_lifetimes_of_modes(
     """
     labels = np.unique(modes)
     time_series = modes[coordinates.time].values
-    return [
-        _find_all_mode_appearances(
-            label=label,
-            modes=modes,
-            time_series=time_series,
-        )
-        for label in labels
-    ]
+    return _modes.Modes(
+        [
+            _find_all_mode_appearances(
+                label=label,
+                modes=modes,
+                time_series=time_series,
+            )
+            for label in labels
+        ]
+    )
 
 
 def _find_all_mode_appearances(
@@ -60,9 +63,11 @@ def _get_mode_appearances(
     label: int, modes: xr.DataArray, time_series: np.ndarray
 ) -> list[mode.Appearance]:
     indexes = _get_indexes_of_mode_appearances(label=label, modes=modes)
-    appearances_indexes = _find_coherent_appearances_indexes(indexes)
+    appearances_indexes = _find_coherent_appearances_indexes(
+        label=label, data=indexes
+    )
     return mode.Appearance.from_indexes(
-        appearances_indexes, time_series=time_series
+        label=label, indexes=appearances_indexes, time_series=time_series
     )
 
 
@@ -74,10 +79,11 @@ def _get_indexes_of_mode_appearances(
 
 
 def _find_coherent_appearances_indexes(
+    label: int,
     data: np.ndarray,
 ) -> list[mode.AppearanceIndex]:
     indexes = _get_coherent_groups_of_equivalent_distances(data, distance=1)
-    return mode.AppearanceIndex.from_sequences(indexes)
+    return mode.AppearanceIndex.from_sequences(label=label, seq=indexes)
 
 
 def _get_coherent_groups_of_equivalent_distances(

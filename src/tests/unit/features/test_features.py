@@ -1,6 +1,5 @@
-from contextlib import nullcontext as doesnotraise
-
 import a6.features.features as features
+import a6.testing as testing
 import pytest
 
 
@@ -17,9 +16,7 @@ class TestFeature:
     )
     def test_initialization(self, variables, generator, expected):
 
-        with pytest.raises(type(expected)) if isinstance(
-            expected, Exception
-        ) else doesnotraise():
+        with testing.expect_raise_if_exception(expected):
             features.Feature(
                 name="ellipse", variables=variables, generator=generator
             )

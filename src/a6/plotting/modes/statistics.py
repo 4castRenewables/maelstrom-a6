@@ -7,12 +7,13 @@ import numpy as np
 
 
 def plot_modes_durations(
-    modes: list[appearances.Mode],
+    modes: appearances.Modes,
+    figsize: tuple[int, int] = (12, 6),
     display: bool = True,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot the mode mean durations and standard deviation."""
-    fig, ax = plt.subplots()
-    n_modes_ticks = list(range(1, len(modes) + 1))
+    fig, ax = plt.subplots(figsize=figsize)
+    n_modes_ticks = list(range(1, modes.size + 1))
 
     durations, stds, zero = _calculate_mean_durations_and_standard_deviations(
         modes
@@ -59,13 +60,13 @@ def plot_modes_durations(
 
 
 def _calculate_mean_durations_and_standard_deviations(
-    modes: list[appearances.Mode],
+    modes: appearances.Modes,
 ) -> tuple[list[float], list[float], datetime.datetime]:
     # Specify a random date to use for the times.
     zero = datetime.datetime(2018, 1, 1)
 
-    means = [zero + mode.statistics.duration.mean for mode in modes]
-    stds = [zero + mode.statistics.duration.std for mode in modes]
+    means = [zero + mode.statistics.duration.mean for mode in modes.modes]
+    stds = [zero + mode.statistics.duration.std for mode in modes.modes]
 
     zero = mdates.date2num(zero)
 
