@@ -3,7 +3,7 @@ include:
     ref: main
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: pass-coverage-omit-only-if-given
     file: /python/templates.yml
   - project: 4cast1/ci-templates
     ref: main
@@ -47,7 +47,7 @@ test-unit:
     - apt install -y build-essential
 
 coverage:
-  extends: .coverage
+  extends: .coveragpass-coverage-omit-only-if-givene
   needs:
     - job: test-unit
       artifacts: true
