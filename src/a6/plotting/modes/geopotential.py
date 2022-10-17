@@ -9,6 +9,8 @@ def plot_geopotential_height_contours(
     data: xr.DataArray,
     temperature: t.Optional[xr.DataArray] = None,
     steps: int = 5,
+    fig: t.Optional[plt.Figure] = None,
+    ax: t.Optional[plt.Axes] = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot the geopotential height contours.
 
@@ -23,7 +25,8 @@ def plot_geopotential_height_contours(
         Steps in hPa for the contour levels.
 
     """
-    fig, ax = plt.subplots()
+    if fig is None and ax is None:
+        fig, ax = plt.subplots()
 
     min = int(np.round(data.min().values, -1))
     max = int(np.round(data.max().values, -1))
