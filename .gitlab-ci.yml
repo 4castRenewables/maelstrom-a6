@@ -47,7 +47,7 @@ test-unit:
     - apt install -y build-essential
 
 coverage:
-  extends: .coveragpass-coverage-omit-only-if-givene
+  extends: .coverage
   needs:
     - job: test-unit
       artifacts: true
