@@ -278,15 +278,45 @@ class Mode:
             statistics=statistics,
         )
 
-    @property
-    def dates(self) -> t.Iterator[datetime.datetime]:
-        """Return all dates of the appearance of the mode."""
+    def get_dates(
+        self,
+        start: t.Optional[datetime.datetime] = None,
+        end: t.Optional[datetime.datetime] = None,
+    ) -> t.Iterator[datetime.datetime]:
+        """Return all dates of the appearance of the mode.
+
+        Parameters
+        ----------
+        start : datetime.datetime
+            Start of the dates.
+        start : datetime.datetime
+            End of the dates.
+
+        Returns
+        -------
+        t.Iterator[datetime.datetime]
+            All dates where this mode appeared.
+            Only within `start` and `end` if given.
+
+        """
+
+        def date_within_range(d):
+            if start is None and end is None:
+                return True
+            elif start is not None and end is None:
+                return start <= d
+            elif start is None and end is not None:
+                return d <= end
+            else:
+                return start <= d <= end
+
         return (
-            date
+            date.to_pydatetime()
             for appearance in self.appearances
             for date in pd.date_range(
                 appearance.start, appearance.end, freq="1d"
             )
+            if date_within_range(date)
         )
 
 
