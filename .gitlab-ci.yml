@@ -1,12 +1,12 @@
 include:
   - project: 4cast1/ci-templates
-    ref: create-python-templates
+    ref: main
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: create-python-templates
+    ref: main
     file: /python/templates.yml
   - project: 4cast1/ci-templates
-    ref: create-docker-templates
+    ref: main
     file: /docker/templates.yml
 
 variables:
