@@ -14,6 +14,11 @@ class Modes:
         """Return the number of existing modes."""
         return len(self.modes)
 
+    @property
+    def labels(self) -> t.Iterator[int]:
+        """Return all labels."""
+        return (mode.label for mode in self.modes)
+
     def get_mode(self, label: int) -> _mode.Mode:
         """Get a certain mode via label."""
         for mode in self.modes:

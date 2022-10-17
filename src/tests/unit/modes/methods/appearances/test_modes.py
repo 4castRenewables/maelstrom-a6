@@ -12,6 +12,13 @@ class TestModes:
 
         assert result == expected
 
+    def test_labels(self, mode_appearances):
+        expected = [0, 1]
+
+        result = list(mode_appearances.labels)
+
+        assert result == expected
+
     @pytest.mark.parametrize(
         ("label", "expected"), [(0, 0), (1, 1), (2, ValueError())]
     )

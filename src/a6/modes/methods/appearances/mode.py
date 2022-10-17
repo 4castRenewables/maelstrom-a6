@@ -278,6 +278,17 @@ class Mode:
             statistics=statistics,
         )
 
+    @property
+    def dates(self) -> t.Iterator[datetime.datetime]:
+        """Return all dates of the appearance of the mode."""
+        return (
+            date
+            for appearance in self.appearances
+            for date in pd.date_range(
+                appearance.start, appearance.end, freq="1d"
+            )
+        )
+
 
 def _numpy_datetime64_to_datetime(date: np.datetime64) -> datetime.datetime:
     ts = pd.Timestamp(date)
