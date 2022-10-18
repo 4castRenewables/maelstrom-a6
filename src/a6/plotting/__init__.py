@@ -6,6 +6,7 @@ from a6.plotting.clustering import (
 from a6.plotting.clustering import plot_single_linkage_tree
 from a6.plotting.extents import Extents
 from a6.plotting.mantik import create_plots_and_log_to_mantik
+from a6.plotting.modes import plot_combined
 from a6.plotting.modes import plot_contours_for_field_and_dates
 from a6.plotting.modes import plot_fields_for_dates
 from a6.plotting.modes import plot_geopotential_height_contours

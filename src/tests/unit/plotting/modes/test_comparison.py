@@ -42,3 +42,11 @@ def test_plot_wind_speed_for_dates(data, dates):
         field=data,
         dates=dates,
     )
+
+
+def test_plot_combined(data, dates):
+    comparison.plot_combined(
+        data=data,
+        dates=dates,
+        geopotential_height="z",
+    )

@@ -132,6 +132,49 @@ def plot_wind_speed_for_dates(
     return figure.fig, figure.axs
 
 
+def plot_combined(
+    data: xr.Dataset,
+    dates: list[datetime.datetime],
+    geopotential_height: str = "z_h",
+    temperature: str = "t",
+    u: str = "u",
+    v: str = "v",
+    x: str = "longitude",
+    y: str = "latitude",
+    vector_steps: t.Optional[int] = 20,
+    contour_steps: t.Optional[int] = 5,
+) -> tuple[plt.Figure, plt.Axes]:
+    """Plot geopotential height contours, temperature and wind speed."""
+    figure = _Figure.from_dates_and_field(
+        dates=dates,
+        field=data,
+    )
+
+    vmin = figure.min(field=temperature)
+    vmax = figure.max(field=temperature)
+
+    for ax, step in figure.axes_and_fields:
+        step[temperature].plot(
+            ax=ax,
+            cmap="RdBu",
+            vmin=vmin,
+            vmax=vmax,
+        )
+
+        geopotential.plot_geopotential_height_contours(
+            data=step[geopotential_height],
+            steps=contour_steps,
+            fig=figure.fig,
+            ax=ax,
+            cmap="black",
+        )
+
+        sub = _get_subset_for_vector_plot(data=step, steps=vector_steps)
+        sub.plot.quiver(ax=ax, x=x, y=y, u=u, v=v, scale=250)
+
+    return figure.fig, figure.axs
+
+
 def _normalize_vectors(
     data: types.DataND, normalization: types.DataND
 ) -> types.DataND:

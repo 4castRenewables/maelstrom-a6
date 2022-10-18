@@ -9,6 +9,9 @@ import a6.modes.methods.appearances.mode as _mode
 class Modes:
     modes: t.List[_mode.Mode]
 
+    def __iter__(self) -> t.Iterator:
+        yield from self.modes
+
     @property
     def size(self) -> int:
         """Return the number of existing modes."""

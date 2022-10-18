@@ -11,6 +11,7 @@ def plot_geopotential_height_contours(
     steps: int = 5,
     fig: t.Optional[plt.Figure] = None,
     ax: t.Optional[plt.Axes] = None,
+    cmap: t.Optional[str] = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot the geopotential height contours.
 
@@ -36,7 +37,9 @@ def plot_geopotential_height_contours(
         temperature.plot(ax=ax, cmap="Greys")
 
     # Geopotential is given in decameters in ECMWF IFS HRES.
-    contours = data.plot.contour(levels=levels, kwargs=dict(inline=True), ax=ax)
+    contours = data.plot.contour(
+        levels=levels, kwargs=dict(inline=True), ax=ax, cmap=cmap
+    )
     ax.clabel(contours)
 
     return fig, ax
