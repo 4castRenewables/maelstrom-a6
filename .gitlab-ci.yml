@@ -3,7 +3,7 @@ include:
     ref: main
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: pass-coverage-omit-only-if-given
+    ref: main
     file: /python/templates.yml
   - project: 4cast1/ci-templates
     ref: main
