@@ -38,6 +38,8 @@ repos:
     hooks:
       - id: black
         args: ["--config", "pyproject.toml"]
+        additional_dependencies:
+          - ".[jupyter]"
 
   - repo: https://github.com/pycqa/flake8
     rev: 5.0.4
