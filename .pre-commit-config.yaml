@@ -38,6 +38,10 @@ repos:
     hooks:
       - id: black
         args: ["--config", "pyproject.toml"]
+        types_or: [python, pyi]
+      - id: black-jupyter
+        args: ["--config", "pyproject.toml"]
+        types_or: [jupyter]
         additional_dependencies:
           - ".[jupyter]"
 
