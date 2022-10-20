@@ -1,3 +1,4 @@
+from a6.studies.grid_search import perform_forecast_model_grid_search
 from a6.studies.hyperparameters import HyperParameters
 from a6.studies.pca_and_hdbscan import (
     perform_pca_and_hdbscan_hyperparameter_study,

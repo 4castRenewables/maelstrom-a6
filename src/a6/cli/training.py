@@ -232,8 +232,6 @@ def create_parser(
                 Level to choose from the data.
             log_to_mantik : bool, default=True
                 Whether to log to mantik.
-            env_file : str, optional
-                Path to the `.env` file with the mantik credentials.
 
     """
     if parser is None:
@@ -259,15 +257,5 @@ def create_parser(
         default=True,
         required=False,
         help="Whether to log to mantik.",
-    )
-    parser.add_argument(
-        "--env-file",
-        type=str,
-        default=None,
-        required=False,
-        help=(
-            "Local path to the .env file that contains the environment"
-            "variables (credentials) required for mantik to allow tracking."
-        ),
     )
     return parser

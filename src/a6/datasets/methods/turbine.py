@@ -1,7 +1,48 @@
 import datetime
 import typing as t
 
+import a6.utils as utils
 import xarray as xr
+
+
+def preprocess_turbine_data_and_match_with_weather_data(
+    weather: xr.Dataset,
+    turbine: xr.Dataset,
+    power_rating: float,
+    production_variable: str = "production",
+    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+) -> tuple[xr.Dataset, xr.Dataset]:
+    """Preprocess turbine data and match time steps with weather data.
+
+    Notes
+    -----
+    Preprocessing steps in order:
+
+    1. Clean the production data by removing outliers.
+    2. Get the closest grid point from the weather data.
+    3. Resample the production data to hourly values.
+    4. Select only the intersecting time steps from both datasets.
+
+    """
+    turbine = clean_production_data(
+        turbine,
+        power_rating=power_rating,
+        production_variable=production_variable,
+    )
+    weather = get_closest_grid_point(
+        weather,
+        turbine=turbine,
+        latitude_coordinate=coordinates.latitude,
+        longitude_coordinate=coordinates.longitude,
+    )
+    turbine = resample_to_hourly_resolution(
+        turbine,
+        production_variable=production_variable,
+        time_coordinate=coordinates.time,
+    )
+    return select_intersecting_time_steps(
+        weather=weather, turbine=turbine, time_coordinate=coordinates.time
+    )
 
 
 def clean_production_data(
@@ -23,13 +64,13 @@ def clean_production_data(
 
 
     """
-    data = _remote_outliers(
+    data = _remove_outliers(
         data, production=production_variable, power_rating=power_rating
     )
     return data
 
 
-def _remote_outliers(
+def _remove_outliers(
     data: xr.Dataset, production: str, power_rating: t.Union[int, float]
 ) -> xr.Dataset:
     return data.where(
@@ -47,9 +88,25 @@ def _remote_outliers(
     )
 
 
+def get_closest_grid_point(
+    weather: xr.Dataset,
+    turbine: xr.Dataset,
+    latitude_coordinate: str = "latitude",
+    longitude_coordinate: str = "longitude",
+) -> xr.Dataset:
+    """Get the closest grid point to the wind turbine."""
+    return weather.sel(
+        {
+            latitude_coordinate: turbine[latitude_coordinate],
+            longitude_coordinate: turbine[longitude_coordinate],
+        },
+        method="nearest",
+    )
+
+
 def resample_to_hourly_resolution(
     data: xr.Dataset,
-    production_variable: str = "time",
+    production_variable: str = "production",
     time_coordinate: str = "time",
 ) -> xr.Dataset:
     # Resample to an hourly time series and take the mean for each hour.
@@ -58,23 +115,7 @@ def resample_to_hourly_resolution(
     return data.where(data[production_variable].notnull(), drop=True)
 
 
-def get_closest_grid_point(
-    weather: xr.Dataset,
-    turbine: xr.Dataset,
-    latitudinal_coordinate: str = "latitude",
-    longitudinal_coordinate: str = "longitude",
-) -> xr.Dataset:
-    """Get the closest grid point to the wind turbine."""
-    return weather.sel(
-        {
-            latitudinal_coordinate: turbine[latitudinal_coordinate],
-            longitudinal_coordinate: turbine[longitudinal_coordinate],
-        },
-        method="nearest",
-    )
-
-
-def select_overlapping_time_steps(
+def select_intersecting_time_steps(
     weather: xr.Dataset,
     turbine: xr.Dataset,
     time_coordinate: str = "time",
@@ -86,7 +127,7 @@ def select_overlapping_time_steps(
         time_coordinate=time_coordinate,
     )
     select = {time_coordinate: intersection}
-    return (weather.sel(select), turbine.sel(select))
+    return weather.sel(select), turbine.sel(select)
 
 
 def _get_time_step_intersection(

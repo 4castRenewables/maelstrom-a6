@@ -10,6 +10,7 @@ From: a6-mlflow:latest
     mlflow/train_kmeans.py /opt/train_kmeans.py
     mlflow/train_hdbscan.py /opt/train_hdbscan.py
     mlflow/train_temporal.py /opt/train_temporal.py
+    mlflow/grid_search.py /opt/grid_search.py
 
 %runscript
     exec "$@"

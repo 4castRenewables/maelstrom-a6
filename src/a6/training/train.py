@@ -8,7 +8,6 @@ def fit(
     model: types.Model,
     X: xr.DataArray,
     y: xr.DataArray,
-    scorers: types.Scorers,
 ) -> sklearn.base.RegressorMixin:
     """Train a given model."""
     return model.fit(X=utils.transpose(X), y=utils.transpose(y))

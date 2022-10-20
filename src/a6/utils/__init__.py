@@ -1,3 +1,4 @@
+from a6.utils import variables
 from a6.utils.averaging import calculate_daily_mean
 from a6.utils.coordinates import CoordinateNames
 from a6.utils.cpus import get_cpu_count

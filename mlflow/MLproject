@@ -99,3 +99,21 @@ entry_points:
         --min-cluster-size {min_cluster_size} \
         --use-varimax {use_varimax} \
         --log-to-mantik {log_to_mantik}
+  grid_search:
+    parameters:
+      weather_data:
+        type: string
+      level:
+        type: int
+        default: None
+      turbine_data:
+        type: str
+      log_to_mantik:
+        type: bool
+        default: True
+    command: >
+      python grid_search.py \
+        --weather-data {weather_data} \
+        --level {level} \
+        --turbine-data //work/nextcloud-office/team/projects/MAELSTROM/3_Execution_Phase/WP1/A6/data/production/eim1.nc \
+        --log-to-mantik {log_to_mantik}

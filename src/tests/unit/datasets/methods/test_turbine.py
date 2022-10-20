@@ -99,7 +99,7 @@ def test_get_closest_grid_point():
     xr.testing.assert_equal(result, expected)
 
 
-def test_select_overlapping_time_steps():
+def test_select_intersecting_time_steps():
     production = _create_dataset(
         values=[2, 3, 4],
         dates=[
@@ -133,7 +133,7 @@ def test_select_overlapping_time_steps():
         ],
     )
 
-    result_weather, result_production = turbine.select_overlapping_time_steps(
+    result_weather, result_production = turbine.select_intersecting_time_steps(
         weather=weather, turbine=production
     )
 
