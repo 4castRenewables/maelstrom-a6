@@ -12,7 +12,6 @@ include:
 variables:
   POETRY_IMAGE_VERSION: 3.9-1.2.1
   PY_SRC: src/a6
-  PY_PYTEST_DIR: src/tests
   PY_LINT_DIRS: src/a6 src/tests scripts mlflow
   PY_PYUPGRADE_ARGS: |
     --py3-plus
@@ -37,7 +36,7 @@ pylint:
   extends: .lint-pylint
   allow_failure: true
 
-test-unit:
+.test-base:
   extends: .test
   needs: []
   before_script:
@@ -45,6 +44,16 @@ test-unit:
     - apt update -y && apt upgrade -y
     # Install gcc, required for HDBSCAN.
     - apt install -y build-essential
+
+test-doc:
+  extends: .test-base
+  variables:
+    PY_PYTEST_DIR: src/a6
+
+test-unit:
+  extends: .test-base
+  variables:
+    PY_PYTEST_DIR: src/tests
 
 coverage:
   extends: .coverage
