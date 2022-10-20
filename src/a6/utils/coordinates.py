@@ -8,3 +8,4 @@ class CoordinateNames:
     time: str = "time"
     latitude: str = "latitude"
     longitude: str = "longitude"
+    level: str = "level"

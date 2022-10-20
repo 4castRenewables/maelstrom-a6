@@ -1,5 +1,3 @@
-import functools
-
 import a6.types as types
 import numpy as np
 import sklearn.metrics as metrics
@@ -9,13 +7,13 @@ def make_scorers(power_rating: float) -> types.Scorers:
     """Make MAE, NMAE, RMSE and NRMSE scorers."""
     return {
         "mae": metrics.make_scorer(metrics.mean_absolute_error),
-        "nmae": metrics.make_scorer(
-            functools.partial(calculate_nmae, power_rating=power_rating)
-        ),
-        "rmse": metrics.make_scorer(calculate_rmse),
-        "nrmse": metrics.make_scorer(
-            functools.partial(calculate_nrmse, power_rating=power_rating)
-        ),
+        # "nmae": metrics.make_scorer(
+        #    functools.partial(calculate_nmae, power_rating=power_rating)
+        # ),
+        # "rmse": metrics.make_scorer(calculate_rmse),
+        # "nrmse": metrics.make_scorer(
+        #    functools.partial(calculate_nrmse, power_rating=power_rating)
+        # ),
     }
 
 

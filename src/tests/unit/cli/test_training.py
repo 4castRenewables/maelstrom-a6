@@ -294,7 +294,6 @@ def test_kmeans_parser(
         "expected_data",
         "expected_level",
         "expected_log_to_mantik",
-        "expected_env_file",
     ),
     [
         (
@@ -307,7 +306,6 @@ def test_kmeans_parser(
             "test-path",
             1,
             True,
-            None,
         ),
     ],
 )
@@ -316,7 +314,6 @@ def test_parser(
     expected_data,
     expected_level,
     expected_log_to_mantik,
-    expected_env_file,
 ):
     parser = training.create_parser()
     args = parser.parse_args(cli_args)
@@ -324,4 +321,3 @@ def test_parser(
     assert args.data == expected_data
     assert args.level == expected_level
     assert args.log_to_mantik == expected_log_to_mantik
-    assert args.env_file == expected_env_file

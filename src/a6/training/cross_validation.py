@@ -7,7 +7,7 @@ import sklearn.model_selection as model_selection
 import mlflow
 
 
-def cross_validation(
+def perform_cross_validation(
     model: object,
     X: types.XarrayData,
     y: types.XarrayData,
