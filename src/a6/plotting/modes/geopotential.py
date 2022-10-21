@@ -26,12 +26,18 @@ def plot_geopotential_height_contours(
         Steps in hPa for the contour levels.
 
     """
+
+    def round_to_decade(value: xr.DataArray) -> int:
+        return int(np.round(value.values, -1))
+
     if fig is None and ax is None:
         fig, ax = plt.subplots()
 
-    min = int(np.round(data.min().values, -1))
-    max = int(np.round(data.max().values, -1))
-    levels = range(min, max, steps)
+    levels = range(
+        round_to_decade(data.min()),
+        round_to_decade(data.max()),
+        steps,
+    )
 
     if temperature is not None:
         temperature.plot(ax=ax, cmap="Greys")
