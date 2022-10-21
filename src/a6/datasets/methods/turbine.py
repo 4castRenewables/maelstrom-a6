@@ -1,8 +1,12 @@
 import datetime
+import logging
 import typing as t
 
 import a6.utils as utils
 import xarray as xr
+
+
+logger = logging.getLogger(__name__)
 
 
 def preprocess_turbine_data_and_match_with_weather_data(
@@ -64,6 +68,11 @@ def clean_production_data(
 
 
     """
+    logger.debug(
+        "Cleaning production data (variable name %s) with power rating %s",
+        production_variable,
+        power_rating,
+    )
     data = _remove_outliers(
         data, production=production_variable, power_rating=power_rating
     )
@@ -95,11 +104,16 @@ def get_closest_grid_point(
     longitude_coordinate: str = "longitude",
 ) -> xr.Dataset:
     """Get the closest grid point to the wind turbine."""
+    select = {
+        latitude_coordinate: turbine[latitude_coordinate],
+        longitude_coordinate: turbine[longitude_coordinate],
+    }
+    logger.debug(
+        "Getting closest grid point to wind turbine from weather data by %s",
+        select,
+    )
     return weather.sel(
-        {
-            latitude_coordinate: turbine[latitude_coordinate],
-            longitude_coordinate: turbine[longitude_coordinate],
-        },
+        select,
         method="nearest",
     )
 
@@ -109,6 +123,7 @@ def resample_to_hourly_resolution(
     production_variable: str = "production",
     time_coordinate: str = "time",
 ) -> xr.Dataset:
+    logger.debug("Resampling production data to hourly time resolution")
     # Resample to an hourly time series and take the mean for each hour.
     data = data.resample({time_coordinate: "1h"}).mean()
     # Remove NaNs that resulted from the resampling.
@@ -121,12 +136,14 @@ def select_intersecting_time_steps(
     time_coordinate: str = "time",
 ) -> tuple[xr.Dataset, xr.Dataset]:
     """Select the overlapping time steps of the datasets."""
+    logger.debug("Getting intersecting time steps for weather and turbine data")
     intersection = _get_time_step_intersection(
         weather=weather,
         turbine=turbine,
         time_coordinate=time_coordinate,
     )
     select = {time_coordinate: intersection}
+    logger.debug("Found intersecting time steps %s", select)
     return weather.sel(select), turbine.sel(select)
 
 

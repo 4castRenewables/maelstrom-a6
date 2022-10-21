@@ -1,61 +1,50 @@
-import argparse
-import typing as t
+import datetime
+import logging
+import pathlib
 
-import a6.cli.conversion as conversion
+import a6.cli.data as data
+import a6.cli.main as main
+import a6.studies as studies
+import a6.utils as utils
+import click
+import xarray as xr
 
 
-def create_parser(
-    parser: t.Optional[argparse.ArgumentParser] = None,
-) -> argparse.ArgumentParser:
-    """Create CLI parser for grid search.
+@main.cli.command("grid-search")
+@main.WEATHER_DATA
+@main.LEVEL
+@click.option(
+    "--turbine-data",
+    type=click.Path(path_type=pathlib.Path),
+    required=True,
+    help="Local or remote path to the wind turbine data",
+)
+@main.LOG_TO_MANTIK
+@main.GROUP_OPTIONS
+def grid_search(
+    options: main.Options,
+    weather_data: pathlib.Path,
+    level: main.Level,
+    turbine_data: pathlib.Path,
+    log_to_mantik: bool,
+):
+    """Perform a grid search with the given data."""
+    options.exit_if_dry_run()
+    utils.log_to_stdout(logging.DEBUG)
 
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser, optional
-        Parser to which the arguments will be added.
-
-    Returns
-    -------
-    parser : argparse.ArgumentParser
-        Arguments can be retrieved via `parser.parse_args()`.
-        Additional arguments can be added via `parser.add_argument()`.
-        Default arguments that will be available as attributes after parsing:
-            data : str
-                Path to the data.
-            level : int, optional
-                Level to choose from the data.
-            log_to_mantik : bool, default=True
-                Whether to log to mantik.
-
-    """
-    if parser is None:
-        parser = argparse.ArgumentParser("Perform a grid search.")
-
-    parser.add_argument(
-        "--weather-data",
-        type=str,
-        required=True,
-        help="Local or remote path to the weather data.",
+    weather = data.read_ecmwf_ifs_hres_data(
+        path=weather_data,
+        level=level,
+    ).sel(
+        time=slice(
+            datetime.datetime(2017, 1, 1), datetime.datetime(2017, 1, 2, 23)
+        )
     )
-    parser.add_argument(
-        "-l",
-        "--level",
-        type=conversion.cast_optional(int),
-        default=None,
-        required=False,
-        help="Level to choose from the data.",
+
+    turbine = xr.open_dataset(turbine_data)
+
+    studies.perform_forecast_model_grid_search(
+        weather=weather,
+        turbine=turbine,
+        log_to_mantik=log_to_mantik,
     )
-    parser.add_argument(
-        "--turbine-data",
-        type=str,
-        required=True,
-        help="Local or remote path to the wind turbine data.",
-    )
-    parser.add_argument(
-        "--log-to-mantik",
-        type=conversion.string_to_bool,
-        default=True,
-        required=False,
-        help="Whether to log to mantik.",
-    )
-    return parser
