@@ -1,3 +1,5 @@
+import logging
+
 import a6.datasets.methods.turbine as _turbine
 import a6.features.methods.wind as wind
 import a6.training as training
@@ -7,6 +9,8 @@ import sklearn.model_selection as model_selection
 import xarray as xr
 
 import mlflow
+
+logger = logging.getLogger(__name__)
 
 
 @utils.log_consumption
@@ -19,6 +23,8 @@ def perform_forecast_model_grid_search(
     log_to_mantik: bool = True,
 ) -> model_selection.GridSearchCV:
     """Perform grid search for a forecasting model."""
+    logger.debug("here now")
+    exit(1)
     power_rating = turbine_variables.read_power_rating(turbine)
     (
         weather,
@@ -49,6 +55,14 @@ def perform_forecast_model_grid_search(
         time_coordinate=coordinates.time,
     )
 
+    logger.debug(
+        "Performing grid search for %s with parameters %s "
+        "and cross validation %s with groups %s",
+        model,
+        parameters,
+        cv,
+        groups,
+    )
     gs = training.grid_search.perform_grid_search(
         model=model,
         parameters=parameters,

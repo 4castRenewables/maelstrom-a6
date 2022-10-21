@@ -109,11 +109,11 @@ entry_points:
       turbine_data:
         type: str
       log_to_mantik:
-        type: bool
-        default: True
+        type: str
+        default: ""
     command: >
-      python grid_search.py \
+      a6 grid-search \
         --weather-data {weather_data} \
         --level {level} \
-        --turbine-data //work/nextcloud-office/team/projects/MAELSTROM/3_Execution_Phase/WP1/A6/data/production/eim1.nc \
-        --log-to-mantik {log_to_mantik}
+        --turbine-data {turbine_data} \
+        {log_to_mantik}
