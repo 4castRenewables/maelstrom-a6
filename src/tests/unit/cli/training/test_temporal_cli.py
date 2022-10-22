@@ -1,19 +1,16 @@
 import a6.cli.main as main
 
 
-def test_perform_inference(monkeypatch, runner):
+def test_temporal(runner):
     args = [
         "--dry-run",
-        "inference",
-        "test-aws-endpoint",
+        "train",
+        "temporal-study",
         "--weather-data",
-        "test-path",
+        "/test/path/",
         "--n-components",
-        "1",
-        "--use-varimax",
-        "true",
+        "3",
     ]
-
     result = runner.invoke(main.cli, args)
 
     assert result.exit_code == 0

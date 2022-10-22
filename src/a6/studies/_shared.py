@@ -30,8 +30,8 @@ def log_to_mantik(
     pca: _pca.PCA,
     clusters: clustering.ClusterAlgorithm,
     n_components: int,
-    min_cluster_size: t.Optional[int] = None,
     use_varimax: t.Optional[bool] = None,
+    **kwargs,
 ) -> None:
     plotting.create_plots_and_log_to_mantik(
         pca=pca,
@@ -40,8 +40,8 @@ def log_to_mantik(
     mlflow.log_param("n_components", n_components)
     mlflow.log_metric("n_clusters", clusters.n_clusters)
 
-    if min_cluster_size is not None:
-        mlflow.log_param("hdbscan_min_cluster_size", min_cluster_size)
+    if kwargs:
+        mlflow.log_params(kwargs)
 
     if use_varimax is not None:
         mlflow.log_param("use_varimax", use_varimax)

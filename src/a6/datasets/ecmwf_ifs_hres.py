@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import typing as t
 
@@ -5,6 +6,9 @@ import a6.utils
 import xarray as xr
 
 Path = t.Union[str, pathlib.Path]
+Levels = t.Optional[t.Union[int, list[int]]]
+
+logger = logging.getLogger(__name__)
 
 
 class EcmwfIfsHres:
@@ -15,7 +19,7 @@ class EcmwfIfsHres:
 
     def __init__(
         self,
-        paths: list[Path],
+        paths: t.Union[Path, list[Path]],
         overlapping: bool = True,
         preprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
         postprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
@@ -25,7 +29,7 @@ class EcmwfIfsHres:
 
         Parameters
         ----------
-        paths : list[str | pathlib.Path]
+        paths : str | pathlib.Path or list[str | pathlib.Path]
             Paths to the data files.
         overlapping : bool, default=True
             Whether the files are temporarily overlapping.
@@ -52,42 +56,55 @@ class EcmwfIfsHres:
 
         self._data: t.Optional[xr.Dataset] = None
         self._dropped_variables = []
-
-    @a6.utils.log_consumption
-    def to_netcdf(
-        self, path: Path, drop_variables: t.Optional[list[str]] = None
-    ) -> None:
-        """Save as netCDF file.
-
-        Parameters
-        ----------
-        path : str or pathlib.Path
-            Path (including file extension) where to save to file.
-        drop_variables : list[str], optional
-            List of variables to drop from the dataset.
-
-        """
-        self.as_xarray(drop_variables).to_netcdf(path)
+        self._selected_levels = []
 
     @a6.utils.log_consumption
     def as_xarray(
-        self, drop_variables: t.Optional[list[str]] = None
+        self,
+        levels: Levels = None,
+        drop_variables: t.Optional[list[str]] = None,
     ) -> xr.Dataset:
         """Return the dataset as an `xr.Dataset`.
 
         Parameters
         ----------
+        levels : int or list[int], optional
+            Level(s) to select.
         drop_variables : list[str], optional
             List of variables to drop from the dataset.
 
         """
-        if self._data is not None and drop_variables == self._dropped_variables:
+        logger.debug(
+            "Selecting level %s and dropping variables %s",
+            levels,
+            drop_variables,
+        )
+        if self._was_already_converted(
+            levels=levels, drop_variables=drop_variables
+        ):
+            logger.debug(
+                "Data was already converted for levels %s and dropped "
+                "variables %s",
+                levels,
+                drop_variables,
+            )
             return self._data
-        return self._as_xarray(drop_variables=drop_variables)
+        return self._as_xarray(levels=levels, drop_variables=drop_variables)
 
-    def _as_xarray(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
+    def _was_already_converted(
+        self, levels: Levels, drop_variables: t.Optional[list[str]]
+    ) -> bool:
+        return (
+            self._data is not None
+            and drop_variables == self._dropped_variables
+            and levels == self._selected_levels
+        )
+
+    def _as_xarray(
+        self, levels: Levels, drop_variables: t.Optional[list[str]]
+    ) -> xr.Dataset:
         """Merge a set of files into a single dataset."""
-        if len(self.paths) == 1:
+        if _single_path_given(self.paths):
             ds = self._open_single_dataset(drop_variables=drop_variables)
         else:
             ds = self._open_multiple_temporally_monotonous_datasets(
@@ -96,13 +113,22 @@ class EcmwfIfsHres:
 
         if self._postprocessing is not None:
             return self._postprocessing(ds)
+
+        if levels is not None:
+            logger.debug("Selecting level %s", levels)
+            return ds.sel(level=levels)
         return ds
 
     def _open_single_dataset(
         self, drop_variables: t.Optional[list[str]]
     ) -> xr.Dataset:
+        if isinstance(self.paths, list):
+            [path] = self.paths
+        else:
+            path = self.paths
+
         dataset = xr.open_dataset(
-            *self.paths,
+            path,
             engine=self._engine,
             drop_variables=drop_variables,
         )
@@ -147,3 +173,7 @@ class EcmwfIfsHres:
             dimension=self._concat_dim,
             slice_until=12,
         )
+
+
+def _single_path_given(paths: t.Union[Path, list[Path]]) -> bool:
+    return isinstance(paths, (str, pathlib.Path)) or len(paths) == 1

@@ -2,20 +2,19 @@ import abc
 import typing as t
 
 import a6.modes.methods.pca as _pca
-import a6.utils
+import a6.types as types
+import a6.utils as utils
 import hdbscan.plots
 import numpy as np
 import sklearn.cluster as cluster
 import xarray as xr
-
-_ClusterAlgorithm = t.Union[cluster.KMeans, hdbscan.HDBSCAN]
 
 
 class ClusterAlgorithm(abc.ABC):
     """Wrapper for `sklearn.cluster`-like algorithms."""
 
     def __init__(
-        self, model: _ClusterAlgorithm, pca: _pca.PCA, n_components: int
+        self, model: types.ClusterAlgorithm, pca: _pca.PCA, n_components: int
     ):
         """Set attributes.
 
@@ -46,7 +45,7 @@ class ClusterAlgorithm(abc.ABC):
         return self._n_components
 
     @property
-    def model(self) -> _ClusterAlgorithm:
+    def model(self) -> types.ClusterAlgorithm:
         """Return the model."""
         return self._model
 
@@ -120,12 +119,12 @@ class HDBSCAN(ClusterAlgorithm):
         )
 
 
-@a6.utils.log_consumption
+@utils.log_consumption
 def find_pc_space_clusters(
     pca: _pca.PCA,
     use_varimax: bool = False,
     n_components: t.Optional[int] = None,
-    algorithm: t.Optional[_ClusterAlgorithm] = None,
+    algorithm: t.Optional[types.ClusterAlgorithm] = None,
 ) -> ClusterAlgorithm:
     """Apply a given clustering algorithm on PCs.
 
@@ -163,7 +162,7 @@ def find_pc_space_clusters(
         )
     else:
         components_subspace = pca.transform(n_components=n_components)
-    result: _ClusterAlgorithm = algorithm.fit(components_subspace)
+    result: types.ClusterAlgorithm = algorithm.fit(components_subspace)
     if isinstance(algorithm, cluster.KMeans):
         return KMeans(model=result, pca=pca, n_components=n_components)
     elif isinstance(algorithm, hdbscan.HDBSCAN):

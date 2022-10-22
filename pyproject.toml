@@ -5,6 +5,11 @@ description = "Tool to determine mode a6 in datasets"
 packages = [{ include = "a6", from = "src" }]
 authors = ["Fabian Emmerich <fabian.emmerich@4-cast.de>"]
 
+
+[tool.poetry.scripts]
+a6 = "a6.cli.main:cli"
+
+
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
 numpy = "^1.21.4"
@@ -25,6 +30,7 @@ hdbscan = "^0.8.28"
 seaborn = "^0.11.2"
 python-dotenv = "^0.20.0"
 scipy = "^1.9.2"
+click = "^8.1.3"
 
 [tool.poetry.extras]
 mlflow = ["boto3", "sagemaker"]

@@ -47,7 +47,9 @@ class FakeDataset(datasets.EcmwfIfsHres):
         }
 
     @functools.lru_cache
-    def _as_xarray(self, drop_variables: t.Optional[list[str]]) -> xr.Dataset:
+    def _as_xarray(
+        self, levels: datasets.Levels, drop_variables: t.Optional[list[str]]
+    ) -> xr.Dataset:
         da = xr.DataArray(
             data=0.0,
             dims=self._dimensions[::-1],
