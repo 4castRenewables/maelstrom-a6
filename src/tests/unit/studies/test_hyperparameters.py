@@ -1,4 +1,5 @@
 import a6.studies.hyperparameters as _hyperparameters
+import hdbscan
 import pytest
 
 
@@ -9,8 +10,9 @@ class TestHyperParamers:
             (
                 _hyperparameters.HyperParameters(
                     n_components_start=1,
-                    min_cluster_size_start=2,
-                    min_cluster_size_end=3,
+                    cluster_arg="test-arg",
+                    cluster_start=2,
+                    cluster_end=3,
                 ),
                 [(1, 2), (1, 3)],
             ),
@@ -18,7 +20,8 @@ class TestHyperParamers:
                 _hyperparameters.HyperParameters(
                     n_components_start=1,
                     n_components_end=2,
-                    min_cluster_size_start=2,
+                    cluster_arg="test-arg",
+                    cluster_start=2,
                 ),
                 [(1, 2), (2, 2)],
             ),
@@ -26,8 +29,9 @@ class TestHyperParamers:
                 _hyperparameters.HyperParameters(
                     n_components_start=1,
                     n_components_end=2,
-                    min_cluster_size_start=2,
-                    min_cluster_size_end=3,
+                    cluster_arg="test-arg",
+                    cluster_start=2,
+                    cluster_end=3,
                 ),
                 [(1, 2), (1, 3), (2, 2), (2, 3)],
             ),
@@ -38,12 +42,7 @@ class TestHyperParamers:
 
         assert result == expected
 
+    def test_apply(self, hyperparameters):
+        result = hyperparameters.apply(hdbscan.HDBSCAN, 2)
 
-@pytest.fixture(scope="session")
-def hyperparameters() -> _hyperparameters.HyperParameters:
-    return _hyperparameters.HyperParameters(
-        n_components_start=1,
-        n_components_end=2,
-        min_cluster_size_start=2,
-        min_cluster_size_end=3,
-    )
+        assert isinstance(result, hdbscan.HDBSCAN)

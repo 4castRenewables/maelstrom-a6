@@ -44,4 +44,4 @@ ds = a6.datasets.EcmwfIfsHres(
 )
 
 with a6.utils.print_execution_time(description="converting to netcdf"):
-    ds.to_netcdf(outfile)
+    ds.as_xarray().to_netcdf(outfile)

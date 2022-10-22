@@ -22,14 +22,16 @@ Lifetime determination of large-scale weather regimes.
    ```
    The above command will set the `MLFLOW_TRACKING_TOKEN` environment variable which enables
    tracking to mantik.
-3. Run a MLflow script via
+3. Run a command (e.g. `train kmeans`) via
    ```commandline
-   poetry run python mlflow/train_kmeans.py \
-     --data data/temperature_level_128_daily_averages_2020.nc \
-     --n-components 2 3 \
-     --n-clusters 3 4 \
-     --use-varimax False
+   poetry run a6 train kmeans \
+     --weather-data data/temperature_level_128_daily_averages_2020.nc \
+     --n-components-start 3 \
+     --n-components-end 4 \
+     --n-clusters-start 3 \
+     --n-clusters-end 4
    ```
+   Pass `--use-varimax` to use VariMax rotation for the PCs.
    **Note:** Running with the above data file requires git-lfs.
    When executing for the first time, the data file has to be pulled via `git-lfs pull`.
 4. Refresh the mantik UI to see the logged parameters, metrics models and artifacts.
@@ -56,9 +58,11 @@ Lifetime determination of large-scale weather regimes.
    poetry run mlflow run mlflow \
      -e kmeans \
      -P data=/data/temperature_level_128_daily_averages_2020.nc \
-     -P n_components="2 3" \
-     -P n_clusters="3 4" \
-     -P use_varimax="False True" \
+     -P n_components_start=3 \
+     -P n_components_end=4 \
+     -P n_clusters_start=3 \
+     -P n_clusters_end=4 \
+     -P use_varimax=--use-varimax
    ```
    **Note:** When using multiple values for the parameters, the cartesian
    product is build from these to run every possible combination of input values.
@@ -93,17 +97,15 @@ image based on the image build in 1.
      --n-clusters 4 \
      --use-varimax True
    ```
-4. Adapt the entry point and input parameters for the application
-   in `mlflow/execute_with_mantik.py`.
-5. Set the required environment variables for the Compute Backend:
+4. Set the required environment variables for the Compute Backend:
    ```bash
    export MANTIK_UNICORE_USERNAME=<JuDoor username>
    export MANTIK_UNICORE_PASSWORD=<JuDoor password>
    export MANTIK_UNICORE_PROJECT=<JuDoor project>
    ```
-6. Run on HPC via
+5. Run on HPC via mantik
    ```commandline
-   poetry run python mlflow/execute_with_mantik.py \
+   poetry run mantik mlflow \
      --experiment-id <experiment ID> \
      --entry-point kmeans \
      -P data="/opt/data/temperature_level_128_daily_averages_2020.nc" \
@@ -114,9 +116,9 @@ image based on the image build in 1.
 
 **Notes:**
 - The above procedure (i.e. the building of the Singularity image)
-  copies the source files (`train_kmeans.py` etc.) during build time into the container image.
-  Thus, if any of these files were modified, the image has to be rebuilt to have the changes
-  in the image. This, of course, applies to the a6 package as well.
+  installs the package during build time into the container image.
+  Thus, the package was modified, the image has to be rebuilt to have the changes
+  in the image.
 - Running with Singularity (and not as an MLproject via `mlflow run`)
   does not track the git version (git commit hash), because, when creating a new run,
   MLflow attempts to import the git Python module and read the project repository to

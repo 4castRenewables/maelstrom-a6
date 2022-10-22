@@ -1,4 +1,5 @@
-import a6.studies.pca_and_hdbscan as pca_and_hdbscan
+import a6.studies.cluster as cluster
+import hdbscan
 import pytest
 
 
@@ -7,12 +8,13 @@ def vary_data_variables(request) -> bool:
     return request.param
 
 
-def test_perform_pca_and_hdbscan_hyperparameter_study(
+def test_perform_pca_and_cluster_hyperparameter_study(
     ds2, coordinates, hyperparameters, vary_data_variables
 ):
-    pca_and_hdbscan.perform_pca_and_hdbscan_hyperparameter_study(
+    cluster.perform_pca_and_cluster_hyperparameter_study(
         data=ds2,
         hyperparameters=hyperparameters,
+        algorithm=hdbscan.HDBSCAN,
         coordinates=coordinates,
         vary_data_variables=vary_data_variables,
         log_to_mantik=False,

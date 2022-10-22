@@ -23,8 +23,6 @@ def perform_forecast_model_grid_search(
     log_to_mantik: bool = True,
 ) -> model_selection.GridSearchCV:
     """Perform grid search for a forecasting model."""
-    logger.debug("here now")
-    exit(1)
     power_rating = turbine_variables.read_power_rating(turbine)
     (
         weather,

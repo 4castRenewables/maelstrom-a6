@@ -2,6 +2,8 @@ import dataclasses
 import itertools
 import typing as t
 
+import a6.types as types
+
 
 @dataclasses.dataclass
 class HyperParameters:
@@ -9,21 +11,24 @@ class HyperParameters:
 
     Parameters
     ----------
+    cluster_arg : str
+        Name of the argument to the clustering algorithm
     n_components_start : int, default=1
         Value for `n_components` (PCA) where to start.
     n_components_end : int, optional
         Value for `n_components` (PCA) where to stop.
-    min_cluster_size_start : int, default=2
+    cluster_start : int, default=2
         Value for `min_cluster_size` (HDBSCAN) where to start.
-    min_cluster_size_end : int, optional
+    cluster_end : int, optional
         Value for `min_cluster_size` (HDBSCAN) where to stop.
 
     """
 
+    cluster_arg: str
     n_components_start: int = 1
     n_components_end: t.Optional[int] = None
-    min_cluster_size_start: int = 2
-    min_cluster_size_end: t.Optional[int] = None
+    cluster_start: int = 2
+    cluster_end: t.Optional[int] = None
 
     @property
     def n_components_max(self) -> int:
@@ -31,7 +36,7 @@ class HyperParameters:
         return self.n_components_end or self.n_components_start
 
     @property
-    def n_components_range(self) -> t.Iterator:
+    def _n_components_range(self) -> t.Iterator:
         """Return the `range` for `n_components`."""
 
         if self.n_components_end is None:
@@ -41,16 +46,22 @@ class HyperParameters:
         return range(self.n_components_start, n_components_end + 1)
 
     @property
-    def min_cluster_size_range(self) -> t.Iterator:
+    def _clustering_range(self) -> t.Iterator:
         """Return the `range` for `min_cluster_size`."""
-        if self.min_cluster_size_end is None:
-            min_cluster_size_end = self.min_cluster_size_start
+        if self.cluster_end is None:
+            cluster_end = self.cluster_start
         else:
-            min_cluster_size_end = self.min_cluster_size_end
-        return range(self.min_cluster_size_start, min_cluster_size_end + 1)
+            cluster_end = self.cluster_end
+        return range(self.cluster_start, cluster_end + 1)
 
     def to_range(self) -> t.Iterator:
         """Return as a range to use in a for loop."""
         return itertools.product(
-            self.n_components_range, self.min_cluster_size_range
+            self._n_components_range, self._clustering_range
         )
+
+    def apply(
+        self, algorithm: t.Type[types.ClusterAlgorithm], cluster_param: int
+    ) -> types.ClusterAlgorithm:
+        """Apply to a given algorithm."""
+        return algorithm(**{self.cluster_arg: cluster_param})

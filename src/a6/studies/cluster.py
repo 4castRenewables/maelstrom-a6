@@ -1,10 +1,12 @@
+import typing as t
+
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
 import a6.studies._shared as _shared
 import a6.studies.hyperparameters as _hyperparameters
+import a6.types as types
 import a6.utils as utils
-import hdbscan
 import sklearn.decomposition as decomposition
 import xarray as xr
 
@@ -12,8 +14,9 @@ import mlflow
 
 
 @utils.log_consumption
-def perform_pca_and_hdbscan_hyperparameter_study(
+def perform_pca_and_cluster_hyperparameter_study(
     data: xr.Dataset,
+    algorithm: t.Type[types.ClusterAlgorithm],
     hyperparameters: _hyperparameters.HyperParameters,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     use_varimax: bool = False,
@@ -24,8 +27,9 @@ def perform_pca_and_hdbscan_hyperparameter_study(
     variables of the dataset.
     """
     if not vary_data_variables:
-        return _perform_hdbscan_hyperparameter_study(
+        return _perform_cluster_hyperparameter_study(
             data=data,
+            algorithm=algorithm,
             hyperparameters=hyperparameters,
             coordinates=coordinates,
             use_varimax=use_varimax,
@@ -36,8 +40,9 @@ def perform_pca_and_hdbscan_hyperparameter_study(
 
     for i, _ in enumerate(data.data_vars):
         data_subset = _select_data_subset(data=data, index=i)
-        clusters_temp = _perform_hdbscan_hyperparameter_study(
+        clusters_temp = _perform_cluster_hyperparameter_study(
             data=data_subset,
+            algorithm=algorithm,
             hyperparameters=hyperparameters,
             coordinates=coordinates,
             use_varimax=use_varimax,
@@ -48,8 +53,9 @@ def perform_pca_and_hdbscan_hyperparameter_study(
 
 
 @utils.log_consumption
-def _perform_hdbscan_hyperparameter_study(
+def _perform_cluster_hyperparameter_study(
     data: xr.Dataset,
+    algorithm: t.Type[types.ClusterAlgorithm],
     hyperparameters: _hyperparameters.HyperParameters,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     use_varimax: bool = False,
@@ -69,11 +75,15 @@ def _perform_hdbscan_hyperparameter_study(
 
     for (
         n_components,
-        min_cluster_size,
+        cluster_param,
     ) in hyperparameters.to_range():
         with mlflow_context(), log_context():
+
             clusters_temp = methods.find_pc_space_clusters(
-                algorithm=hdbscan.HDBSCAN(min_cluster_size=min_cluster_size),
+                algorithm=hyperparameters.apply(
+                    algorithm,
+                    cluster_param,
+                ),
                 pca=pca,
                 n_components=n_components,
                 use_varimax=use_varimax,
@@ -86,7 +96,7 @@ def _perform_hdbscan_hyperparameter_study(
                     pca=pca,
                     clusters=clusters_temp,
                     n_components=n_components,
-                    min_cluster_size=min_cluster_size,
+                    **{hyperparameters.cluster_arg: cluster_param},
                 )
     return clusters
 
