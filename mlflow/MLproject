@@ -8,17 +8,21 @@ docker_env:
 entry_points:
   kmeans:
     parameters:
-      data:
+      weather_data:
         type: string
       level:
         type: int
         default: None
-      n_components:
+      n_components_start:
         type: int
-        default: 3
-      n_clusters:
+      n_components_end:
         type: int
-        default: 4
+        default: None
+      n_clusters_start:
+        type: int
+      n_clusters_end:
+        type: int
+        default: None
       use_varimax:
         type: bool
         default: False
@@ -26,16 +30,19 @@ entry_points:
         type: bool
         default: True
     command: >
-      python train_kmeans.py \
-        --data {data} \
+      a6 \
+        --log-to-mantik {log_to_mantik} \
+        train kmeans \
+        --weather-data {weather_data} \
         --level {level} \
-        --n-components {n_components} \
-        --n-clusters {n_clusters} \
-        --use-varimax {use_varimax} \
-        --log-to-mantik {log_to_mantik}
+        --n-components-start {n_components_start} \
+        --n-components-end {n_components_end} \
+        --n-clusters-start {n_clusters_start} \
+        --n-clusters-end {n_clusters_end} \
+        --use-varimax {use_varimax}
   hdbscan:
     parameters:
-      data:
+      weather_data:
         type: string
       vary_data_variables:
         type: bool
@@ -60,21 +67,22 @@ entry_points:
         default: False
       log_to_mantik:
         type: bool
-        default: True
+        default: False
     command: >
-      python train_hdbscan.py \
-        --data {data} \
+      a6 \
+        --log-to-mantik {log_to_mantik} \
+        train hdbscan \
+        --weather-data {weather_data} \
         --vary-data-variables {vary_data_variables} \
         --level {level} \
         --n-components-start {n_components_start} \
         --n-components-end {n_components_end} \
         --min-cluster-size-start {min_cluster_size_start} \
         --min-cluster-size-end {min_cluster_size_end} \
-        --use-varimax {use_varimax} \
-        --log-to-mantik {log_to_mantik}
+        --use-varimax {use_varimax}
   temporal:
     parameters:
-      data:
+      weather_data:
         type: string
       level:
         type: int
@@ -90,15 +98,16 @@ entry_points:
         default: False
       log_to_mantik:
         type: bool
-        default: True
+        default: False
     command: >
-      python train_temporal.py \
-        --data {data} \
+      a6 \
+        --log-to-mantik {log_to_mantik} \
+        train temporal-study \
+        --weather-data {weather_data} \
         --level {level} \
         --n-components {n_components} \
         --min-cluster-size {min_cluster_size} \
-        --use-varimax {use_varimax} \
-        --log-to-mantik {log_to_mantik}
+        --use-varimax {use_varimax}
   grid_search:
     parameters:
       weather_data:
@@ -109,11 +118,13 @@ entry_points:
       turbine_data:
         type: str
       log_to_mantik:
-        type: str
-        default: ""
+        type: bool
+        default: False
     command: >
-      a6 grid-search \
+      a6 \
+        --log-to-mantik {log_to_mantik} \
+        grid-search \
         --weather-data {weather_data} \
         --level {level} \
-        --turbine-data {turbine_data} \
-        {log_to_mantik}
+        --turbine-data {turbine_data}
+

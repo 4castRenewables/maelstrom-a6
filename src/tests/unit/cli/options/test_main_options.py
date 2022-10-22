@@ -33,7 +33,7 @@ def test_dry_run(runner, args, expected):
 @pytest.mark.parametrize(
     ("args", "expected"),
     [
-        (["--log-to-mantik"], "True"),
+        (["--log-to-mantik", "true"], "True"),
         ([], "False"),
     ],
 )
