@@ -13,7 +13,10 @@ import click
 )
 @click.option(
     "--log-to-mantik",
-    is_flag=True,
+    type=click.BOOL,
+    default=False,
+    required=False,
+    show_default=True,
     help="Log to the Mantik platform (via MLflow)",
 )
 @click.pass_context

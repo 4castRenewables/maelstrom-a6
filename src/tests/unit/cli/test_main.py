@@ -9,7 +9,7 @@ def test_dry_run(runner):
 
 
 def test_log_to_mantik(runner):
-    args = ["--log-to-mantik", "--help"]
+    args = ["--log-to-mantik", "true", "--help"]
     result = runner.invoke(main.cli, args)
 
     assert result.exit_code == 0
