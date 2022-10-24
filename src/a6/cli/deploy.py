@@ -52,7 +52,7 @@ _DEFAULT_SAGEMAKER_INSTANCE_TYPE = "ml.m5.large"
         Role (ARN) with access to the specified Docker image and S3
         bucket container the MLflow model artifacts.
 
-        \b"
+        \b
         Required permissions:
             - AmazonS3ReadOnlyAccess
             - AmazonSageMakerFullAccess
@@ -76,8 +76,10 @@ _DEFAULT_SAGEMAKER_INSTANCE_TYPE = "ml.m5.large"
             - `SecurityGroupIds`: ID of the security group of the
               MLflow VPC.
             - `Subnets`: ID of the private subnet of the MLflow VPC.
+
+        \b
         Example:
-        ```JSON
+        ```json
         {
           "SecurityGroupIds": ["sg-123abc"],
           "Subnets": ["subnet-123abc"]
