@@ -9,6 +9,7 @@ import xarray as xr
 logger = logging.getLogger(__name__)
 
 
+@utils.log_consumption
 def preprocess_turbine_data_and_match_with_weather_data(
     weather: xr.Dataset,
     turbine: xr.Dataset,
@@ -49,6 +50,7 @@ def preprocess_turbine_data_and_match_with_weather_data(
     )
 
 
+@utils.log_consumption
 def clean_production_data(
     data: xr.Dataset,
     power_rating: t.Union[int, float],
@@ -97,6 +99,7 @@ def _remove_outliers(
     )
 
 
+@utils.log_consumption
 def get_closest_grid_point(
     weather: xr.Dataset,
     turbine: xr.Dataset,
@@ -118,6 +121,7 @@ def get_closest_grid_point(
     )
 
 
+@utils.log_consumption
 def resample_to_hourly_resolution(
     data: xr.Dataset,
     production_variable: str = "production",
@@ -130,6 +134,7 @@ def resample_to_hourly_resolution(
     return data.where(data[production_variable].notnull(), drop=True)
 
 
+@utils.log_consumption
 def select_intersecting_time_steps(
     weather: xr.Dataset,
     turbine: xr.Dataset,

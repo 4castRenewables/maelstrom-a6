@@ -5,15 +5,13 @@ description = "Tool to determine mode a6 in datasets"
 packages = [{ include = "a6", from = "src" }]
 authors = ["Fabian Emmerich <fabian.emmerich@4-cast.de>"]
 
-
 [tool.poetry.scripts]
 a6 = "a6.cli.main:cli"
-
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
 numpy = "^1.21.4"
-xarray = "^0.20.2"
+xarray = "^2022.10.0"
 netCDF4 = "^1.5.8"
 dask = {extras = ["distributed"], version = "^2022.2.0"}
 dask-jobqueue = "^0.7.3"

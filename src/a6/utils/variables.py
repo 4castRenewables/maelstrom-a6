@@ -9,6 +9,7 @@ class Turbine:
 
     production: str = "production"
     power_rating: str = "power rating"
+    name: str = "wind plant"
 
     def read_power_rating(self, data: xr.Dataset) -> float:
         """Read the power rating from the meta data."""
@@ -16,6 +17,12 @@ class Turbine:
         if "kW" in value:
             return float(value.split()[0])
         return float(value)
+
+    def get_turbine_name(self, data: xr.Dataset) -> str:
+        """Read the turbine's name from the meta data."""
+        if self.name in data.attrs:
+            return data.attrs[self.name]
+        return "nonamed"
 
 
 @dataclasses.dataclass(frozen=True)
