@@ -127,14 +127,14 @@ def execute_parallel(
 
     Examples
     --------
+    >>> import pytest; pytest.skip("")
     >>> def add(x, y):
     ...    return x + y
     >>> args = [
     ...    (1, 1),
     ...    (2, 2),
     ...    (3, 3),
-    ...]
-
+    ... ]
     >>> execute_parallel(add, args, ...)
     [2, 4, 6]
 
