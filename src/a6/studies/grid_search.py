@@ -1,11 +1,12 @@
 import logging
 import pathlib
+import typing as t
 
 import a6.datasets.methods.turbine as _turbine
 import a6.features.methods.wind as wind
 import a6.training as training
+import a6.types as types
 import a6.utils as utils
-import sklearn.ensemble as ensemble
 import sklearn.model_selection as model_selection
 import xarray as xr
 
@@ -16,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 @utils.log_consumption
 def perform_forecast_model_grid_search(
+    model: t.Type[types.Model],
+    parameters: dict[str, list],
     weather: xr.Dataset,
     turbine: xr.Dataset,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
@@ -42,15 +45,6 @@ def perform_forecast_model_grid_search(
         weather, u=model_variables.u, v=model_variables.v
     )
 
-    model = ensemble.GradientBoostingRegressor()
-    parameters = {
-        "learning_rate": [0.1],
-        "n_estimators": [50],
-        "min_samples_split": [2],
-        "min_samples_leaf": [1],
-        "max_depth": [3],
-    }
-
     cv = model_selection.LeaveOneGroupOut()
     groups = training.Groups(
         data=turbine,
@@ -68,7 +62,7 @@ def perform_forecast_model_grid_search(
         groups,
     )
     gs = training.grid_search.perform_grid_search(
-        model=model,
+        model=model(),
         parameters=parameters,
         X=wind_speed,
         y=turbine[turbine_variables.production],

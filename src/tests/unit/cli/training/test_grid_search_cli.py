@@ -10,6 +10,8 @@ def test_grid_search(runner):
         "/test/path/",
         "--turbine-data",
         "/test/other/path/",
+        "--config",
+        "grid-search.yaml",
     ]
     result = runner.invoke(
         main.cli,
