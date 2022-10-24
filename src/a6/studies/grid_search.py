@@ -1,4 +1,5 @@
 import logging
+import pathlib
 
 import a6.datasets.methods.turbine as _turbine
 import a6.features.methods.wind as wind
@@ -20,9 +21,12 @@ def perform_forecast_model_grid_search(
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     turbine_variables: utils.variables.Turbine = utils.variables.Turbine(),
     model_variables: utils.variables.Model = utils.variables.Model(),
-    log_to_mantik: bool = True,
+    log_to_mantik: bool = False,
 ) -> model_selection.GridSearchCV:
     """Perform grid search for a forecasting model."""
+    if log_to_mantik:
+        mlflow.sklearn.autolog(log_models=False)
+
     power_rating = turbine_variables.read_power_rating(turbine)
     (
         weather,
@@ -41,17 +45,19 @@ def perform_forecast_model_grid_search(
     model = ensemble.GradientBoostingRegressor()
     parameters = {
         "learning_rate": [0.1],
-        "n_estimators": [50, 100],
+        "n_estimators": [50],
         "min_samples_split": [2],
         "min_samples_leaf": [1],
         "max_depth": [3],
     }
 
     cv = model_selection.LeaveOneGroupOut()
-    groups = training.get_group_labels_for_each_date(
+    groups = training.Groups(
         data=turbine,
         time_coordinate=coordinates.time,
+        groupby="date",
     )
+    scorers = training.metrics.turbine.Scorers(power_rating)
 
     logger.debug(
         "Performing grid search for %s with parameters %s "
@@ -67,14 +73,31 @@ def perform_forecast_model_grid_search(
         X=wind_speed,
         y=turbine[turbine_variables.production],
         cv=cv,
-        groups=groups,
-        scorers=training.metrics.turbine.make_scorers(power_rating),
-        refit="mae",
+        groups=groups.labels,
+        scorers=scorers.to_dict(),
+        refit=scorers.main_score,
     )
 
+    scores = groups.evaluate_cross_validation(
+        gs.cv_results_, scores=scorers.scores
+    )
+    scores_with_coords = scores.assign_coords(
+        {
+            coordinates.latitude: turbine[coordinates.longitude],
+            coordinates.longitude: turbine[coordinates.latitude],
+        }
+    )
     if log_to_mantik:
-        mlflow.log_param("model", model.__class__.__name__)
-        mlflow.log_params(parameters)
-        mlflow.log_metrics(gs.cv_results_)
+        _log_scores_as_netcdf(
+            scores_with_coords,
+            name=f"{turbine_variables.get_turbine_name(turbine)}-scores.nc",
+        )
 
     return gs
+
+
+def _log_scores_as_netcdf(scores: xr.Dataset, name: str) -> None:
+    path = pathlib.Path(name)
+    scores.to_netcdf(path)
+    mlflow.log_artifact(path.as_posix())
+    path.unlink()

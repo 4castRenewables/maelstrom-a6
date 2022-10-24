@@ -3,18 +3,41 @@ import numpy as np
 import sklearn.metrics as metrics
 
 
-def make_scorers(power_rating: float) -> types.Scorers:
-    """Make MAE, NMAE, RMSE and NRMSE scorers."""
-    return {
-        "mae": metrics.make_scorer(metrics.mean_absolute_error),
-        # "nmae": metrics.make_scorer(
-        #    functools.partial(calculate_nmae, power_rating=power_rating)
-        # ),
-        # "rmse": metrics.make_scorer(calculate_rmse),
-        # "nrmse": metrics.make_scorer(
-        #    functools.partial(calculate_nrmse, power_rating=power_rating)
-        # ),
-    }
+class Scorers:
+    """MAE, NMAE, RMSE and NRMSE scorers."""
+
+    def __init__(self, power_rating: float):
+        self._mae = metrics.make_scorer(
+            metrics.mean_absolute_error, greater_is_better=False
+        )
+        self._nmae = metrics.make_scorer(
+            calculate_nmae, greater_is_better=False, power_rating=power_rating
+        )
+        self._rmse = metrics.make_scorer(
+            calculate_rmse, greater_is_better=False
+        )
+        self._nrmse = metrics.make_scorer(
+            calculate_nrmse, greater_is_better=False, power_rating=power_rating
+        )
+
+    @property
+    def main_score(self) -> str:
+        """Return the main score function for the best estimator."""
+        return "nrmse"
+
+    @property
+    def scores(self) -> list[str]:
+        """Return the score names."""
+        return list(self.to_dict())
+
+    def to_dict(self) -> types.Scorers:
+        """Return as dict as expected by sklearn API."""
+        return {
+            "mae": self._mae,
+            "nmae": self._nmae,
+            "rmse": self._rmse,
+            "nrmse": self._nrmse,
+        }
 
 
 def calculate_nmae(

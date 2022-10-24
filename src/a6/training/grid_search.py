@@ -3,6 +3,7 @@ import a6.utils as utils
 import sklearn.model_selection as model_selection
 
 
+@utils.log_consumption
 def perform_grid_search(
     model: types.Model,
     parameters: dict[str, list],

@@ -1,5 +1,5 @@
 import a6.training.metrics as metrics
 from a6.training.cross_validation import perform_cross_validation
 from a6.training.grid_search import perform_grid_search
-from a6.training.groups import get_group_labels_for_each_date
+from a6.training.groups import Groups
 from a6.training.train import fit

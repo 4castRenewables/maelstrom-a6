@@ -11,7 +11,7 @@ def test_perform_forecast_model_grid_search(pl_ds):
             "latitude": pl_ds["latitude"].isel(latitude=0),
             "longitude": pl_ds["longitude"].isel(longitude=0),
         },
-        attrs={"power rating": "1000"},
+        attrs={"power rating": "1000", "wind plant": "test-name"},
     )
 
     forecast.perform_forecast_model_grid_search(
