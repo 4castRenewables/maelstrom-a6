@@ -86,7 +86,7 @@ build-docker:
     - docker:dind
   image: docker:latest
   before_script:
-    - !reference[.set-required-environment-variables, script]
+    - !reference [.set-required-environment-variables, script]
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
     - apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
     - python3 -m ensurepip
