@@ -1,4 +1,3 @@
-import datetime
 import logging
 import typing as t
 
@@ -142,23 +141,11 @@ def select_intersecting_time_steps(
 ) -> tuple[xr.Dataset, xr.Dataset]:
     """Select the overlapping time steps of the datasets."""
     logger.debug("Getting intersecting time steps for weather and turbine data")
-    intersection = _get_time_step_intersection(
-        weather=weather,
-        turbine=turbine,
+    intersection = utils.get_time_step_intersection(
+        left=weather,
+        right=turbine,
         time_coordinate=time_coordinate,
     )
     select = {time_coordinate: intersection}
     logger.debug("Found intersecting time steps %s", select)
     return weather.sel(select), turbine.sel(select)
-
-
-def _get_time_step_intersection(
-    weather: xr.Dataset,
-    turbine: xr.Dataset,
-    time_coordinate: str,
-) -> list[datetime.datetime]:
-    # Create sets of the time steps to allow set theory operations.
-    weather_time_stamps = set(weather[time_coordinate].values)
-    turbine_time_stamps = set(turbine[time_coordinate].values)
-    intersection = weather_time_stamps & turbine_time_stamps
-    return sorted(intersection)

@@ -9,7 +9,7 @@ import mlflow
 
 def perform_cross_validation(
     model: object,
-    X: types.XarrayData,
+    X: types.XarrayData,  # noqa: N803
     y: types.XarrayData,
     power_rating: float,
     log_to_mantik: bool = True,
@@ -30,18 +30,14 @@ def perform_cross_validation(
 
 
 def _log_result(model: object, cv: dict[str, np.ndarray]) -> None:
-    mae = cv["test_mae"]
     nmae = cv["test_nmae"]
-    rmse = cv["test_rmse"]
     nrmse = cv["test_nrmse"]
     mlflow.log_param("model", model.__class__.__name__)
     mlflow.log_metric("fit_time_mean", cv["fit_time"].mean())
     mlflow.log_metric("fit_time_std", cv["fit_time"].std())
 
     for metric, value in [
-        ("mae", mae),
         ("nmae", nmae),
-        ("rmse", rmse),
         ("nrmse", nrmse),
     ]:
         mlflow.log_metric(f"{metric}_mean", value.mean())

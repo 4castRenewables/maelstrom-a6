@@ -2,6 +2,7 @@ import dataclasses
 import datetime
 import typing as t
 
+import a6.utils as utils
 import numpy as np
 import pandas as pd
 
@@ -127,9 +128,9 @@ class Appearance:
         start_dt64: np.datetime64 = time_series[index.start]
         end_dt64: np.datetime64 = time_series[index.end]
         time_delta_td64: np.timedelta64 = time_series[1] - time_series[0]
-        start = _numpy_datetime64_to_datetime(start_dt64)
-        end = _numpy_datetime64_to_datetime(end_dt64)
-        time_delta = _numpy_timedelta64_to_timedelta(time_delta_td64)
+        start = utils.numpy_datetime64_to_datetime(start_dt64)
+        end = utils.numpy_datetime64_to_datetime(end_dt64)
+        time_delta = utils.numpy_timedelta64_to_timedelta(time_delta_td64)
         return cls(
             label=label,
             start=start,
@@ -278,7 +279,7 @@ class Mode:
             statistics=statistics,
         )
 
-    def get_dates(
+    def get_dates(  # noqa: CFQ004
         self,
         start: t.Optional[datetime.datetime] = None,
         end: t.Optional[datetime.datetime] = None,
@@ -300,7 +301,7 @@ class Mode:
 
         """
 
-        def date_within_range(d):
+        def date_within_range(d):  # noqa: CFQ004
             if start is None and end is None:
                 return True
             elif start is not None and end is None:
@@ -318,15 +319,3 @@ class Mode:
             )
             if date_within_range(date)
         )
-
-
-def _numpy_datetime64_to_datetime(date: np.datetime64) -> datetime.datetime:
-    ts = pd.Timestamp(date)
-    return ts.to_pydatetime()
-
-
-def _numpy_timedelta64_to_timedelta(
-    delta: np.timedelta64,
-) -> datetime.timedelta:
-    ts = pd.Timedelta(delta)
-    return ts.to_pytimedelta()
