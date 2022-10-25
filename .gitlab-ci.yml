@@ -1,9 +1,9 @@
 include:
   - project: 4cast1/ci-templates
-    ref: main
+    ref: fix-zipped-docker-image-name
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: fix-zipped-docker-image-name
     file: /python/templates.yml
   - project: 4cast1/ci-templates
     ref: fix-zipped-docker-image-name
@@ -21,6 +21,7 @@ variables:
     --py39-plus
   DOCKER_FILE: mlflow/Dockerfile
   DOCKER_IMAGE_NAME: a6-mlflow
+  DOCKER_ZIPPED_IMAGE_FILE: a6-mlflow
 
 stages:
  - lint
