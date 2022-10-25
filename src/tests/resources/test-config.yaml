@@ -1,0 +1,3 @@
+model: sklearn.cluster.KMeans
+parameters:
+  test_parameter: 1
