@@ -8,10 +8,15 @@ repos:
       - id: check-added-large-files
         args: [ "--maxkb=3000" ]
         exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy)
+      - id: check-ast
       - id: check-builtin-literals
       - id: check-case-conflict
       - id: check-docstring-first
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
       - id: debug-statements
+      - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
         exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy)
@@ -51,6 +56,14 @@ repos:
       - id: flake8
         additional_dependencies:
           - Flake8-pyproject
+          # See https://github.com/DmytroLitvinov/awesome-flake8-extensions
+          - flake8-blind-except
+          - flake8-builtins-unleashed
+          - flake8-functions
+          - flake8-logging-format
+          - flake8_module_name
+          - pep8-naming
+
   - repo: local
     hooks:
       - id: jupyter-nb-clear-output
