@@ -7,14 +7,8 @@ class Scorers:
     """MAE, NMAE, RMSE and NRMSE scorers."""
 
     def __init__(self, power_rating: float):
-        self._mae = metrics.make_scorer(
-            metrics.mean_absolute_error, greater_is_better=False
-        )
         self._nmae = metrics.make_scorer(
             calculate_nmae, greater_is_better=False, power_rating=power_rating
-        )
-        self._rmse = metrics.make_scorer(
-            calculate_rmse, greater_is_better=False
         )
         self._nrmse = metrics.make_scorer(
             calculate_nrmse, greater_is_better=False, power_rating=power_rating
@@ -33,9 +27,7 @@ class Scorers:
     def to_dict(self) -> types.Scorers:
         """Return as dict as expected by sklearn API."""
         return {
-            "mae": self._mae,
             "nmae": self._nmae,
-            "rmse": self._rmse,
             "nrmse": self._nrmse,
         }
 
