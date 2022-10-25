@@ -1,13 +1,15 @@
 import a6.cli.main as main
 
 
-def test_cluster_with_hdbscan(runner):
+def test_train_cluster(runner, config_path):
     args = [
         "--dry-run",
         "train",
-        "hdbscan",
+        "cluster",
         "--weather-data",
         "/test/path/",
+        "--config",
+        config_path.as_posix(),
     ]
     result = runner.invoke(
         main.cli,
