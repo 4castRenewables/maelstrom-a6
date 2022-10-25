@@ -6,35 +6,25 @@ import pytest
 
 @main.cli.command("test-pca-command")
 @_options.pca.N_COMPONENTS
-@_options.pca.N_COMPONENTS_START
-@_options.pca.N_COMPONENTS_END
+@_options.pca.USE_VARIMAX
 def pca_command(
     n_components: int,
-    n_components_start: int,
-    n_components_end: _options.cluster.MinClusterSizeEnd,
+    use_varimax: bool,
 ):
     click.echo(n_components)
-    click.echo(n_components_start)
-    click.echo(f"{n_components_end}")
+    click.echo(use_varimax)
 
 
 @pytest.mark.parametrize(
     ("args", "expected"),
     [
         (
-            ["--n-components", "2", "--n-components-start", "3"],
-            ["2", "3", "None"],
+            ["--n-components", "2"],
+            ["2", "False"],
         ),
         (
-            [
-                "--n-components",
-                "2",
-                "--n-components-start",
-                "3",
-                "--n-components-end",
-                "4",
-            ],
-            ["2", "3", "4"],
+            ["--n-components", "2", "--use-varimax", "true"],
+            ["2", "True"],
         ),
     ],
 )

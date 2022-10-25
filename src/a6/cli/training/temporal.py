@@ -4,6 +4,7 @@ import a6.cli.data as data
 import a6.cli.options as _options
 import a6.cli.training.train as train
 import a6.studies as studies
+import click
 
 
 @train.train.command("temporal-study")
@@ -11,7 +12,14 @@ import a6.studies as studies
 @_options.data.LEVEL
 @_options.pca.N_COMPONENTS
 @_options.pca.USE_VARIMAX
-@_options.cluster.MIN_CLUSTER_SIZE
+@click.option(
+    "--min-cluster-size",
+    type=int,
+    default=2,
+    required=False,
+    show_default=True,
+    help="`min_cluster_size` for the HDBSCAN algorithm.",
+)
 @_options.main.PASS_OPTIONS
 def perform_temporal_study(
     options: _options.main.Options,

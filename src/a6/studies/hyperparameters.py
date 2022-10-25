@@ -2,6 +2,7 @@ import dataclasses
 import itertools
 import typing as t
 
+import a6.cli.options.config as _config
 import a6.types as types
 
 
@@ -29,6 +30,22 @@ class HyperParameters:
     n_components_end: t.Optional[int] = None
     cluster_start: int = 2
     cluster_end: t.Optional[int] = None
+
+    @classmethod
+    def from_config(cls, config: _config.Config) -> "HyperParameters":
+        """Create from CLI config."""
+        parameters = config.parameters
+
+        def read_optional(name: str) -> t.Optional[int]:
+            return parameters[name] if name in parameters else None
+
+        return cls(
+            cluster_arg=parameters["cluster_arg"],
+            n_components_start=parameters["n_components_start"],
+            n_components_end=read_optional("n_components_end"),
+            cluster_start=parameters["cluster_start"],
+            cluster_end=read_optional("cluster_end"),
+        )
 
     @property
     def n_components_max(self) -> int:

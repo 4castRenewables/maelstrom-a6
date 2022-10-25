@@ -1,7 +1,7 @@
 import a6.cli.main as main
 
 
-def test_grid_search(runner):
+def test_grid_search(runner, config_path):
     args = [
         "--dry-run",
         "train",
@@ -11,7 +11,7 @@ def test_grid_search(runner):
         "--turbine-data",
         "/test/other/path/",
         "--config",
-        "grid-search.yaml",
+        config_path.as_posix(),
     ]
     result = runner.invoke(
         main.cli,
