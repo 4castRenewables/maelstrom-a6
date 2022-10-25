@@ -87,6 +87,7 @@ build-docker:
   before_script:
     - !reference [.set-required-environment-variables, script]
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
+    # numpy requires gcc g++ make python3-dev
     - apk add --update --no-cache python3 gcc g++ make python3-dev
     - ln -sf python3 /usr/bin/python
     - python3 -m ensurepip
