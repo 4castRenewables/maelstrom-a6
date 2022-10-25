@@ -6,62 +6,15 @@ docker_env:
   environment: ["MLFLOW_TRACKING_TOKEN"]
 
 entry_points:
-  kmeans:
+  cluster:
     parameters:
       weather_data:
         type: string
       level:
         type: int
         default: None
-      n_components_start:
-        type: int
-      n_components_end:
-        type: int
-        default: None
-      n_clusters_start:
-        type: int
-      n_clusters_end:
-        type: int
-        default: None
-      use_varimax:
-        type: bool
-        default: False
-      log_to_mantik:
-        type: bool
-        default: True
-    command: >
-      a6 \
-        --log-to-mantik {log_to_mantik} \
-        train kmeans \
-        --weather-data {weather_data} \
-        --level {level} \
-        --n-components-start {n_components_start} \
-        --n-components-end {n_components_end} \
-        --n-clusters-start {n_clusters_start} \
-        --n-clusters-end {n_clusters_end} \
-        --use-varimax {use_varimax}
-  hdbscan:
-    parameters:
-      weather_data:
-        type: string
-      vary_data_variables:
-        type: bool
-        default: False
-      level:
-        type: int
-        default: None
-      n_components_start:
-        type: int
-        default: 3
-      n_components_end:
-        type: int
-        default: None
-      min_cluster_size_start:
-        type: int
-        default: 2
-      min_cluster_size_end:
-        type: int
-        default: None
+      config:
+        type: str
       use_varimax:
         type: bool
         default: False
@@ -71,14 +24,10 @@ entry_points:
     command: >
       a6 \
         --log-to-mantik {log_to_mantik} \
-        train hdbscan \
+        train cluster \
         --weather-data {weather_data} \
-        --vary-data-variables {vary_data_variables} \
         --level {level} \
-        --n-components-start {n_components_start} \
-        --n-components-end {n_components_end} \
-        --min-cluster-size-start {min_cluster_size_start} \
-        --min-cluster-size-end {min_cluster_size_end} \
+        --config {config} \
         --use-varimax {use_varimax}
   temporal:
     parameters:
@@ -108,7 +57,7 @@ entry_points:
         --n-components {n_components} \
         --min-cluster-size {min_cluster_size} \
         --use-varimax {use_varimax}
-  grid_search:
+  grid-search:
     parameters:
       weather_data:
         type: string
@@ -117,14 +66,16 @@ entry_points:
         default: None
       turbine_data:
         type: str
+      config:
+        type: str
       log_to_mantik:
         type: bool
         default: False
     command: >
       a6 \
         --log-to-mantik {log_to_mantik} \
-        grid-search \
+        train grid-search \
         --weather-data {weather_data} \
         --level {level} \
-        --turbine-data {turbine_data}
-
+        --turbine-data {turbine_data} \
+        --config {config}
