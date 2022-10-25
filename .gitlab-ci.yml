@@ -6,7 +6,7 @@ include:
     ref: main
     file: /python/templates.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: fix-zipped-docker-image-name
     file: /docker/templates.yml
 
 variables:
@@ -20,13 +20,14 @@ variables:
     --py38-plus
     --py39-plus
   DOCKER_FILE: mlflow/Dockerfile
-
+  DOCKER_IMAGE_NAME: a6-mlflow
 
 stages:
  - lint
  - test
  - validate
  - build
+ - integration
 
 mypy:
   extends: .lint-mypy
@@ -55,6 +56,7 @@ test-unit:
   variables:
     PY_PYTEST_DIR: src/tests
 
+
 coverage:
   extends: .coverage
   needs:
@@ -72,3 +74,51 @@ build-docker:
       artifacts: true
     - job: build-python
       artifacts: true
+
+.test-integration:
+  stage: integration
+  needs:
+    - job: build-python
+      artifacts: true
+    - job: build-docker
+      artifacts: true
+  services:
+    - docker:dind
+  image: docker:latest
+  before_script:
+    - !reference[.set-required-environment-variables, script]
+    - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
+    - apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
+    - python3 -m ensurepip
+    - pip3 install --no-cache --upgrade pip
+    - pip install mlflow==1.27.0
+
+test-cluster:
+  extends: .test-integration
+  script:
+    - mlflow run mlflow \
+      -e cluster \
+      -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
+      -P config=cluster.yaml \
+      -P use_varimax=false \
+      -P log_to_mantik=false
+
+test-temporal:
+  extends: .test-integration
+  script:
+    - mlflow run mlflow \
+      -e temporal \
+      -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
+      -P use_varimax=false \
+      -P log_to_mantik=false
+
+test-grid-search:
+  extends: .test-integration
+  script:
+    - mlflow run mlflow \
+      -e grid-search \
+      -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
+      -P turbine_data=/data/turbine.nc \
+      -P config=grid-search.yaml \
+      -P use_varimax=false \
+      -P log_to_mantik=false

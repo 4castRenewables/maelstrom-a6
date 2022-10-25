@@ -18,20 +18,20 @@ Lifetime determination of large-scale weather regimes.
    track to the desired experiment.
 2. Initialize tracking with mantik
    ```commandline
-   eval $(mantik init)
+   eval $(poetry run mantik init)
    ```
    The above command will set the `MLFLOW_TRACKING_TOKEN` environment variable which enables
    tracking to mantik.
-3. Run a command (e.g. `train kmeans`) via
+3. Run a command (e.g. `train cluster`) via
    ```commandline
-   poetry run a6 train kmeans \
+   poetry run \
+     a6 \
+     --log-to-mantik true \
+     train cluster \
      --weather-data data/temperature_level_128_daily_averages_2020.nc \
-     --n-components-start 3 \
-     --n-components-end 4 \
-     --n-clusters-start 3 \
-     --n-clusters-end 4
+     --level 128 \
+     --config mlflow/cluster.yaml
    ```
-   Pass `--use-varimax` to use VariMax rotation for the PCs.
    **Note:** Running with the above data file requires git-lfs.
    When executing for the first time, the data file has to be pulled via `git-lfs pull`.
 4. Refresh the mantik UI to see the logged parameters, metrics models and artifacts.
@@ -47,36 +47,18 @@ Lifetime determination of large-scale weather regimes.
 3. Run the project
    ```commandline
    poetry run mlflow run mlflow \
-     -e kmeans \
-     -P data=/data/temperature_level_128_daily_averages_2020.nc \
-     -P n_components=3 \
-     -P n_clusters=4 \
-     -P use_varimax=False
+     -e cluster \
+     -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
+     -P config=cluster.yaml
+     -P use_varimax=false
    ```
-   In order to run with a set of parameters execute as follows:
-   ```commandline
-   poetry run mlflow run mlflow \
-     -e kmeans \
-     -P data=/data/temperature_level_128_daily_averages_2020.nc \
-     -P n_components_start=3 \
-     -P n_components_end=4 \
-     -P n_clusters_start=3 \
-     -P n_clusters_end=4 \
-     -P use_varimax=--use-varimax
-   ```
-   **Note:** When using multiple values for the parameters, the cartesian
-   product is build from these to run every possible combination of input values.
-   This is done in the `mlflow/train_kmeans.py`, though, and is not a feature of mlflow.
 
 **Note:** The a6 package is installed into the Docker container
 at build time. If the source code of the a6 package was modified,
 the Docker image has to be rebuilt (see 1.) in order to have the updated source code
-in the container image. The `train_kmeans.py`, on the other hand, is copied by mlflow into
+in the container image. The given folder (`mlflow/`), on the other hand, is copied by mlflow into
 the container when running the project and, hence, does not require rebuilding the
-Docker image manually if the file was modified.
-
-In fact, mlflow copies the whole project folder into a new container
-image based on the image build in 1.
+Docker image manually if any of these files was modified
 (see
 [here](https://github.com/mlflow/mlflow/blob/276f71e0dfd496701774b976103dc8cce72734f2/mlflow/projects/docker.py#L60)).
 
@@ -91,11 +73,10 @@ image based on the image build in 1.
    ```commandline
    singularity run \
      mlflow/a6-mlflow.sif \
-     python /opt/train_kmeans.py \
-     --data ${PWD}/data/temperature_level_128_daily_averages_2020.nc \
-     --n-components 3 \
-     --n-clusters 4 \
-     --use-varimax True
+     a6 train cluster \
+     --weather-data ${PWD}/data/temperature_level_128_daily_averages_2020.nc \
+     --config cluster.yaml \
+     --use-varimax true
    ```
 4. Set the required environment variables for the Compute Backend:
    ```bash
@@ -107,11 +88,10 @@ image based on the image build in 1.
    ```commandline
    poetry run mantik mlflow \
      --experiment-id <experiment ID> \
-     --entry-point kmeans \
-     -P data="/opt/data/temperature_level_128_daily_averages_2020.nc" \
-     -P n_components=3 \
-     -P n_clusters=4 \
-     -P use_varimax=False
+     --entry-point cluster \
+     -P weather_data="/opt/data/temperature_level_128_daily_averages_2020.nc" \
+     -P config=cluster.yaml \
+     -P use_varimax=false
    ```
 
 **Notes:**
@@ -141,13 +121,12 @@ image based on the image build in 1.
    [`deployments create`](https://mlflow.org/docs/latest/python_api/mlflow.sagemaker.html#mlflow-sagemaker)
    entrypoint
    ```commandline
-   poetry run python mlflow/deploy.py \
-       --endpoint-name a6 \
-       --image-uri <URI to ECR image> }
-       --model-uri "models:/<registered model name>/<version>" \
-       --role <SageMaker role ARN> \
-       --bucket <S3 bucket Artifact Storage name> \
-       --vpc-config '{"SecurityGroupIds": ["<MLflow VPC security group ID>"], "Subnets": ["<MLflow VPC private subnet ID>"]}'
+   poetry run a6 deploy a6-kmeans \
+     --image-uri <URI to ECR image> }
+     --model-uri "models:/<registered model name>/<version>" \
+     --role <SageMaker role ARN> \
+     --bucket <S3 bucket Artifact Storage name> \
+     --vpc-config '{"SecurityGroupIds": ["<MLflow VPC security group ID>"], "Subnets": ["<MLflow VPC private subnet ID>"]}'
    ```
    The SageMaker role has to be created
    (under `User Menu > Security credentials > Roles > Create Role > AWS account`)
@@ -156,11 +135,10 @@ image based on the image build in 1.
    - AmazonSageMakerFullAccess
 4. Run the inference per the deployed SageMaker endpoint
    ```commandline
-   poetry run python mlflow/infer.py \
-       --endpoint-name a6 \
-       --data $PWD/data/temperature_level_128_daily_averages_2020.nc
-       --variance-ratio 0.95
-       --use-varimax False
+   poetry run a6 inference a6-kmeans \
+     --weather-data $PWD/data/temperature_level_128_daily_averages_2020.nc
+     --n-components 3
+     --use-varimax false
    ```
    *Note:* Take care how many input features the model requires.
    It may be required to use the exact same `variance_ratio` as was used
