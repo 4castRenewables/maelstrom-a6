@@ -1,5 +1,6 @@
 import datetime
 import functools
+import pathlib
 import typing as t
 
 import a6.datasets.ecmwf_ifs_hres as datasets
@@ -29,7 +30,7 @@ class FakeDataset(datasets.EcmwfIfsHres):
         By default, a dataset of duration of 50 days is created.
 
         """
-        super().__init__(["test_path"])
+        super().__init__(pathlib.Path("test_path"))
         self.grid = grid
         self.dates = pd.date_range(start, end, freq=frequency)
         self.shape = (self.dates.size, *self.grid.shape)

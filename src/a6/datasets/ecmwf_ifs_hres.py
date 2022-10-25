@@ -2,10 +2,9 @@ import logging
 import pathlib
 import typing as t
 
-import a6.utils
+import a6.utils as utils
 import xarray as xr
 
-Path = t.Union[str, pathlib.Path]
 Levels = t.Optional[t.Union[int, list[int]]]
 
 logger = logging.getLogger(__name__)
@@ -17,10 +16,11 @@ class EcmwfIfsHres:
     _engine = "netcdf4"
     _concat_dim = "time"
 
-    def __init__(
+    def __init__(  # noqa: CFQ002
         self,
-        paths: t.Union[Path, list[Path]],
-        overlapping: bool = True,
+        path: pathlib.Path,
+        pattern: t.Optional[str] = "*.nc",
+        slice_time_dimension: bool = True,
         preprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
         postprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
         parallel_loading: bool = True,
@@ -29,10 +29,13 @@ class EcmwfIfsHres:
 
         Parameters
         ----------
-        paths : str | pathlib.Path or list[str | pathlib.Path]
-            Paths to the data files.
-        overlapping : bool, default=True
-            Whether the files are temporarily overlapping.
+        path : pathlib.Path
+            Paths to the data file or folder.
+        pattern : str, default="*.nc"
+            Pattern for the data files to read.
+            If path is a file, the pattern will be ignored.
+        slice_time_dimension : bool, default=True
+            Whether the files are temporarily overlapping and should be sliced.
             The ECMWF models are usually run at 12am and 12 pm for 48 hours.
             As a consequence, the data of new models overlap with data from
             older models by 12 hours.
@@ -45,11 +48,12 @@ class EcmwfIfsHres:
             Whether to load the data files parallely.
 
         """
-        if not paths:
-            raise ValueError("No source paths given")
+        if path.is_file():
+            self.paths = [path]
+        else:
+            self.paths = utils.list_files(path=path, pattern=pattern)
 
-        self.paths = paths
-        self._overlapping = overlapping
+        self._slice_time_dimension = slice_time_dimension
         self._parallel = parallel_loading
         self._preprocessing = preprocessing
         self._postprocessing = postprocessing
@@ -58,7 +62,7 @@ class EcmwfIfsHres:
         self._dropped_variables = []
         self._selected_levels = []
 
-    @a6.utils.log_consumption
+    @utils.log_consumption
     def as_xarray(
         self,
         levels: Levels = None,
@@ -104,7 +108,7 @@ class EcmwfIfsHres:
         self, levels: Levels, drop_variables: t.Optional[list[str]]
     ) -> xr.Dataset:
         """Merge a set of files into a single dataset."""
-        if _single_path_given(self.paths):
+        if len(self.paths) == 1:
             ds = self._open_single_dataset(drop_variables=drop_variables)
         else:
             ds = self._open_multiple_temporally_monotonous_datasets(
@@ -122,19 +126,13 @@ class EcmwfIfsHres:
     def _open_single_dataset(
         self, drop_variables: t.Optional[list[str]]
     ) -> xr.Dataset:
-        if isinstance(self.paths, list):
-            [path] = self.paths
-        else:
-            path = self.paths
-
+        [path] = self.paths
         dataset = xr.open_dataset(
             path,
             engine=self._engine,
             drop_variables=drop_variables,
         )
-        if self._preprocessing is not None:
-            return self._preprocessing(dataset)
-        return dataset
+        return self._preprocess_dataset(dataset)
 
     def _open_multiple_temporally_monotonous_datasets(
         self, drop_variables: t.Optional[list[str]]
@@ -153,7 +151,7 @@ class EcmwfIfsHres:
         )
 
     def _preprocess_dataset(self, dataset: xr.Dataset) -> xr.Dataset:
-        if self._overlapping:
+        if self._slice_time_dimension:
             dataset = self._slice_first_twelve_hours(dataset)
         if self._preprocessing is not None:
             return self._preprocessing(dataset)
@@ -168,12 +166,8 @@ class EcmwfIfsHres:
         recent run to overwrite the older ones.
 
         """
-        return a6.utils.slice_dataset(
+        return utils.slice_dataset(
             dataset,
             dimension=self._concat_dim,
             slice_until=12,
         )
-
-
-def _single_path_given(paths: t.Union[Path, list[Path]]) -> bool:
-    return isinstance(paths, (str, pathlib.Path)) or len(paths) == 1
