@@ -66,6 +66,17 @@ def data_command(
             ],
             ["500"],
         ),
+        (
+            [
+                "--weather-data",
+                "/test/path",
+                "--turbine-data",
+                "/test/other/path",
+                "--level",
+                "None",
+            ],
+            ["None"],
+        ),
     ],
 )
 def test_data_options(runner, args, expected):

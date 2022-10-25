@@ -1,0 +1,7 @@
+model: hdbscan.HDBSCAN
+parameters:
+  n_components_start: 3
+  n_components_end: 4
+  cluster_arg: min_cluster_size
+  cluster_start: 2
+  cluster_end: 3

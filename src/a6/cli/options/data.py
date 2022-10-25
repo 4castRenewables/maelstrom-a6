@@ -1,6 +1,7 @@
 import pathlib
 import typing as t
 
+import a6.cli.options._callbacks as _callbacks
 import click
 
 Level = t.Optional[int]
@@ -15,7 +16,8 @@ WEATHER_DATA = click.option(
 LEVEL = click.option(
     "-l",
     "--level",
-    type=int,
+    type=click.UNPROCESSED,
+    callback=_callbacks.cast_optional(int),
     required=False,
     default=None,
     help="Level to select from the weather data",
