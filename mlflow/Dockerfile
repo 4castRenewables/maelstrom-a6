@@ -12,8 +12,8 @@ RUN apt-get update -y \
 
 # Install Python package
 RUN python -m venv /venv \
- && /venv/bin/python -m pip install --upgrade pip \
  && . /venv/bin/activate \
+ && pip install --upgrade pip \
  && pip install /opt/dist/*.whl \
  # HDBSCAN import fails for joblib>1.1.0
  && pip install joblib==1.1.0
