@@ -67,6 +67,19 @@ coverage:
 build-python:
   needs: []
   extends: .build-python
+  script:
+    - !reference [.build-python, script]
+    - python -m venv venv
+    - . venv/bin/activate
+    - pip install --upgrade pip
+    - pip install dist/*.whl
+    # HDBSCAN import fails for joblib>1.1.0
+    - pip install joblib==1.1.0
+  artifacts:
+    when: always
+    paths:
+      - dist/
+      - venv/
 
 build-docker:
   extends: .build-docker
@@ -79,6 +92,8 @@ build-docker:
 .test-integration:
   stage: integration
   needs:
+    - job: build-python
+      artifacts: true
     - job: build-docker
       artifacts: true
   services:
@@ -92,12 +107,7 @@ build-docker:
   before_script:
     - !reference [.set-required-environment-variables, script]
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
-    # numpy requires gcc g++ make python3-dev
-    - apk add --update --no-cache python3 gcc g++ make python3-dev
-    - ln -sf python3 /usr/bin/python
-    - python3 -m ensurepip
-    - pip3 install --no-cache --upgrade pip
-    - pip install mlflow==1.27.0
+    - . venv/bin/activate
 
 test-cluster:
   extends: .test-integration
