@@ -8,14 +8,18 @@ import a6.studies as studies
 
 @train.train.command("cluster")
 @_options.data.WEATHER_DATA
+@_options.data.PATTERN
+@_options.data.SLICE
 @_options.data.LEVEL
 @_options.data.VARY_VARIABLES
 @_options.config.CONFIG
 @_options.pca.USE_VARIMAX
 @_options.main.PASS_OPTIONS
-def train_cluster(
+def train_cluster(  # noqa: CFQ002
     options: _options.main.Options,
     weather_data: pathlib.Path,
+    pattern: str,
+    slice_weather_data_files: bool,
     level: _options.data.Level,
     vary_data_variables: bool,
     config: _options.config.Config,
@@ -26,6 +30,8 @@ def train_cluster(
 
     ds = data.read(
         path=weather_data,
+        pattern=pattern,
+        slice_files=slice_weather_data_files,
         level=level,
     )
 

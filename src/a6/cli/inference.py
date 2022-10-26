@@ -2,7 +2,6 @@ import json
 import pathlib
 
 import a6.cli.arguments as arguments
-import a6.cli.data as data
 import a6.cli.main as main
 import a6.cli.options as _options
 import a6.modes.methods as methods
@@ -10,6 +9,7 @@ import boto3
 import click
 import pandas as pd
 import sklearn.decomposition as decomposition
+import xarray as xr
 
 
 @main.cli.command("inference")
@@ -57,7 +57,7 @@ def _prepare_data(
     use_varimax: bool,
 ) -> pd.DataFrame:
     """Run PCA on ECMWF IFS HRES data."""
-    ds = data.read(path, level=level)["t"]
+    ds = xr.open_dataset(path).sel(level=level)["t"]
 
     pca = methods.spatio_temporal_pca(
         data=ds,
