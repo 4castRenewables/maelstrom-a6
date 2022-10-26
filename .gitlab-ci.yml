@@ -99,11 +99,6 @@ build-docker:
   services:
     - docker:dind
   image: docker:latest
-  variables:
-    PIP_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/pip
-  cache:
-    paths:
-      - ${CI_PROJECT_DIR}/.cache/pip
   before_script:
     - !reference [.set-required-environment-variables, script]
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
