@@ -78,6 +78,7 @@ build-python:
   artifacts:
     when: always
     paths:
+      - .cache/pip
       - dist/
       - venv/
 
@@ -101,7 +102,7 @@ build-docker:
   image: docker:latest
   variables:
   before_script:
-    - !reference [.set-required-environment-variables, script]
+    - !reference [.set-required-docker-environment-variables, script]
     - ls -al .
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
     - ls -l venv/bin
