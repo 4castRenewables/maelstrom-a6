@@ -99,15 +99,18 @@ build-docker:
   services:
     - docker:dind
   image: docker:latest
+  variables:
   before_script:
     - !reference [.set-required-environment-variables, script]
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
-    - . venv/bin/activate
+    - export PATH=${PWD}/venv/bin:$PATH
 
 test-cluster:
   extends: .test-integration
   script:
-    - mlflow run mlflow \
+    - >
+      . venv/bin/activate &&
+      mlflow run mlflow \
       -e cluster \
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
       -P config=cluster.yaml \
@@ -117,7 +120,9 @@ test-cluster:
 test-temporal:
   extends: .test-integration
   script:
-    - mlflow run mlflow \
+    - >
+      . venv/bin/activate &&
+      mlflow run mlflow \
       -e temporal \
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
       -P use_varimax=false \
@@ -126,7 +131,9 @@ test-temporal:
 test-grid-search:
   extends: .test-integration
   script:
-    - mlflow run mlflow \
+    - >
+      . venv/bin/activate &&
+      mlflow run mlflow \
       -e grid-search \
       -P weather_data=/data/model_level_133_jan_2020.nc \
       -P turbine_data=/data/turbine.nc \
