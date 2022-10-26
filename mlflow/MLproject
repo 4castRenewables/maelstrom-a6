@@ -10,6 +10,12 @@ entry_points:
     parameters:
       weather_data:
         type: string
+      pattern:
+        type: str
+        default: "*.nc"
+      slice_weather_data_files:
+        type: bool
+        default: False
       level:
         type: int
         default: None
@@ -26,6 +32,8 @@ entry_points:
         --log-to-mantik {log_to_mantik} \
         train cluster \
         --weather-data {weather_data} \
+        --pattern {pattern} \
+        --slice-weather-data-files {slice_weather_data_files} \
         --level {level} \
         --config {config} \
         --use-varimax {use_varimax}
@@ -33,6 +41,12 @@ entry_points:
     parameters:
       weather_data:
         type: string
+      pattern:
+        type: str
+        default: "*.nc"
+      slice_weather_data_files:
+        type: bool
+        default: False
       level:
         type: int
         default: None
@@ -53,6 +67,8 @@ entry_points:
         --log-to-mantik {log_to_mantik} \
         train temporal-study \
         --weather-data {weather_data} \
+        --pattern {pattern} \
+        --slice-weather-data-files {slice_weather_data_files} \
         --level {level} \
         --n-components {n_components} \
         --min-cluster-size {min_cluster_size} \
@@ -61,6 +77,12 @@ entry_points:
     parameters:
       weather_data:
         type: string
+      pattern:
+        type: str
+        default: "*.nc"
+      slice_weather_data_files:
+        type: bool
+        default: False
       level:
         type: int
         default: None
@@ -76,6 +98,8 @@ entry_points:
         --log-to-mantik {log_to_mantik} \
         train grid-search \
         --weather-data {weather_data} \
+        --pattern {pattern} \
+        --slice-weather-data-files {slice_weather_data_files} \
         --level {level} \
         --turbine-data {turbine_data} \
         --config {config}
