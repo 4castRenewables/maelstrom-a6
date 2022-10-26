@@ -103,6 +103,7 @@ build-docker:
   before_script:
     - !reference [.set-required-environment-variables, script]
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
+    - ls -alR .
 
 test-cluster:
   extends: .test-integration
