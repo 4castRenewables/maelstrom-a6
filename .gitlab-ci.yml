@@ -69,8 +69,8 @@ build-python:
   extends: .build-python
   script:
     - !reference [.build-python, script]
-    - python -m venv .venv
-    - source .venv/bin/activate
+    - python -m venv venv
+    - source venv/bin/activate
     - pip install --upgrade pip
     - pip install dist/*.whl
     # HDBSCAN import fails for joblib>1.1.0
@@ -106,8 +106,8 @@ build-docker:
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
     - ls -l venv/bin
     - ls venv/bin/mlflow
-    - source .venv/bin/activate
-    - .venv/bin/mlflow --help
+    - source venv/bin/activate
+    - venv/bin/mlflow --help
     - mlflow --help
 
 test-cluster:
