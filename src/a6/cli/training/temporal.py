@@ -9,6 +9,8 @@ import click
 
 @train.train.command("temporal-study")
 @_options.data.WEATHER_DATA
+@_options.data.PATTERN
+@_options.data.SLICE
 @_options.data.LEVEL
 @_options.pca.N_COMPONENTS
 @_options.pca.USE_VARIMAX
@@ -21,9 +23,11 @@ import click
     help="`min_cluster_size` for the HDBSCAN algorithm.",
 )
 @_options.main.PASS_OPTIONS
-def perform_temporal_study(
+def perform_temporal_study(  # noqa: CFQ002
     options: _options.main.Options,
     weather_data: pathlib.Path,
+    pattern: str,
+    slice_weather_data_files: bool,
     level: _options.data.Level,
     n_components: _options.pca.Components,
     use_varimax: bool,
@@ -33,6 +37,8 @@ def perform_temporal_study(
     options.exit_if_dry_run()
     ds = data.read(
         path=weather_data,
+        pattern=pattern,
+        slice_files=slice_weather_data_files,
         level=level,
     )
 

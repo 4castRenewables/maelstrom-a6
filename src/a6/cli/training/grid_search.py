@@ -9,13 +9,17 @@ import xarray as xr
 
 @train.train.command("grid-search")
 @_options.data.WEATHER_DATA
+@_options.data.PATTERN
+@_options.data.SLICE
 @_options.data.LEVEL
 @_options.data.TURBINE_DATA
 @_options.config.CONFIG
 @_options.main.PASS_OPTIONS
-def grid_search(
+def grid_search(  # noqa: CFQ002
     options: _options.main.Options,
     weather_data: pathlib.Path,
+    pattern: str,
+    slice_weather_data_files: bool,
     level: _options.data.Level,
     turbine_data: pathlib.Path,
     config: _options.config.Config,
@@ -25,6 +29,8 @@ def grid_search(
 
     ds = data.read(
         path=weather_data,
+        pattern=pattern,
+        slice_files=slice_weather_data_files,
         level=level,
     )
 
