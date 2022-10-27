@@ -108,12 +108,7 @@ build-docker:
     - apk update
     # bash is required by mlflow
     - apk --no-cache add python3 bash
-    # Add link to Python3 at /usr/bin/python
-    #- ln -sf python3 /usr/bin/python
-    # Relink python executable in venv to /usr/bin/python
-    #- ln -sf /usr/bin/python ${PWD}/venv/bin/python
     # Set PATH and PYTHONPATH to include venv
-    #- export PATH=${PWD}/venv/bin:$PATH
     - export PYTHONPATH=$PYTHONPATH:${PWD}/venv/lib/python3.9/site-packages
     - alias mlflow="python3 ${PWD}/venv/bin/mlflow"
     # MLproject expects MLFLOW_TRACKING_TOKEN env var to be set
