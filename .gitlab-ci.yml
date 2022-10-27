@@ -111,7 +111,9 @@ build-docker:
     # Relink python executable in venv to /usr/bin/python
     - ln -sf /usr/bin/python ${PWD}/venv/bin/python
     - export PATH=${PWD}/venv/bin:$PATH
-    - alias mlflow="python3 ${PWD}/venv/bin/mlflow"
+    - echo PATH=${PATH}
+    - alias mlflow="${PWD}/venv/bin/python ${PWD}/venv/bin/mlflow"
+    - . ${PWD}/venv/bin/activate
     - mlflow --help
 
 test-cluster:
