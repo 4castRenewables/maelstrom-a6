@@ -103,6 +103,7 @@ build-docker:
     - !reference [.set-required-docker-environment-variables, script]
     - ls -al .
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
+    - docker tag ${IMAGE_NAME}:latest ${DOCKER_IMAGE_NAME}:latest
     # Install Python 3
     - apk update
     - apk --no-cache add python3
