@@ -1,12 +1,12 @@
 include:
   - project: 4cast1/ci-templates
-    ref: fix-zipped-docker-image-name
+    ref: main
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: fix-zipped-docker-image-name
+    ref: main
     file: /python/templates.yml
   - project: 4cast1/ci-templates
-    ref: fix-zipped-docker-image-name
+    ref: main
     file: /docker/templates.yml
 
 variables:
