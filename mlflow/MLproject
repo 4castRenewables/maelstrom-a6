@@ -26,7 +26,7 @@ entry_points:
         default: False
       log_to_mantik:
         type: bool
-        default: False
+        default: True
     command: >
       a6 \
         --log-to-mantik {log_to_mantik} \
@@ -61,7 +61,7 @@ entry_points:
         default: False
       log_to_mantik:
         type: bool
-        default: False
+        default: True
     command: >
       a6 \
         --log-to-mantik {log_to_mantik} \
@@ -92,7 +92,7 @@ entry_points:
         type: str
       log_to_mantik:
         type: bool
-        default: False
+        default: True
     command: >
       a6 \
         --log-to-mantik {log_to_mantik} \
