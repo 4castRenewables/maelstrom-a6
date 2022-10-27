@@ -1,8 +1,13 @@
 {
-  "SingularityImage": "a6-mlflow.sif",
+  "Environment": {
+      "Singularity": {
+        "Path": "a6-mlflow.sif",
+        "Type": "local"
+      }
+  },
   "UnicoreApiUrl": "https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core",
   "Resources": {
-    "Runtime": "1h",
+    "Runtime": "6h",
     "Queue": "booster",
     "Nodes": 1
   }
