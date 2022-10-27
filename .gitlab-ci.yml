@@ -85,8 +85,6 @@ build-python:
 build-docker:
   extends: .build-docker
   needs:
-    - job: test-unit
-      artifacts: true
     - job: build-python
       artifacts: true
 
@@ -105,17 +103,20 @@ build-docker:
     - !reference [.set-required-docker-environment-variables, script]
     - ls -al .
     - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
-    - ls -l venv/bin
-    - ls venv/bin/mlflow
-    - source venv/bin/activate
-    - venv/bin/mlflow --help
+    # Install Python 3
+    - apk update
+    - apk --no-cache add python3
+    - ln -sf python3 /usr/bin/python
+    # Relink python executable in venv
+    - ln -sf /usr/bin/python ${PWD}/venv/bin/python
+    - export PATH=${PWD}/venv/bin:$PATH
     - mlflow --help
 
 test-cluster:
   extends: .test-integration
   script:
     - >
-      venv/bin/mlflow run mlflow
+      mlflow
       -e cluster
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P config=cluster.yaml
@@ -126,7 +127,7 @@ test-temporal:
   extends: .test-integration
   script:
     - >
-      venv/bin/mlflow run mlflow
+      mlflow
       -e temporal
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P use_varimax=false
@@ -136,7 +137,7 @@ test-grid-search:
   extends: .test-integration
   script:
     - >
-      venv/bin/mlflow run mlflow
+      mlflow
       -e grid-search
       -P weather_data=/data/model_level_133_jan_2020.nc
       -P turbine_data=/data/turbine.nc
