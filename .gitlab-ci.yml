@@ -110,18 +110,17 @@ build-docker:
     - ln -sf python3 /usr/bin/python
     # Relink python executable in venv to /usr/bin/python
     - ln -sf /usr/bin/python ${PWD}/venv/bin/python
+    # Set PATH and PYTHONPATH to include venv
     - export PATH=${PWD}/venv/bin:$PATH
-    - echo PATH=${PATH}
     - export PYTHONPATH=$PYTHONPATH:${PWD}/venv/lib/python3.9/site-packages
-    - echo PYTHONPATH=${PYTHONPATH}
     - alias mlflow="${PWD}/venv/bin/python ${PWD}/venv/bin/mlflow"
-    - mlflow --help
 
 test-cluster:
   extends: .test-integration
   script:
     - >
       mlflow
+      run mlflow
       -e cluster
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P config=cluster.yaml
@@ -133,6 +132,7 @@ test-temporal:
   script:
     - >
       mlflow
+      run mlflow
       -e temporal
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P use_varimax=false
@@ -143,6 +143,7 @@ test-grid-search:
   script:
     - >
       mlflow
+      run mlflow
       -e grid-search
       -P weather_data=/data/model_level_133_jan_2020.nc
       -P turbine_data=/data/turbine.nc
