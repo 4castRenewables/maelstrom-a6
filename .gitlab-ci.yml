@@ -112,8 +112,9 @@ build-docker:
     - ln -sf /usr/bin/python ${PWD}/venv/bin/python
     - export PATH=${PWD}/venv/bin:$PATH
     - echo PATH=${PATH}
+    - export PYTHONPATH=$PYTHONPATH:${PWD}/venv/lib/python3.9/site-packages
+    - echo PYTHONPATH=${PYTHONPATH}
     - alias mlflow="${PWD}/venv/bin/python ${PWD}/venv/bin/mlflow"
-    - . ${PWD}/venv/bin/activate
     - mlflow --help
 
 test-cluster:
