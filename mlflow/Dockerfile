@@ -25,6 +25,5 @@ RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
 
 FROM python:${PYTHON_VERSION}-slim-buster
 
-# Add venv
 COPY --from=builder /venv /venv
 ENV PATH=/venv/bin:$PATH
