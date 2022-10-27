@@ -106,8 +106,9 @@ build-docker:
     # Install Python 3
     - apk update
     - apk --no-cache add python3
+    # Add link to Python3 at /usr/bin/python
     - ln -sf python3 /usr/bin/python
-    # Relink python executable in venv
+    # Relink python executable in venv to /usr/bin/python
     - ln -sf /usr/bin/python ${PWD}/venv/bin/python
     - export PATH=${PWD}/venv/bin:$PATH
     - mlflow --help
