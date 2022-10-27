@@ -115,6 +115,8 @@ build-docker:
     - export PATH=${PWD}/venv/bin:$PATH
     - export PYTHONPATH=$PYTHONPATH:${PWD}/venv/lib/python3.9/site-packages
     - alias mlflow="${PWD}/venv/bin/python ${PWD}/venv/bin/mlflow"
+    # MLproject expects MLFLOW_TRACKING_TOKEN env var to be set
+    - export MLFLOW_TRACKING_TOKEN="test-token"
 
 test-cluster:
   extends: .test-integration
