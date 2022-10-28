@@ -4,9 +4,21 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    ("size", "expected"),
+    ("width", "height", "expected"),
     [
         (
+            3,
+            None,
+            np.array(
+                [
+                    [1.0, 1.0, 1.0],
+                    [1.0, 1.0, 1.0],
+                    [1.0, 1.0, 1.0],
+                ]
+            ),
+        ),
+        (
+            3,
             3,
             np.array(
                 [
@@ -16,10 +28,22 @@ import pytest
                 ]
             ),
         ),
+        (
+            3,
+            4,
+            np.array(
+                [
+                    [1.0, 1.0, 1.0],
+                    [1.0, 1.0, 1.0],
+                    [1.0, 1.0, 1.0],
+                    [1.0, 1.0, 1.0],
+                ]
+            ),
+        ),
     ],
 )
-def test_create_average_kernel(size, expected):
-    result = kernels.create_average_kernel(size)
+def test_create_average_kernel(width, height, expected):
+    result = kernels.create_average_kernel(width=width, height=height)
 
     np.testing.assert_equal(result, expected)
 
