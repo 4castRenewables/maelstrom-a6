@@ -8,7 +8,7 @@ WORKDIR /opt
 
 RUN apt-get update -y \
  && apt-get install -y \
-    # Installs gcc, required for HDBSCAN
+    # Installs gcc, required by HDBSCAN
     build-essential \
     # Required by cartopy
     libgeos-3.9.0 \
@@ -27,7 +27,7 @@ RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
  && cd /venv \
  && find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-FROM python:${PYTHON_VERSION}-slim-buster
+FROM python:${PYTHON_VERSION}-slim
 
 COPY --from=builder /venv /venv
 ENV PATH=/venv/bin:$PATH
