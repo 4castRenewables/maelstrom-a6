@@ -18,9 +18,7 @@ RUN apt-get update -y \
 RUN python -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip \
- && pip install /opt/dist/*.whl \
- # HDBSCAN import fails for joblib>1.1.0
- && pip install joblib==1.1.0
+ && pip install /opt/dist/*.whl
 
 # Delete Python cache
 RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
