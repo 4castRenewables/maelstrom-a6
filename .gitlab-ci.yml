@@ -49,9 +49,9 @@ pylint:
     #   - gcc (build-essential), required by HDBSCAN.
     #   - libgeos and libgeos-dev, required by Cartopy.
     - >
-      apt install -y \
-      build-essential \
-      libgeos-3.9.0 \
+      apt install -y
+      build-essential
+      libgeos-3.9.0
       libgeos-dev
 
 test-doc:
