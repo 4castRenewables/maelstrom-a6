@@ -1,14 +1,18 @@
 ARG PYTHON_VERSION="3.9"
 
-FROM python:${PYTHON_VERSION}-slim-buster as builder
+FROM python:${PYTHON_VERSION}-slim-bullseye as builder
 
 ADD dist/ /opt/dist/
 
 WORKDIR /opt
 
-# Install gcc, which is required for HDBSCAN
 RUN apt-get update -y \
- && apt-get install -y build-essential
+ && apt-get install -y \
+    # Installs gcc, required for HDBSCAN
+    build-essential \
+    # Required by cartopy
+    libgeos-3.9.0 \
+    libgeos-dev
 
 # Install Python package
 RUN python -m venv /venv \
