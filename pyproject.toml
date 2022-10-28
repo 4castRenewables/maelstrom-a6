@@ -17,6 +17,8 @@ dask = {extras = ["distributed"], version = "^2022.2.0"}
 dask-jobqueue = "^0.7.3"
 ecmwflibs = "^0.4.17" # cartopy dependency 0.4.3 not on pypi
 hdbscan = "^0.8.28"
+# HDBSCAN import fails for joblib>1.1.0
+joblib = "1.1.0"
 ipyparallel = "^8.2.0"
 matplotlib = "^3.5.1"
 mantik = "^0.1.1"

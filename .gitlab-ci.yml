@@ -80,8 +80,6 @@ build-python:
     - source venv/bin/activate
     - pip install --upgrade pip
     - pip install dist/*.whl
-    # HDBSCAN import fails for joblib>1.1.0
-    - pip install joblib==1.1.0
   artifacts:
     when: always
     paths:
