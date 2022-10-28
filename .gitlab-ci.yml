@@ -10,7 +10,7 @@ include:
     file: /docker/templates.yml
 
 variables:
-  POETRY_IMAGE_VERSION: 3.9-1.2.1
+  POETRY_IMAGE_VERSION: 3.9-1.2.1-bullseye
   PY_SRC: src/a6
   PY_LINT_DIRS: src/a6 src/tests scripts mlflow
   PY_PYUPGRADE_ARGS: |
@@ -44,8 +44,14 @@ pylint:
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - apt update -y && apt upgrade -y
-    # Install gcc, required for HDBSCAN.
-    - apt install -y build-essential
+    # Install
+    #   - gcc (build-essential), required by HDBSCAN.
+    #   - libgeos and libgeos-dev, required by Cartopy.
+    - >
+      apt install -y \
+      build-essential \
+      libgeos-3.9.0 \
+      libgeos-dev
 
 test-doc:
   extends: .test-base
