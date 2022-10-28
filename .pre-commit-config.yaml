@@ -72,4 +72,4 @@ repos:
         stages: [commit]
         language: system
         files: \.ipynb$
-        entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
+        entry: poetry run jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
