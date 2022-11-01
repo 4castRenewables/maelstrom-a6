@@ -18,14 +18,13 @@ def create_average_kernel(width: int, height: int | None = None) -> np.ndarray:
     if height is None:
         height = width
 
-    return np.ones((height, width), dtype=np.float64)
+    return np.ones((height, width), dtype=np.float32)
 
 
 def create_gaussian_kernel(size: int, sigma: float = 1.0) -> np.ndarray:
     """Create a gaussian kernel."""
     half_length = (size - 1) / 2.0
     x = np.linspace(-half_length, half_length, size)
-    sigma_squared = np.square(sigma)
-    gauss_curve = np.exp(-0.5 * np.square(x) / sigma_squared)
+    gauss_curve = np.exp(-0.5 * np.square(x) / np.square(sigma))
     kernel = np.outer(gauss_curve, gauss_curve)
     return kernel
