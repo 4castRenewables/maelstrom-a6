@@ -143,6 +143,6 @@ def test_apply_kernel(data, kernel, expected):
     ],
 )
 def test_apply_pooling(data, size, mode, expected):
-    result = apply.perform_pooling(data, size=size, mode=mode)
+    result = apply.apply_pooling(data, size=size, mode=mode)
 
     np.testing.assert_equal(result, expected)
