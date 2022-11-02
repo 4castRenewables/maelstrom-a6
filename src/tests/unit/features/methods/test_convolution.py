@@ -1,39 +1,60 @@
-import a6.features.methods.convolution.kernels as kernels
+import a6.features.methods.convolution as convolution
 import numpy as np
 import pytest
 
 
 @pytest.mark.parametrize(
-    ("width", "height", "expected"),
+    ("data", "kernel", "expected"),
+    [
+        (
+            [
+                [1.0, 1.0],
+                [2.0, 2.0],
+            ],
+            [
+                [1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0],
+            ],
+            [
+                [12.0 / 9.0, 12.0 / 9.0],
+                [15.0 / 9.0, 15.0 / 9.0],
+            ],
+        ),
+        (
+            [
+                [1.0, 1.0],
+                [2.0, 2.0],
+                [3.0, 3.0],
+                [4.0, 4.0],
+            ],
+            [
+                [1.0],
+                [1.0],
+                [1.0],
+            ],
+            [
+                [4.0 / 3.0, 4.0 / 3.0],
+                [6.0 / 3.0, 6.0 / 3.0],
+                [9.0 / 3.0, 9.0 / 3.0],
+                [11.0 / 3.0, 11.0 / 3.0],
+            ],
+        ),
+    ],
+)
+def test_apply_kernel(data, kernel, expected):
+    result = convolution.apply_kernel(np.array(data), kernel=np.array(kernel))
+
+    np.testing.assert_equal(result, np.array(expected))
+
+
+@pytest.mark.parametrize(
+    ("size", "expected"),
     [
         (
             3,
-            None,
             np.array(
                 [
-                    [1.0, 1.0, 1.0],
-                    [1.0, 1.0, 1.0],
-                    [1.0, 1.0, 1.0],
-                ]
-            ),
-        ),
-        (
-            3,
-            3,
-            np.array(
-                [
-                    [1.0, 1.0, 1.0],
-                    [1.0, 1.0, 1.0],
-                    [1.0, 1.0, 1.0],
-                ]
-            ),
-        ),
-        (
-            3,
-            4,
-            np.array(
-                [
-                    [1.0, 1.0, 1.0],
                     [1.0, 1.0, 1.0],
                     [1.0, 1.0, 1.0],
                     [1.0, 1.0, 1.0],
@@ -42,8 +63,8 @@ import pytest
         ),
     ],
 )
-def test_create_average_kernel(width, height, expected):
-    result = kernels.create_average_kernel(width=width, height=height)
+def test_create_mean_kernel(size, expected):
+    result = convolution.create_mean_kernel(size)
 
     np.testing.assert_equal(result, expected)
 
@@ -90,6 +111,6 @@ def test_create_average_kernel(width, height, expected):
     ],
 )
 def test_create_gaussian_kernel(size, sigma, expected):
-    result = kernels.create_gaussian_kernel(size=size, sigma=sigma)
+    result = convolution.create_gaussian_kernel(size=size, sigma=sigma)
 
     np.testing.assert_almost_equal(result, expected, decimal=5)

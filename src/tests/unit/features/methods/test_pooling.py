@@ -1,51 +1,6 @@
-import a6.features.methods.convolution.apply as apply
+import a6.features.methods.pooling as pooling
 import numpy as np
 import pytest
-
-
-@pytest.mark.parametrize(
-    ("data", "kernel", "expected"),
-    [
-        (
-            [
-                [1.0, 1.0],
-                [2.0, 2.0],
-            ],
-            [
-                [1.0, 1.0, 1.0],
-                [1.0, 1.0, 1.0],
-                [1.0, 1.0, 1.0],
-            ],
-            [
-                [12.0 / 9.0, 12.0 / 9.0],
-                [15.0 / 9.0, 15.0 / 9.0],
-            ],
-        ),
-        (
-            [
-                [1.0, 1.0],
-                [2.0, 2.0],
-                [3.0, 3.0],
-                [4.0, 4.0],
-            ],
-            [
-                [1.0],
-                [1.0],
-                [1.0],
-            ],
-            [
-                [4.0 / 3.0, 4.0 / 3.0],
-                [6.0 / 3.0, 6.0 / 3.0],
-                [9.0 / 3.0, 9.0 / 3.0],
-                [11.0 / 3.0, 11.0 / 3.0],
-            ],
-        ),
-    ],
-)
-def test_apply_kernel(data, kernel, expected):
-    result = apply.apply_kernel(np.array(data), kernel=np.array(kernel))
-
-    np.testing.assert_equal(result, np.array(expected))
 
 
 @pytest.mark.parametrize(
@@ -143,6 +98,6 @@ def test_apply_kernel(data, kernel, expected):
     ],
 )
 def test_apply_pooling(data, size, mode, expected):
-    result = apply.apply_pooling(data, size=size, mode=mode)
+    result = pooling.apply_pooling(data, size=size, mode=mode)
 
     np.testing.assert_equal(result, expected)
