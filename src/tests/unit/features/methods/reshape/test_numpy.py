@@ -1,8 +1,8 @@
+import a6.features.methods.reshape.numpy as numpy
 import numpy as np
-from a6.utils.reshape import numpy_array
 
 
-def test_reshape_spatio_temporal_xarray_data_array():
+def test_reshape_spatio_temporal_data_array():
     data = np.array(
         [
             [
@@ -23,6 +23,6 @@ def test_reshape_spatio_temporal_xarray_data_array():
         ],
     )
 
-    result = numpy_array.reshape_spatio_temporal_numpy_array(data=data)
+    result = numpy.reshape_spatio_temporal_numpy_array(data=data)
 
     np.testing.assert_equal(result, expected)

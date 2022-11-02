@@ -1,4 +1,4 @@
-import a6.utils.reshape.sklearn as sklearn
+import a6.features.methods.reshape.sklearn as sklearn
 import numpy as np
 import pytest
 import xarray as xr

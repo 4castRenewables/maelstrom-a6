@@ -1,5 +1,6 @@
 import typing as t
 
+import a6.features.methods as methods
 import a6.modes.methods.pca.pca as _pca
 import a6.types as types
 import a6.utils as utils
@@ -97,18 +98,18 @@ def _reshape_and_standardize_data(
         data,
         coordinates=coordinates,
     )
-    data = utils.weight_by_latitudes(
+    data = methods.weighting.weight_by_latitudes(
         data=data,
         latitudes=coordinates.latitude,
         use_sqrt=True,
     )
-    data = utils.reshape_spatio_temporal_xarray_data(
+    data = methods.reshape.xarray.reshape_spatio_temporal_data(
         data=data,
         time_coordinate=None,  # Set to None to avoid memory excess in function
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-    data = utils.standardize_features(data)
+    data = methods.standardization.standardize_features(data)
     return (
         dimensions,
         data,

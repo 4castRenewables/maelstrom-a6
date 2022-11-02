@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @utils.log_consumption
-def perform_forecast_model_grid_search(
+def perform_forecast_model_grid_search(  # noqa: CFQ002
     model: t.Type[types.Model],
     parameters: dict[str, list],
     weather: xr.Dataset,
@@ -64,8 +64,8 @@ def perform_forecast_model_grid_search(
     gs = training.grid_search.perform_grid_search(
         model=model(),
         parameters=parameters,
-        X=wind_speed,
-        y=turbine[turbine_variables.production],
+        training_data=wind_speed,
+        target_data=turbine[turbine_variables.production],
         cv=cv,
         groups=groups.labels,
         scorers=scorers.to_dict(),
