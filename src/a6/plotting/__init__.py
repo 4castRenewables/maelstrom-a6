@@ -1,3 +1,4 @@
+from a6.plotting import coastlines
 from a6.plotting.animation import animate_timeseries
 from a6.plotting.clustering import plot_condensed_tree
 from a6.plotting.clustering import (

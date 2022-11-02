@@ -33,7 +33,6 @@ def test_plot_contours_for_field_and_dates(data, dates, temperature):
     comparison.plot_contours_for_field_and_dates(
         field=data["z"],
         dates=dates,
-        temperature=temperature,
     )
 
 

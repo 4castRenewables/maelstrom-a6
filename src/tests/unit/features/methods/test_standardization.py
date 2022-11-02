@@ -1,4 +1,4 @@
-import a6.utils.standardization as standardization
+import a6.features.methods.standardization as standardization
 import numpy as np
 import xarray as xr
 

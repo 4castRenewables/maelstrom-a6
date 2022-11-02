@@ -1,4 +1,4 @@
-import a6.utils.weighting as weighting
+import a6.features.methods.weighting as weighting
 import numpy as np
 import pytest
 import xarray as xr

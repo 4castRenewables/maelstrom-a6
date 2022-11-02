@@ -1,15 +1,15 @@
 import functools
 import typing as t
 
+import a6.features.methods.reshape._flatten as _flatten
 import a6.utils.logging as logging
-import a6.utils.reshape._flatten as _flatten
 import xarray as xr
 
 Data = t.Union[xr.Dataset, xr.DataArray]
 
 
 @logging.log_consumption
-def reshape_spatio_temporal_xarray_data(
+def reshape_spatio_temporal_data(
     data: Data,
     time_coordinate: t.Optional[str] = None,
     x_coordinate: t.Optional[str] = None,

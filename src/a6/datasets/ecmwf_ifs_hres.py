@@ -2,6 +2,7 @@ import logging
 import pathlib
 import typing as t
 
+import a6.datasets.methods as methods
 import a6.utils as utils
 import xarray as xr
 
@@ -166,7 +167,7 @@ class EcmwfIfsHres:
         recent run to overwrite the older ones.
 
         """
-        return utils.slice_dataset(
+        return methods.slicing.slice_dataset(
             dataset,
             dimension=self._concat_dim,
             slice_until=12,

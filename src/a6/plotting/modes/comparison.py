@@ -4,6 +4,7 @@ import math
 import typing as t
 
 import a6.features.methods as methods
+import a6.plotting.coastlines as _coastlines
 import a6.plotting.modes.geopotential as geopotential
 import a6.types as types
 import matplotlib.pyplot as plt
@@ -33,7 +34,7 @@ def plot_fields_for_dates(
     vmax = figure.max()
 
     for ax, step in figure.axes_and_fields:
-        step.plot(ax=ax, vmin=vmin, vmax=vmax)
+        _coastlines.plot(step, ax=ax, vmin=vmin, vmax=vmax)
 
     return figure.fig, figure.axs
 
@@ -41,7 +42,6 @@ def plot_fields_for_dates(
 def plot_contours_for_field_and_dates(
     field: xr.DataArray,
     dates: list[datetime.datetime],
-    temperature: t.Optional[xr.DataArray] = None,
     steps: t.Optional[int] = 5,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot contours for a given field and dates in the timeseries.
@@ -66,7 +66,6 @@ def plot_contours_for_field_and_dates(
     for ax, step in figure.axes_and_fields:
         geopotential.plot_geopotential_height_contours(
             data=step,
-            temperature=temperature,
             steps=steps,
             fig=figure.fig,
             ax=ax,
@@ -75,7 +74,7 @@ def plot_contours_for_field_and_dates(
     return figure.fig, figure.axs
 
 
-def plot_wind_speed_for_dates(
+def plot_wind_speed_for_dates(  # noqa: CFQ002
     field: xr.Dataset,
     dates: list[datetime.datetime],
     u: str = "u",
@@ -105,7 +104,7 @@ def plot_wind_speed_for_dates(
 
     """
     field = field.copy()
-    field["w"] = methods.calculate_wind_speed(field, u=u, v=v)
+    field["w"] = methods.wind.calculate_wind_speed(field, u=u, v=v)
     figure = _Figure.from_dates_and_field(
         dates=dates,
         field=field,
@@ -118,7 +117,8 @@ def plot_wind_speed_for_dates(
         step["u_norm"] = _normalize_vectors(step[u], step["w"])
         step["v_norm"] = _normalize_vectors(step[v], step["w"])
 
-        step["w"].plot.contourf(
+        _coastlines.plot_contourf(
+            step["w"],
             ax=ax,
             levels=levels,
             cmap="jet",
@@ -132,7 +132,7 @@ def plot_wind_speed_for_dates(
     return figure.fig, figure.axs
 
 
-def plot_combined(
+def plot_combined(  # noqa: CFQ002
     data: xr.Dataset,
     dates: list[datetime.datetime],
     geopotential_height: str = "z_h",
@@ -198,7 +198,9 @@ class _Figure:
 
     @classmethod
     def from_dates_and_field(
-        cls, dates: list[datetime.datetime], field: types.XarrayData
+        cls,
+        dates: list[datetime.datetime],
+        field: types.XarrayData,
     ) -> "_Figure":
         n_rows = math.ceil(len(dates) / 3)
         n_cols = 3
@@ -207,7 +209,10 @@ class _Figure:
         width = n_cols * 8
 
         fig, axs = plt.subplots(
-            figsize=(width, height), nrows=n_rows, ncols=n_cols
+            figsize=(width, height),
+            nrows=n_rows,
+            ncols=n_cols,
+            subplot_kw=_coastlines.create_projection(),
         )
 
         fields = field.sel(time=dates)

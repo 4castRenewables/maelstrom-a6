@@ -1,7 +1,7 @@
+import a6.features.methods.reshape.xarray as xarray
 import numpy as np
 import pytest
 import xarray as xr
-from a6.utils.reshape import xarray_data
 
 
 @pytest.mark.parametrize(
@@ -11,7 +11,7 @@ from a6.utils.reshape import xarray_data
         ("time", "lon", "lat"),
     ],
 )
-def test_reshape_spatio_temporal_xarray_data_array(
+def test_reshape_spatio_temporal_data_array(
     da, time_coordinate, x_coordinate, y_coordinate
 ):
     expected = np.array(
@@ -21,7 +21,7 @@ def test_reshape_spatio_temporal_xarray_data_array(
         ],
     )
 
-    result = xarray_data.reshape_spatio_temporal_xarray_data(
+    result = xarray.reshape_spatio_temporal_data(
         data=da,
         time_coordinate=time_coordinate,
         x_coordinate=x_coordinate,
@@ -38,7 +38,7 @@ def test_reshape_spatio_temporal_xarray_data_array(
         ("time", "lon", "lat"),
     ],
 )
-def test_reshape_spatio_temporal_xarray_dataset(
+def test_reshape_spatio_temporal_dataset(
     da, time_coordinate, x_coordinate, y_coordinate
 ):
 
@@ -54,7 +54,7 @@ def test_reshape_spatio_temporal_xarray_dataset(
         ],
     )
 
-    result = xarray_data.reshape_spatio_temporal_xarray_data(
+    result = xarray.reshape_spatio_temporal_data(
         data=ds,
         time_coordinate=time_coordinate,
         x_coordinate=x_coordinate,

@@ -1,7 +1,7 @@
 import datetime
 import typing as t
 
-import a6.utils.averaging as averaging
+import a6.features.methods.averaging as averaging
 import numpy as np
 import pandas as pd
 import pytest

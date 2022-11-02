@@ -1,1 +1,2 @@
-from a6.evaluation.modes import evaluate_scores_per_mode
+import a6.evaluation.modes
+import a6.evaluation.residuals
