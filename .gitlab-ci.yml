@@ -39,11 +39,8 @@ pylint:
   extends: .lint-pylint
   allow_failure: true
 
-.test-base:
-  extends: .test
-  needs: []
-  before_script:
-    - export PYTHONPATH=$PYTHONPATH:src
+.install-dependencies:
+  script:
     - apt update -y && apt upgrade -y
     # Install
     #   - gcc (build-essential), required by HDBSCAN.
@@ -53,6 +50,13 @@ pylint:
       build-essential
       libgeos-3.9.0
       libgeos-dev
+
+.test-base:
+  extends: .test
+  needs: []
+  before_script:
+    - export PYTHONPATH=$PYTHONPATH:src
+    - !reference [.install-dependencies, script]
 
 test-doc:
   extends: .test-base
@@ -75,6 +79,7 @@ build-python:
   needs: []
   extends: .build-python
   script:
+    - !reference [.install-dependencies, script]
     - !reference [.build-python, script]
     - python -m venv venv
     - source venv/bin/activate
