@@ -1,17 +1,15 @@
 import a6.types as types
 import numpy as np
-import scipy.ndimage as ndimage
 import skimage.measure
 import xarray as xr
 
 
-def apply_kernel(data: types.Data, kernel: np.ndarray) -> np.ndarray:
-    """Apply a given kernel to the data.
-
-    Padding values are filled with the nearest value (`mode="nearest"`).
-
-    """
-    return ndimage.convolve(data, kernel, mode="nearest") / kernel.sum()
+_POOLING_MODES = {
+    "mean": np.mean,
+    "median": np.median,
+    "max": np.max,
+    "min": np.min,
+}
 
 
 def apply_pooling(
@@ -51,11 +49,3 @@ def apply_pooling(
         func=func,
         cval=func(data),
     )
-
-
-_POOLING_MODES = {
-    "mean": np.mean,
-    "median": np.median,
-    "max": np.max,
-    "min": np.min,
-}
