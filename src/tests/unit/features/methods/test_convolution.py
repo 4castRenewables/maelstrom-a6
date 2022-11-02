@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    ("data", "kernel", "expected"),
+    ("data", "kernel", "kwargs", "expected"),
     [
         (
             [
@@ -16,6 +16,19 @@ import pytest
                 [1.0, 1.0, 1.0],
                 [1.0, 1.0, 1.0],
             ],
+            {},
+            [
+                [12.0 / 9.0, 12.0 / 9.0],
+                [15.0 / 9.0, 15.0 / 9.0],
+            ],
+        ),
+        (
+            [
+                [1.0, 1.0],
+                [2.0, 2.0],
+            ],
+            "mean",
+            {"size": 3},
             [
                 [12.0 / 9.0, 12.0 / 9.0],
                 [15.0 / 9.0, 15.0 / 9.0],
@@ -33,6 +46,7 @@ import pytest
                 [1.0],
                 [1.0],
             ],
+            {},
             [
                 [4.0 / 3.0, 4.0 / 3.0],
                 [6.0 / 3.0, 6.0 / 3.0],
@@ -42,8 +56,10 @@ import pytest
         ),
     ],
 )
-def test_apply_kernel(data, kernel, expected):
-    result = convolution.apply_kernel(np.array(data), kernel=np.array(kernel))
+def test_apply_kernel(data, kernel, kwargs, expected):
+    if isinstance(kernel, list):
+        kernel = np.array(kernel)
+    result = convolution.apply_kernel(np.array(data), kernel=kernel, **kwargs)
 
     np.testing.assert_equal(result, np.array(expected))
 

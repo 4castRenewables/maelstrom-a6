@@ -16,8 +16,8 @@ def apply_kernel(
             factory = _KERNELS[kernel]
         except KeyError:
             raise ValueError(f"Kernel of type '{kernel} not supported")
-
         kernel = factory(**kwargs)
+
     return ndimage.convolve(data, kernel, mode="nearest") / kernel.sum()
 
 
