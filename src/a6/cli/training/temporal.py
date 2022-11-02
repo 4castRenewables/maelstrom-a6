@@ -37,7 +37,7 @@ def perform_temporal_study(  # noqa: CFQ002
     options.exit_if_dry_run()
     ds = data.read(
         path=weather_data,
-        filename_pattern=filename_pattern,
+        pattern=filename_pattern,
         slice_files=slice_weather_data_files,
         level=level,
     )

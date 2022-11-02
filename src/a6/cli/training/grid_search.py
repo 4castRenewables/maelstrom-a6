@@ -29,7 +29,7 @@ def grid_search(  # noqa: CFQ002
 
     ds = data.read(
         path=weather_data,
-        filename_pattern=filename_pattern,
+        pattern=filename_pattern,
         slice_files=slice_weather_data_files,
         level=level,
     )
