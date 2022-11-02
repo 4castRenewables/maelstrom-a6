@@ -15,13 +15,13 @@ import pytest
 @_options.data.VARY_VARIABLES
 def data_command(
     weather_data: pathlib.Path,
-    pattern: str,
+    filename_pattern: str,
     slice_weather_data_files: bool,
     level: _options.data.Level,
     turbine_data: pathlib.Path,
     vary_data_variables: bool,
 ):
-    click.echo(f"{pattern}")
+    click.echo(f"{filename_pattern}")
     click.echo(f"{slice_weather_data_files}")
     click.echo(f"{level}")
     click.echo(f"{vary_data_variables}")
@@ -80,7 +80,7 @@ def data_command(
             [
                 "--weather-data",
                 "/test/path",
-                "--pattern",
+                "--filename-pattern",
                 "test*pattern",
                 "--turbine-data",
                 "/test/other/path",

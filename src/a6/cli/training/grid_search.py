@@ -18,7 +18,7 @@ import xarray as xr
 def grid_search(  # noqa: CFQ002
     options: _options.main.Options,
     weather_data: pathlib.Path,
-    pattern: str,
+    filename_pattern: str,
     slice_weather_data_files: bool,
     level: _options.data.Level,
     turbine_data: pathlib.Path,
@@ -29,7 +29,7 @@ def grid_search(  # noqa: CFQ002
 
     ds = data.read(
         path=weather_data,
-        pattern=pattern,
+        filename_pattern=filename_pattern,
         slice_files=slice_weather_data_files,
         level=level,
     )

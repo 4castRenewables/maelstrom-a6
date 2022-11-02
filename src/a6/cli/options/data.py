@@ -15,7 +15,7 @@ WEATHER_DATA = click.option(
 
 PATTERN = click.option(
     "-p",
-    "--pattern",
+    "--filename-pattern",
     type=str,
     required=False,
     default="*.nc",

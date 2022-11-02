@@ -10,7 +10,7 @@ entry_points:
     parameters:
       weather_data:
         type: string
-      pattern:
+      filename_pattern:
         type: str
         default: "*.nc"
       slice_weather_data_files:
@@ -32,7 +32,7 @@ entry_points:
         --log-to-mantik {log_to_mantik} \
         train cluster \
         --weather-data {weather_data} \
-        --pattern {pattern} \
+        --filename-pattern {filename_pattern} \
         --slice-weather-data-files {slice_weather_data_files} \
         --level {level} \
         --config {config} \
@@ -41,7 +41,7 @@ entry_points:
     parameters:
       weather_data:
         type: string
-      pattern:
+      filename_pattern:
         type: str
         default: "*.nc"
       slice_weather_data_files:
@@ -67,7 +67,7 @@ entry_points:
         --log-to-mantik {log_to_mantik} \
         train temporal-study \
         --weather-data {weather_data} \
-        --pattern {pattern} \
+        --filename-pattern {filename_pattern} \
         --slice-weather-data-files {slice_weather_data_files} \
         --level {level} \
         --n-components {n_components} \
@@ -77,7 +77,7 @@ entry_points:
     parameters:
       weather_data:
         type: string
-      pattern:
+      filename_pattern:
         type: str
         default: "*.nc"
       slice_weather_data_files:
@@ -98,7 +98,7 @@ entry_points:
         --log-to-mantik {log_to_mantik} \
         train grid-search \
         --weather-data {weather_data} \
-        --pattern {pattern} \
+        --filename-pattern {filename_pattern} \
         --slice-weather-data-files {slice_weather_data_files} \
         --level {level} \
         --turbine-data {turbine_data} \

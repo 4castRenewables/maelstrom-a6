@@ -26,7 +26,7 @@ import click
 def perform_temporal_study(  # noqa: CFQ002
     options: _options.main.Options,
     weather_data: pathlib.Path,
-    pattern: str,
+    filename_pattern: str,
     slice_weather_data_files: bool,
     level: _options.data.Level,
     n_components: _options.pca.Components,
@@ -37,7 +37,7 @@ def perform_temporal_study(  # noqa: CFQ002
     options.exit_if_dry_run()
     ds = data.read(
         path=weather_data,
-        pattern=pattern,
+        filename_pattern=filename_pattern,
         slice_files=slice_weather_data_files,
         level=level,
     )
