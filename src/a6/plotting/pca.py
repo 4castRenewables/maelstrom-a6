@@ -1,5 +1,3 @@
-import typing as t
-
 import a6.modes.methods.pca as _pca
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +5,7 @@ import numpy as np
 
 def plot_scree_test(
     pca: _pca.PCA,
-    variance_ratio: t.Optional[float] = None,
+    variance_ratio: float | None = None,
     display: bool = True,
 ) -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes]]:
     """Create a scree test plot for a PCA.
@@ -83,7 +81,7 @@ def plot_scree_test(
 
 
 def plot_first_three_components_timeseries(
-    pca: _pca.PCA, colors: t.Optional[list] = None, display: bool = True
+    pca: _pca.PCA, colors: list | None = None, display: bool = True
 ) -> tuple[plt.Figure, plt.Axes]:
     """Return a figure with the first three PCs plotted."""
 

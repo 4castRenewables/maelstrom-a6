@@ -2,7 +2,7 @@ import contextlib
 import logging
 import os
 import pathlib
-import typing as t
+from typing import Any
 
 import a6.parallel._client as _client
 import a6.parallel.types as types
@@ -17,17 +17,17 @@ SINGULARITY_IMAGE_ENV_VAR = "SINGULARITY_IMAGE"
 class DaskSlurmClient(_client.Client):
     """Allows parallel execution of jobs."""
 
-    _interface: t.Optional[str] = None
+    _interface: str | None = None
     _shebang = "#!/usr/bin/env bash"
-    _local_directory: t.Optional[str] = None
+    _local_directory: str | None = None
     _death_timeout = "30s"
     _default_log_directory_name = "job_logs"
     _python_executable = "srun singularity run {} python"
-    _client: t.Optional[dask.distributed.Client] = None
-    _extra_job_commands: t.Optional[list[str]] = None
-    _extra_worker_commands: t.Optional[list[str]] = None
+    _client: dask.distributed.Client | None = None
+    _extra_job_commands: list[str] | None = None
+    _extra_worker_commands: list[str] | None = None
 
-    def __init__(
+    def __init__(  # noqa: CFQ002
         self,
         queue: str,
         project: str,
@@ -35,13 +35,13 @@ class DaskSlurmClient(_client.Client):
         processes: int = 1,
         memory: int = 90,
         walltime: str = "00:30:00",
-        log_directory: t.Optional[str] = None,
-        scheduler_options: t.Optional[dict] = None,
+        log_directory: str | None = None,
+        scheduler_options: dict | None = None,
         dashboard_port: int = 56755,
-        python_executable: t.Optional[str] = None,
-        extra_job_commands: t.Optional[list[str]] = None,
-        network_interface: t.Optional[str] = None,
-        extra_slurm_options: t.Optional[list[str]] = None,
+        python_executable: str | None = None,
+        extra_job_commands: list[str] | None = None,
+        network_interface: str | None = None,
+        extra_slurm_options: list[str] | None = None,
         **kwargs,
     ):
         """Initialize the cluster and client.
@@ -148,9 +148,9 @@ class DaskSlurmClient(_client.Client):
     def scale(
         self,
         workers: int = 1,
-        jobs: t.Optional[int] = None,
-        cores: t.Optional[int] = None,
-        memory: t.Optional[int] = None,
+        jobs: int | None = None,
+        cores: int | None = None,
+        memory: int | None = None,
     ):
         """Scale up the workers.
 
@@ -206,8 +206,8 @@ class DaskSlurmClient(_client.Client):
         return python_executable
 
     def _update_extra_job_commands(
-        self, extra_job_commands: t.Optional[list[str]]
-    ) -> t.Optional[list[str]]:
+        self, extra_job_commands: list[str] | None
+    ) -> list[str] | None:
         if extra_job_commands is None:
             extra_job_commands = []
 
@@ -245,7 +245,7 @@ class DaskSlurmClient(_client.Client):
 
     def _execute(
         self, method: types.Method, arguments: types.Arguments
-    ) -> list[t.Any]:
+    ) -> list[Any]:
         if not self.ready:
             raise RuntimeError("No worker(s) running")
 

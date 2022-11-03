@@ -1,11 +1,11 @@
 import logging
 import sys
-import typing as t
+from collections.abc import Callable
 
 import dask.delayed
 
 
-def wrap_benchmark_method_with_logging(method: t.Callable) -> t.Callable:
+def wrap_benchmark_method_with_logging(method: Callable) -> Callable:
     """
     Wrap benchmark method by adding logging setup.
 
@@ -25,7 +25,7 @@ def wrap_benchmark_method_with_logging(method: t.Callable) -> t.Callable:
 
     """
 
-    def wrapped(*args, **kwargs) -> t.Callable:
+    def wrapped(*args, **kwargs) -> Callable:
         logger = logging.getLogger(__name__)
 
         logging.basicConfig(
@@ -40,8 +40,8 @@ def wrap_benchmark_method_with_logging(method: t.Callable) -> t.Callable:
 
 
 def make_method_lazy(
-    benchmark_method: t.Callable,
-) -> t.Callable:
+    benchmark_method: Callable,
+) -> Callable:
     """
     Lazily execute the benchmark method.
 

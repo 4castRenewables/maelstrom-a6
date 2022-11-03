@@ -1,9 +1,9 @@
-import typing as t
+from typing import Optional
 
 import click
 
 Components = int
-ComponentsEnd = t.Optional[int]
+ComponentsEnd = Optional[int]
 
 N_COMPONENTS = click.option(
     "--n-components",

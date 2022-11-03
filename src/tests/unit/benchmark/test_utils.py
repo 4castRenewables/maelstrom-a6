@@ -1,5 +1,5 @@
-import typing as t
 import unittest.mock as mock
+from collections.abc import Callable
 
 import a6.benchmark as bench
 from dask.delayed import Delayed
@@ -18,5 +18,5 @@ def test_wrap_benchmark_method_with_loggin(mock_get_logger):
 def test_make_method_lazy():
     lazy_print = bench.utils.make_method_lazy(print)
     result = lazy_print("A")
-    assert isinstance(lazy_print, t.Callable)
+    assert isinstance(lazy_print, Callable)
     assert isinstance(result, Delayed)

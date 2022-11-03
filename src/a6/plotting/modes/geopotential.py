@@ -1,5 +1,3 @@
-import typing as t
-
 import a6.plotting.coastlines as _coastlines
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,9 +7,9 @@ import xarray as xr
 def plot_geopotential_height_contours(
     data: xr.DataArray,
     steps: int = 5,
-    fig: t.Optional[plt.Figure] = None,
-    ax: t.Optional[plt.Axes] = None,
-    cmap: t.Optional[str] = None,
+    fig: plt.Figure | None = None,
+    ax: plt.Axes | None = None,
+    cmap: str | None = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot the geopotential height contours.
 

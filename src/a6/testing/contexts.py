@@ -1,9 +1,9 @@
 import contextlib
-import typing as t
+from typing import Any
 
 
 def expect_raise_if_exception(
-    expected: t.Any,
+    expected: Any,
 ) -> contextlib.AbstractContextManager:
     """Create a context that expects a raised exception or no raised exception.
 

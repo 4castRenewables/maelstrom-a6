@@ -1,7 +1,7 @@
 import dataclasses
 import datetime
 import math
-import typing as t
+from collections.abc import Iterator
 
 import a6.features.methods as methods
 import a6.plotting.coastlines as _coastlines
@@ -42,7 +42,7 @@ def plot_fields_for_dates(
 def plot_contours_for_field_and_dates(
     field: xr.DataArray,
     dates: list[datetime.datetime],
-    steps: t.Optional[int] = 5,
+    steps: int | None = 5,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot contours for a given field and dates in the timeseries.
 
@@ -81,7 +81,7 @@ def plot_wind_speed_for_dates(  # noqa: CFQ002
     v: str = "v",
     x: str = "longitude",
     y: str = "latitude",
-    steps: t.Optional[int] = 20,
+    steps: int | None = 20,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot contours for a given field and dates in the timeseries.
 
@@ -141,8 +141,8 @@ def plot_combined(  # noqa: CFQ002
     v: str = "v",
     x: str = "longitude",
     y: str = "latitude",
-    vector_steps: t.Optional[int] = 20,
-    contour_steps: t.Optional[int] = 5,
+    vector_steps: int | None = 20,
+    contour_steps: int | None = 5,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot geopotential height contours, temperature and wind speed."""
     figure = _Figure.from_dates_and_field(
@@ -224,11 +224,11 @@ class _Figure:
         )
 
     @property
-    def axes(self) -> t.Iterator[plt.Axes]:
+    def axes(self) -> Iterator[plt.Axes]:
         yield from self.axs.flatten()
 
     @property
-    def axes_and_fields(self) -> t.Iterator[tuple[plt.Axes, types.XarrayData]]:
+    def axes_and_fields(self) -> Iterator[tuple[plt.Axes, types.XarrayData]]:
         if isinstance(self.fields, xr.DataArray):
             fields = self.fields
         elif isinstance(self.fields, xr.Dataset):
@@ -237,13 +237,13 @@ class _Figure:
             )
         yield from zip(self.axes, fields)
 
-    def max(self, field: t.Optional[str] = None) -> float:
+    def max(self, field: str | None = None) -> float:
         if isinstance(self.fields, xr.DataArray):
             return float(self.fields.max().values)
         elif isinstance(self.fields, xr.Dataset):
             return float(self.fields[field].max().values)
 
-    def min(self, field: t.Optional[str] = None) -> float:
+    def min(self, field: str | None = None) -> float:
         if isinstance(self.fields, xr.DataArray):
             return float(self.fields.min().values)
         elif isinstance(self.fields, xr.Dataset):

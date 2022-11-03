@@ -1,13 +1,12 @@
 import dataclasses
 import logging
-import typing as t
+from collections.abc import Iterator
 
+import a6.types as types
 import a6.utils.coordinates as _coordinates
 import xarray as xr
 
 logger = logging.getLogger(__name__)
-
-XarrayData = t.Union[xr.DataArray, xr.Dataset]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -67,7 +66,7 @@ class SpatioTemporalDimensions:
     @classmethod
     def from_xarray(
         cls,
-        data: XarrayData,
+        data: types.XarrayData,
         coordinates: _coordinates.CoordinateNames,
     ) -> "SpatioTemporalDimensions":
         """Construct from `xarray` data object."""
@@ -94,7 +93,7 @@ class SpatioTemporalDimensions:
         return self.y.name, self.x.name
 
     @property
-    def variable_names(self) -> t.Iterator[str]:
+    def variable_names(self) -> Iterator[str]:
         """Return the names of the variables."""
         return (variable.name for variable in self.variables)
 
@@ -106,7 +105,7 @@ class SpatioTemporalDimensions:
 
     def to_variable_name_and_slices(
         self,
-    ) -> tuple[t.Iterator[str], t.Iterator[slice]]:
+    ) -> tuple[Iterator[str], Iterator[slice]]:
         """Return a set of `slice` that allows iterating over a flattened array
         containing multiple variables"""
         flattened_size = self.x.size * self.y.size
@@ -122,7 +121,7 @@ class SpatioTemporalDimensions:
 
 
 def _get_temporal_and_spatial_dimension(
-    data: XarrayData, coordinates: _coordinates.CoordinateNames
+    data: types.XarrayData, coordinates: _coordinates.CoordinateNames
 ) -> _Dimensions:
     return _Dimensions(
         time=TemporalDimension(
@@ -141,7 +140,7 @@ def _get_temporal_and_spatial_dimension(
     )
 
 
-def _get_variables(data: XarrayData) -> tuple[Variable]:
+def _get_variables(data: types.XarrayData) -> tuple[Variable]:
     if isinstance(data, xr.DataArray):
         return (Variable(name=str(data.name)),)
     return tuple(Variable(name=str(var)) for var in data.data_vars)

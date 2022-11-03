@@ -1,4 +1,5 @@
-import typing as t
+from typing import Any
+from typing import Protocol
 
 import a6.modes.methods.clustering as clustering
 import a6.plotting.pca as pca
@@ -8,7 +9,7 @@ import seaborn.palettes
 Plot = tuple[plt.Figure, plt.Axes]
 
 
-class AxesFactory(t.Protocol):
+class AxesFactory(Protocol):
     def __call__(self, axis: plt.Axes, *args, **kwargs) -> plt.Axes:
         ...
 
@@ -101,7 +102,7 @@ def _create_colors(clusters: clustering.ClusterAlgorithm) -> list[str]:
     return [cmap[i] if i != -1 else "black" for i in clusters.labels.values]
 
 
-def _raise_if_not_hierarchical_clustering_method(clusters: t.Any):
+def _raise_if_not_hierarchical_clustering_method(clusters: Any):
     if not isinstance(clusters, clustering.HDBSCAN):
         raise ValueError(
             "Condensed tree can only be plotted for a hierarchical "

@@ -1,5 +1,5 @@
 import abc
-import typing as t
+from collections.abc import Iterator
 
 import a6.modes.methods.pca as _pca
 import a6.types as types
@@ -93,7 +93,7 @@ class HDBSCAN(ClusterAlgorithm):
     def _centers(self) -> np.ndarray:
         return np.array(list(self._get_weighted_centers()))
 
-    def _get_weighted_centers(self) -> t.Iterator[list]:
+    def _get_weighted_centers(self) -> Iterator[list]:
         return (
             self.model.weighted_cluster_centroid(i)
             for i in range(self.n_clusters)
@@ -123,8 +123,8 @@ class HDBSCAN(ClusterAlgorithm):
 def find_pc_space_clusters(
     pca: _pca.PCA,
     use_varimax: bool = False,
-    n_components: t.Optional[int] = None,
-    algorithm: t.Optional[types.ClusterAlgorithm] = None,
+    n_components: int | None = None,
+    algorithm: types.ClusterAlgorithm | None = None,
 ) -> ClusterAlgorithm:
     """Apply a given clustering algorithm on PCs.
 

@@ -1,5 +1,3 @@
-import typing as t
-
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
@@ -14,9 +12,9 @@ import mlflow
 
 
 @utils.log_consumption
-def perform_pca_and_cluster_hyperparameter_study(
+def perform_pca_and_cluster_hyperparameter_study(  # noqa: CFQ002
     data: xr.Dataset,
-    algorithm: t.Type[types.ClusterAlgorithm],
+    algorithm: type[types.ClusterAlgorithm],
     hyperparameters: _hyperparameters.HyperParameters,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     use_varimax: bool = False,
@@ -55,7 +53,7 @@ def perform_pca_and_cluster_hyperparameter_study(
 @utils.log_consumption
 def _perform_cluster_hyperparameter_study(
     data: xr.Dataset,
-    algorithm: t.Type[types.ClusterAlgorithm],
+    algorithm: type[types.ClusterAlgorithm],
     hyperparameters: _hyperparameters.HyperParameters,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     use_varimax: bool = False,

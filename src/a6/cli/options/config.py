@@ -1,7 +1,6 @@
 import dataclasses
 import importlib
 import pathlib
-import typing as t
 
 import a6.types as types
 import click
@@ -12,7 +11,7 @@ import yaml
 class Config:
     """A config for a hyperparameter study."""
 
-    model: t.Type[types.Model]
+    model: type[types.Model]
     parameters: dict
 
     @classmethod
@@ -30,7 +29,7 @@ def _read_config(path: pathlib.Path) -> dict:
         return yaml.safe_load(f)
 
 
-def _get_model_from_config(config: dict) -> t.Type[types.Model]:
+def _get_model_from_config(config: dict) -> type[types.Model]:
     import_statement: str = config["model"]
     module, model = import_statement.rsplit(".", 1)
     sklearn = importlib.import_module(module)

@@ -1,4 +1,4 @@
-import typing as t
+from collections.abc import Iterator
 
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
@@ -64,7 +64,7 @@ def perform_temporal_range_study(
 
 def _create_logarithmic_time_slices(
     data: xr.Dataset, n_components: int, coordinates: utils.CoordinateNames
-) -> t.Iterator[slice]:
+) -> Iterator[slice]:
     time_steps = data[coordinates.time].size
     exponent = np.log2(time_steps)
     rounded = int(np.ceil(exponent))

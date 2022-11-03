@@ -1,5 +1,3 @@
-import typing as t
-
 import dask.distributed as distributed
 
 
@@ -10,9 +8,7 @@ class DaskBenchmarkingContext:
     def __init__(
         self,
         job_name: str,
-        memory_sampler: t.Optional[
-            distributed.diagnostics.MemorySampler
-        ] = None,
+        memory_sampler: None | (distributed.diagnostics.MemorySampler) = None,
         log_directory: str = ".",
     ):
         """

@@ -1,5 +1,3 @@
-import typing as t
-
 import a6.features.methods as methods
 import a6.modes.methods.pca.pca as _pca
 import a6.types as types
@@ -7,16 +5,14 @@ import a6.utils as utils
 import sklearn.decomposition as decomposition
 import xarray as xr
 
-PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
-
 
 @utils.log_consumption
 def spatio_temporal_pca(
     data: types.DataND,
-    algorithm: t.Optional[PCAMethod] = None,
+    algorithm: _pca.PCAMethod | None = None,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),
-    x_coordinate: t.Optional[str] = None,
-    y_coordinate: t.Optional[str] = None,
+    x_coordinate: str | None = None,
+    y_coordinate: str | None = None,
 ) -> _pca.PCA:
     """Perform a spatio-temporal PCA.
 
@@ -71,10 +67,10 @@ def spatio_temporal_pca(
 def _apply_pca(
     data: types.DataND,
     coordinates: utils.CoordinateNames,
-    algorithm: t.Optional[PCAMethod] = None,
-    x_coordinate: t.Optional[str] = None,
-    y_coordinate: t.Optional[str] = None,
-) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray, PCAMethod]:
+    algorithm: _pca.PCAMethod | None = None,
+    x_coordinate: str | None = None,
+    y_coordinate: str | None = None,
+) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray, _pca.PCAMethod]:
     if algorithm is None:
         algorithm = decomposition.PCA()
 
@@ -84,15 +80,15 @@ def _apply_pca(
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
-    sklearn_pca: PCAMethod = algorithm.fit(data)
+    sklearn_pca: _pca.PCAMethod = algorithm.fit(data)
     return dimensions, data, sklearn_pca
 
 
 def _reshape_and_standardize_data(
     data: types.DataND,
     coordinates: utils.CoordinateNames,
-    x_coordinate: t.Optional[str],
-    y_coordinate: t.Optional[str],
+    x_coordinate: str | None,
+    y_coordinate: str | None,
 ) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray]:
     dimensions = utils.SpatioTemporalDimensions.from_xarray(
         data,

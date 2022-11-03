@@ -1,6 +1,6 @@
 import dataclasses
 import datetime
-import typing as t
+from collections.abc import Iterator
 
 import a6.types as types
 import numpy as np
@@ -64,7 +64,7 @@ class Groups:
         return result
 
     @property
-    def dates(self) -> t.Iterator[datetime.datetime]:
+    def dates(self) -> Iterator[datetime.datetime]:
         """Return the dates."""
         return (datetime.datetime(t.year, t.month, t.day) for t in self._groups)
 

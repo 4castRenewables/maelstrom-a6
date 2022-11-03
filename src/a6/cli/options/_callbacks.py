@@ -1,9 +1,10 @@
-import typing as t
+from collections.abc import Callable
+from typing import Any
 
 import click
 
 
-def cast_optional(type_: t.Type) -> t.Callable[[str], t.Optional[t.Any]]:
+def cast_optional(type_: type) -> Callable[[str], Any | None]:
     """Create a function to cast an optional value.
 
     Returns

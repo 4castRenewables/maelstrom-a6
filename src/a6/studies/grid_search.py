@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import typing as t
 
 import a6.datasets.methods.turbine as _turbine
 import a6.features.methods.wind as wind
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @utils.log_consumption
 def perform_forecast_model_grid_search(  # noqa: CFQ002
-    model: t.Type[types.Model],
+    model: type[types.Model],
     parameters: dict[str, list],
     weather: xr.Dataset,
     turbine: xr.Dataset,

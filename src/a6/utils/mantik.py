@@ -4,14 +4,13 @@ import pathlib
 import shutil
 import sys
 import tempfile
-import typing as t
 
 import mlflow
 
 
 @contextlib.contextmanager
 def log_logs_as_file(
-    level: int = logging.INFO, path: t.Optional[pathlib.Path] = None
+    level: int = logging.INFO, path: pathlib.Path | None = None
 ) -> None:
     """Log the logs as a file to mantik (mlflow).
 
@@ -37,7 +36,7 @@ def log_logs_as_file(
     _log_file_to_mantik_and_remove_from_local_disk(tmp_file)
 
 
-def _create_log_file(path: t.Optional[pathlib.Path]) -> pathlib.Path:
+def _create_log_file(path: pathlib.Path | None) -> pathlib.Path:
     if path is None:
         path = pathlib.Path(tempfile.mkdtemp())
     return path / "debug.log"

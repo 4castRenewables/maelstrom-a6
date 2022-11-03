@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import typing as t
 
 import a6.datasets as datasets
 import xarray as xr
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def read(
-    path: pathlib.Path, pattern: str, slice_files: bool, level: t.Optional[int]
+    path: pathlib.Path, pattern: str, slice_files: bool, level: int | None
 ) -> xr.Dataset:
     """Read a given data path and convert to `xarray`.
 

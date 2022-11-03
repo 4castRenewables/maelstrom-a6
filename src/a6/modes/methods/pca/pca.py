@@ -1,4 +1,4 @@
-import typing as t
+from typing import TypeVar
 
 import a6.modes.methods.pca._reshape as _reshape
 import a6.utils as utils
@@ -6,7 +6,9 @@ import numpy as np
 import sklearn.decomposition as decomposition
 import xarray as xr
 
-PCAMethod = t.Union[decomposition.PCA, decomposition.IncrementalPCA]
+PCAMethod = TypeVar(
+    "PCAMethod", decomposition.PCA, decomposition.IncrementalPCA
+)
 
 PC_DIM = "component"
 PC_VALUES_DIM = "entry"
@@ -94,13 +96,13 @@ class PCA:
         return self.reshaper(self.components_varimax_rotated)
 
     @utils.log_consumption
-    def transform(self, n_components: t.Optional[int] = None) -> xr.DataArray:
+    def transform(self, n_components: int | None = None) -> xr.DataArray:
         """Transform the given data into the vector space of the PCs."""
         return self._transform(self.components, n_components=n_components)
 
     @utils.log_consumption
     def transform_with_varimax_rotation(
-        self, n_components: t.Optional[int] = None
+        self, n_components: int | None = None
     ) -> xr.DataArray:
         """Transform the given data into the
         vector space of the varimax-rotated PCs."""
@@ -115,7 +117,7 @@ class PCA:
     def _transform(
         self,
         components: xr.DataArray,
-        n_components: t.Optional[int] = None,
+        n_components: int | None = None,
     ) -> xr.DataArray:
         """Tansform data into PC space.
 
@@ -140,7 +142,7 @@ class PCA:
     def inverse_transform(
         self,
         data: xr.DataArray,
-        n_components: t.Optional[int] = None,
+        n_components: int | None = None,
         in_original_shape: bool = True,
     ) -> xr.Dataset:
         """Transform data back to its original space.
@@ -242,7 +244,7 @@ def _perform_varimax_rotation(
 
 
 def _select_components(
-    data: xr.DataArray, n_components: t.Optional[int]
+    data: xr.DataArray, n_components: int | None
 ) -> xr.DataArray:
     if n_components is None:
         return data
