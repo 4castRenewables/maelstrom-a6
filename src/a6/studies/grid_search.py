@@ -1,7 +1,9 @@
 import logging
 import pathlib
 
+import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods.turbine as _turbine
+import a6.datasets.variables as _variables
 import a6.features.methods.wind as wind
 import a6.training as training
 import a6.types as types
@@ -20,9 +22,9 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
     parameters: dict[str, list],
     weather: xr.Dataset,
     turbine: xr.Dataset,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
-    turbine_variables: utils.variables.Turbine = utils.variables.Turbine(),
-    model_variables: utils.variables.Model = utils.variables.Model(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+    turbine_variables: _variables.Turbine = _variables.Turbine(),
+    model_variables: _variables.Model = _variables.Model(),
     log_to_mantik: bool = False,
 ) -> model_selection.GridSearchCV:
     """Perform grid search for a forecasting model."""
@@ -40,9 +42,7 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
         production_variable=turbine_variables.production,
         coordinates=coordinates,
     )
-    wind_speed = wind.calculate_wind_speed(
-        weather, u=model_variables.u, v=model_variables.v
-    )
+    wind_speed = wind.calculate_wind_speed(weather, variables=model_variables)
 
     cv = model_selection.LeaveOneGroupOut()
     groups = training.Groups(

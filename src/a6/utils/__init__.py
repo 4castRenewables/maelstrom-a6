@@ -1,7 +1,4 @@
-from a6.utils import variables
-from a6.utils.coordinates import CoordinateNames
 from a6.utils.cpus import get_cpu_count
-from a6.utils.dimensions import SpatioTemporalDimensions
 from a6.utils.functional import Functional
 from a6.utils.functional import make_functional
 from a6.utils.logging import log_consumption

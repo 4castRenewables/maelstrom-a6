@@ -1,3 +1,4 @@
+import a6.datasets.coordinates as _coordinates
 import a6.features.methods as methods
 import a6.modes.methods.pca.pca as _pca
 import a6.types as types
@@ -10,7 +11,7 @@ import xarray as xr
 def spatio_temporal_pca(
     data: types.DataND,
     algorithm: _pca.PCAMethod | None = None,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     x_coordinate: str | None = None,
     y_coordinate: str | None = None,
 ) -> _pca.PCA:
@@ -22,7 +23,7 @@ def spatio_temporal_pca(
         Spatial timeseries data.
     algorithm : sklearn.decomposition.PCA or IncrementalPCA, default=PCA
         Method to use for the PCA.
-    coordinates : a6.utils.CoordinateNames
+    coordinates : a6._coordinates.Coordinates
         Names of the coordinates.
         These are required
             - to reshape the data for the PCA.
@@ -66,7 +67,7 @@ def spatio_temporal_pca(
 
 def _apply_pca(
     data: types.DataND,
-    coordinates: utils.CoordinateNames,
+    coordinates: _coordinates.Coordinates,
     algorithm: _pca.PCAMethod | None = None,
     x_coordinate: str | None = None,
     y_coordinate: str | None = None,
@@ -86,7 +87,7 @@ def _apply_pca(
 
 def _reshape_and_standardize_data(
     data: types.DataND,
-    coordinates: utils.CoordinateNames,
+    coordinates: _coordinates.Coordinates,
     x_coordinate: str | None,
     y_coordinate: str | None,
 ) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray]:

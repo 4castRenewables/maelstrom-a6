@@ -1,13 +1,13 @@
+import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances.mode as mode
 import a6.modes.methods.appearances.modes as _modes
-import a6.utils as utils
 import numpy as np
 import xarray as xr
 
 
 def determine_lifetimes_of_modes(
     modes: xr.DataArray,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> _modes.Modes:
     """For a given set of modes, calculate their lifetimes.
 
@@ -17,7 +17,7 @@ def determine_lifetimes_of_modes(
         A timeseries containing the mode labels as a timeseries.
         E.g. if weather modes with labels 1, 2 and 3 exist, a timeseries
         with `N=6` time steps could have the shape `[1, 1, 1, 2, 2, 3]`.
-    coordinates : a6.utils.CoordinateNames, optional
+    coordinates : a6._coordinates.Coordinates, optional
         Names of the coordinates.
         This is needed to get the time stamps of the appearance and
         disappearance of a weather mode.

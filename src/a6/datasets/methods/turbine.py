@@ -1,5 +1,7 @@
 import logging
 
+import a6.datasets.coordinates as _coordinates
+import a6.datasets.variables as _variables
 import a6.utils as utils
 import xarray as xr
 
@@ -12,8 +14,8 @@ def preprocess_turbine_data_and_match_with_weather_data(
     weather: xr.Dataset,
     turbine: xr.Dataset,
     power_rating: float,
-    production_variable: str = "production",
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    turbine_variables: _variables.Turbine = _variables.Turbine(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> tuple[xr.Dataset, xr.Dataset]:
     """Preprocess turbine data and match time steps with weather data.
 
@@ -30,7 +32,7 @@ def preprocess_turbine_data_and_match_with_weather_data(
     turbine = clean_production_data(
         turbine,
         power_rating=power_rating,
-        production_variable=production_variable,
+        variables=turbine_variables,
     )
     weather = get_closest_grid_point(
         weather,
@@ -40,7 +42,7 @@ def preprocess_turbine_data_and_match_with_weather_data(
     )
     turbine = resample_to_hourly_resolution(
         turbine,
-        production_variable=production_variable,
+        variables=turbine_variables,
         time_coordinate=coordinates.time,
     )
     return select_intersecting_time_steps(
@@ -52,7 +54,7 @@ def preprocess_turbine_data_and_match_with_weather_data(
 def clean_production_data(
     data: xr.Dataset,
     power_rating: int | float,
-    production_variable: str = "production",
+    variables: _variables.Turbine = _variables.Turbine(),
 ) -> xr.Dataset:
     """Clean the production data.
 
@@ -63,18 +65,17 @@ def clean_production_data(
     power_rating : int or float
         Power rating of the wind turbine in kW.
         Will be used to remove outliers.
-    production_variable : str, default="production"
-        Name of the power production variable.
-
+    variables : a6.datasets.variables.Turbine, optional
+        Name of the power production variables.
 
     """
     logger.debug(
-        "Cleaning production data (variable name %s) with power rating %s",
-        production_variable,
+        "Cleaning production data (variables %s) with power rating %s",
+        variables,
         power_rating,
     )
     data = _remove_outliers(
-        data, production=production_variable, power_rating=power_rating
+        data, production=variables.production, power_rating=power_rating
     )
     return data
 
@@ -101,13 +102,12 @@ def _remove_outliers(
 def get_closest_grid_point(
     weather: xr.Dataset,
     turbine: xr.Dataset,
-    latitude_coordinate: str = "latitude",
-    longitude_coordinate: str = "longitude",
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     """Get the closest grid point to the wind turbine."""
     select = {
-        latitude_coordinate: turbine[latitude_coordinate],
-        longitude_coordinate: turbine[longitude_coordinate],
+        coordinates.latitude: turbine[coordinates.latitude],
+        coordinates.longitude: turbine[coordinates.longitude],
     }
     logger.debug(
         "Getting closest grid point to wind turbine from weather data by %s",
@@ -122,29 +122,29 @@ def get_closest_grid_point(
 @utils.log_consumption
 def resample_to_hourly_resolution(
     data: xr.Dataset,
-    production_variable: str = "production",
-    time_coordinate: str = "time",
+    variables: _variables.Turbine = _variables.Turbine(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     logger.debug("Resampling production data to hourly time resolution")
     # Resample to an hourly time series and take the mean for each hour.
-    data = data.resample({time_coordinate: "1h"}).mean()
+    data = data.resample({coordinates.time: "1h"}).mean()
     # Remove NaNs that resulted from the resampling.
-    return data.where(data[production_variable].notnull(), drop=True)
+    return data.where(data[variables.production].notnull(), drop=True)
 
 
 @utils.log_consumption
 def select_intersecting_time_steps(
     weather: xr.Dataset,
     turbine: xr.Dataset,
-    time_coordinate: str = "time",
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> tuple[xr.Dataset, xr.Dataset]:
     """Select the overlapping time steps of the datasets."""
     logger.debug("Getting intersecting time steps for weather and turbine data")
     intersection = utils.get_time_step_intersection(
         left=weather,
         right=turbine,
-        time_coordinate=time_coordinate,
+        time_coordinate=coordinates.time,
     )
-    select = {time_coordinate: intersection}
+    select = {coordinates.time: intersection}
     logger.debug("Found intersecting time steps %s", select)
     return weather.sel(select), turbine.sel(select)

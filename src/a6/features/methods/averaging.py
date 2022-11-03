@@ -1,3 +1,4 @@
+import a6.datasets.coordinates as _coordinates
 import a6.utils as utils
 import xarray as xr
 
@@ -6,7 +7,7 @@ import xarray as xr
 @utils.log_consumption
 def calculate_daily_mean(
     dataset: xr.Dataset,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     is_temporally_monotonous: bool = True,
 ) -> xr.Dataset:
     """Calculate daily mean for all parameters in a dataset.
@@ -15,7 +16,7 @@ def calculate_daily_mean(
     ----------
     dataset : xr.Dataset
         The dataset to calculate the daily mean for.
-    coordinates : a6.utils.CoordinateNames, optional
+    coordinates : a6._coordinates.Coordinates, optional
         Name of the coordinates.
     is_temporally_monotonous : bool, default=True
         Whether the dataset is temporally monotonous.

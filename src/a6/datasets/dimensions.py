@@ -2,8 +2,8 @@ import dataclasses
 import logging
 from collections.abc import Iterator
 
+import a6.datasets.coordinates as _coordinates
 import a6.types as types
-import a6.utils.coordinates as _coordinates
 import xarray as xr
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class SpatioTemporalDimensions:
     def from_xarray(
         cls,
         data: types.XarrayData,
-        coordinates: _coordinates.CoordinateNames,
+        coordinates: _coordinates.Coordinates,
     ) -> "SpatioTemporalDimensions":
         """Construct from `xarray` data object."""
         dimensions = _get_temporal_and_spatial_dimension(
@@ -121,7 +121,7 @@ class SpatioTemporalDimensions:
 
 
 def _get_temporal_and_spatial_dimension(
-    data: types.XarrayData, coordinates: _coordinates.CoordinateNames
+    data: types.XarrayData, coordinates: _coordinates.Coordinates
 ) -> _Dimensions:
     return _Dimensions(
         time=TemporalDimension(

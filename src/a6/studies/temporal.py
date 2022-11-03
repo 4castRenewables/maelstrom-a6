@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 
+import a6.datasets.coordinates as _coordinates
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
@@ -20,7 +21,7 @@ def perform_temporal_range_study(
     min_cluster_size: int,
     use_varimax: bool = False,
     log_to_mantik: bool = True,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> list[clustering.ClusterAlgorithm]:
     """Perform a temporal range study where the number of time steps used
     increases logarithmically (to the base of 2).
@@ -63,7 +64,7 @@ def perform_temporal_range_study(
 
 
 def _create_logarithmic_time_slices(
-    data: xr.Dataset, n_components: int, coordinates: utils.CoordinateNames
+    data: xr.Dataset, n_components: int, coordinates: _coordinates.Coordinates
 ) -> Iterator[slice]:
     time_steps = data[coordinates.time].size
     exponent = np.log2(time_steps)
@@ -76,6 +77,6 @@ def _create_logarithmic_time_slices(
 
 
 def _select_data_subset(
-    data: xr.Dataset, slice_: slice, coordinates: utils.CoordinateNames
+    data: xr.Dataset, slice_: slice, coordinates: _coordinates.Coordinates
 ) -> xr.Dataset:
     return data.isel({coordinates.time: slice_})

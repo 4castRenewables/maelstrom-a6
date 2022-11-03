@@ -1,7 +1,6 @@
 import datetime
 
 import a6.modes.methods.appearances as appearances
-import a6.utils as utils
 import pandas as pd
 import xarray as xr
 
@@ -16,7 +15,7 @@ def test_determine_lifetimes_of_modes(mode_appearances):
     time_series = xr.DataArray(data=modes, coords={"time": dates})
 
     result = appearances.determine_lifetimes_of_modes(
-        time_series, coordinates=utils.CoordinateNames()
+        time_series,
     )
 
     assert result.modes == mode_appearances.modes
