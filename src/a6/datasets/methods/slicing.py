@@ -1,13 +1,13 @@
-import typing as t
-
+import a6.utils as utils
 import xarray as xr
 
 
+@utils.make_functional
 def slice_dataset(
     dataset: xr.Dataset,
     dimension: str,
     slice_until: int,
-    slice_from: t.Optional[int] = None,
+    slice_from: int | None = None,
 ) -> xr.Dataset:
     """Drop data before/after given indexes of given dimension.
 

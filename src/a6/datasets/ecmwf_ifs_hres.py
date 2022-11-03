@@ -1,14 +1,21 @@
 import logging
 import pathlib
-import typing as t
+from collections.abc import Callable
+from typing import Optional
+from typing import TypeVar
+from typing import Union
 
 import a6.datasets.methods as methods
 import a6.utils as utils
 import xarray as xr
 
-Levels = t.Optional[t.Union[int, list[int]]]
+Levels = Optional[Union[int, list[int]]]
 
 logger = logging.getLogger(__name__)
+
+Processing = TypeVar(
+    "Processing", utils.Functional, Callable[[xr.Dataset], xr.Dataset]
+)
 
 
 class EcmwfIfsHres:
@@ -20,10 +27,10 @@ class EcmwfIfsHres:
     def __init__(  # noqa: CFQ002
         self,
         path: pathlib.Path,
-        pattern: t.Optional[str] = "*.nc",
+        pattern: str | None = "*.nc",
         slice_time_dimension: bool = True,
-        preprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
-        postprocessing: t.Optional[t.Callable[[xr.Dataset], xr.Dataset]] = None,
+        preprocessing: Processing | None = None,
+        postprocessing: Processing | None = None,
         parallel_loading: bool = True,
     ):
         """Initialize without opening the files.
@@ -41,7 +48,7 @@ class EcmwfIfsHres:
             As a consequence, the data of new models overlap with data from
             older models by 12 hours.
         preprocessing : Callable, optional
-            Pre-processing to apply to each data file before appending it.
+            Pre-processing to apply to each data file before appending i
         postprocessing : Callable, optional
             Post-processing to apply to the entire dataset after reading
             individual files.
@@ -59,7 +66,7 @@ class EcmwfIfsHres:
         self._preprocessing = preprocessing
         self._postprocessing = postprocessing
 
-        self._data: t.Optional[xr.Dataset] = None
+        self._data: xr.Dataset | None = None
         self._dropped_variables = []
         self._selected_levels = []
 
@@ -67,16 +74,16 @@ class EcmwfIfsHres:
     def as_xarray(
         self,
         levels: Levels = None,
-        drop_variables: t.Optional[list[str]] = None,
+        drop_variables: list[str] | None = None,
     ) -> xr.Dataset:
         """Return the dataset as an `xr.Dataset`.
 
         Parameters
         ----------
         levels : int or list[int], optional
-            Level(s) to select.
+            Level(s) to selec
         drop_variables : list[str], optional
-            List of variables to drop from the dataset.
+            List of variables to drop from the datase
 
         """
         logger.debug(
@@ -97,7 +104,7 @@ class EcmwfIfsHres:
         return self._as_xarray(levels=levels, drop_variables=drop_variables)
 
     def _was_already_converted(
-        self, levels: Levels, drop_variables: t.Optional[list[str]]
+        self, levels: Levels, drop_variables: list[str] | None
     ) -> bool:
         return (
             self._data is not None
@@ -106,9 +113,9 @@ class EcmwfIfsHres:
         )
 
     def _as_xarray(
-        self, levels: Levels, drop_variables: t.Optional[list[str]]
+        self, levels: Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
-        """Merge a set of files into a single dataset."""
+        """Merge a set of files into a single datase"""
         if len(self.paths) == 1:
             ds = self._open_single_dataset(drop_variables=drop_variables)
         else:
@@ -125,7 +132,7 @@ class EcmwfIfsHres:
         return ds
 
     def _open_single_dataset(
-        self, drop_variables: t.Optional[list[str]]
+        self, drop_variables: list[str] | None
     ) -> xr.Dataset:
         [path] = self.paths
         dataset = xr.open_dataset(
@@ -136,7 +143,7 @@ class EcmwfIfsHres:
         return self._preprocess_dataset(dataset)
 
     def _open_multiple_temporally_monotonous_datasets(
-        self, drop_variables: t.Optional[list[str]]
+        self, drop_variables: list[str] | None
     ):
         return xr.open_mfdataset(
             self.paths,
@@ -168,7 +175,6 @@ class EcmwfIfsHres:
 
         """
         return methods.slicing.slice_dataset(
-            dataset,
             dimension=self._concat_dim,
             slice_until=12,
-        )
+        ).apply_to(dataset)
