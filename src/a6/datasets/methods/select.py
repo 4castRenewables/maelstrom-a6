@@ -1,30 +1,34 @@
-import typing as t
+from collections.abc import Sequence
+from typing import TypeVar
 
 import a6.features.methods as methods
 import a6.utils as utils
 import xarray as xr
 
 
-Levels = t.Union[int, t.Sequence[int]]
+Levels = TypeVar("Levels", int, Sequence[int])
 
 
+@utils.make_functional
 def select_levels(dataset: xr.Dataset, levels: Levels) -> xr.Dataset:
     """Select given level(s) from the dataset."""
     return dataset.sel(level=levels)
 
 
+@utils.make_functional
 def select_levels_and_calculate_daily_mean(
     dataset: xr.Dataset,
     levels: Levels,
-    time_coordinate: str = "time",
+    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
 ) -> xr.Dataset:
     """Select given level(s) from the dataset and calculate daily means."""
-    dataset = select_levels(dataset, levels=levels)
-    return methods.averaging.calculate_daily_mean(
-        dataset, time_coordinate=time_coordinate
-    )
+    return (
+        select_levels(levels=levels)
+        >> methods.averaging.calculate_daily_mean(coordinates=coordinates)
+    ).apply_to(dataset)
 
 
+@utils.make_functional
 def select_dwd_area(
     dataset: xr.Dataset,
     coordinates: utils.CoordinateNames = utils.CoordinateNames(),

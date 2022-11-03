@@ -1,11 +1,12 @@
-import a6.utils.logging as logging
+import a6.utils as utils
 import xarray as xr
 
 
-@logging.log_consumption
+@utils.make_functional
+@utils.log_consumption
 def calculate_daily_mean(
     dataset: xr.Dataset,
-    time_coordinate: str = "time",
+    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
     is_temporally_monotonous: bool = True,
 ) -> xr.Dataset:
     """Calculate daily mean for all parameters in a dataset.
@@ -14,8 +15,8 @@ def calculate_daily_mean(
     ----------
     dataset : xr.Dataset
         The dataset to calculate the daily mean for.
-    time_coordinate : str, default="time"
-        Name of the time coordinate.
+    coordinates : a6.utils.CoordinateNames, optional
+        Name of the coordinates.
     is_temporally_monotonous : bool, default=True
         Whether the dataset is temporally monotonous.
 
@@ -27,13 +28,15 @@ def calculate_daily_mean(
 
     """
     if is_temporally_monotonous:
-        return dataset.resample({time_coordinate: "1D"}).mean(time_coordinate)
+        return dataset.resample({coordinates.time: "1D"}).mean(coordinates.time)
 
-    grouped: xr.Dataset = dataset.groupby(f"{time_coordinate}.date")
+    grouped: xr.Dataset = dataset.groupby(f"{coordinates.time}.date")
     mean: xr.Dataset = grouped.mean()
     # groupy renames the time dimension.
-    renamed = mean.rename({"date": time_coordinate})
+    renamed = mean.rename({"date": coordinates.time})
     # groupy time.date transforms the time values into `datetime.datetime`,
     # which is incompatible with the netCDF format.
-    renamed[time_coordinate] = renamed[time_coordinate].astype("datetime64[ms]")
+    renamed[coordinates.time] = renamed[coordinates.time].astype(
+        "datetime64[ms]"
+    )
     return renamed

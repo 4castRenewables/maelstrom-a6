@@ -2,6 +2,7 @@ import datetime
 import typing as t
 
 import a6.features.methods.averaging as averaging
+import a6.utils as utils
 import numpy as np
 import pandas as pd
 import pytest
@@ -44,8 +45,9 @@ def test_calculate_daily_mean(is_temporally_monotonous, time_coordinate):
 
     result = averaging.calculate_daily_mean(
         dataset,
-        time_coordinate=time_coordinate,
+        coordinates=utils.CoordinateNames(time=time_coordinate),
         is_temporally_monotonous=is_temporally_monotonous,
+        non_functional=True,
     )
     result_dates = result.coords[time_coordinate].values
 

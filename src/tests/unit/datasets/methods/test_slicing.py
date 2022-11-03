@@ -32,6 +32,7 @@ def test_slice_dataset(slice_from, slice_until):
         dimension="dim_0",
         slice_from=slice_from,
         slice_until=slice_until,
+        non_functional=True,
     )
 
     xr.testing.assert_equal(result, expected)
