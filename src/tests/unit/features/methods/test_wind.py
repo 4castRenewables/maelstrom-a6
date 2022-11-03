@@ -36,29 +36,31 @@ def data(coords):
     )
 
 
-def test_calculate_wind_speed(coords, data):
-    expected = xr.DataArray(
+def test_calculate_wind_speed(data):
+    expected = data.copy(deep=True)
+    expected["spd"] = xr.DataArray(
         [
             [np.sqrt(2), np.sqrt(8)],
             [np.sqrt(18), np.sqrt(32)],
         ],
-        coords=coords,
+        coords=data.coords,
     )
 
-    result = wind.calculate_wind_speed(data)
+    result = wind.calculate_wind_speed(data, non_functional=True)
 
     xr.testing.assert_equal(result, expected)
 
 
-def test_calculate_wind_direction_angle(coords, data):
-    expected = xr.DataArray(
+def test_calculate_wind_direction_angle(data):
+    expected = data.copy(deep=True)
+    expected["dir"] = xr.DataArray(
         [
             [45.0, 45.0],
             [45.0, 45.0],
         ],
-        coords=coords,
+        coords=data.coords,
     )
 
-    result = wind.calculate_wind_direction_angle(data)
+    result = wind.calculate_wind_direction_angle(data, non_functional=True)
 
     xr.testing.assert_equal(result, expected)

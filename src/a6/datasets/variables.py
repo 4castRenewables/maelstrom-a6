@@ -31,3 +31,10 @@ class Model:
 
     u: str = "u"
     v: str = "v"
+    wind_speed: str = "spd"
+    wind_direction: str = "dir"
+    t: str = "t"
+    r: str = "r"
+    q: str = "q"
+    z: str = "z"
+    geopotential_height: str = "z_h"

@@ -39,15 +39,17 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
         weather=weather,
         turbine=turbine,
         power_rating=power_rating,
-        production_variable=turbine_variables.production,
+        turbine_variables=turbine_variables,
         coordinates=coordinates,
     )
-    wind_speed = wind.calculate_wind_speed(weather, variables=model_variables)
+    weather = wind.calculate_wind_speed(variables=model_variables).apply_to(
+        weather
+    )
 
     cv = model_selection.LeaveOneGroupOut()
     groups = training.Groups(
         data=turbine,
-        time_coordinate=coordinates.time,
+        coordinates=coordinates,
         groupby="date",
     )
     scorers = training.metrics.turbine.Scorers(power_rating)
@@ -63,7 +65,7 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
     gs = training.grid_search.perform_grid_search(
         model=model(),
         parameters=parameters,
-        training_data=wind_speed,
+        training_data=weather[model_variables.wind_speed],
         target_data=turbine[turbine_variables.production],
         cv=cv,
         groups=groups.labels,

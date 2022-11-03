@@ -3,6 +3,8 @@ import datetime
 import math
 from collections.abc import Iterator
 
+import a6.datasets.coordinates as _coordinates
+import a6.datasets.variables as _variables
 import a6.features.methods as methods
 import a6.plotting.coastlines as _coastlines
 import a6.plotting.modes.geopotential as geopotential
@@ -52,8 +54,6 @@ def plot_contours_for_field_and_dates(
         The field to plot the contours for.
     dates : list[datetime.datetime]
         The dates in the timeseries for which to plot the contours.
-    temperature : xr.DataArray, optional
-        Will be used to display land and sea.
     steps : int, default=5
         The steps to use for the contour heights.
 
@@ -74,13 +74,11 @@ def plot_contours_for_field_and_dates(
     return figure.fig, figure.axs
 
 
-def plot_wind_speed_for_dates(  # noqa: CFQ002
+def plot_wind_speed_for_dates(
     field: xr.Dataset,
     dates: list[datetime.datetime],
-    u: str = "u",
-    v: str = "v",
-    x: str = "longitude",
-    y: str = "latitude",
+    variables: _variables.Model = _variables.Model(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     steps: int | None = 20,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot contours for a given field and dates in the timeseries.
@@ -91,34 +89,35 @@ def plot_wind_speed_for_dates(  # noqa: CFQ002
         The field to plot the contours for.
     dates : list[datetime.datetime]
         The dates in the timeseries for which to plot the contours.
-    u : str, default="u"
-        U-wind speed component.
-    v : str, default="v"
-        V-wind speed component.
-    x : str, default="longitude"
-        Name of the x-coordinate.
-    y : str, default="latitude"
-        Name of the y-coordinate.
+    variables : a6.datasets.variables.Model, optional
+        Weather model variable names.
+    coordinates : a6.datasets.coordinates.Coordinates, optional
+        Coordinate names.
     steps : int, default=5
         The number of data points to skip for plotting the vectors.
 
     """
-    field = field.copy()
-    field["w"] = methods.wind.calculate_wind_speed(field, u=u, v=v)
+    field = methods.wind.calculate_wind_speed(variables=variables).apply_to(
+        field.copy(deep=True)
+    )
     figure = _Figure.from_dates_and_field(
         dates=dates,
         field=field,
     )
-    vmin = figure.min(field="w")
-    vmax = figure.max(field="w")
+    vmin = figure.min(field=variables.wind_speed)
+    vmax = figure.max(field=variables.wind_speed)
     levels = _get_levels_for_wind_speed(vmax)
 
     for ax, step in figure.axes_and_fields:
-        step["u_norm"] = _normalize_vectors(step[u], step["w"])
-        step["v_norm"] = _normalize_vectors(step[v], step["w"])
+        step["u_norm"] = _normalize_vectors(
+            step[variables.u], step[variables.wind_speed]
+        )
+        step["v_norm"] = _normalize_vectors(
+            step[variables.v], step[variables.wind_speed]
+        )
 
         _coastlines.plot_contourf(
-            step["w"],
+            step[variables.wind_speed],
             ax=ax,
             levels=levels,
             cmap="jet",
@@ -127,7 +126,14 @@ def plot_wind_speed_for_dates(  # noqa: CFQ002
         )
 
         sub = _get_subset_for_vector_plot(data=step, steps=steps)
-        sub.plot.quiver(ax=ax, x=x, y=y, u="u_norm", v="v_norm", scale=steps)
+        sub.plot.quiver(
+            ax=ax,
+            x=coordinates.longitude,
+            y=coordinates.latitude,
+            u="u_norm",
+            v="v_norm",
+            scale=steps,
+        )
 
     return figure.fig, figure.axs
 
@@ -136,11 +142,8 @@ def plot_combined(  # noqa: CFQ002
     data: xr.Dataset,
     dates: list[datetime.datetime],
     geopotential_height: str = "z_h",
-    temperature: str = "t",
-    u: str = "u",
-    v: str = "v",
-    x: str = "longitude",
-    y: str = "latitude",
+    variables: _variables.Model = _variables.Model(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     vector_steps: int | None = 20,
     contour_steps: int | None = 5,
 ) -> tuple[plt.Figure, plt.Axes]:
@@ -150,11 +153,11 @@ def plot_combined(  # noqa: CFQ002
         field=data,
     )
 
-    vmin = figure.min(field=temperature)
-    vmax = figure.max(field=temperature)
+    vmin = figure.min(field=variables.t)
+    vmax = figure.max(field=variables.t)
 
     for ax, step in figure.axes_and_fields:
-        step[temperature].plot(
+        step[variables.t].plot(
             ax=ax,
             cmap="RdBu",
             vmin=vmin,
@@ -170,7 +173,14 @@ def plot_combined(  # noqa: CFQ002
         )
 
         sub = _get_subset_for_vector_plot(data=step, steps=vector_steps)
-        sub.plot.quiver(ax=ax, x=x, y=y, u=u, v=v, scale=250)
+        sub.plot.quiver(
+            ax=ax,
+            x=coordinates.longitude,
+            y=coordinates.latitude,
+            u=variables.u,
+            v=variables.v,
+            scale=250,
+        )
 
     return figure.fig, figure.axs
 

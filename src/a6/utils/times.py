@@ -1,5 +1,6 @@
 import datetime
 
+import a6.datasets.coordinates as _coordinates
 import a6.types as types
 import numpy as np
 import pandas as pd
@@ -8,12 +9,12 @@ import pandas as pd
 def get_time_step_intersection(
     left: types.XarrayData,
     right: types.XarrayData,
-    time_coordinate: str,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> list[datetime.datetime]:
     """Get the intersection of time steps."""
     # Create sets of the time steps to allow set theory operations.
-    left_time_stamps = set(left[time_coordinate].values)
-    right_time_stamps = set(right[time_coordinate].values)
+    left_time_stamps = set(left[coordinates.time].values)
+    right_time_stamps = set(right[coordinates.time].values)
     intersection = left_time_stamps & right_time_stamps
     return sorted(intersection)
 
