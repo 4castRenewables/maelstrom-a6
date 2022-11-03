@@ -1,12 +1,9 @@
-import typing as t
-
-
 class Extent:
     longitude: slice
     latitude: slice
 
     @classmethod
-    def to_dict(cls) -> t.Dict:
+    def to_dict(cls) -> dict:
         return {
             "longitude": cls.longitude,
             "latitude": cls.latitude,

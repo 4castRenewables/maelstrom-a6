@@ -1,5 +1,4 @@
 import datetime
-import typing as t
 
 import a6.features.methods.averaging as averaging
 import a6.utils as utils
@@ -108,7 +107,7 @@ def _create_expected_dataset(
 
 
 def _create_dataset(
-    data: list, time_coordinate: str, dates: t.Union[list, np.ndarray]
+    data: list, time_coordinate: str, dates: list | np.ndarray
 ) -> xr.Dataset:
     return xr.Dataset(
         data_vars={

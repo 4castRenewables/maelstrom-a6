@@ -1,15 +1,15 @@
 import dataclasses
 import datetime
-import typing as t
+from collections.abc import Iterator
 
 import a6.modes.methods.appearances.mode as _mode
 
 
 @dataclasses.dataclass
 class Modes:
-    modes: t.List[_mode.Mode]
+    modes: list[_mode.Mode]
 
-    def __iter__(self) -> t.Iterator:
+    def __iter__(self) -> Iterator:
         yield from self.modes
 
     @property
@@ -18,7 +18,7 @@ class Modes:
         return len(self.modes)
 
     @property
-    def labels(self) -> t.Iterator[int]:
+    def labels(self) -> Iterator[int]:
         """Return all labels."""
         return (mode.label for mode in self.modes)
 

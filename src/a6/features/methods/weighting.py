@@ -1,10 +1,10 @@
-import typing as t
+from typing import Union
 
 import a6.types as types
 import a6.utils.logging as logging
 import numpy as np
 
-Latitudes = t.Union[str, np.ndarray]
+Latitudes = Union[str, np.ndarray]
 
 
 @logging.log_consumption

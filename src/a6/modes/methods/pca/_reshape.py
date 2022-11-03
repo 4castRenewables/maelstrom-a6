@@ -1,4 +1,4 @@
-import typing as t
+from collections.abc import Iterator
 
 import a6.modes.methods.pca.pca as pca
 import a6.utils as utils
@@ -43,7 +43,7 @@ class Reshaper:
 
     def _reshape_entries(
         self, data: xr.DataArray, includes_time_dimension: bool
-    ) -> t.Iterator[xr.DataArray]:
+    ) -> Iterator[xr.DataArray]:
         """Reshape the entries of a PCA.
 
         Notes

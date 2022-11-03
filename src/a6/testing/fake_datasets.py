@@ -1,7 +1,6 @@
 import datetime
 import functools
 import pathlib
-import typing as t
 
 import a6.datasets.ecmwf_ifs_hres as datasets
 import a6.testing.data_points as data_points
@@ -20,10 +19,10 @@ class FakeDataset(datasets.EcmwfIfsHres):
     def __init__(
         self,
         grid: grids.Grid,
-        start: t.Union[str, datetime.datetime],
-        end: t.Union[str, datetime.datetime],
+        start: str | datetime.datetime,
+        end: str | datetime.datetime,
         frequency: str,
-        data: t.Optional[list[data_points.DataPoints]],
+        data: list[data_points.DataPoints] | None,
     ):
         """Create the dataset.
 
@@ -49,7 +48,7 @@ class FakeDataset(datasets.EcmwfIfsHres):
 
     @functools.lru_cache
     def _as_xarray(
-        self, levels: datasets.Levels, drop_variables: t.Optional[list[str]]
+        self, levels: datasets.Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
         da = xr.DataArray(
             data=0.0,
@@ -88,11 +87,11 @@ class FakeEcmwfIfsHresDataset(FakeDataset):
 
     def __init__(
         self,
-        grid: t.Optional[grids.Grid],
+        grid: grids.Grid | None,
         start: types.Timestamp,
         end: types.Timestamp,
         frequency: str,
-        data: t.Optional[list[data_points.DataPoints]] = None,
+        data: list[data_points.DataPoints] | None = None,
     ):
         """Create IFS HRES dataset.
 

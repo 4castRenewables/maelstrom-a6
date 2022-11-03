@@ -1,5 +1,4 @@
 import logging
-import typing as t
 
 import a6.utils as utils
 import xarray as xr
@@ -52,7 +51,7 @@ def preprocess_turbine_data_and_match_with_weather_data(
 @utils.log_consumption
 def clean_production_data(
     data: xr.Dataset,
-    power_rating: t.Union[int, float],
+    power_rating: int | float,
     production_variable: str = "production",
 ) -> xr.Dataset:
     """Clean the production data.
@@ -81,7 +80,7 @@ def clean_production_data(
 
 
 def _remove_outliers(
-    data: xr.Dataset, production: str, power_rating: t.Union[int, float]
+    data: xr.Dataset, production: str, power_rating: int | float
 ) -> xr.Dataset:
     return data.where(
         (

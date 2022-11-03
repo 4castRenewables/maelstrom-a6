@@ -1,19 +1,19 @@
 import functools
-import typing as t
+from typing import Union
 
 import a6.features.methods.reshape._flatten as _flatten
 import a6.utils.logging as logging
 import xarray as xr
 
-Data = t.Union[xr.Dataset, xr.DataArray]
+Data = Union[xr.Dataset, xr.DataArray]
 
 
 @logging.log_consumption
 def reshape_spatio_temporal_data(
     data: Data,
-    time_coordinate: t.Optional[str] = None,
-    x_coordinate: t.Optional[str] = None,
-    y_coordinate: t.Optional[str] = None,
+    time_coordinate: str | None = None,
+    x_coordinate: str | None = None,
+    y_coordinate: str | None = None,
 ) -> xr.DataArray:
     """Reshape an `xarray` data object that has one temporal and two spatial
     dimensions.
@@ -56,8 +56,8 @@ def reshape_spatio_temporal_data(
 @functools.singledispatch
 def _flatten_spatio_temporal_grid_data(
     data: xr.DataArray,
-    x_coordinate: t.Optional[str],
-    y_coordinate: t.Optional[str],
+    x_coordinate: str | None,
+    y_coordinate: str | None,
 ) -> xr.DataArray:
     if x_coordinate is None and y_coordinate is None:
         return _flatten.flatten_timeseries_with_unlabeled_grid_data(data)
@@ -71,8 +71,8 @@ def _flatten_spatio_temporal_grid_data(
 @_flatten_spatio_temporal_grid_data.register
 def _(
     data: xr.Dataset,
-    x_coordinate: t.Optional[str],
-    y_coordinate: t.Optional[str],
+    x_coordinate: str | None,
+    y_coordinate: str | None,
 ) -> xr.DataArray:
     if x_coordinate is None and y_coordinate is None:
         return _flatten.flatten_dataset_with_unlabeled_grid_data(data)

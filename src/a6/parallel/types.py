@@ -1,4 +1,5 @@
-import typing as t
+from collections.abc import Callable
+from collections.abc import Iterable
 
-Method = t.Callable
-Arguments = t.Iterable[t.Iterable]
+Method = Callable
+Arguments = Iterable[Iterable]

@@ -1,6 +1,6 @@
 import logging
 import os
-import typing as t
+from typing import Any
 
 import a6.parallel._client as _client
 import a6.parallel.types as types
@@ -71,7 +71,7 @@ class IPyParallelClient(_client.Client):
         self._client[:].map(
             os.chdir, [self._working_directory] * self.n_engines
         )
-        logger.info(f"c.ids :{self.ids}")
+        logger.info("c.ids : %s", self.ids)
         balanced_view = self._client.load_balanced_view()
         joblib.register_parallel_backend(
             self._backend,
@@ -86,7 +86,7 @@ class IPyParallelClient(_client.Client):
 
     def _execute_jobs_with_engines(
         self, method: types.Method, arguments: types.Arguments
-    ) -> list[t.Any]:
+    ) -> list[Any]:
         with joblib.parallel_backend("ipyparallel"):
             jobs = (joblib.delayed(method)(*args) for args in arguments)
             engines = joblib.Parallel(n_jobs=self.n_engines)

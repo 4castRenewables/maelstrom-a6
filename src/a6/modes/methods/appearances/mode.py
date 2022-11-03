@@ -1,12 +1,13 @@
 import dataclasses
 import datetime
-import typing as t
+from collections.abc import Iterator
+from typing import Union
 
 import a6.utils as utils
 import numpy as np
 import pandas as pd
 
-Sequence = t.Union[list, tuple, np.ndarray]
+Sequence = Union[list, tuple, np.ndarray]
 
 
 @dataclasses.dataclass
@@ -42,7 +43,7 @@ class AppearanceIndex:
 
     @classmethod
     def from_sequence(
-        cls, label: int, seq: t.Union[list, tuple, np.ndarray]
+        cls, label: int, seq: list | tuple | np.ndarray
     ) -> "AppearanceIndex":
         """Create from a sequence of indexes.
 
@@ -281,9 +282,9 @@ class Mode:
 
     def get_dates(  # noqa: CFQ004
         self,
-        start: t.Optional[datetime.datetime] = None,
-        end: t.Optional[datetime.datetime] = None,
-    ) -> t.Iterator[datetime.datetime]:
+        start: datetime.datetime | None = None,
+        end: datetime.datetime | None = None,
+    ) -> Iterator[datetime.datetime]:
         """Return all dates of the appearance of the mode.
 
         Parameters
@@ -295,7 +296,7 @@ class Mode:
 
         Returns
         -------
-        t.Iterator[datetime.datetime]
+        Iterator[datetime.datetime]
             All dates where this mode appeared.
             Only within `start` and `end` if given.
 

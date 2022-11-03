@@ -1,7 +1,7 @@
 import os
 import pathlib
-import typing as t
 import unittest.mock
+from collections.abc import Iterable
 
 import a6.parallel.slurm as slurm
 import dask.distributed
@@ -77,7 +77,7 @@ def client(log_directory) -> slurm.DaskSlurmClient:
     return _client
 
 
-def dummy_benchmark_method(inputs: t.Iterable[str]):
+def dummy_benchmark_method(inputs: Iterable[str]):
     for input in inputs:
         print(input)
 

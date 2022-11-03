@@ -1,9 +1,9 @@
-import typing as t
+from collections.abc import Callable
 
 import a6.datasets.ecmwf_ifs_hres as datasets
 import xarray as xr
 
-FeatureGenerator = t.Callable[[xr.DataArray, ...], xr.DataArray]
+FeatureGenerator = Callable[[xr.DataArray, ...], xr.DataArray]
 
 
 class Feature:
@@ -13,7 +13,7 @@ class Feature:
         self,
         name: str,
         variables: list[str],
-        generator: t.Optional[FeatureGenerator] = None,
+        generator: FeatureGenerator | None = None,
     ):
         """Initialize without generating the feature.
 

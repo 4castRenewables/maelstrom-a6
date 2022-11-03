@@ -1,10 +1,9 @@
 import contextlib
 import time
-import typing as t
 
 
 @contextlib.contextmanager
-def print_execution_time(description: t.Optional[str] = None) -> None:
+def print_execution_time(description: str | None = None) -> None:
     """Print time it took to execute the code executed in the context.
 
     Parameters

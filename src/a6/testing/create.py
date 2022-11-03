@@ -1,6 +1,5 @@
 import dataclasses
 import datetime
-import typing as t
 
 import a6.testing.data_factories as data_factories
 import a6.testing.data_points as data_points
@@ -56,7 +55,7 @@ def create_dummy_ecmwf_ifs_hres_dataset(
     start: types.Timestamp = DEFAULT_START,
     end: types.Timestamp = DEFAULT_END,
     frequency: str = "1d",
-    ellipses: t.Optional[list[Ellipse]] = None,
+    ellipses: list[Ellipse] | None = None,
 ) -> fake_datasets.FakeEcmwfIfsHresDataset:
     """Create a dummy dataset like ECMWF IFS HRES with elliptical data regions.
 

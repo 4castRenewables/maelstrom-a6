@@ -12,8 +12,9 @@ See e.g.
 
 Code from https://github.com/FabriFalasca/climate-and-dynamical-systems
 """
+# flake8: noqa
 import sys
-import typing as t
+from collections.abc import Callable
 
 import numpy as np
 import scipy.stats
@@ -22,12 +23,12 @@ import sklearn.metrics.pairwise
 
 def indicators(
     X: np.ndarray,
-    Y: t.Optional[np.ndarray] = None,
-    metric: t.Union[str, t.Callable] = "euclidean",
+    Y: np.ndarray | None = None,
+    metric: str | Callable = "euclidean",
     q: float = 0.98,
     pareto_fit: str = "scipy",
     theta_fit: str = "ferro",
-    distances: t.Optional[np.ndarray] = None,
+    distances: np.ndarray | None = None,
 ):
     """Fit a dataset to find its local dimension and persistence index.
 
@@ -99,9 +100,9 @@ def indicators(
 
 def _calculate_logarithmic_distances(
     X: np.ndarray,
-    Y: t.Optional[np.ndarray],
+    Y: np.ndarray | None,
     metric: str,
-    distances: t.Optional[np.ndarray],
+    distances: np.ndarray | None,
 ) -> np.ndarray:
     if distances is None:
         distances = sklearn.metrics.pairwise.pairwise_distances(

@@ -1,5 +1,4 @@
 import contextlib
-import typing as t
 
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
@@ -30,7 +29,7 @@ def log_to_mantik(
     pca: _pca.PCA,
     clusters: clustering.ClusterAlgorithm,
     n_components: int,
-    use_varimax: t.Optional[bool] = None,
+    use_varimax: bool | None = None,
     **kwargs,
 ) -> None:
     plotting.create_plots_and_log_to_mantik(

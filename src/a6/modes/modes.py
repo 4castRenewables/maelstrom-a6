@@ -1,8 +1,8 @@
-import typing as t
+from collections.abc import Callable
 
 import xarray as xr
 
-ModesDeterminator = t.Callable[[xr.DataArray], xr.DataArray]
+ModesDeterminator = Callable[[xr.DataArray], xr.DataArray]
 
 
 class Modes:

@@ -1,6 +1,5 @@
 import abc
 import functools
-import typing as t
 
 import a6.testing._ellipse as _ellipse
 import a6.testing.grids as grids
@@ -23,7 +22,7 @@ class EllipticalDataFactory(GridDataFactory):
         self,
         a: float,
         b: float,
-        center: t.Optional[types.Coordinate] = None,
+        center: types.Coordinate | None = None,
         rotate: bool = False,
     ):
         """Set the ellipse properties.

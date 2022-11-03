@@ -1,15 +1,16 @@
-import typing as t
+from collections.abc import Callable
+from collections.abc import Iterable
 
 import a6.benchmark.dask_benchmark_context as _context
 import a6.parallel
 
 
 def execute_benchmark(
-    method: t.Callable,
+    method: Callable,
     job_name: str,
-    method_args: t.Iterable[t.Tuple],
-    cluster_scale: t.Dict,
-    dask_slurm_cluster_kwargs: t.Dict,
+    method_args: Iterable[tuple],
+    cluster_scale: dict,
+    dask_slurm_cluster_kwargs: dict,
 ):
     """
     Wrapper for benchmark execution.
