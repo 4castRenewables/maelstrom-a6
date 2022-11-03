@@ -2,6 +2,7 @@ import dataclasses
 import datetime
 from collections.abc import Iterator
 
+import a6.datasets.coordinates as _coordinates
 import a6.types as types
 import numpy as np
 import xarray as xr
@@ -14,7 +15,7 @@ class Groups:
     def __init__(
         self,
         data: types.XarrayData,
-        time_coordinate: str = "time",
+        coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
         groupby: str = "date",
     ):
         """Get group labels for each date in a time series.
@@ -24,12 +25,13 @@ class Groups:
         data : xr.Dataset or xr.DataArray
             The data to get the labels for.
             Must have a time dimension.
-        time_coordinate : str, default="time"
+        coordinates : a6.datasets.coordinates.Coordinates, optional
+            Name of the coordinates.
 
         """
-        grouped = data.groupby(f"{time_coordinate}.{groupby}")
+        grouped = data.groupby(f"{coordinates.time}.{groupby}")
         self._groups: dict[datetime.datetime, list[int]] = grouped.groups
-        self._time = time_coordinate
+        self._time = coordinates.time
 
     @property
     def labels(self) -> list[int]:

@@ -2,20 +2,26 @@ import logging
 
 import a6.datasets.variables as _variables
 import a6.types as types
+import a6.utils as utils
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
+@utils.make_functional
 def calculate_wind_speed(
     data: types.DataND,
     variables: _variables.Model = _variables.Model(),
 ) -> types.DataND:
     """Calculate the wind speed."""
     logger.debug("Calculating wind speed using %s", variables)
-    return np.sqrt(data[variables.u] ** 2 + data[variables.v] ** 2)
+    data[variables.wind_speed] = np.sqrt(
+        data[variables.u] ** 2 + data[variables.v] ** 2
+    )
+    return data
 
 
+@utils.make_functional
 def calculate_wind_direction_angle(
     data: types.DataND,
     variables: _variables.Model = _variables.Model(),
@@ -25,7 +31,8 @@ def calculate_wind_direction_angle(
     angle = _calculate_angle_to_equator_in_deg(
         opposite=data[variables.u], adjacent=data[variables.v]
     )
-    return 90.0 - angle
+    data[variables.wind_direction] = 90.0 - angle
+    return data
 
 
 def _calculate_angle_to_equator_in_deg(

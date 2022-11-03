@@ -30,26 +30,23 @@ def preprocess_turbine_data_and_match_with_weather_data(
 
     """
     turbine = clean_production_data(
-        turbine,
         power_rating=power_rating,
         variables=turbine_variables,
-    )
+    ).apply_to(turbine)
     weather = get_closest_grid_point(
-        weather,
         turbine=turbine,
-        latitude_coordinate=coordinates.latitude,
-        longitude_coordinate=coordinates.longitude,
-    )
+        coordinates=coordinates,
+    ).apply_to(weather)
     turbine = resample_to_hourly_resolution(
-        turbine,
         variables=turbine_variables,
-        time_coordinate=coordinates.time,
-    )
+        coordinates=coordinates,
+    ).apply_to(turbine)
     return select_intersecting_time_steps(
-        weather=weather, turbine=turbine, time_coordinate=coordinates.time
+        weather=weather, turbine=turbine, coordinates=coordinates
     )
 
 
+@utils.make_functional
 @utils.log_consumption
 def clean_production_data(
     data: xr.Dataset,
@@ -74,12 +71,12 @@ def clean_production_data(
         variables,
         power_rating,
     )
-    data = _remove_outliers(
-        data, production=variables.production, power_rating=power_rating
-    )
-    return data
+    return _remove_outliers(
+        production=variables.production, power_rating=power_rating
+    ).apply_to(data)
 
 
+@utils.make_functional
 def _remove_outliers(
     data: xr.Dataset, production: str, power_rating: int | float
 ) -> xr.Dataset:
@@ -98,6 +95,7 @@ def _remove_outliers(
     )
 
 
+@utils.make_functional
 @utils.log_consumption
 def get_closest_grid_point(
     weather: xr.Dataset,
@@ -119,6 +117,7 @@ def get_closest_grid_point(
     )
 
 
+@utils.make_functional
 @utils.log_consumption
 def resample_to_hourly_resolution(
     data: xr.Dataset,
@@ -143,7 +142,7 @@ def select_intersecting_time_steps(
     intersection = utils.get_time_step_intersection(
         left=weather,
         right=turbine,
-        time_coordinate=coordinates.time,
+        coordinates=coordinates,
     )
     select = {coordinates.time: intersection}
     logger.debug("Found intersecting time steps %s", select)

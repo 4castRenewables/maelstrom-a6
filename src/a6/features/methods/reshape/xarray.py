@@ -1,16 +1,14 @@
 import functools
-from typing import Union
 
 import a6.features.methods.reshape._flatten as _flatten
+import a6.types as types
 import a6.utils.logging as logging
 import xarray as xr
-
-Data = Union[xr.Dataset, xr.DataArray]
 
 
 @logging.log_consumption
 def reshape_spatio_temporal_data(
-    data: Data,
+    data: types.XarrayData,
     time_coordinate: str | None = None,
     x_coordinate: str | None = None,
     y_coordinate: str | None = None,

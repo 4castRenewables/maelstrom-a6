@@ -1,4 +1,5 @@
 import a6.datasets.coordinates as _coordinates
+import a6.datasets.dimensions as _dimensions
 import a6.features.methods as methods
 import a6.modes.methods.pca.pca as _pca
 import a6.types as types
@@ -71,7 +72,7 @@ def _apply_pca(
     algorithm: _pca.PCAMethod | None = None,
     x_coordinate: str | None = None,
     y_coordinate: str | None = None,
-) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray, _pca.PCAMethod]:
+) -> tuple[_dimensions.SpatioTemporalDimensions, xr.DataArray, _pca.PCAMethod]:
     if algorithm is None:
         algorithm = decomposition.PCA()
 
@@ -90,8 +91,8 @@ def _reshape_and_standardize_data(
     coordinates: _coordinates.Coordinates,
     x_coordinate: str | None,
     y_coordinate: str | None,
-) -> tuple[utils.SpatioTemporalDimensions, xr.DataArray]:
-    dimensions = utils.SpatioTemporalDimensions.from_xarray(
+) -> tuple[_dimensions.SpatioTemporalDimensions, xr.DataArray]:
+    dimensions = _dimensions.SpatioTemporalDimensions.from_xarray(
         data,
         coordinates=coordinates,
     )

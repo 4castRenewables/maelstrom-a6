@@ -1,5 +1,6 @@
 from typing import TypeVar
 
+import a6.datasets.dimensions as _dimensions
 import a6.modes.methods.pca._reshape as _reshape
 import a6.utils as utils
 import numpy as np
@@ -21,7 +22,7 @@ class PCA:
         self,
         sklearn_pca: PCAMethod,
         reshaped: xr.DataArray,
-        dimensions: utils.SpatioTemporalDimensions,
+        dimensions: _dimensions.SpatioTemporalDimensions,
     ):
         """Wrap `sklearn.decomposition.PCA`.
 

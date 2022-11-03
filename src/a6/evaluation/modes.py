@@ -1,5 +1,6 @@
 import datetime
 
+import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances as _appearances
 import a6.utils as utils
 import numpy as np
@@ -11,7 +12,7 @@ ScoresPerMode = dict[int, dict[str, np.ndarray]]
 def evaluate_scores_per_mode(
     modes: _appearances.Modes,
     scores: list[xr.DataArray],
-    time_coordinate: str = "time",
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> ScoresPerMode:
     """Evaluate the scores that appeared at each mode."""
 
@@ -19,20 +20,24 @@ def evaluate_scores_per_mode(
         mode.label: _get_score_values_for_mode(
             mode=mode,
             scores=scores,
-            time_coordinate=time_coordinate,
+            coordinates=coordinates,
         )
         for mode in modes
     }
 
 
 def _get_score_values_for_mode(
-    mode: _appearances.Mode, scores: list[xr.DataArray], time_coordinate: str
+    mode: _appearances.Mode,
+    scores: list[xr.DataArray],
+    coordinates: _coordinates.Coordinates,
 ) -> dict[str, np.ndarray]:
-    dates = _get_dates_from_mode(mode, time_coordinate=time_coordinate)
+    dates = _get_dates_from_mode(mode, coordinates=coordinates)
     result = {var: [] for var in list(scores[0].data_vars)}
     for score in scores:
         intersection = utils.get_time_step_intersection(
-            dates, score, time_coordinate=time_coordinate
+            dates,
+            score,
+            coordinates=coordinates,
         )
         for var in score.data_vars:
             result[var].extend(
@@ -40,28 +45,28 @@ def _get_score_values_for_mode(
                     score=score,
                     variable=var,
                     dates=intersection,
-                    time_coordinate=time_coordinate,
+                    coordinates=coordinates,
                 )
             )
     return _convert_to_numpy(result)
 
 
 def _get_dates_from_mode(
-    mode: _appearances.Mode, time_coordinate: str
+    mode: _appearances.Mode, coordinates: _coordinates.Coordinates
 ) -> xr.DataArray:
     # Dates are required as an xarray.DataArray in order to calculate
     # intersecting time steps.
     dates = list(mode.get_dates())
-    return xr.DataArray(dates, coords={time_coordinate: dates})
+    return xr.DataArray(dates, coords={coordinates.time: dates})
 
 
 def _get_scores_for_variable(
     score: xr.DataArray,
     variable: str,
     dates: list[datetime.datetime],
-    time_coordinate: str,
+    coordinates: _coordinates.Coordinates,
 ) -> list:
-    values = score[variable].sel({time_coordinate: dates})
+    values = score[variable].sel({coordinates.time: dates})
     return values.values.tolist()
 
 

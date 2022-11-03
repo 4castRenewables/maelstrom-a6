@@ -33,7 +33,7 @@ def test_clean_production_data():
     )
 
     result = turbine.clean_production_data(
-        production, power_rating=power_rating
+        production, power_rating=power_rating, non_functional=True
     )
 
     xr.testing.assert_equal(result, expected)
@@ -57,7 +57,9 @@ def test_resample_to_hourly_resolution():
         ],
     )
 
-    result = turbine.resample_to_hourly_resolution(production)
+    result = turbine.resample_to_hourly_resolution(
+        production, non_functional=True
+    )
 
     xr.testing.assert_equal(result, expected)
 
@@ -94,7 +96,9 @@ def test_get_closest_grid_point():
         dims=["time"],
     )
 
-    result = turbine.get_closest_grid_point(weather=weather, turbine=production)
+    result = turbine.get_closest_grid_point(
+        weather=weather, turbine=production, non_functional=True
+    )
 
     xr.testing.assert_equal(result, expected)
 
