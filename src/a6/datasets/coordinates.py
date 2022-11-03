@@ -2,7 +2,7 @@ import dataclasses
 
 
 @dataclasses.dataclass(frozen=True)
-class CoordinateNames:
+class Coordinates:
     """Name of the coordinates of a dataset."""
 
     time: str = "time"

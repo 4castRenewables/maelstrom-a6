@@ -1,11 +1,11 @@
 import datetime
 import pathlib
 
+import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances as appearances
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
 import a6.testing as testing
-import a6.utils as utils
 import hdbscan as _hdbscan
 import pytest
 import sklearn.cluster as cluster
@@ -88,8 +88,8 @@ def ds2(da) -> xr.Dataset:
 
 
 @pytest.fixture(scope="session")
-def coordinates() -> utils.CoordinateNames:
-    return utils.CoordinateNames(
+def coordinates() -> _coordinates.Coordinates:
+    return _coordinates.Coordinates(
         time="time",
         latitude="lat",
         longitude="lon",

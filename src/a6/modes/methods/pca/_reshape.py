@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 
+import a6.datasets.dimensions as _dimensions
 import a6.modes.methods.pca.pca as pca
-import a6.utils as utils
 import numpy as np
 import xarray as xr
 
@@ -9,7 +9,7 @@ import xarray as xr
 class Reshaper:
     """Reshapes given PCA data to the according dimensions."""
 
-    def __init__(self, dimensions: utils.dimensions.SpatioTemporalDimensions):
+    def __init__(self, dimensions: _dimensions.SpatioTemporalDimensions):
         self._dimensions = dimensions
 
     def __call__(

@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import TypeVar
 
+import a6.datasets.coordinates as _coordinates
 import a6.features.methods as methods
 import a6.utils as utils
 import xarray as xr
@@ -19,7 +20,7 @@ def select_levels(dataset: xr.Dataset, levels: Levels) -> xr.Dataset:
 def select_levels_and_calculate_daily_mean(
     dataset: xr.Dataset,
     levels: Levels,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     """Select given level(s) from the dataset and calculate daily means."""
     return (
@@ -31,7 +32,7 @@ def select_levels_and_calculate_daily_mean(
 @utils.make_functional
 def select_dwd_area(
     dataset: xr.Dataset,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     """Return the dataset, but only the DWD area for GWL.
 

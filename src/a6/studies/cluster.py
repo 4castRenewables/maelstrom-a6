@@ -1,3 +1,4 @@
+import a6.datasets.coordinates as _coordinates
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
@@ -16,7 +17,7 @@ def perform_pca_and_cluster_hyperparameter_study(  # noqa: CFQ002
     data: xr.Dataset,
     algorithm: type[types.ClusterAlgorithm],
     hyperparameters: _hyperparameters.HyperParameters,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     use_varimax: bool = False,
     vary_data_variables: bool = False,
     log_to_mantik: bool = True,
@@ -55,7 +56,7 @@ def _perform_cluster_hyperparameter_study(
     data: xr.Dataset,
     algorithm: type[types.ClusterAlgorithm],
     hyperparameters: _hyperparameters.HyperParameters,
-    coordinates: utils.CoordinateNames = utils.CoordinateNames(),
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     use_varimax: bool = False,
     log_to_mantik: bool = True,
 ) -> list[clustering.ClusterAlgorithm]:

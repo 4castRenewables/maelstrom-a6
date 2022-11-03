@@ -1,5 +1,5 @@
-import a6.utils.coordinates as _coordinates
-import a6.utils.dimensions as _dimensions
+import a6.datasets.coordinates as _coordinates
+import a6.datasets.dimensions as _dimensions
 import pytest
 
 
@@ -29,7 +29,7 @@ def ds_dimensions2(ds2, coordinates):
 @pytest.fixture(scope="session")
 def ds_dimensions_in_real_order(pl_ds):
     return _dimensions.SpatioTemporalDimensions.from_xarray(
-        pl_ds.sel(level=500), coordinates=_coordinates.CoordinateNames()
+        pl_ds.sel(level=500), coordinates=_coordinates.Coordinates()
     )
 
 
