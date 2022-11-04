@@ -7,8 +7,10 @@
   },
   "UnicoreApiUrl": "https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core",
   "Resources": {
-    "Runtime": "6h",
-    "Queue": "batch",
-    "Nodes": 1
-  }
+    "Runtime": "2h",
+    "Queue": "booster",
+    "Nodes": 1,
+    "NodeConstraints": "largedata"
+  },
+  "Exclude": ["*.sif"]
 }
