@@ -1,3 +1,6 @@
+import functools
+
+import a6.datasets.coordinates as _coordinates
 import a6.types as types
 import numpy as np
 import skimage.measure
@@ -10,11 +13,108 @@ _POOLING_MODES = {
     "max": np.max,
     "min": np.min,
 }
+_DEFAULT_POOLING_MODE = "mean"
+
+
+@functools.singledispatch
+def apply_pooling_to_time_series(
+    data: types.XarrayData,
+    size: int,
+    mode: str = _DEFAULT_POOLING_MODE,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> types.XarrayData:
+    """Apply given method to each step in the timeseries."""
+    return NotImplemented
+
+
+@apply_pooling_to_time_series.register
+def _(
+    data: xr.Dataset,
+    size: int,
+    mode: str = _DEFAULT_POOLING_MODE,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> xr.Dataset:
+    """Apply given method to each step in the timeseries."""
+    result = {
+        var: apply_pooling_to_time_series(
+            data[var],
+            size=size,
+            mode=mode,
+            coordinates=coordinates,
+        )
+        for var in data.data_vars
+    }
+    return _create_copy_with_data_and_reduced_spatial_coordinates(
+        original=data, data=result, size=size, coordinates=coordinates
+    )
+
+
+@apply_pooling_to_time_series.register
+def _(
+    data: xr.DataArray,
+    size: int,
+    mode: str = _DEFAULT_POOLING_MODE,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> xr.DataArray:
+    """Apply given method to each step in the timeseries."""
+    result = [
+        apply_pooling(
+            data.sel({coordinates.time: step}),
+            size=size,
+            mode=mode,
+        )
+        for step in data[coordinates.time]
+    ]
+    return _create_copy_with_data_and_reduced_spatial_coordinates(
+        original=data, data=result, size=size, coordinates=coordinates
+    )
+
+
+def _create_copy_with_data_and_reduced_spatial_coordinates(
+    original: types.XarrayData,
+    data: list | dict,
+    size: int,
+    coordinates: _coordinates.Coordinates,
+) -> types.XarrayData:
+    coords = {
+        coordinates.time: original[coordinates.time],
+        coordinates.latitude: _calculate_new_coordinates(
+            original[coordinates.latitude], size=size
+        ),
+        coordinates.longitude: _calculate_new_coordinates(
+            original[coordinates.longitude], size=size
+        ),
+    }
+    if isinstance(original, xr.DataArray):
+        return xr.DataArray(
+            data,
+            coords=coords,
+            dims=original.dims,
+            attrs=original.attrs,
+        )
+    return xr.Dataset(
+        data,
+        coords=coords,
+        attrs=original.attrs,
+    )
+
+
+def _calculate_new_coordinates(
+    coordinates: xr.DataArray, size: int
+) -> np.ndarray:
+    n_blocks = np.ceil(coordinates.size / size) * size
+    start = coordinates[0]
+    res = coordinates[1] - start
+    end = start + n_blocks * res
+    arange = np.linspace(start, end, int(n_blocks), endpoint=False)
+    return apply_pooling(arange, size=size)
 
 
 def apply_pooling(
-    data: types.Data, size: float | tuple[float, float], mode: str = "mean"
-) -> xr.DataArray:
+    data: types.Data,
+    size: float | tuple[float, float],
+    mode: str = _DEFAULT_POOLING_MODE,
+) -> types.Data:
     """Apply pooling on an image.
 
     Parameters
