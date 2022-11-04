@@ -96,11 +96,6 @@ def _reshape_and_standardize_data(
         data,
         coordinates=coordinates,
     )
-    data = methods.weighting.weight_by_latitudes(
-        data=data,
-        latitudes=coordinates.latitude,
-        use_sqrt=True,
-    )
     data = methods.reshape.xarray.reshape_spatio_temporal_data(
         data=data,
         time_coordinate=None,  # Set to None to avoid memory excess in function

@@ -63,17 +63,15 @@ def expected_data_array(coords, dims) -> xr.DataArray:
     )
 
 
-def test_apply_pooling_to_time_series_data_array(
-    data_array, expected_data_array
-):
-    result = pooling.apply_pooling_to_time_series(
-        data_array, mode="mean", size=2
+def test_apply_pooling_data_array(data_array, expected_data_array):
+    result = pooling.apply_pooling(
+        data_array, mode="mean", size=2, non_functional=True
     )
 
     xr.testing.assert_equal(result, expected_data_array)
 
 
-def test_apply_pooling_to_time_series_dataset(data_array, expected_data_array):
+def test_apply_pooling_dataset(data_array, expected_data_array):
     data = xr.Dataset(
         data_vars={
             "var1": data_array,
@@ -88,7 +86,9 @@ def test_apply_pooling_to_time_series_dataset(data_array, expected_data_array):
         },
         coords=expected_data_array.coords,
     )
-    result = pooling.apply_pooling_to_time_series(data, mode="mean", size=2)
+    result = pooling.apply_pooling(
+        data, mode="mean", size=2, non_functional=True
+    )
 
     xr.testing.assert_equal(result, expected)
 
@@ -216,6 +216,6 @@ def test_calculate_new_coordinates(coordinates, size, expected):
     ],
 )
 def test_apply_pooling(data, size, mode, expected):
-    result = pooling.apply_pooling(data, size=size, mode=mode)
+    result = pooling._apply_pooling(data, size=size, mode=mode)
 
     np.testing.assert_equal(result, expected)

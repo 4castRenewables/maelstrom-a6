@@ -55,17 +55,15 @@ def expected_data_array(coords, dims) -> xr.DataArray:
     )
 
 
-def test_apply_kernel_to_time_series_data_array(
-    data_array, expected_data_array
-):
-    result = convolution.apply_kernel_to_time_series(
-        data_array, kernel="mean", size=3
+def test_apply_kernel_data_array(data_array, expected_data_array):
+    result = convolution.apply_kernel(
+        data_array, kernel="mean", size=3, non_functional=True
     )
 
     xr.testing.assert_equal(result, expected_data_array)
 
 
-def test_apply_kernel_to_time_series_dataset(data_array, expected_data_array):
+def test_apply_kernel_dataset(data_array, expected_data_array):
     data = xr.Dataset(
         data_vars={
             "var1": data_array,
@@ -80,8 +78,8 @@ def test_apply_kernel_to_time_series_dataset(data_array, expected_data_array):
         },
         coords=expected_data_array.coords,
     )
-    result = convolution.apply_kernel_to_time_series(
-        data, kernel="mean", size=3
+    result = convolution.apply_kernel(
+        data, kernel="mean", size=3, non_functional=True
     )
 
     xr.testing.assert_equal(result, expected)
@@ -143,7 +141,7 @@ def test_apply_kernel_to_time_series_dataset(data_array, expected_data_array):
 def test_apply_kernel(data, kernel, kwargs, expected):
     if isinstance(kernel, list):
         kernel = np.array(kernel)
-    result = convolution.apply_kernel(np.array(data), kernel=kernel, **kwargs)
+    result = convolution._apply_kernel(np.array(data), kernel=kernel, **kwargs)
 
     np.testing.assert_equal(result, np.array(expected))
 
