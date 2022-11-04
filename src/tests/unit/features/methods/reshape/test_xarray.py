@@ -26,6 +26,7 @@ def test_reshape_spatio_temporal_data_array(
         time_coordinate=time_coordinate,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
+        non_functional=True,
     )
 
     np.testing.assert_equal(result, expected)
@@ -59,6 +60,7 @@ def test_reshape_spatio_temporal_dataset(
         time_coordinate=time_coordinate,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
+        non_functional=True,
     )
 
     np.testing.assert_equal(result, expected)

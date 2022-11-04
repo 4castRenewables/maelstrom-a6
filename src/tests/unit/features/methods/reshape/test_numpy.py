@@ -23,6 +23,8 @@ def test_reshape_spatio_temporal_data_array():
         ],
     )
 
-    result = numpy.reshape_spatio_temporal_numpy_array(data=data)
+    result = numpy.reshape_spatio_temporal_numpy_array(
+        data=data, non_functional=True
+    )
 
     np.testing.assert_equal(result, expected)

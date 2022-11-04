@@ -52,58 +52,41 @@ def spatio_temporal_pca(
     Springer, 2002, page 302 ff.
 
     """
-    dimensions, data, sklearn_pca = _apply_pca(
+    dimensions = _dimensions.SpatioTemporalDimensions.from_xarray(
+        data,
+        coordinates=coordinates,
+    )
+    reshaped, sklearn_pca = _apply_pca(
         data=data,
         algorithm=algorithm,
-        coordinates=coordinates,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
     )
     return _pca.PCA(
         sklearn_pca=sklearn_pca,
-        reshaped=data,
+        reshaped=reshaped,
         dimensions=dimensions,
     )
 
 
 def _apply_pca(
     data: types.DataND,
-    coordinates: _coordinates.Coordinates,
     algorithm: _pca.PCAMethod | None = None,
     x_coordinate: str | None = None,
     y_coordinate: str | None = None,
-) -> tuple[_dimensions.SpatioTemporalDimensions, xr.DataArray, _pca.PCAMethod]:
+) -> tuple[xr.DataArray, _pca.PCAMethod]:
     if algorithm is None:
         algorithm = decomposition.PCA()
 
-    (dimensions, data) = _reshape_and_standardize_data(
-        data=data,
-        coordinates=coordinates,
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
+    prepare = (
+        methods.reshape.xarray.reshape_spatio_temporal_data(
+            # Set to None to avoid memory excess in function
+            time_coordinate=None,
+            x_coordinate=x_coordinate,
+            y_coordinate=y_coordinate,
+        )
+        >> methods.standardization.standardize_features()
     )
-    sklearn_pca: _pca.PCAMethod = algorithm.fit(data)
-    return dimensions, data, sklearn_pca
-
-
-def _reshape_and_standardize_data(
-    data: types.DataND,
-    coordinates: _coordinates.Coordinates,
-    x_coordinate: str | None,
-    y_coordinate: str | None,
-) -> tuple[_dimensions.SpatioTemporalDimensions, xr.DataArray]:
-    dimensions = _dimensions.SpatioTemporalDimensions.from_xarray(
-        data,
-        coordinates=coordinates,
-    )
-    data = methods.reshape.xarray.reshape_spatio_temporal_data(
-        data=data,
-        time_coordinate=None,  # Set to None to avoid memory excess in function
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-    )
-    data = methods.standardization.standardize_features(data)
-    return (
-        dimensions,
-        data,
-    )
+    reshaped = prepare.apply_to(data)
+    sklearn_pca: _pca.PCAMethod = algorithm.fit(reshaped)
+    return reshaped, sklearn_pca
