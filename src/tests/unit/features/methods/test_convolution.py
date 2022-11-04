@@ -1,6 +1,90 @@
 import a6.features.methods.convolution as convolution
 import numpy as np
+import pandas as pd
 import pytest
+import xarray as xr
+
+
+@pytest.fixture()
+def coords() -> dict:
+    return {
+        "time": pd.date_range("2000-01-01", "2000-01-02", freq="1d"),
+        "latitude": [1.0, 0.0],
+        "longitude": [0.0, 1.0],
+    }
+
+
+@pytest.fixture()
+def dims() -> list[str]:
+    return ["time", "latitude", "longitude"]
+
+
+@pytest.fixture()
+def data_array(coords, dims) -> xr.DataArray:
+    return xr.DataArray(
+        [
+            [
+                [1.0, 1.0],
+                [2.0, 2.0],
+            ],
+            [
+                [2.0, 3.0],
+                [4.0, 5.0],
+            ],
+        ],
+        coords=coords,
+        dims=dims,
+    )
+
+
+@pytest.fixture()
+def expected_data_array(coords, dims) -> xr.DataArray:
+    return xr.DataArray(
+        [
+            [
+                [12.0 / 9.0, 12.0 / 9.0],
+                [15.0 / 9.0, 15.0 / 9.0],
+            ],
+            [
+                [27.0 / 9.0, 30.0 / 9.0],
+                [33.0 / 9.0, 36.0 / 9.0],
+            ],
+        ],
+        coords=coords,
+        dims=dims,
+    )
+
+
+def test_apply_kernel_to_time_series_data_array(
+    data_array, expected_data_array
+):
+    result = convolution.apply_kernel_to_time_series(
+        data_array, kernel="mean", size=3
+    )
+
+    xr.testing.assert_equal(result, expected_data_array)
+
+
+def test_apply_kernel_to_time_series_dataset(data_array, expected_data_array):
+    data = xr.Dataset(
+        data_vars={
+            "var1": data_array,
+            "var2": data_array,
+        },
+        coords=data_array.coords,
+    )
+    expected = xr.Dataset(
+        data_vars={
+            "var1": expected_data_array,
+            "var2": expected_data_array,
+        },
+        coords=data_array.coords,
+    )
+    result = convolution.apply_kernel_to_time_series(
+        data, kernel="mean", size=3
+    )
+
+    xr.testing.assert_equal(result, expected)
 
 
 @pytest.mark.parametrize(

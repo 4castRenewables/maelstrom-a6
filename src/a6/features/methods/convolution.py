@@ -1,6 +1,71 @@
+import functools
+
+import a6.datasets.coordinates as _coordinates
 import a6.types as types
 import numpy as np
 import scipy.ndimage as ndimage
+import xarray as xr
+
+
+@functools.singledispatch
+def apply_kernel_to_time_series(
+    data: types.XarrayData,
+    kernel: str | np.ndarray,
+    size: int,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+    **kwargs,
+) -> types.XarrayData:
+    """Apply given method to each step in the timeseries."""
+    return NotImplemented
+
+
+@apply_kernel_to_time_series.register
+def _(
+    data: xr.Dataset,
+    kernel: str | np.ndarray,
+    size: int,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+    **kwargs,
+) -> xr.Dataset:
+    """Apply given method to each step in the timeseries."""
+    result = {
+        var: apply_kernel_to_time_series(
+            data[var],
+            kernel=kernel,
+            size=size,
+            coordinates=coordinates,
+            **kwargs,
+        )
+        for var in data.data_vars
+    }
+    return _create_copy_with_data(original=data, data=result)
+
+
+@apply_kernel_to_time_series.register
+def _(
+    data: xr.DataArray,
+    kernel: str | np.ndarray,
+    size: int,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+    **kwargs,
+) -> xr.DataArray:
+    """Apply given method to each step in the timeseries."""
+    result = [
+        apply_kernel(
+            data.sel({coordinates.time: step}),
+            kernel=kernel,
+            size=size,
+            **kwargs,
+        )
+        for step in data[coordinates.time]
+    ]
+    return _create_copy_with_data(original=data, data=result)
+
+
+def _create_copy_with_data(
+    original: types.XarrayData, data: list | dict
+) -> types.XarrayData:
+    return original.copy(deep=True, data=data)
 
 
 def apply_kernel(
