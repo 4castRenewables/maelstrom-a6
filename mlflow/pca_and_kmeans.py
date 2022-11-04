@@ -8,15 +8,23 @@ logger = logging.getLogger(__name__)
 a6.utils.log_to_stdout()
 
 if __name__ == "__main__":
-    data = a6.cli.data.read(
-        path=pathlib.Path("/home/fabian/Documents/MAELSTROM/data/pca"),
-        pattern="pl_*.nc",
-        slice_files=True,
-        level=500,
-    )
-
     coordinates = a6.datasets.coordinates.Coordinates()
     variables = a6.datasets.variables.Model()
+
+    data = a6.datasets.EcmwfIfsHres(
+        # path=pathlib.Path("/home/fabian/Documents/MAELSTROM/data/pca"),
+        path=pathlib.Path(
+            "/p/largedata/slmet/slmet111/met_data/ecmwf/ifs_hres/ifs_hres_subset/pl"  # noqa
+        ),
+        pattern="pl_*.nc",
+        slice_time_dimension=True,
+        preprocessing=a6.datasets.methods.select.select_levels_and_calculate_daily_mean(  # noqa
+            levels=500
+        ),
+        postprocessing=a6.features.methods.averaging.calculate_daily_mean(
+            coordinates=coordinates
+        ),
+    ).as_xarray()
 
     preprocessing = (
         a6.datasets.methods.select.select_dwd_area()

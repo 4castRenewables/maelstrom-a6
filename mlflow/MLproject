@@ -6,6 +6,9 @@ docker_env:
   environment: ["MLFLOW_TRACKING_TOKEN"]
 
 entry_points:
+  test:
+    command:
+      python mlflow/pca_and_kmeans.py
   cluster:
     parameters:
       weather_data:

@@ -11,9 +11,13 @@ Levels = TypeVar("Levels", int, Sequence[int])
 
 
 @utils.make_functional
-def select_levels(dataset: xr.Dataset, levels: Levels) -> xr.Dataset:
+def select_levels(
+    dataset: xr.Dataset,
+    levels: Levels,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> xr.Dataset:
     """Select given level(s) from the dataset."""
-    return dataset.sel(level=levels)
+    return dataset.sel({coordinates.level: levels})
 
 
 @utils.make_functional
