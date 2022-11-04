@@ -1,13 +1,14 @@
 from typing import Union
 
 import a6.types as types
-import a6.utils.logging as logging
+import a6.utils as utils
 import numpy as np
 
 Latitudes = Union[str, np.ndarray]
 
 
-@logging.log_consumption
+@utils.make_functional
+@utils.log_consumption
 def weight_by_latitudes(
     data: types.DataND,
     latitudes: Latitudes,

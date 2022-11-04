@@ -2,6 +2,7 @@ import functools
 
 import a6.datasets.coordinates as _coordinates
 import a6.types as types
+import a6.utils as utils
 import numpy as np
 import skimage.measure
 import xarray as xr
@@ -16,8 +17,9 @@ _POOLING_MODES = {
 _DEFAULT_POOLING_MODE = "mean"
 
 
+@utils.make_functional
 @functools.singledispatch
-def apply_pooling_to_time_series(
+def apply_pooling(
     data: types.XarrayData,
     size: int,
     mode: str = _DEFAULT_POOLING_MODE,
@@ -27,7 +29,8 @@ def apply_pooling_to_time_series(
     return NotImplemented
 
 
-@apply_pooling_to_time_series.register
+@utils.make_functional
+@apply_pooling.register
 def _(
     data: xr.Dataset,
     size: int,
@@ -36,12 +39,11 @@ def _(
 ) -> xr.Dataset:
     """Apply given method to each step in the timeseries."""
     result = {
-        var: apply_pooling_to_time_series(
-            data[var],
+        var: apply_pooling(
             size=size,
             mode=mode,
             coordinates=coordinates,
-        )
+        ).apply_to(data[var])
         for var in data.data_vars
     }
     return _create_copy_with_data_and_reduced_spatial_coordinates(
@@ -49,7 +51,8 @@ def _(
     )
 
 
-@apply_pooling_to_time_series.register
+@utils.make_functional
+@apply_pooling.register
 def _(
     data: xr.DataArray,
     size: int,
@@ -58,7 +61,7 @@ def _(
 ) -> xr.DataArray:
     """Apply given method to each step in the timeseries."""
     result = [
-        apply_pooling(
+        _apply_pooling(
             data.sel({coordinates.time: step}),
             size=size,
             mode=mode,
@@ -107,10 +110,10 @@ def _calculate_new_coordinates(
     res = coordinates[1] - start
     end = start + n_blocks * res
     arange = np.linspace(start, end, int(n_blocks), endpoint=False)
-    return apply_pooling(arange, size=size)
+    return _apply_pooling(arange, size=size)
 
 
-def apply_pooling(
+def _apply_pooling(
     data: types.Data,
     size: float | tuple[float, float],
     mode: str = _DEFAULT_POOLING_MODE,
