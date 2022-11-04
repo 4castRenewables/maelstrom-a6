@@ -7,8 +7,8 @@ import numpy as np
 Latitudes = Union[str, np.ndarray]
 
 
-@utils.make_functional
 @utils.log_consumption
+@utils.make_functional
 def weight_by_latitudes(
     data: types.DataND,
     latitudes: Latitudes,

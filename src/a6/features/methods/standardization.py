@@ -1,9 +1,11 @@
 import a6.types as types
+import a6.utils as utils
 import numpy as np
 import sklearn.preprocessing as preprocessing
 import xarray as xr
 
 
+@utils.make_functional
 def standardize(data: types.DataND) -> types.DataND:
     """Standardize to zero mean and unit variance (standard deviation).
 
@@ -16,6 +18,7 @@ def standardize(data: types.DataND) -> types.DataND:
     return standardized
 
 
+@utils.make_functional
 def standardize_features(data: types.DataND) -> xr.DataArray:
     """Standardize features of a (n_samples x n_features) dataset."""
     scaler = preprocessing.StandardScaler(

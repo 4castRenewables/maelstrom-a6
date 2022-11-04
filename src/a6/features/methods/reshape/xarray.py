@@ -2,11 +2,12 @@ import functools
 
 import a6.features.methods.reshape._flatten as _flatten
 import a6.types as types
-import a6.utils.logging as logging
+import a6.utils as utils
 import xarray as xr
 
 
-@logging.log_consumption
+@utils.log_consumption
+@utils.make_functional
 def reshape_spatio_temporal_data(
     data: types.XarrayData,
     time_coordinate: str | None = None,

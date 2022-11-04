@@ -3,8 +3,8 @@ import a6.utils as utils
 import xarray as xr
 
 
-@utils.make_functional
 @utils.log_consumption
+@utils.make_functional
 def calculate_daily_mean(
     dataset: xr.Dataset,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),

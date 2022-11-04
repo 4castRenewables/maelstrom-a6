@@ -69,7 +69,10 @@ def create_data_array(data) -> xr.DataArray:
 )
 def test_weight_by_latitudes(data, latitudes, latitudes_in_radians, expected):
     result = weighting.weight_by_latitudes(
-        data, latitudes=latitudes, latitudes_in_radians=latitudes_in_radians
+        data,
+        latitudes=latitudes,
+        latitudes_in_radians=latitudes_in_radians,
+        non_functional=True,
     )
 
     if isinstance(data, np.ndarray):

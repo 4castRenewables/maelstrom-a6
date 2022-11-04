@@ -46,8 +46,8 @@ def preprocess_turbine_data_and_match_with_weather_data(
     )
 
 
-@utils.make_functional
 @utils.log_consumption
+@utils.make_functional
 def clean_production_data(
     data: xr.Dataset,
     power_rating: int | float,
@@ -95,8 +95,8 @@ def _remove_outliers(
     )
 
 
-@utils.make_functional
 @utils.log_consumption
+@utils.make_functional
 def get_closest_grid_point(
     weather: xr.Dataset,
     turbine: xr.Dataset,
@@ -117,8 +117,8 @@ def get_closest_grid_point(
     )
 
 
-@utils.make_functional
 @utils.log_consumption
+@utils.make_functional
 def resample_to_hourly_resolution(
     data: xr.Dataset,
     variables: _variables.Turbine = _variables.Turbine(),

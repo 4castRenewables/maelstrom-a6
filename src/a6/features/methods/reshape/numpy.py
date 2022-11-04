@@ -1,6 +1,8 @@
+import a6.utils as utils
 import numpy as np
 
 
+@utils.make_functional
 def reshape_spatio_temporal_numpy_array(
     data: np.ndarray,
 ) -> np.ndarray:

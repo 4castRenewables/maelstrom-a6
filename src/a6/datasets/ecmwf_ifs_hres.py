@@ -175,6 +175,8 @@ class EcmwfIfsHres:
 
         """
         return methods.slicing.slice_dataset(
+            dataset,
             dimension=self._concat_dim,
             slice_until=12,
-        ).apply_to(dataset)
+            non_functional=True,
+        )
