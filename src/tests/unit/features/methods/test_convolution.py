@@ -78,7 +78,7 @@ def test_apply_kernel_to_time_series_dataset(data_array, expected_data_array):
             "var1": expected_data_array,
             "var2": expected_data_array,
         },
-        coords=data_array.coords,
+        coords=expected_data_array.coords,
     )
     result = convolution.apply_kernel_to_time_series(
         data, kernel="mean", size=3
