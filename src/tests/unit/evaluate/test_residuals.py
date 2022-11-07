@@ -78,8 +78,7 @@ def test_calculate_ssr(left, right, expected_ssr):
 def test_calculate_normalized_root_ssr(left, right, expected_ssr):
     expected = np.sqrt(expected_ssr) / 8.0
 
-    result = residuals.calculate_normalized_root_ssr(
-        left, right, non_functional=True
-    )
+    pipe = residuals.calculate_normalized_root_ssr(y_true=left)
+    result = pipe.apply_to(right)
 
     assert result == expected
