@@ -27,17 +27,17 @@ def make_functional(func):
     ...         [3, 4],
     ...     ],
     ... )
-    >>> add(1)(da)
+    >>> add(number=1)(da)
     <xarray.DataArray (dim_0: 2, dim_1: 2)>
     array([[2, 3],
            [4, 5]])
     Dimensions without coordinates: dim_0, dim_1
-    >>> add(1).apply_to(da)
+    >>> add(number=1).apply_to(da)
     <xarray.DataArray (dim_0: 2, dim_1: 2)>
     array([[2, 3],
            [4, 5]])
     Dimensions without coordinates: dim_0, dim_1
-    >>> pipe = add(1) >> multiply(4)
+    >>> pipe = add(number=1) >> multiply(number=4)
     >>> pipe.apply_to(da)
     <xarray.DataArray (dim_0: 2, dim_1: 2)>
     array([[ 8, 12],
