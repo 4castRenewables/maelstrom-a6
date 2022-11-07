@@ -27,7 +27,7 @@ if __name__ == "__main__":
     ).as_xarray()
 
     preprocessing = (
-        a6.datasets.methods.select.select_dwd_area()
+        a6.datasets.methods.select.select_dwd_area(coordinates=coordinates)
         >> a6.features.methods.weighting.weight_by_latitudes(
             latitudes=coordinates.latitude,
             use_sqrt=True,
@@ -35,16 +35,18 @@ if __name__ == "__main__":
         >> a6.features.methods.geopotential.calculate_geopotential_height(
             variables=variables,
         )
-        >> a6.features.methods.wind.calculate_wind_speed()
+        >> a6.features.methods.wind.calculate_wind_speed(variables=variables)
         >> a6.features.methods.variables.drop_variables(
-            [variables.z, variables.u, variables.v]
+            names=[variables.z, variables.u, variables.v]
         )
         >> a6.features.methods.convolution.apply_kernel(
             kernel="mean",
             size=11,
             coordinates=coordinates,
         )
-        >> a6.features.methods.pooling.apply_pooling(size=10, mode="mean")
+        >> a6.features.methods.pooling.apply_pooling(
+            size=10, mode="mean", coordinates=coordinates
+        )
     )
 
     hyperparameters = a6.studies.HyperParameters(
