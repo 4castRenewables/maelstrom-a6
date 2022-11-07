@@ -65,7 +65,12 @@ def make_functional(func):
     ) -> Functional | Any:
         if non_functional:
             return func(*args, **kwargs)
-        return Functional(func, *args, **kwargs)
+        if args:
+            raise ValueError(
+                "When using a Functional object, arguments have to be provided "
+                "with keywords (kwargs)"
+            )
+        return Functional(func, **kwargs)
 
     return wrapper
 
@@ -96,14 +101,16 @@ class Functional:
 
     """
 
-    def __init__(self, func, *args, **kwargs):
-        self._func = functools.partial(func, *args, **kwargs)
+    def __init__(self, func, **kwargs):
+        self._func = functools.partial(func, **kwargs)
+        self._prev = None
         self._next = None
 
     def __rshift__(self, operation: "Functional") -> "Functional":
         """Append a subsequent operation"""
         self._next = operation
-        return self
+        self._next._prev = self
+        return self._next
 
     def __call__(self, data: types.DataND) -> types.DataND:
         """Apply the function on the given data."""
@@ -115,6 +122,6 @@ class Functional:
         If a following operation was defined, pass the result.
 
         """
-        if self._next is None:
+        if self._prev is None:
             return self._func(data)
-        return self._next.apply_to(self._func(data))
+        return self._func(self._prev.apply_to(data))
