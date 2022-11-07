@@ -4,15 +4,15 @@ import xarray as xr
 
 
 @utils.make_functional
-def calculate_ssr(left: xr.DataArray, right: xr.DataArray) -> float:
+def calculate_ssr(y_pred: xr.DataArray, y_true: xr.DataArray) -> float:
     """Calculate the sum of squared residuals between two datasets."""
-    return float(((left - right) ** 2).sum().values)
+    return float(((y_pred - y_true) ** 2).sum().values)
 
 
 @utils.make_functional
 def calculate_normalized_root_ssr(
-    left: xr.DataArray, right: xr.DataArray
+    y_pred: xr.DataArray, y_true: xr.DataArray
 ) -> float:
     """Calculate the normalized root SSR between two datasets."""
-    ssr = calculate_ssr(left, right, non_functional=True)
-    return np.sqrt(ssr) / left.max()
+    ssr = calculate_ssr(y_pred=y_pred, y_true=y_true, non_functional=True)
+    return np.sqrt(ssr) / y_true.max()
