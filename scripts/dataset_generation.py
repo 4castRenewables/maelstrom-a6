@@ -20,7 +20,6 @@ As a result, the data are processed in the order:
    - Daily mean is calculated.
 
 """
-import functools
 import pathlib
 
 import a6
@@ -31,17 +30,16 @@ outfile = (
     path
     / f"pressure_level_{'_'.join(map(str, levels))}_daily_mean_2017_2020.nc"
 )
-paths = a6.utils.list_files(path, pattern="pl*.nc")
 
-preprocess = functools.partial(
-    a6.datasets.methods.select_levels_and_calculate_daily_mean,
-    levels=levels,
-)
 ds = a6.datasets.EcmwfIfsHres(
-    paths=paths,
-    preprocessing=preprocess,
-    postprocessing=a6.utils.calculate_daily_mean,
+    path=path,
+    pattern="pl*.nc",
+    slice_time_dimension=True,
+    preprocessing=a6.datasets.methods.select.select_levels_and_calculate_daily_mean(  # noqa
+        levels=levels
+    ),
+    postprocessing=a6.features.methods.averaging.calculate_daily_mean(),
 )
 
 with a6.utils.print_execution_time(description="converting to netcdf"):
-    ds.as_xarray().to_netcdf(outfile)
+    ds.to_xarray().to_netcdf(outfile)
