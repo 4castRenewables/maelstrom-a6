@@ -25,7 +25,13 @@ RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
  && cd /venv \
  && find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-FROM python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION}-slim-bullseye
+
+RUN apt-get update -y \
+ && apt-get install -y \
+    # Required by cartopy
+    libgeos-3.9.0 \
+    libgeos-dev
 
 COPY --from=builder /venv /venv
 ENV PATH=/venv/bin:$PATH
