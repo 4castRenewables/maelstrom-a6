@@ -8,7 +8,7 @@ docker_env:
 entry_points:
   test:
     command:
-      python mlflow/pca_and_kmeans.py
+      python pca_and_kmeans.py
   cluster:
     parameters:
       weather_data:
