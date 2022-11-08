@@ -71,7 +71,7 @@ class EcmwfIfsHres:
         self._selected_levels = []
 
     @utils.log_consumption
-    def as_xarray(
+    def to_xarray(
         self,
         levels: Levels = None,
         drop_variables: list[str] | None = None,
@@ -101,7 +101,7 @@ class EcmwfIfsHres:
                 drop_variables,
             )
             return self._data
-        return self._as_xarray(levels=levels, drop_variables=drop_variables)
+        return self._to_xarray(levels=levels, drop_variables=drop_variables)
 
     def _was_already_converted(
         self, levels: Levels, drop_variables: list[str] | None
@@ -112,7 +112,7 @@ class EcmwfIfsHres:
             and levels == self._selected_levels
         )
 
-    def _as_xarray(
+    def _to_xarray(
         self, levels: Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
         """Merge a set of files into a single datase"""

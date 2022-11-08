@@ -31,4 +31,4 @@ def read(
     ds = datasets.EcmwfIfsHres(
         path=path, pattern=pattern, slice_time_dimension=slice_files
     )
-    return ds.as_xarray(levels=level)
+    return ds.to_xarray(levels=level)

@@ -51,6 +51,6 @@ def test_generate_ecmwf_ifs_hres_data():
         },
         coords={"time": (["time"], dates), **grid.xarray_coords_dict},
     )
-    result = dataset.as_xarray()
+    result = dataset.to_xarray()
 
     xr.testing.assert_equal(result, expected)

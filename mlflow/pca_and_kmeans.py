@@ -11,24 +11,27 @@ if __name__ == "__main__":
     coordinates = a6.datasets.coordinates.Coordinates()
     variables = a6.datasets.variables.Model()
 
+    preprocessing = a6.datasets.methods.select.select_dwd_area(
+        coordinates=coordinates
+    ) >> a6.datasets.methods.select.select_levels_and_calculate_daily_mean(
+        levels=500
+    )
+
     data = a6.datasets.EcmwfIfsHres(
-        # path=pathlib.Path("/home/fabian/Documents/MAELSTROM/data/pca"),
         path=pathlib.Path(
-            "/p/largedata/slmet/slmet111/met_data/ecmwf/ifs_hres/ifs_hres_subset/pl"  # noqa
+            # "/home/fabian/Documents/MAELSTROM/data/pca"
+            "/p/scratch/deepacf/maelstrom/maelstrom_data/a6/pl"
         ),
         pattern="pl_*.nc",
         slice_time_dimension=True,
-        preprocessing=a6.datasets.methods.select.select_levels_and_calculate_daily_mean(  # noqa
-            levels=500
-        ),
+        preprocessing=preprocessing,
         postprocessing=a6.features.methods.averaging.calculate_daily_mean(
             coordinates=coordinates
         ),
-    ).as_xarray()
+    ).to_xarray()
 
     preprocessing = (
-        a6.datasets.methods.select.select_dwd_area(coordinates=coordinates)
-        >> a6.features.methods.weighting.weight_by_latitudes(
+        a6.features.methods.weighting.weight_by_latitudes(
             latitudes=coordinates.latitude,
             use_sqrt=True,
         )
@@ -51,7 +54,7 @@ if __name__ == "__main__":
 
     hyperparameters = a6.studies.HyperParameters(
         cluster_arg="min_cluster_size",
-        n_components_start=3,
+        n_components_start=2,
         n_components_end=12,
         cluster_start=2,
         cluster_end=30,
