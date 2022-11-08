@@ -43,7 +43,7 @@ class TestEcmwfIfsHresDataset:
             ),
         ],
     )
-    def test_as_xarray(self, path, pattern, slice_time_dimension, expected):
+    def test_to_xarray(self, path, pattern, slice_time_dimension, expected):
         with testing.expect_raise_if_exception(expected):
             dataset = ecmwf_ifs_hres.EcmwfIfsHres(
                 path,
@@ -51,7 +51,7 @@ class TestEcmwfIfsHresDataset:
                 slice_time_dimension=slice_time_dimension,
                 parallel_loading=False,
             )
-            result = dataset.as_xarray()
+            result = dataset.to_xarray()
             result_dates = result["time"].values.astype("datetime64[m]")
             expected_dates = expected.to_numpy().astype("datetime64[m]")
 

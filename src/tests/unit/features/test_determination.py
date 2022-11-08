@@ -53,7 +53,7 @@ def dataset() -> datasets.EcmwfIfsHres:
 )
 def test_determine_features(dataset, features_, expected):
     if expected is None:
-        expected = dataset.as_xarray()["ellipse"]
+        expected = dataset.to_xarray()["ellipse"]
 
     with testing.expect_raise_if_exception(expected):
         [result] = features.determine_features(dataset, features_)

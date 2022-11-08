@@ -43,7 +43,7 @@ class Feature:
 
     def generate_from(self, dataset: datasets.EcmwfIfsHres) -> xr.DataArray:
         """Generate the feature from a given dataset."""
-        data = dataset.as_xarray()
+        data = dataset.to_xarray()
         result = self._generate_feature_from_dataset(data)
         result.name = self.name
         return result

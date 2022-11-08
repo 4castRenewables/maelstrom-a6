@@ -68,7 +68,7 @@ def ds() -> xr.Dataset:
         frequency="1d",
         data=data_points,
     )
-    ds = dataset.as_xarray()
+    ds = dataset.to_xarray()
     return ds
 
 
