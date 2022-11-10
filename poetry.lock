@@ -156,6 +156,25 @@ css = ["tinycss2 (>=1.1.0,<1.2)"]
 dev = ["Sphinx (==4.3.2)", "black (==22.3.0)", "build (==0.8.0)", "flake8 (==4.0.1)", "hashin (==0.17.0)", "mypy (==0.961)", "pip-tools (==6.6.2)", "pytest (==7.1.2)", "tox (==3.25.0)", "twine (==4.0.1)", "wheel (==0.37.1)"]
 
 [[package]]
+name = "bokeh"
+version = "3.0.1"
+description = "Interactive plots and applications in the browser from Python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+contourpy = ">=1"
+Jinja2 = ">=2.9"
+numpy = ">=1.11.3"
+packaging = ">=16.8"
+pandas = ">=1.2"
+pillow = ">=7.1.0"
+PyYAML = ">=3.10"
+tornado = ">=5.1"
+xyzservices = ">=2021.09.1"
+
+[[package]]
 name = "boto3"
 version = "1.26.0"
 description = "The AWS SDK for Python"
@@ -2737,6 +2756,14 @@ parallel = ["dask[complete]"]
 viz = ["matplotlib", "nc-time-axis", "seaborn"]
 
 [[package]]
+name = "xyzservices"
+version = "2022.9.0"
+description = "Source of XYZ tiles providers"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "zict"
 version = "2.2.0"
 description = "Mutable mapping tools"
@@ -2766,7 +2793,7 @@ notebooks = ["jupyter", "python-dotenv"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "af7b6fc474236c70cf91bab64fc123b6c4db2c511a442a47c3a6a996b5318cbd"
+content-hash = "8ba5b8a49b61530d590ec1ab66e30bb4a85a897e7df0579558987cc3092ed44b"
 
 [metadata.files]
 alembic = [
@@ -2834,6 +2861,10 @@ beautifulsoup4 = [
 bleach = [
     {file = "bleach-5.0.1-py3-none-any.whl", hash = "sha256:085f7f33c15bd408dd9b17a4ad77c577db66d76203e5984b1bd59baeee948b2a"},
     {file = "bleach-5.0.1.tar.gz", hash = "sha256:0d03255c47eb9bd2f26aa9bb7f2107732e7e8fe195ca2f64709fcf3b0a4a085c"},
+]
+bokeh = [
+    {file = "bokeh-3.0.1-py3-none-any.whl", hash = "sha256:1274054df22e3e6fbb81ad6e5c5ed0cbc1f080ecc0526591c25571de259d6fe3"},
+    {file = "bokeh-3.0.1.tar.gz", hash = "sha256:aa044829f66f08e9aeb74e33d538bc719270406124ea128bd7616e09e1561815"},
 ]
 boto3 = [
     {file = "boto3-1.26.0-py3-none-any.whl", hash = "sha256:0a19d07a39d69b8e84e24d75474bbf4e737b1749d0c665503dfc2446f321e1f0"},
@@ -4856,6 +4887,10 @@ widgetsnbextension = [
 xarray = [
     {file = "xarray-2022.10.0-py3-none-any.whl", hash = "sha256:e4e574820ff8eb7dbc119c5089d30860b73160bd587cc045ae37a128b8eb4fc2"},
     {file = "xarray-2022.10.0.tar.gz", hash = "sha256:b39ff3475f73eaacdf831b0ab7eb6930e7b5933e46dcf71b9327f4c4bb941793"},
+]
+xyzservices = [
+    {file = "xyzservices-2022.9.0-py3-none-any.whl", hash = "sha256:5547b3d6bc06a60561d039fc9ef5fd521d8bea9b6b3d617410fd764b30c6c2bd"},
+    {file = "xyzservices-2022.9.0.tar.gz", hash = "sha256:55651961708b9a14849978b339df76008c886df7a8326308a5549bae5516260c"},
 ]
 zict = [
     {file = "zict-2.2.0-py2.py3-none-any.whl", hash = "sha256:dabcc8c8b6833aa3b6602daad50f03da068322c1a90999ff78aed9eecc8fa92c"},
