@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 a6.utils.log_to_stdout()
 
 if __name__ == "__main__":
+    kernel_size = 11
+    kernel_mode = "mean"
+
     coordinates = a6.datasets.coordinates.Coordinates()
     variables = a6.datasets.variables.Model()
 
@@ -19,8 +22,8 @@ if __name__ == "__main__":
 
     data = a6.datasets.EcmwfIfsHres(
         path=pathlib.Path(
-            "/home/fabian/Documents/MAELSTROM/data/pca"
-            # "/p/scratch/deepacf/maelstrom/maelstrom_data/a6/pl"
+            # "/home/fabian/Documents/MAELSTROM/data/pca"
+            "/p/scratch/deepacf/maelstrom/maelstrom_data/a6/pl"
         ),
         pattern="pl_*.nc",
         slice_time_dimension=True,
@@ -43,12 +46,12 @@ if __name__ == "__main__":
             names=[variables.z, variables.u, variables.v]
         )
         >> a6.features.methods.convolution.apply_kernel(
-            kernel="mean",
-            size=11,
+            kernel=kernel_mode,
+            size=kernel_size,
             coordinates=coordinates,
         )
         >> a6.features.methods.pooling.apply_pooling(
-            size=10, mode="mean", coordinates=coordinates
+            size=kernel_size, mode=kernel_mode, coordinates=coordinates
         )
     )
 
