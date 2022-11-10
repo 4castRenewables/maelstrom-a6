@@ -1,11 +1,12 @@
 import datetime
 import pathlib
 
+import numpy as np
+import xarray as xr
+
 import a6.evaluation.modes as _modes
 import a6.modes.methods.appearances as _appearances
 import a6.utils as utils
-import numpy as np
-import xarray as xr
 
 _FILE_DIR = pathlib.Path(__file__).parent
 

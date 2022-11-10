@@ -1,9 +1,10 @@
 import datetime
 
-import a6.training.groups as _groups
 import numpy as np
 import pytest
 import xarray as xr
+
+import a6.training.groups as _groups
 
 
 @pytest.fixture

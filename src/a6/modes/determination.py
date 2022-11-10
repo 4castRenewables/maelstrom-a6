@@ -1,5 +1,6 @@
-import a6.modes.modes as _modes
 import xarray as xr
+
+import a6.modes.modes as _modes
 
 
 def determine_modes(

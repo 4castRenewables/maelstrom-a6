@@ -3,14 +3,15 @@ import datetime
 import math
 from collections.abc import Iterator
 
+import matplotlib.pyplot as plt
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
 import a6.features.methods as methods
 import a6.plotting.coastlines as _coastlines
 import a6.plotting.modes.geopotential as geopotential
 import a6.types as types
-import matplotlib.pyplot as plt
-import xarray as xr
 
 
 def plot_fields_for_dates(

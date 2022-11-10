@@ -1,8 +1,9 @@
-import a6.types as types
-import a6.utils as utils
 import numpy as np
 import sklearn.preprocessing as preprocessing
 import xarray as xr
+
+import a6.types as types
+import a6.utils as utils
 
 
 @utils.make_functional

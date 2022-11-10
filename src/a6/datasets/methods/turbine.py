@@ -1,9 +1,10 @@
 import logging
 
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
 import a6.utils as utils
-import xarray as xr
 
 
 logger = logging.getLogger(__name__)

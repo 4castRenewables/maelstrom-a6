@@ -1,15 +1,16 @@
 import datetime
 import pathlib
 
+import hdbscan as _hdbscan
+import pytest
+import sklearn.cluster as cluster
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances as appearances
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
 import a6.testing as testing
-import hdbscan as _hdbscan
-import pytest
-import sklearn.cluster as cluster
-import xarray as xr
 
 DATA_DIR = pathlib.Path(__file__).parent / "../data"
 

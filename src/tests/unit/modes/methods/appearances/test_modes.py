@@ -1,7 +1,8 @@
 import datetime
 
-import a6.testing as testing
 import pytest
+
+import a6.testing as testing
 
 
 class TestModes:

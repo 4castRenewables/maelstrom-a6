@@ -1,5 +1,6 @@
-import a6.studies.temporal as temporal
 import pytest
+
+import a6.studies.temporal as temporal
 
 
 def test_perform_temporal_range_study(ds2, coordinates):

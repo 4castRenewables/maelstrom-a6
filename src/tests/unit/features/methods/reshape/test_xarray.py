@@ -1,7 +1,8 @@
-import a6.features.methods.reshape.xarray as xarray
 import numpy as np
 import pytest
 import xarray as xr
+
+import a6.features.methods.reshape.xarray as xarray
 
 
 @pytest.mark.parametrize(

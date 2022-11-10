@@ -1,7 +1,8 @@
-import a6.plotting.coastlines as _coastlines
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+
+import a6.plotting.coastlines as _coastlines
 
 
 def plot_geopotential_height_contours(

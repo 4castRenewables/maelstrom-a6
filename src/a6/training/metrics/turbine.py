@@ -1,6 +1,7 @@
-import a6.types as types
 import numpy as np
 import sklearn.metrics as metrics
+
+import a6.types as types
 
 
 class Scorers:

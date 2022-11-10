@@ -1,7 +1,8 @@
 import datetime
 
-import a6.plotting.modes.comparison as comparison
 import pytest
+
+import a6.plotting.modes.comparison as comparison
 
 
 @pytest.fixture

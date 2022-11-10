@@ -1,8 +1,9 @@
 import pathlib
 from typing import Optional
 
-import a6.cli.options._callbacks as _callbacks
 import click
+
+import a6.cli.options._callbacks as _callbacks
 
 Level = Optional[int]
 

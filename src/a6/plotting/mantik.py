@@ -1,9 +1,9 @@
+import matplotlib.pyplot as plt
+
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
 import a6.plotting.clustering as _plotting_clustering
 import a6.plotting.pca as _plotting_pca
-import matplotlib.pyplot as plt
-
 import mlflow
 
 

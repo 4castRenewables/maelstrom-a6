@@ -1,8 +1,9 @@
 import abc
 import functools
 
-import a6.testing.types as types
 import numpy as np
+
+import a6.testing.types as types
 
 
 class Grid(abc.ABC):

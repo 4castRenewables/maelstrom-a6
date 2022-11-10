@@ -5,11 +5,11 @@ https://github.com/aws-samples/amazon-sagemaker-mlflow-fargate/blob/main/lab/3_d
 """
 import json
 
+import click
+
 import a6.cli.arguments as arguments
 import a6.cli.main as main
 import a6.cli.options as _options
-import click
-
 import mlflow.sagemaker
 
 _DEFAULT_SAGEMAKER_INSTANCE_TYPE = "ml.m5.large"

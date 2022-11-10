@@ -1,11 +1,12 @@
 import functools
 
-import a6.datasets.coordinates as _coordinates
-import a6.types as types
-import a6.utils as utils
 import numpy as np
 import skimage.measure
 import xarray as xr
+
+import a6.datasets.coordinates as _coordinates
+import a6.types as types
+import a6.utils as utils
 
 
 _POOLING_MODES = {

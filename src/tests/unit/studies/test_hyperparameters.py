@@ -1,6 +1,7 @@
-import a6.studies.hyperparameters as _hyperparameters
 import hdbscan
 import pytest
+
+import a6.studies.hyperparameters as _hyperparameters
 
 
 class TestHyperParamers:

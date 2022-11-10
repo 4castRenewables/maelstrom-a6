@@ -1,13 +1,14 @@
 import abc
 from collections.abc import Iterator
 
-import a6.modes.methods.pca as _pca
-import a6.types as types
-import a6.utils as utils
 import hdbscan.plots
 import numpy as np
 import sklearn.cluster as cluster
 import xarray as xr
+
+import a6.modes.methods.pca as _pca
+import a6.types as types
+import a6.utils as utils
 
 
 class ClusterAlgorithm(abc.ABC):

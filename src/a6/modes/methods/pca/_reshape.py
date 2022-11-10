@@ -1,9 +1,10 @@
 from collections.abc import Iterator
 
-import a6.datasets.dimensions as _dimensions
-import a6.modes.methods.pca.pca as pca
 import numpy as np
 import xarray as xr
+
+import a6.datasets.dimensions as _dimensions
+import a6.modes.methods.pca.pca as pca
 
 
 class Reshaper:

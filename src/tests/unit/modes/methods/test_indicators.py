@@ -1,5 +1,6 @@
-import a6.modes.methods.indicators as indicators
 import numpy as np
+
+import a6.modes.methods.indicators as indicators
 
 
 def test_indicators():

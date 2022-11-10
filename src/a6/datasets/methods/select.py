@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 from typing import TypeVar
 
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.features.methods as methods
 import a6.utils as utils
-import xarray as xr
 
 
 Levels = TypeVar("Levels", int, Sequence[int])

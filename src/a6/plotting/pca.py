@@ -1,6 +1,7 @@
-import a6.modes.methods.pca as _pca
 import matplotlib.pyplot as plt
 import numpy as np
+
+import a6.modes.methods.pca as _pca
 
 
 def plot_scree_test(

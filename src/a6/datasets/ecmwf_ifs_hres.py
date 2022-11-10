@@ -5,9 +5,10 @@ from typing import Optional
 from typing import TypeVar
 from typing import Union
 
+import xarray as xr
+
 import a6.datasets.methods as methods
 import a6.utils as utils
-import xarray as xr
 
 Levels = Optional[Union[int, list[int]]]
 

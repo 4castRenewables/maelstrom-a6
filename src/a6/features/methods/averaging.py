@@ -1,6 +1,7 @@
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.utils as utils
-import xarray as xr
 
 
 @utils.log_consumption

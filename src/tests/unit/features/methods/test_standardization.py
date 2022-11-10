@@ -1,6 +1,7 @@
-import a6.features.methods.standardization as standardization
 import numpy as np
 import xarray as xr
+
+import a6.features.methods.standardization as standardization
 
 
 def test_standarize():

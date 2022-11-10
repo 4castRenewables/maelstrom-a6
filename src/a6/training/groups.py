@@ -2,10 +2,11 @@ import dataclasses
 import datetime
 from collections.abc import Iterator
 
-import a6.datasets.coordinates as _coordinates
-import a6.types as types
 import numpy as np
 import xarray as xr
+
+import a6.datasets.coordinates as _coordinates
+import a6.types as types
 
 
 @dataclasses.dataclass

@@ -1,7 +1,8 @@
+import sklearn.model_selection as model_selection
+
 import a6.features.methods.reshape as reshape
 import a6.types as types
 import a6.utils as utils
-import sklearn.model_selection as model_selection
 
 
 @utils.log_consumption

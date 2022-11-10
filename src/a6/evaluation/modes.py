@@ -1,10 +1,11 @@
 import datetime
 
+import numpy as np
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances as _appearances
 import a6.utils as utils
-import numpy as np
-import xarray as xr
 
 ScoresPerMode = dict[int, dict[str, np.ndarray]]
 

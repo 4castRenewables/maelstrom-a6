@@ -1,6 +1,3 @@
-from typing import Optional
-from typing import Union
-
 import hdbscan
 import matplotlib.animation as animation
 import matplotlib.collections as collections
@@ -77,7 +74,7 @@ def create_scree_test_plot(
 
 def create_3d_scatter_plot(
     data: np.ndarray,
-    colors: Optional[list[int]] = None,
+    colors: list[int] | None = None,
 ) -> tuple[plt.Figure, plt.Axes, collections.PathCollection]:
     """Create a 3D projection scatter plot of the given data.
 
@@ -149,11 +146,11 @@ def create_3d_animation_scatter_plot(
 def create_timeseries_scatter_plot(
     x: np.array,
     y: np.array,
-    colors: Optional[list[int]] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    xticks: Optional[list] = None,
-    yticks: Optional[list] = None,
+    colors: list[int] | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    xticks: list | None = None,
+    yticks: list | None = None,
 ) -> tuple[plt.Figure, collections.PathCollection]:
     """Create a timeseries plot."""
     fig = plt.figure()
@@ -176,7 +173,7 @@ def create_timeseries_scatter_plot(
 
 def create_label_time_series_scatter_plot(
     data: xr.Dataset,
-    clusters: Union[cluster.KMeans, hdbscan.HDBSCAN],
+    clusters: cluster.KMeans | hdbscan.HDBSCAN,
     time_coordinate: str = "time",
 ) -> tuple[plt.Figure, collections.PathCollection]:
     """Create a label time series plot."""

@@ -1,8 +1,9 @@
 from typing import Union
 
+import numpy as np
+
 import a6.types as types
 import a6.utils as utils
-import numpy as np
 
 Latitudes = Union[str, np.ndarray]
 

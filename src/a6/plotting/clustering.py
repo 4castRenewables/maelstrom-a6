@@ -1,10 +1,11 @@
 from typing import Any
 from typing import Protocol
 
-import a6.modes.methods.clustering as clustering
-import a6.plotting.pca as pca
 import matplotlib.pyplot as plt
 import seaborn.palettes
+
+import a6.modes.methods.clustering as clustering
+import a6.plotting.pca as pca
 
 Plot = tuple[plt.Figure, plt.Axes]
 

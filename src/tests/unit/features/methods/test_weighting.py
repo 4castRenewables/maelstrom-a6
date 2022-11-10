@@ -1,7 +1,8 @@
-import a6.features.methods.weighting as weighting
 import numpy as np
 import pytest
 import xarray as xr
+
+import a6.features.methods.weighting as weighting
 
 
 def create_data_array(data) -> xr.DataArray:

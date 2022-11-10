@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import xarray as xr
 
@@ -8,8 +6,8 @@ def create_twin_y_axis_plot(
     data: xr.Dataset,
     left: str,
     right: str,
-    left_ylim: Optional[tuple[float, float]] = None,
-    right_ylim: Optional[tuple[float, float]] = None,
+    left_ylim: tuple[float, float] | None = None,
+    right_ylim: tuple[float, float] | None = None,
 ) -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes]]:
     """Create a twin axis plot with two Y-axes.
 

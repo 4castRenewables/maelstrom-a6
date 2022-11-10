@@ -1,9 +1,10 @@
 import logging
 
+import numpy as np
+
 import a6.datasets.variables as _variables
 import a6.types as types
 import a6.utils as utils
-import numpy as np
 
 logger = logging.getLogger(__name__)
 

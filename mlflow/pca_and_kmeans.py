@@ -1,8 +1,9 @@
 import logging
 import pathlib
 
-import a6
 import hdbscan
+
+import a6
 
 logger = logging.getLogger(__name__)
 a6.utils.log_to_stdout()

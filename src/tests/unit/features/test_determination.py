@@ -1,8 +1,9 @@
+import pytest
+import xarray as xr
+
 import a6.datasets as datasets
 import a6.features as features
 import a6.testing as testing
-import pytest
-import xarray as xr
 
 
 @pytest.fixture()

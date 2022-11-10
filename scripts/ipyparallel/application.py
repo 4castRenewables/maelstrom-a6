@@ -5,9 +5,10 @@ import logging
 import os
 import sys
 
-import a6
 import joblib
 import numpy as np
+
+import a6
 
 
 logger = logging.getLogger(__name__)
@@ -29,8 +30,8 @@ logging.basicConfig(
     filemode="w",
     level=logging.DEBUG,
 )
-logger.info(f"number of CPUs found: {joblib.cpu_count()}")
-logger.info(f"args.profile: {profile}")
+logger.info("number of CPUs found: %s", joblib.cpu_count())
+logger.info("args.profile: %s", profile)
 
 n_workers = int(os.environ.get("N_WORKERS", 1))
 

@@ -1,11 +1,12 @@
+import sklearn.decomposition as decomposition
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.dimensions as _dimensions
 import a6.features.methods as methods
 import a6.modes.methods.pca.pca as _pca
 import a6.types as types
 import a6.utils as utils
-import sklearn.decomposition as decomposition
-import xarray as xr
 
 
 @utils.log_consumption

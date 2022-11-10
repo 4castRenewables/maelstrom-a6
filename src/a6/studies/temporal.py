@@ -1,16 +1,16 @@
 from collections.abc import Iterator
 
+import hdbscan
+import numpy as np
+import sklearn.decomposition as decomposition
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
 import a6.modes.methods.pca as _pca
 import a6.studies._shared as _shared
 import a6.utils as utils
-import hdbscan
-import numpy as np
-import sklearn.decomposition as decomposition
-import xarray as xr
-
 import mlflow
 
 

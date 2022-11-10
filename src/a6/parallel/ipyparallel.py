@@ -2,11 +2,12 @@ import logging
 import os
 from typing import Any
 
+import ipyparallel.joblib
+import joblib
+
 import a6.parallel._client as _client
 import a6.parallel.types as types
 import a6.utils
-import ipyparallel.joblib
-import joblib
 
 logger = logging.getLogger(__name__)
 

@@ -2,12 +2,13 @@ import datetime
 import functools
 import pathlib
 
+import pandas as pd
+import xarray as xr
+
 import a6.datasets.ecmwf_ifs_hres as datasets
 import a6.testing.data_points as data_points
 import a6.testing.grids as grids
 import a6.testing.types as types
-import pandas as pd
-import xarray as xr
 
 
 class FakeDataset(datasets.EcmwfIfsHres):

@@ -1,7 +1,8 @@
+import scipy.constants as constants
+
 import a6.datasets.variables as _variables
 import a6.types as types
 import a6.utils as utils
-import scipy.constants as constants
 
 
 @utils.make_functional

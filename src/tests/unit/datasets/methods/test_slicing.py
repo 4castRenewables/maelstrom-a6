@@ -1,6 +1,7 @@
-import a6.datasets.methods.slicing as slicing
 import pytest
 import xarray as xr
+
+import a6.datasets.methods.slicing as slicing
 
 
 @pytest.mark.parametrize(

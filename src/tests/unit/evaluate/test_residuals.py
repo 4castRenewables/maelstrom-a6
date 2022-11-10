@@ -1,8 +1,9 @@
-import a6.evaluation.residuals as residuals
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+
+import a6.evaluation.residuals as residuals
 
 TIME = pd.date_range("2000-01-01", "2000-01-02", freq="1d")
 LATS = [1.0, 0.0]

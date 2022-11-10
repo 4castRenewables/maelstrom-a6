@@ -1,6 +1,7 @@
+import xarray as xr
+
 import a6.datasets.ecmwf_ifs_hres as datasets
 import a6.features.features as _features
-import xarray as xr
 
 
 def determine_features(

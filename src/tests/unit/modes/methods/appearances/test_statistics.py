@@ -1,8 +1,9 @@
 import datetime
 
-import a6.modes.methods.appearances as appearances
 import pandas as pd
 import xarray as xr
+
+import a6.modes.methods.appearances as appearances
 
 
 def test_determine_lifetimes_of_modes(mode_appearances):

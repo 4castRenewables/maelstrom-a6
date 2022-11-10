@@ -1,11 +1,12 @@
 import datetime
 
-import a6.datasets.coordinates as _coordinates
-import a6.features.methods.averaging as averaging
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+
+import a6.datasets.coordinates as _coordinates
+import a6.features.methods.averaging as averaging
 
 START = datetime.datetime(2000, 1, 1)
 END = datetime.datetime(2000, 2, 1)

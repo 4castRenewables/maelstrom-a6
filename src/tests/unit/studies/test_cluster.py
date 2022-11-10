@@ -1,6 +1,7 @@
-import a6.studies.cluster as cluster
 import hdbscan
 import pytest
+
+import a6.studies.cluster as cluster
 
 
 @pytest.fixture(params=[True, False])

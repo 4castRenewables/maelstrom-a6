@@ -3,11 +3,12 @@ import pathlib
 import unittest.mock
 from collections.abc import Iterable
 
-import a6.parallel.slurm as slurm
 import dask.distributed
 import dask.utils
 import dask_jobqueue
 import pytest
+
+import a6.parallel.slurm as slurm
 
 FILE_DIR = pathlib.Path(__file__).parent
 

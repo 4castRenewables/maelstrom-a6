@@ -1,8 +1,9 @@
 import logging
 import pathlib
 
-import a6.datasets as datasets
 import xarray as xr
+
+import a6.datasets as datasets
 
 logger = logging.getLogger(__name__)
 

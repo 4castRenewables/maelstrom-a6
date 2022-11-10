@@ -2,9 +2,10 @@ import dataclasses
 import logging
 from collections.abc import Iterator
 
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.types as types
-import xarray as xr
 
 logger = logging.getLogger(__name__)
 

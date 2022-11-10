@@ -1,8 +1,9 @@
 import unittest.mock as mock
 from collections.abc import Callable
 
-import a6.benchmark as bench
 from dask.delayed import Delayed
+
+import a6.benchmark as bench
 
 # Cannot be imported otherwise,
 # because dask mixes up function delayed and submodule delayed"""

@@ -3,7 +3,6 @@ import logging
 import pathlib
 
 import a6.utils.mantik as mantik
-
 import mlflow
 
 

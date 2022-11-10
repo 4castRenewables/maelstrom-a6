@@ -1,8 +1,9 @@
 import logging
 
+import click
+
 import a6.cli.options as options
 import a6.utils as utils
-import click
 
 
 @click.group()

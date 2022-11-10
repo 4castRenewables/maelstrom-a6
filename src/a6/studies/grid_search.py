@@ -1,6 +1,9 @@
 import logging
 import pathlib
 
+import sklearn.model_selection as model_selection
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods.turbine as _turbine
 import a6.datasets.variables as _variables
@@ -8,9 +11,6 @@ import a6.features.methods.wind as wind
 import a6.training as training
 import a6.types as types
 import a6.utils as utils
-import sklearn.model_selection as model_selection
-import xarray as xr
-
 import mlflow
 
 logger = logging.getLogger(__name__)

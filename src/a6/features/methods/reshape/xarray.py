@@ -1,9 +1,10 @@
 import functools
 
+import xarray as xr
+
 import a6.features.methods.reshape._flatten as _flatten
 import a6.types as types
 import a6.utils as utils
-import xarray as xr
 
 
 @utils.log_consumption

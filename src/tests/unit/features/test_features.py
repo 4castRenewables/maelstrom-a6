@@ -1,6 +1,7 @@
+import pytest
+
 import a6.features.features as features
 import a6.testing as testing
-import pytest
 
 
 class TestFeature:

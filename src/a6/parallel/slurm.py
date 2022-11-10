@@ -4,10 +4,11 @@ import os
 import pathlib
 from typing import Any
 
-import a6.parallel._client as _client
-import a6.parallel.types as types
 import dask.distributed
 import dask_jobqueue
+
+import a6.parallel._client as _client
+import a6.parallel.types as types
 
 logger = logging.getLogger(__name__)
 

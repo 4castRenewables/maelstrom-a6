@@ -1,8 +1,9 @@
-import a6.features.methods.pooling as pooling
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+
+import a6.features.methods.pooling as pooling
 
 
 @pytest.fixture()

@@ -1,8 +1,9 @@
-import a6.testing as testing
-import a6.testing._ellipse as _ellipse
 import numpy as np
 import pytest
 import xarray as xr
+
+import a6.testing as testing
+import a6.testing._ellipse as _ellipse
 
 
 def create_data_array_with_data(

@@ -1,7 +1,8 @@
-import a6.features.methods.reshape.sklearn as sklearn
 import numpy as np
 import pytest
 import xarray as xr
+
+import a6.features.methods.reshape.sklearn as sklearn
 
 
 @pytest.mark.parametrize(

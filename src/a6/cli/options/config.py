@@ -2,9 +2,10 @@ import dataclasses
 import importlib
 import pathlib
 
-import a6.types as types
 import click
 import yaml
+
+import a6.types as types
 
 
 @dataclasses.dataclass(frozen=True)

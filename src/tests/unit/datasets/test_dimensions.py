@@ -1,6 +1,7 @@
+import pytest
+
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.dimensions as _dimensions
-import pytest
 
 
 @pytest.fixture(scope="session")

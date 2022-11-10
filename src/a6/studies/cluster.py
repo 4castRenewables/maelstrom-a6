@@ -1,3 +1,6 @@
+import sklearn.decomposition as decomposition
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.modes.methods as methods
 import a6.modes.methods.clustering as clustering
@@ -6,9 +9,6 @@ import a6.studies._shared as _shared
 import a6.studies.hyperparameters as _hyperparameters
 import a6.types as types
 import a6.utils as utils
-import sklearn.decomposition as decomposition
-import xarray as xr
-
 import mlflow
 
 

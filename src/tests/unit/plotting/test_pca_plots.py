@@ -1,5 +1,6 @@
-import a6.plotting.pca as _pca
 import pytest
+
+import a6.plotting.pca as _pca
 
 
 @pytest.mark.parametrize("variance_ratio", [None, 0.8])

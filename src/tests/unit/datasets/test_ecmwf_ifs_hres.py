@@ -1,10 +1,11 @@
 import pathlib
 
-import a6.datasets.ecmwf_ifs_hres as ecmwf_ifs_hres
-import a6.testing as testing
 import numpy as np
 import pandas as pd
 import pytest
+
+import a6.datasets.ecmwf_ifs_hres as ecmwf_ifs_hres
+import a6.testing as testing
 
 FILE_PATH = pathlib.Path(__file__).parent
 DATA_DIR = FILE_PATH / "../../data"

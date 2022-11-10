@@ -1,5 +1,6 @@
-import a6.plotting.clustering as clustering
 import pytest
+
+import a6.plotting.clustering as clustering
 
 
 @pytest.fixture(params=["kmeans", "hdbscan"], scope="session")

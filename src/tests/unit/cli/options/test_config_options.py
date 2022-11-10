@@ -1,6 +1,7 @@
+import sklearn.cluster as cluster
+
 import a6.cli.main as main
 import a6.cli.options as _options
-import sklearn.cluster as cluster
 
 
 @main.cli.command("test-config-command")

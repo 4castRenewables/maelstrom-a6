@@ -1,7 +1,8 @@
-import a6.testing.grids as grids
-import a6.testing.types as types
 import numpy as np
 import xarray as xr
+
+import a6.testing.grids as grids
+import a6.testing.types as types
 
 
 def create_ellipse_on_grid(

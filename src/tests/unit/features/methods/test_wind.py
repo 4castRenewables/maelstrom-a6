@@ -1,7 +1,8 @@
-import a6.features.methods.wind as wind
 import numpy as np
 import pytest
 import xarray as xr
+
+import a6.features.methods.wind as wind
 
 
 @pytest.fixture

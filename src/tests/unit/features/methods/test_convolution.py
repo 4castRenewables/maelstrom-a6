@@ -1,8 +1,9 @@
-import a6.features.methods.convolution as convolution
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+
+import a6.features.methods.convolution as convolution
 
 
 @pytest.fixture()

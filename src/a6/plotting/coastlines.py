@@ -1,6 +1,7 @@
-import a6.types as types
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
+
+import a6.types as types
 
 
 def create_projection() -> dict:

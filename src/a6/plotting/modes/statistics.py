@@ -1,5 +1,6 @@
-import a6.modes.methods.appearances as appearances
 import matplotlib.pyplot as plt
+
+import a6.modes.methods.appearances as appearances
 
 
 def plot_modes_durations(

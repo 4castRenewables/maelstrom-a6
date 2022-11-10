@@ -1,7 +1,8 @@
-import a6.cli.main as main
-import a6.cli.options as _options
 import click
 import pytest
+
+import a6.cli.main as main
+import a6.cli.options as _options
 
 
 @main.cli.command("test-main-command")

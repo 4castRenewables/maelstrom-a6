@@ -1,11 +1,12 @@
 from typing import TypeVar
 
-import a6.datasets.dimensions as _dimensions
-import a6.modes.methods.pca._reshape as _reshape
-import a6.utils as utils
 import numpy as np
 import sklearn.decomposition as decomposition
 import xarray as xr
+
+import a6.datasets.dimensions as _dimensions
+import a6.modes.methods.pca._reshape as _reshape
+import a6.utils as utils
 
 PCAMethod = TypeVar(
     "PCAMethod", decomposition.PCA, decomposition.IncrementalPCA

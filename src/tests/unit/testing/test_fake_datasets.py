@@ -1,8 +1,9 @@
 import datetime
 
-import a6.testing as testing
 import numpy as np
 import xarray as xr
+
+import a6.testing as testing
 
 
 def test_generate_ecmwf_ifs_hres_data():

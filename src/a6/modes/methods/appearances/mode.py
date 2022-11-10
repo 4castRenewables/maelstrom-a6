@@ -3,9 +3,10 @@ import datetime
 from collections.abc import Iterator
 from typing import Union
 
-import a6.utils as utils
 import numpy as np
 import pandas as pd
+
+import a6.utils as utils
 
 Sequence = Union[list, tuple, np.ndarray]
 

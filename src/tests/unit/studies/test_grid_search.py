@@ -1,6 +1,7 @@
-import a6.studies.grid_search as forecast
 import sklearn.ensemble as ensemble
 import xarray as xr
+
+import a6.studies.grid_search as forecast
 
 
 def test_perform_forecast_model_grid_search(pl_ds):

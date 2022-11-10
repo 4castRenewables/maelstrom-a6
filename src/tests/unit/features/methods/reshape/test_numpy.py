@@ -1,5 +1,6 @@
-import a6.features.methods.reshape.numpy as numpy
 import numpy as np
+
+import a6.features.methods.reshape.numpy as numpy
 
 
 def test_reshape_spatio_temporal_data_array():

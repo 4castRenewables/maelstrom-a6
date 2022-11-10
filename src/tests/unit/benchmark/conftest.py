@@ -1,7 +1,8 @@
-import a6.benchmark as bench
 import dask.distributed
 import dask_jobqueue
 import pytest
+
+import a6.benchmark as bench
 
 
 @pytest.fixture(scope="session")

@@ -1,6 +1,7 @@
-import a6.datasets.methods.select as select
 import numpy as np
 import pytest
+
+import a6.datasets.methods.select as select
 
 
 @pytest.mark.parametrize("levels", [500, [500, 1000]])

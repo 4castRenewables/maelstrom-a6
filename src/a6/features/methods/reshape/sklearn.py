@@ -1,6 +1,7 @@
-import a6.types as types
 import numpy as np
 import xarray as xr
+
+import a6.types as types
 
 
 def transpose(*data: types.XarrayData) -> np.ndarray:

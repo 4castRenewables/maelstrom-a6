@@ -1,6 +1,7 @@
-import a6.utils as utils
 import numpy as np
 import xarray as xr
+
+import a6.utils as utils
 
 
 @utils.make_functional

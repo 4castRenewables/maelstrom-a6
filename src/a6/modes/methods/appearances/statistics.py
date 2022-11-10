@@ -1,8 +1,9 @@
+import numpy as np
+import xarray as xr
+
 import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances.mode as mode
 import a6.modes.methods.appearances.modes as _modes
-import numpy as np
-import xarray as xr
 
 
 def determine_lifetimes_of_modes(

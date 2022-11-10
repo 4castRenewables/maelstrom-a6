@@ -1,7 +1,8 @@
 import datetime
 
-import a6.datasets.methods.turbine as turbine
 import xarray as xr
+
+import a6.datasets.methods.turbine as turbine
 
 COORDS = {
     "latitude": 1.123,

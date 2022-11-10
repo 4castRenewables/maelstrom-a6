@@ -1,11 +1,12 @@
 import functools
 
-import a6.datasets.coordinates as _coordinates
-import a6.types as types
-import a6.utils as utils
 import numpy as np
 import scipy.ndimage as ndimage
 import xarray as xr
+
+import a6.datasets.coordinates as _coordinates
+import a6.types as types
+import a6.utils as utils
 
 
 @utils.make_functional

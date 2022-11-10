@@ -1,10 +1,11 @@
 import pathlib
 
+import click
+
 import a6.cli.data as data
 import a6.cli.options as _options
 import a6.cli.training.train as train
 import a6.studies as studies
-import click
 
 
 @train.train.command("temporal-study")

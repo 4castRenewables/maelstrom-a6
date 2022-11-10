@@ -1,10 +1,11 @@
 import abc
 import functools
 
+import xarray as xr
+
 import a6.testing._ellipse as _ellipse
 import a6.testing.grids as grids
 import a6.testing.types as types
-import xarray as xr
 
 
 class GridDataFactory(abc.ABC):

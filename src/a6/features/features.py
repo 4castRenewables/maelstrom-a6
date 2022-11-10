@@ -1,7 +1,8 @@
 from collections.abc import Callable
 
-import a6.datasets.ecmwf_ifs_hres as datasets
 import xarray as xr
+
+import a6.datasets.ecmwf_ifs_hres as datasets
 
 FeatureGenerator = Callable[[xr.DataArray, ...], xr.DataArray]
 

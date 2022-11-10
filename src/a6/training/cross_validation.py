@@ -1,9 +1,9 @@
-import a6.training.metrics as metrics
-import a6.types as types
-import a6.utils as utils
 import numpy as np
 import sklearn.model_selection as model_selection
 
+import a6.training.metrics as metrics
+import a6.types as types
+import a6.utils as utils
 import mlflow
 
 

@@ -1,15 +1,16 @@
 import json
 import pathlib
 
-import a6.cli.arguments as arguments
-import a6.cli.main as main
-import a6.cli.options as _options
-import a6.modes.methods as methods
 import boto3
 import click
 import pandas as pd
 import sklearn.decomposition as decomposition
 import xarray as xr
+
+import a6.cli.arguments as arguments
+import a6.cli.main as main
+import a6.cli.options as _options
+import a6.modes.methods as methods
 
 
 @main.cli.command("inference")
