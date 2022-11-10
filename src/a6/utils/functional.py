@@ -92,7 +92,7 @@ class Functional:
     ... )
     >>> def add(ds: xr.DataArray, number: int) -> xr.DataArray:
     ...     return ds + number
-    >>> f = Functional(add, 1)
+    >>> f = Functional(add, number=1)
     >>> f.apply_to(da)
     <xarray.DataArray (dim_0: 2, dim_1: 2)>
     array([[2, 3],
