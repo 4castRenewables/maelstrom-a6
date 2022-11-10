@@ -68,7 +68,6 @@ test-unit:
   variables:
     PY_PYTEST_DIR: src/tests
 
-
 coverage:
   extends: .coverage
   needs:
