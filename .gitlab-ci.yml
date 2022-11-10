@@ -71,6 +71,8 @@ test-unit:
 coverage:
   extends: .coverage
   needs:
+    - job: test-doc
+      artifacts: true
     - job: test-unit
       artifacts: true
 
