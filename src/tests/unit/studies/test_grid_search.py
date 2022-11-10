@@ -13,14 +13,20 @@ def test_perform_forecast_model_grid_search(pl_ds):
         "max_depth": [3],
     }
     weather = pl_ds.sel(level=500)
-    turbine = xr.Dataset(
-        data_vars={"production": [i for i in range(49)]},
+    production = xr.DataArray(
+        [i for i in range(48)],
         coords={
             "time": pl_ds["time"].isel(time=slice(None, 48)),
             "latitude": pl_ds["latitude"].isel(latitude=0),
             "longitude": pl_ds["longitude"].isel(longitude=0),
         },
+        dims=["time"],
         attrs={"power rating": "1000", "wind plant": "test-name"},
+    )
+    turbine = xr.Dataset(
+        data_vars={"production": production},
+        coords=production.coords,
+        attrs=production.attrs,
     )
 
     forecast.perform_forecast_model_grid_search(

@@ -29,18 +29,20 @@ def preprocess_turbine_data_and_match_with_weather_data(
     4. Select only the intersecting time steps from both datasets.
 
     """
-    turbine = clean_production_data(
-        power_rating=power_rating,
-        variables=turbine_variables,
+    turbine = (
+        clean_production_data(
+            power_rating=power_rating,
+            variables=turbine_variables,
+        )
+        >> resample_to_hourly_resolution(
+            variables=turbine_variables,
+            coordinates=coordinates,
+        )
     ).apply_to(turbine)
     weather = get_closest_grid_point(
         turbine=turbine,
         coordinates=coordinates,
     ).apply_to(weather)
-    turbine = resample_to_hourly_resolution(
-        variables=turbine_variables,
-        coordinates=coordinates,
-    ).apply_to(turbine)
     return select_intersecting_time_steps(
         weather=weather, turbine=turbine, coordinates=coordinates
     )
