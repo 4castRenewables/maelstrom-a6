@@ -54,6 +54,8 @@ pylint:
 .test-base:
   extends: .test
   needs: []
+  variables:
+    PY_PYTEST_NO_INSTALL_DEV_DEPENDENCIES: "true"
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
@@ -62,6 +64,7 @@ test-doc:
   extends: .test-base
   variables:
     PY_PYTEST_DIR: src/a6
+    PY_PYTEST_RUN_DOCTESTS: "true"
 
 test-unit:
   extends: .test-base
