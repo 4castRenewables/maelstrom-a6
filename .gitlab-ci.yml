@@ -20,6 +20,9 @@ variables:
     --py38-plus
     --py39-plus
     --py310-plus
+  PY_REORDER_PYTHON_IMPORTS_ARGS: |
+    --application-directories=.:src
+    --py310-plus
   DOCKER_FILE: mlflow/Dockerfile
   DOCKER_IMAGE_NAME: a6-mlflow
   DOCKER_ZIPPED_IMAGE_FILE: a6-mlflow
