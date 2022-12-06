@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-import a6.features.methods.convolution as convolution
+import a6.features.methods.convolution.convolve as convolve
 
 
 @pytest.fixture()
@@ -57,7 +57,7 @@ def expected_data_array(coords, dims) -> xr.DataArray:
 
 
 def test_apply_kernel_data_array(data_array, expected_data_array):
-    result = convolution.apply_kernel(
+    result = convolve.apply_kernel(
         data_array, kernel="mean", size=3, non_functional=True
     )
 
@@ -79,7 +79,7 @@ def test_apply_kernel_dataset(data_array, expected_data_array):
         },
         coords=expected_data_array.coords,
     )
-    result = convolution.apply_kernel(
+    result = convolve.apply_kernel(
         data, kernel="mean", size=3, non_functional=True
     )
 
@@ -142,74 +142,6 @@ def test_apply_kernel_dataset(data_array, expected_data_array):
 def test_apply_kernel(data, kernel, kwargs, expected):
     if isinstance(kernel, list):
         kernel = np.array(kernel)
-    result = convolution._apply_kernel(np.array(data), kernel=kernel, **kwargs)
+    result = convolve._apply_kernel(np.array(data), kernel=kernel, **kwargs)
 
     np.testing.assert_equal(result, np.array(expected))
-
-
-@pytest.mark.parametrize(
-    ("size", "expected"),
-    [
-        (
-            3,
-            np.array(
-                [
-                    [1.0, 1.0, 1.0],
-                    [1.0, 1.0, 1.0],
-                    [1.0, 1.0, 1.0],
-                ]
-            ),
-        ),
-    ],
-)
-def test_create_mean_kernel(size, expected):
-    result = convolution.create_mean_kernel(size)
-
-    np.testing.assert_equal(result, expected)
-
-
-@pytest.mark.parametrize(
-    ("size", "sigma", "expected"),
-    [
-        (
-            3,
-            1,
-            np.array(
-                [
-                    [0.36787944, 0.60653066, 0.36787944],
-                    [0.60653066, 1.0, 0.60653066],
-                    [0.36787944, 0.60653066, 0.36787944],
-                ],
-            ),
-        ),
-        (
-            5,
-            2,
-            np.array(
-                [
-                    [
-                        0.36787944,
-                        0.53526143,
-                        0.60653066,
-                        0.53526143,
-                        0.36787944,
-                    ],
-                    [0.53526143, 0.77880078, 0.8824969, 0.77880078, 0.53526143],
-                    [0.60653066, 0.8824969, 1.0, 0.8824969, 0.60653066],
-                    [0.53526143, 0.77880078, 0.8824969, 0.77880078, 0.53526143],
-                    [
-                        0.36787944,
-                        0.53526143,
-                        0.60653066,
-                        0.53526143,
-                        0.36787944,
-                    ],
-                ],
-            ),
-        ),
-    ],
-)
-def test_create_gaussian_kernel(size, sigma, expected):
-    result = convolution.create_gaussian_kernel(size=size, sigma=sigma)
-
-    np.testing.assert_almost_equal(result, expected, decimal=5)
