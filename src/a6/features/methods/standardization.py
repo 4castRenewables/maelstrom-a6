@@ -7,21 +7,21 @@ import a6.utils as utils
 
 
 @utils.make_functional
-def standardize(data: types.DataND) -> types.DataND:
-    """Standardize to zero mean and unit variance (standard deviation).
+def normalize(data: types.DataND) -> types.DataND:
+    """Normalize to zero mean and unit variance (standard deviation).
 
-    Standardizing to zero mean and unit variance is important when using more
+    Normalizing to zero mean and unit variance is important when using more
     than 1 variable.
 
     """
     mean_subtracted = data - np.nanmean(data)
-    standardized = mean_subtracted / np.nanstd(mean_subtracted)
-    return standardized
+    normalized = mean_subtracted / np.nanstd(mean_subtracted)
+    return normalized
 
 
 @utils.make_functional
-def standardize_features(data: types.DataND) -> xr.DataArray:
-    """Standardize features of a (n_samples x n_features) dataset."""
+def normalize_features(data: types.DataND) -> xr.DataArray:
+    """Normalize features of a (n_samples x n_features) dataset."""
     scaler = preprocessing.StandardScaler(
         with_mean=True, with_std=True, copy=False
     )

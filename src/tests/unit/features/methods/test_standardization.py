@@ -10,7 +10,7 @@ def test_standarize():
     std = np.sqrt(((1 - 2) ** 2 * 1 + (2 - 2) ** 2 * 1 + (3 - 2) ** 2 * 1) / 3)
     expected = np.array([(1 - mean), (2 - mean), (3 - mean)]) / std
 
-    result = standardization.standardize(data, non_functional=True)
+    result = standardization.normalize(data, non_functional=True)
 
     np.testing.assert_equal(result, expected)
 
@@ -35,6 +35,6 @@ def test_standarize_features():
     expected_2 = np.array([(4 - mean_2), (5 - mean_2), (6 - mean_2)]) / std_2
     expected = xr.DataArray(list(zip(expected_1, expected_2)))
 
-    result = standardization.standardize_features(data, non_functional=True)
+    result = standardization.normalize_features(data, non_functional=True)
 
     xr.testing.assert_equal(result, expected)

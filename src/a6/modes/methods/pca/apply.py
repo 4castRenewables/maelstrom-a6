@@ -86,7 +86,7 @@ def _apply_pca(
             x_coordinate=x_coordinate,
             y_coordinate=y_coordinate,
         )
-        >> methods.standardization.standardize_features()
+        >> methods.standardization.normalize_features()
     )
     reshaped = prepare.apply_to(data)
     sklearn_pca: _pca.PCAMethod = algorithm.fit(reshaped)
