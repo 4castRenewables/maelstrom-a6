@@ -56,7 +56,7 @@ def clean_production_data(
     power_rating: int | float,
     variables: _variables.Turbine = _variables.Turbine(),
 ) -> xr.Dataset:
-    """Clean the production data.
+    """Clean the production data by removing outliers.
 
     Parameters
     ----------
@@ -67,6 +67,14 @@ def clean_production_data(
         Will be used to remove outliers.
     variables : a6.datasets.variables.Turbine, optional
         Name of the power production variables.
+
+    Notes
+    -----
+    Outliers are data points matching one of the below criterions:
+
+    1. Power production is higher than the power rating.
+    2. Production is below 0.
+    3. Production is NaN.
 
     """
     logger.debug(
