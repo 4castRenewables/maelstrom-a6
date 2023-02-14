@@ -27,13 +27,13 @@ build-docker: build-python
 	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
 
 build-apptainer: build-python
-	sudo apptainer build --force mlflow/$(IMAGE_NAME).sif apptainer/a6.def
+	sudo apptainer build --force mlflow/a6/$(IMAGE_NAME).sif apptainer/a6.def
 
 build: build-docker build-apptainer
 
 upload:
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
-		mlflow/$(IMAGE_NAME).sif \
+		mlflow/a6/$(IMAGE_NAME).sif \
 		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/$(IMAGE_NAME).sif
 
 deploy: build upload
@@ -128,12 +128,12 @@ deploy-e4-kernel: build-e4-kernel upload-e4-kernel
 
 # VISSL-related steps
 
-build-vissl: build-python
-	sudo apptainer build --force vissl.sif apptainer/vissl.def
+build-vissl:
+	sudo apptainer build --force mlflow/deepclusterv2/vissl.sif apptainer/vissl.def
 
 upload-vissl:
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
-		vissl.sif \
+		mlflow/deepclusterv2/vissl.sif \
 		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/vissl.sif
 
 deploy-vissl: build-vissl upload-vissl
