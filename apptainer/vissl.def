@@ -78,22 +78,25 @@ From: nvidia/cuda:10.2-cudnn7-devel
     git checkout v${VISSL_VERSION}
     git checkout -b v{VISSL_VERSION}
 
-    # install vissl dependencies
+    # Install vissl dependencies
     python -m pip install --progress-bar off -r requirements.txt
     python -m pip install opencv-python
 
-    # update classy vision install to commit stable for vissl.
+    # Update classy vision install to commit stable for vissl.
     # Note: If building from vissl main, use classyvision main.
     python -m pip uninstall -y classy_vision
     python -m pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
 
-    # update fairscale install to commit stable for vissl.
+    # Update fairscale install to commit stable for vissl.
     python -m pip uninstall -y fairscale
     python -m pip install fairscale==0.4.6
 
-    # install vissl dev mode (e stands for editable)
+    # Install vissl dev mode (e stands for editable)
     python -m pip install -e ".[dev]"
 
+    # Update numpy to fix ModuleNotFoundError: No module named 'numpy.core._multiarray_umath'
+    # See https://stackoverflow.com/a/74934626/16814206
+    python -m pip install numpy==1.21.0
 
 %test
     # Version checks
@@ -106,7 +109,12 @@ From: nvidia/cuda:10.2-cudnn7-devel
     python -c 'import torch, apex, vissl, cv2'
 
 %runscript
-    bash
+    . /opt/conda/etc/profile.d/conda.sh
+    exec "$@"
+
+%startscript
+    . /opt/conda/etc/profile.d/conda.sh
+    exec "$@"
 
 %labels
     Author Fabian Emmerich
