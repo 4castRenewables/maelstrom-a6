@@ -208,7 +208,6 @@ class PCA:
     def number_of_components_sufficient_for_variance_ratio(
         self, variance_ratio: float
     ) -> int:
-
         """Return the PCs account for given variance ratio."""
         return self._index_of_variance_excess(variance_ratio)
 

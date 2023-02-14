@@ -24,7 +24,6 @@ class TestModes:
         ("label", "expected"), [(0, 0), (1, 1), (2, ValueError())]
     )
     def test_get_mode(self, mode_appearances, label, expected):
-
         with testing.expect_raise_if_exception(expected):
             result = mode_appearances.get_mode(label)
             expected = mode_appearances.modes[expected]

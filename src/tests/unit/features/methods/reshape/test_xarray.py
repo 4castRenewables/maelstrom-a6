@@ -43,7 +43,6 @@ def test_reshape_spatio_temporal_data_array(
 def test_reshape_spatio_temporal_dataset(
     da, time_coordinate, x_coordinate, y_coordinate
 ):
-
     ds = xr.Dataset(
         data_vars={"var1": da, "var2": da},
         coords=da.coords,

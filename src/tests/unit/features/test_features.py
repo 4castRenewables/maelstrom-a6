@@ -16,7 +16,6 @@ class TestFeature:
         ],
     )
     def test_initialization(self, variables, generator, expected):
-
         with testing.expect_raise_if_exception(expected):
             features.Feature(
                 name="ellipse", variables=variables, generator=generator

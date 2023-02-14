@@ -77,7 +77,6 @@ def _perform_cluster_hyperparameter_study(
         cluster_param,
     ) in hyperparameters.to_range():
         with mlflow_context(), log_context():
-
             clusters_temp = methods.find_pc_space_clusters(
                 algorithm=hyperparameters.apply(
                     algorithm,
