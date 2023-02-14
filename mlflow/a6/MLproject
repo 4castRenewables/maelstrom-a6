@@ -1,7 +1,7 @@
 name: a6
 
 docker_env:
-  image: a6-mlflow:latest
+  image: a6:latest
   volumes: ["${PWD}/../data:/data"]
   environment: ["MLFLOW_TRACKING_TOKEN"]
 
