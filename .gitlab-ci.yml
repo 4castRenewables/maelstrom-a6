@@ -148,7 +148,7 @@ test-cluster:
   script:
     - >
       mlflow
-      run mlflow
+      run mlflow/a6
       -e cluster
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P config=cluster.yaml
@@ -160,7 +160,7 @@ test-temporal:
   script:
     - >
       mlflow
-      run mlflow
+      run mlflow/a6
       -e temporal
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P use_varimax=false
@@ -171,7 +171,7 @@ test-grid-search:
   script:
     - >
       mlflow
-      run mlflow
+      run mlflow/a6
       -e grid-search
       -P weather_data=/data/model_level_133_jan_2020.nc
       -P turbine_data=/data/turbine.nc
