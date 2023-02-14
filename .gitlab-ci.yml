@@ -108,9 +108,14 @@ build-docker:
 build-apptainer-vissl:
   stage: build
   needs: []
-  image: kaczmarj/apptainer:1.1.3
+  image:
+    name: kaczmarj/apptainer:1.1.3
+    entrypoint: [""]
   script:
-    - apptainer build vissl.sif apptainer/vissl.sif
+    - apptainer build vissl.sif apptainer/vissl.def
+  only:
+    changes:
+      - apptainer/vissl.def
 
 .test-integration:
   stage: integration
