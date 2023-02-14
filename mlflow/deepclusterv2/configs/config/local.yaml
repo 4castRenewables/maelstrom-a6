@@ -12,18 +12,18 @@ config:
       ROLLING_BTIME_FREQ: -1   # rolling average batch time
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      LOG_DIR: /p/project/deepacf/maelstrom/emmerich1/deepclusterv2/checkpoints
+      LOG_DIR: /home/fabian/work/maelstrom/a6/a6/mlflow/deepclusterv2/.checkpoints
       EXPERIMENT_LOG_DIR: "tensorboard"
       FLUSH_EVERY_N_MIN: 5
       LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
   DATA:
-    NUM_DATALOADER_WORKERS: 16   # Set this depending on the number of CPUs you have
+    NUM_DATALOADER_WORKERS: 8   # Set this depending on the number of CPUs you have
     TRAIN:
       DATA_SOURCES: [disk_folder] # can be user specified
-      DATASET_NAMES: [dc_test_dataset]
-      BATCHSIZE_PER_REPLICA: 750  # number of unique samples in minibatch per gpu
+      DATASET_NAMES: [local_test_dataset]
+      BATCHSIZE_PER_REPLICA: 8  # number of unique samples in minibatch per gpu
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:                 # https://vissl.readthedocs.io/en/latest/api/data.html
         - name: ImgPilToMultiCrop
@@ -72,13 +72,13 @@ config:
       SYNC_BN_TYPE: apex
       GROUP_SIZE: 8 # if group_size>0 -> will set group_size=value set by user.
     AMP_PARAMS:
-      USE_AMP: True  # leverages mixed precision training by default
+      USE_AMP: False  # leverages mixed precision training by default
       AMP_ARGS: {"opt_level": "O1"}  # Use O1 as it is robust and stable than O3
   LOSS:
     name: deepclusterv2_loss
     deepclusterv2_loss:
-      num_train_samples: 54864
-      BATCHSIZE_PER_REPLICA: 750
+      num_train_samples: 16
+      BATCHSIZE_PER_REPLICA: 8
       num_crops: 2
       temperature: 0.1
       #num_clusters: [3000, 3000, 3000]
@@ -132,7 +132,7 @@ config:
   SLURM:
     USE_SLURM: false
   DISTRIBUTED:
-    BACKEND: nccl
+    BACKEND: gloo
     NUM_NODES: 1    # number of machines to use in training. Each machine can have many gpus. NODES count number of unique hosts
     NUM_PROC_PER_NODE: 4 # set this to the number of gpus per machine.
     RUN_ID: auto  #"localhost:49160" #  #(date +'%Y%m%d')/specify run_id={master_node}:{port}/unique rendezvous run_id that is specific to 1 run.
@@ -146,7 +146,7 @@ config:
     NCCL_DEBUG: True
   CHECKPOINT:
     AUTO_RESUME: True
-    DIR: /p/project/deepacf/maelstrom/emmerich1/deepclusterv2/checkpoints
+    DIR: /home/fabian/work/maelstrom/a6/a6/mlflow/deepclusterv2/.checkpoints
     CHECKPOINT_FREQUENCY: 25           # every phase since data is big
     CHECKPOINT_ITER_FREQUENCY: -1    # checkpoint model at various iterations as well and not just phase
     OVERWRITE_EXISTING: true

@@ -25,7 +25,20 @@ make build-vissl
 make upload-vissl
 ```
 
-## Training
+## Testing locally
+
+**Note**: To make the `dataset_catalog.json` available in the image, the `configs` directory
+has to be bound into the container, i.e. `-B $PWD/configs:/opt/vissl/configs`.
+
+```bash
+apptainer run \
+    -B $PWD/configs:/opt/vissl/configs mlflow/deepclusterv2/vissl.sif \
+    python /opt/vissl/tools/run_distributed_enginges.py \
+    config=local
+```
+
+
+## Running with mantik
 
 ```bash
 mantik runs submit mlflow/deepclusterv2

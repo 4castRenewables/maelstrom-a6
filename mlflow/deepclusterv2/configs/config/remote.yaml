@@ -22,7 +22,8 @@ config:
     NUM_DATALOADER_WORKERS: 16   # Set this depending on the number of CPUs you have
     TRAIN:
       DATA_SOURCES: [disk_folder] # can be user specified
-      DATASET_NAMES: [dc_test_dataset]
+      LABEL_SOURCES: [disk_folder] # can be user specified
+      DATASET_NAMES: [remote_test_dataset]
       BATCHSIZE_PER_REPLICA: 750  # number of unique samples in minibatch per gpu
       LABEL_TYPE: sample_index    # just an implementation detail. Label isn't used
       TRANSFORMS:                 # https://vissl.readthedocs.io/en/latest/api/data.html
@@ -128,7 +129,7 @@ config:
           # lengths: [0.00641, 0.99359]       # 2ep IG-1B
           # lengths: [0.002563, 0.997437]     # 5ep IG-1B = 50 ep IG-100M
   MACHINE:
-    DEVICE: cpu
+    DEVICE: gpu
   SLURM:
     USE_SLURM: false
   DISTRIBUTED:

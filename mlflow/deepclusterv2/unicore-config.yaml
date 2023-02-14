@@ -11,3 +11,4 @@ Resources:
 Exclude:
   - "*.sif"
   - "README.md"
+  - ".checkpoints/"
