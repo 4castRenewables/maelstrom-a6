@@ -1,0 +1,6 @@
+name: a6-vissl
+
+entry_points:
+  main:
+    command:
+      python /opt/vissl/tools/run_distributed_engines.py --config=deepclusterv2.yaml

@@ -1,0 +1,7 @@
+{
+  "dc_test_dataset":
+    {
+      "train": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""],
+      "val": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""]
+    }
+}
