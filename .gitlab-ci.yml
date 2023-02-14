@@ -105,6 +105,13 @@ build-docker:
     - job: build-python
       artifacts: true
 
+build-apptainer-vissl:
+  stage: build
+  needs: []
+  image: kaczmarj/apptainer:1.1.3
+  script:
+    - apptainer build vissl.sif apptainer/vissl.sif
+
 .test-integration:
   stage: integration
   needs:
