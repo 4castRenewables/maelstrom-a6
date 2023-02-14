@@ -125,3 +125,15 @@ upload-e4-kernel:
 	rm $(KERNEL_FILE)
 
 deploy-e4-kernel: build-e4-kernel upload-e4-kernel
+
+# VISSL-related steps
+
+build-vissl: build-python
+	sudo apptainer build --force vissl.sif apptainer/vissl.def
+
+upload-vissl:
+	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
+		vissl.sif \
+		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/vissl.sif
+
+deploy-vissl: build-vissl upload-vissl
