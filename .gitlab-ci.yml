@@ -24,8 +24,8 @@ variables:
     --application-directories=.:src
     --py310-plus
   DOCKER_FILE: docker/a6.Dockerfile
-  DOCKER_IMAGE_NAME: a6-mlflow
-  DOCKER_ZIPPED_IMAGE_FILE: a6-mlflow
+  DOCKER_IMAGE_NAME: a6
+  DOCKER_ZIPPED_IMAGE_FILE: a6
 
 stages:
  - lint
@@ -116,6 +116,7 @@ build-apptainer-vissl:
   only:
     changes:
       - apptainer/vissl.def
+      - gitlab-ci.yml
 
 .test-integration:
   stage: integration
