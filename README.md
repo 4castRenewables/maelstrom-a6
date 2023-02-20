@@ -65,14 +65,14 @@ Docker image manually if any of these files was modified
 ### Run remotely on HPC
 
 1. Build the Docker image (see step 1 above).
-2. Build the Singularity image
+2. Build the Apptainer image
    ```commandline
    make build
    ```
 3. Test locally with remote tracking:
    ```commandline
-   singularity run \
-     mlflow/a6-mlflow.sif \
+   apptainer run \
+     mlflow/a6.sif \
      a6 train cluster \
      --weather-data ${PWD}/data/temperature_level_128_daily_averages_2020.nc \
      --config cluster.yaml \
@@ -95,14 +95,14 @@ Docker image manually if any of these files was modified
    ```
 
 **Notes:**
-- The above procedure (i.e. the building of the Singularity image)
+- The above procedure (i.e. the building of the Apptainer image)
   installs the package during build time into the container image.
   Thus, the package was modified, the image has to be rebuilt to have the changes
   in the image.
-- Running with Singularity (and not as an MLproject via `mlflow run`)
+- Running with Apptainer (and not as an MLproject via `mlflow run`)
   does not track the git version (git commit hash), because, when creating a new run,
   MLflow attempts to import the git Python module and read the project repository to
-  retrieve the commit hash. This is not possible inside the Singularity container since
+  retrieve the commit hash. This is not possible inside the Apptainer container since
   1. git is not installed within the container (error is usually logged by MLflow, but can be
      silenced by setting the `GIT_PYTHON_REFRESH=quiet` environment variable inside the container).
   2. the repository is not available inside the container, but only the `train_kmeans.py` file.
@@ -154,7 +154,7 @@ Docker image manually if any of these files was modified
      variables to allow uploading via SSH.
    - E4: Set the `E4_USERNAME` and `E4_SERVER_IP` environment variables.
      `E4_SERVER_IP` here is the IP of the E4 machine you want to use for SSH login.
-2. Build Singularity image with package and ipykernel installed
+2. Build Apptainer image with package and ipykernel installed
    ```commandline
    make build-jsc-kernel
    ```
@@ -172,8 +172,8 @@ Docker image manually if any of these files was modified
 
 If this worked correctly, the kernel should be available in Jupyter JSC/on the E4 system
 under the name `a6`.
-The Singularity image may generally be used to run the package on e.g. JUWELS
-via `singularity exec <path to image> python <path to script>`.
+The Apptainer image may generally be used to run the package on e.g. JUWELS
+via `apptainer exec <path to image> python <path to script>`.
 
 ## Running on Juwels (Booster)
 
@@ -185,7 +185,7 @@ via `singularity exec <path to image> python <path to script>`.
 
 1. Connect to the VPN.
 2. SSH onto a certain host.
-3. The kernel needs Singularity, hence the module has to be loaded
+3. The kernel needs Apptainer (formerly Singularity), hence the module has to be loaded
    ```commandline
    module load go-1.17.6/singularity-3.9.5
    ```
