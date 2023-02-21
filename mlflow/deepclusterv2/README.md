@@ -40,6 +40,18 @@ apptainer run \
     config=local
 ```
 
+## Running remotely
+
+`cd` into the git repository of A6. Then
+
+```bash
+apptainer run \
+    -B $PWD/mlflow/deepclusterv2/configs:/opt/vissl/configs \
+    --nv \
+    /p/project/deepacf/emmerich1/vissl.sif \
+    python /opt/vissl/tools/run_distributed_engines.py \
+    config=remote
+```
 
 ## Running with mantik
 
