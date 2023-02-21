@@ -6,7 +6,7 @@
     },
   "local_test_dataset":
   {
-    "train": ["/home/fabian/work/maelstrom/a6/a6/data/deepclusterv2", ""],
-    "val": ["/home/fabian/work/maelstrom/a6/a6/data/deepclusterv2", ""]
+    "train": ["/data", ""],
+    "val": ["/data", ""]
   }
 }

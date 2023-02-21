@@ -14,6 +14,7 @@ E4_SSH = $(E4_USER)@$(E4_IP)
 E4_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/e4
 
 IMAGE_NAME = a6
+VISSL_IMAGE_NAME = vissl
 
 install:
 	poetry install
@@ -127,13 +128,15 @@ upload-e4-kernel:
 deploy-e4-kernel: build-e4-kernel upload-e4-kernel
 
 # VISSL-related steps
+build-vissl-docker:
+	sudo docker build -t $(VISSL_IMAGE_NAME):latest -f docker/vissl.Dockerfile .
 
-build-vissl:
-	sudo apptainer build --force mlflow/deepclusterv2/vissl.sif apptainer/vissl.def
+build-vissl: build-vissl-docker
+	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif apptainer/vissl.def
 
 upload-vissl:
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
-		mlflow/deepclusterv2/vissl.sif \
-		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/vissl.sif
+		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif \
+		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/$(VISSL_IMAGE_NAME).sif
 
 deploy-vissl: build-vissl upload-vissl
