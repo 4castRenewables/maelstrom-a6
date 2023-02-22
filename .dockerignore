@@ -1,0 +1,19 @@
+# IDE
+.bsp/
+
+# Python
+**/.mypy_cache/
+**/.pytest_cache/
+**/.ipynb_checkpoints/
+
+# Apptainer
+**/*.sif
+
+# MLflow
+mlruns/
+
+# VISSL
+**/.checkpoints/
+
+data/
+**/*.env
