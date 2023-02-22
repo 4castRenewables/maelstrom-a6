@@ -19,7 +19,7 @@ config:
       LOG_PARAMS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
   DATA:
-    NUM_DATALOADER_WORKERS: 16   # Set this depending on the number of CPUs you have
+    NUM_DATALOADER_WORKERS: 1   # Set this depending on the number of CPUs you have
     TRAIN:
       DATA_SOURCES: [disk_folder] # can be user specified
       LABEL_SOURCES: [disk_folder] # can be user specified
@@ -98,6 +98,7 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
+      # SPECIFY NUMBER OF EPOCHS
       num_epochs: 1
       regularize_bn: True # whether to regularize batch norm. if set to False, weight decay of batch norm params is 0
       regularize_bias: True # whether to regularize bias parameter. if set to False, weight decay of bias params is 0.

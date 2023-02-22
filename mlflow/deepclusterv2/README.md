@@ -48,7 +48,7 @@ apptainer run \
 apptainer run \
     -B $PWD/mlflow/deepclusterv2/configs:/opt/vissl/configs \
     --nv \
-    /p/project/deepacf/emmerich1/vissl.sif \
+    /p/project/deepacf/maelstrom/emmerich1/vissl.sif \
     python /opt/vissl/tools/run_distributed_engines.py \
     config=remote
 ```
