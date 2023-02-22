@@ -4,7 +4,7 @@ JSC_DIR = $(NOTEBOOKS_DIR)/jsc
 E4_DIR = $(NOTEBOOKS_DIR)/e4
 
 JSC_USER = ${MANTIK_UNICORE_USERNAME}
-JSC_PROJECT = ${MANTIK_UNICORE_PROJECT}
+JSC_PROJECT_DIR = /p/project/deepacf/maelstrom/$(JSC_USER)
 JSC_SSH = $(JSC_USER)@juwels-cluster.fz-juelich.de
 JSC_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/jsc
 
@@ -15,6 +15,7 @@ E4_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/e4
 
 IMAGE_NAME = a6
 VISSL_IMAGE_NAME = vissl
+
 
 install:
 	poetry install
@@ -35,7 +36,7 @@ build: build-docker build-apptainer
 upload:
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
 		mlflow/a6/$(IMAGE_NAME).sif \
-		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/$(IMAGE_NAME).sif
+		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(IMAGE_NAME).sif
 
 deploy: build upload
 
@@ -56,7 +57,7 @@ define JSC_KERNEL_JSON
    "exec",
    "--cleanenv",
    "-B /usr/:/host/usr/, /etc/slurm:/etc/slurm, /usr/lib64:/host/usr/lib64, /opt/parastation:/opt/parastation, /usr/lib64/slurm:/usr/lib64/slurm, /usr/share/lua:/usr/share/lua, /usr/lib64/lua:/usr/lib64/lua, /opt/jsc:/opt/jsc, /var/run/munge:/var/run/munge",
-   "/p/scratch/$(JSC_PROJECT)/$(JSC_USER)/jupyter-kernel.sif",
+   "$(JSC_PROJECT_DIR)/jupyter-kernel.sif",
    "python",
    "-m",
    "ipykernel",
@@ -74,7 +75,7 @@ upload-jsc-kernel:
 	# Copy kernel image file
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
 		$(JSC_DIR)/jupyter-kernel.sif \
-		$(JSC_SSH):/p/scratch/$(JSC_PROJECT)/$(JSC_USER)/jupyter-kernel.sif
+		$(JSC_SSH):$(JSC_PROJECT_DIR)/jupyter-kernel.sif
 
 	# Create kernel.json file
 	$(eval KERNEL_FILE := $(JSC_DIR)/kernel.json)
@@ -131,12 +132,12 @@ deploy-e4-kernel: build-e4-kernel upload-e4-kernel
 build-vissl-docker:
 	sudo docker build -t $(VISSL_IMAGE_NAME):latest -f docker/vissl.Dockerfile .
 
-build-vissl: build-vissl-docker
+build-vissl:
 	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif apptainer/vissl.def
 
 upload-vissl:
 	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
 		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif \
-		$(JSC_SSH):/p/project/$(JSC_PROJECT)/$(JSC_USER)/$(VISSL_IMAGE_NAME).sif
+		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(VISSL_IMAGE_NAME).sif
 
 deploy-vissl: build-vissl upload-vissl
