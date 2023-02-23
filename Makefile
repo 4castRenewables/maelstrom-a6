@@ -129,9 +129,6 @@ upload-e4-kernel:
 deploy-e4-kernel: build-e4-kernel upload-e4-kernel
 
 # VISSL-related steps
-build-vissl-docker:
-	sudo docker build -t $(VISSL_IMAGE_NAME):latest -f docker/vissl.Dockerfile .
-
 build-vissl:
 	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif apptainer/vissl.def
 

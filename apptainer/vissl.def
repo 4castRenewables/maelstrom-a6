@@ -1,9 +1,21 @@
+# Always use cudnn version 7
 Bootstrap: docker
-From: debian:bullseye-slim
-Stage: setup
+From: nvidia/cuda:10.2-cudnn7-devel
+Stage: builder
 
 %post
+    export CUDA_VERSION=10.2
+    export PYTHON_VERSION=3.8
+    export PYTORCH_VERSION=1.8.1
+    export TORCHVISION_VERSION=0.9.1
     export VISSL_VERSION=0.1.6
+    export PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
+
+    # See https://github.com/NVIDIA/nvidia-docker/issues/1631
+    apt-key del 7fa2af80
+    apt-key del 3bf863cc
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
 
     # Install common dependencies
     # See https://stackoverflow.com/questions/44331836/apt-get-install-tzdata-noninteractive
@@ -14,31 +26,10 @@ Stage: setup
         wget \
         git
 
-    # Install conda
+    # Install conda (miniconda)
     wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     chmod +x miniconda.sh
     bash miniconda.sh -b -p /opt/conda
-
-    # Clone vissl repository
-    git clone --recursive https://github.com/facebookresearch/vissl.git /opt/vissl
-    cd /opt/vissl
-    git checkout v${VISSL_VERSION}
-
-# Always use cudnn version 7
-Bootstrap: docker
-From: nvidia/cuda:10.2-cudnn7-devel
-Stage: build
-
-%files from setup
-    /opt/conda /opt/conda
-    /opt/vissl /opt/vissl
-
-%post
-    export CUDA_VERSION=10.2
-    export PYTHON_VERSION=3.8
-    export PYTORCH_VERSION=1.8.1
-    export TORCHVISION_VERSION=0.9.1
-    export PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
 
     . /opt/conda/etc/profile.d/conda.sh
     conda config --add channels conda-forge
@@ -59,7 +50,12 @@ Stage: build
     conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex
 
     # Install VISSL
+    # Clone repository
+    git clone --recursive https://github.com/facebookresearch/vissl.git /opt/vissl
     cd /opt/vissl
+    git checkout v${VISSL_VERSION}
+
+    # Install VISSL dependencies and package
     python -m pip install --no-cache -r requirements.txt
     python -m pip install --no-cache opencv-python
     python -m pip install --no-cache -e "."
@@ -88,14 +84,11 @@ Bootstrap: docker
 From: nvidia/cuda:10.2-cudnn7-devel
 Stage: final
 
-%files from setup
-    /opt/vissl /opt/vissl
-
-%files from build
-    /opt/conda /opt/conda
+%files from builder
+    /opt/conda/envs/vissl /venv
 
 %environment
-    export PATH=/usr/local/cuda-10.2/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}
+    export PATH=/usr/local/cuda-10.2/bin:/usr/local/bin:/venv/bin:${PATH}
 
 %post
     # See https://github.com/NVIDIA/nvidia-docker/issues/1631
@@ -109,13 +102,9 @@ Stage: final
     apt-get clean
     rm -rf /var/lib/apt/lists/*
 
-%test
-    . /opt/conda/etc/profile.d/conda.sh
-    conda activate vissl
+    ln -sv /venv/bin/python /usr/bin/python
 
-    # Check correct installation
-    which conda
-    conda --version
+%test
     which python
     python --version
     python -c 'import torch, apex, vissl, cv2'
@@ -123,8 +112,6 @@ Stage: final
 %runscript
     echo "[$NOW] Running VISSL"
     echo "Arguments: $*"
-    . /opt/conda/etc/profile.d/conda.sh
-    conda activate vissl
     exec "$@"
 
 %labels
