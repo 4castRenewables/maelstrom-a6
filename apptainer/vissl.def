@@ -38,7 +38,7 @@ Stage: build
     export PYTHON_VERSION=3.8
     export PYTORCH_VERSION=1.8.1
     export TORCHVISION_VERSION=0.9.1
-    export PATH="/usr/local/cuda-10.2/bin:/usr/local/bin:/opt/conda/bin${PATH}"
+    export PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
 
     . /opt/conda/etc/profile.d/conda.sh
     conda config --add channels conda-forge
@@ -60,26 +60,28 @@ Stage: build
 
     # Install VISSL
     cd /opt/vissl
-
-    # Install vissl dependencies
-    python -m pip install -r requirements.txt
-    python -m pip install opencv-python
+    python -m pip install --no-cache -r requirements.txt
+    python -m pip install --no-cache opencv-python
+    python -m pip install --no-cache -e "."
 
     # Update classy vision install to commit stable for vissl.
     # Note: If building from vissl main, use classyvision main.
-    python -m pip uninstall -y classy_vision
-    python -m pip install classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d
-
     # Update fairscale install to commit stable for vissl.
-    python -m pip uninstall -y fairscale
-    python -m pip install fairscale==0.4.6
-
-    # Install vissl dev mode (e stands for editable)
-    python -m pip install -e "."
-
     # Update numpy to fix ModuleNotFoundError: No module named 'numpy.core._multiarray_umath'
     # See https://stackoverflow.com/a/74934626/16814206
-    python -m pip install numpy==1.21.0
+    python -m pip uninstall -y \
+        classy_vision \
+        fairscale \
+        numpy
+    python -m pip install --no-cache \
+        classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d \
+        fairscale==0.4.6 \
+        numpy==1.21.0
+
+    # Delete Python cache
+    find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+    cd ${CONDA_PREFIX}
+    find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 # Always use cudnn version 7
 Bootstrap: docker
@@ -93,8 +95,7 @@ Stage: final
     /opt/conda /opt/conda
 
 %environment
-    export PATH="/usr/local/cuda-10.2/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}"
-    . /opt/conda/etc/profile.d/conda.sh
+    export PATH=/usr/local/cuda-10.2/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}
 
 %post
     # See https://github.com/NVIDIA/nvidia-docker/issues/1631
@@ -112,18 +113,17 @@ Stage: final
     . /opt/conda/etc/profile.d/conda.sh
     conda activate vissl
 
-    # Version checks
+    # Check correct installation
     which conda
     conda --version
     which python
     python --version
-
-    # Check correct installation
     python -c 'import torch, apex, vissl, cv2'
 
 %runscript
     echo "[$NOW] Running VISSL"
     echo "Arguments: $*"
+    . /opt/conda/etc/profile.d/conda.sh
     conda activate vissl
     exec "$@"
 
