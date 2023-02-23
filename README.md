@@ -46,7 +46,7 @@ Lifetime determination of large-scale weather regimes.
    (see above).
 3. Run the project
    ```commandline
-   poetry run mlflow run mlflow \
+   poetry run mlflow run mlflow/a6 \
      -e cluster \
      -P weather_data=/data/temperature_level_128_daily_averages_2020.nc \
      -P config=cluster.yaml
@@ -86,7 +86,7 @@ Docker image manually if any of these files was modified
    ```
 5. Run on HPC via mantik
    ```commandline
-   poetry run mantik mlflow \
+   poetry run mantik mlflow/a6 \
      --experiment-id <experiment ID> \
      --entry-point cluster \
      -P weather_data="/opt/data/temperature_level_128_daily_averages_2020.nc" \
