@@ -58,7 +58,7 @@ Stage: builder
     # Install VISSL dependencies and package
     python -m pip install --no-cache -r requirements.txt
     python -m pip install --no-cache opencv-python
-    python -m pip install --no-cache -e "."
+    python -m pip install --no-cache -e ".[dev]"
 
     # Update classy vision install to commit stable for vissl.
     # Note: If building from vissl main, use classyvision main.
