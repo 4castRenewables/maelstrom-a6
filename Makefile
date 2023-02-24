@@ -6,16 +6,17 @@ E4_DIR = $(NOTEBOOKS_DIR)/e4
 JSC_USER = ${MANTIK_UNICORE_USERNAME}
 JSC_PROJECT_DIR = /p/project/deepacf/maelstrom/$(JSC_USER)
 JSC_SSH = $(JSC_USER)@juwels-cluster.fz-juelich.de
-JSC_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/jsc
+JSC_SSH_PRIVATE_KEY_FILE = -e "ssh -i $(HOME)/.ssh/jsc"
 
 E4_USER = ${E4_USERNAME}
 E4_IP = ${E4_SERVER_IP}
 E4_SSH = $(E4_USER)@$(E4_IP)
-E4_SSH_PRIVATE_KEY_FILE = -i $(HOME)/.ssh/e4
+E4_SSH_PRIVATE_KEY_FILE = -e "ssh -i $(HOME)/.ssh/e4"
 
 IMAGE_NAME = a6
 VISSL_IMAGE_NAME = vissl
 
+SSH_COPY_COMMAND = rsync -Pvra --progress
 
 install:
 	poetry install
@@ -26,7 +27,7 @@ build-python:
 	poetry build -f wheel
 
 build-docker: build-python
-	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
+	sudo docker build --no-cache -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
 
 build-apptainer: build-python
 	sudo apptainer build --force mlflow/a6/$(IMAGE_NAME).sif apptainer/a6.def
@@ -34,7 +35,7 @@ build-apptainer: build-python
 build: build-docker build-apptainer
 
 upload:
-	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
+	$(SSH_COPY_COMMAND) $(JSC_SSH_PRIVATE_KEY_FILE) \
 		mlflow/a6/$(IMAGE_NAME).sif \
 		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(IMAGE_NAME).sif
 
@@ -73,7 +74,7 @@ export JSC_KERNEL_JSON
 
 upload-jsc-kernel:
 	# Copy kernel image file
-	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
+	$(SSH_COPY_COMMAND) $(JSC_SSH_PRIVATE_KEY_FILE) \
 		$(JSC_DIR)/jupyter-kernel.sif \
 		$(JSC_SSH):$(JSC_PROJECT_DIR)/jupyter-kernel.sif
 
@@ -84,7 +85,7 @@ upload-jsc-kernel:
 	# Upload kernel.json file
 	$(eval KERNEL_PATH="/p/home/jusers/$(JSC_USER)/juwels/.local/share/jupyter/kernels/a6/")
 	ssh $(JSC_SSH_PRIVATE_KEY_FILE) $(JSC_SSH) "mkdir -p $(KERNEL_PATH)"
-	scp $(JSC_SSH_PRIVATE_KEY_FILE) $(KERNEL_FILE) $(JSC_SSH):$(KERNEL_PATH)
+	$(SSH_COPY_COMMAND) $(JSC_SSH_PRIVATE_KEY_FILE) $(KERNEL_FILE) $(JSC_SSH):$(KERNEL_PATH)
 	rm $(KERNEL_FILE)
 
 deploy-jsc-kernel: build-jsc-kernel upload-jsc-kernel
@@ -112,7 +113,7 @@ export E4_KERNEL_JSON
 
 upload-e4-kernel:
 	# Copy kernel image file
-	scp $(E4_SSH_PRIVATE_KEY_FILE) \
+	$(SSH_COPY_COMMAND) $(E4_SSH_PRIVATE_KEY_FILE) \
 		$(E4_DIR)/jupyter-kernel.sif \
 		$(E4_SSH):/home/${E4_USER}/jupyter-kernel.sif
 
@@ -123,7 +124,7 @@ upload-e4-kernel:
 	# Upload kernel.json file
 	$(eval KERNEL_PATH="/home/${E4_USER}/.local/share/jupyter/kernels/a6")
 	ssh $(E4_SSH_PRIVATE_KEY_FILE) $(E4_SSH) "mkdir -p $(KERNEL_PATH)"
-	scp $(E4_SSH_PRIVATE_KEY_FILE) $(KERNEL_FILE) $(E4_SSH):$(KERNEL_PATH)
+	$(SSH_COPY_COMMAND) $(E4_SSH_PRIVATE_KEY_FILE) $(KERNEL_FILE) $(E4_SSH):$(KERNEL_PATH)
 	rm $(KERNEL_FILE)
 
 deploy-e4-kernel: build-e4-kernel upload-e4-kernel
@@ -133,7 +134,7 @@ build-vissl:
 	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif apptainer/vissl.def
 
 upload-vissl:
-	scp $(JSC_SSH_PRIVATE_KEY_FILE) \
+	$(SSH_COPY_COMMAND) $(JSC_SSH_PRIVATE_KEY_FILE) \
 		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif \
 		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(VISSL_IMAGE_NAME).sif
 
