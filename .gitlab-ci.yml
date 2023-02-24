@@ -101,16 +101,15 @@ build-python:
       - dist/
       - venv/
 
-
 .relevant-mlflow-project-changes:
   rules:
     - changes:
-        - docker/a6.Dockerfile
-        - gitlab-ci.yml
-        - 'src/a6/**/*.py'
-        - pyproject.toml
-        - poetry.lock
-        -
+      - docker/a6.Dockerfile
+      - gitlab-ci.yml
+      - 'src/a6/**/*.py'
+      - pyproject.toml
+      - poetry.lock
+
 build-docker:
   extends: .build-docker
   needs:
@@ -159,6 +158,8 @@ build-apptainer-vissl:
     - export MLFLOW_TRACKING_TOKEN="test-token"
   rules:
     - !reference [.relevant-mlflow-project-changes, rules]
+    - changes:
+      - mlflow/a6/**/*
 
 test-cluster:
   extends: .test-integration
