@@ -31,7 +31,11 @@ RUN apt-get update -y \
  && apt-get install -y \
     # Required by cartopy
     libgeos-3.9.0 \
-    libgeos-dev
+    libgeos-dev \
+    # Required by opencv
+    python3-opencv \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /venv /venv
 ENV PATH=/venv/bin:$PATH

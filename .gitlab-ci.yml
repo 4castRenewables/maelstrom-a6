@@ -48,11 +48,13 @@ pylint:
     # Install
     #   - gcc (build-essential), required by HDBSCAN.
     #   - libgeos and libgeos-dev, required by Cartopy.
+    #   - python3-opencv, required by opencv
     - >
       apt install -y
       build-essential
       libgeos-3.9.0
       libgeos-dev
+      python3-opencv
 
 .test-base:
   extends: .test
