@@ -1,3 +1,4 @@
+import logging
 import pathlib
 from collections.abc import Sequence
 
@@ -9,6 +10,8 @@ import a6.datasets.coordinates as _coordinates
 
 Variables = Sequence[str]
 MinMaxValues = dict[str, tuple[float, float]]
+
+logger = logging.getLogger(__name__)
 
 
 def convert_fields_to_grayscale_images(
@@ -60,12 +63,14 @@ def convert_fields_to_grayscale_images(
 
     min_max_values = _get_min_max_values(data, variables=variables)
 
+    logger.info("Starting conversion of images to .tif")
+
     for step in data[coordinates.time]:
+        logger.info("Converting time step %s", step.values)
         channels = _convert_fields_to_channels(
             data.sel(time=step),
             min_max_values=min_max_values,
         )
-
         _save_channels_to_image_file(
             channels,
             path=path,
@@ -77,6 +82,7 @@ def convert_fields_to_grayscale_images(
 
 
 def _get_min_max_values(data: xr.Dataset, variables: Variables) -> MinMaxValues:
+    logger.info("Getting min and max values for data variables %s", variables)
     return {var: (data[var].min(), data[var].max()) for var in variables}
 
 
