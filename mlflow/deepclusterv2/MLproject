@@ -6,5 +6,8 @@ entry_points:
       config:
         type: string
         default: remote
+      options:
+        type: string
+        default: ""
     command:
-      python /opt/vissl/tools/run_distributed_engines.py config={config}
+      python /opt/vissl/tools/run_distributed_engines.py config={config} {options}
