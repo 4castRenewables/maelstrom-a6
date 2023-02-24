@@ -22,7 +22,7 @@ def log_consumption(func):
 
     @functools.wraps(func)
     def with_logging(*args, **kwargs):
-        logger.info(
+        logger.debug(
             "Calling function '%s' with args: %s and kwargs: %s",
             func.__name__,
             args,
@@ -32,7 +32,7 @@ def log_consumption(func):
         start = time.time()
         result = func(*args, **kwargs)
         after = _get_process_memory()
-        logger.info(
+        logger.debug(
             (
                 "Memory consumption of function '%s': before: %s, after: %s, "
                 "consumed: %s, exec time: %s"

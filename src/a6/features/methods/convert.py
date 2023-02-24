@@ -7,6 +7,7 @@ import numpy as np
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
+import a6.utils as utils
 
 Variables = Sequence[str]
 MinMaxValues = dict[str, tuple[float, float]]
@@ -14,6 +15,7 @@ MinMaxValues = dict[str, tuple[float, float]]
 logger = logging.getLogger(__name__)
 
 
+@utils.log_consumption
 def convert_fields_to_grayscale_images(
     data: xr.Dataset,
     variables: Variables,
@@ -66,7 +68,7 @@ def convert_fields_to_grayscale_images(
     logger.info("Starting conversion of images to .tif")
 
     for step in data[coordinates.time]:
-        logger.info("Converting time step %s", step.values)
+        logger.debug("Converting time step %s", step.values)
         channels = _convert_fields_to_channels(
             data.sel(time=step),
             min_max_values=min_max_values,
@@ -81,11 +83,16 @@ def convert_fields_to_grayscale_images(
         )
 
 
+@utils.log_consumption
 def _get_min_max_values(data: xr.Dataset, variables: Variables) -> MinMaxValues:
-    logger.info("Getting min and max values for data variables %s", variables)
-    return {var: (data[var].min(), data[var].max()) for var in variables}
+    logger.debug("Getting min and max values for data variables %s", variables)
+    return {
+        var: (data[var].min().compute(), data[var].max().compute())
+        for var in variables
+    }
 
 
+@utils.log_consumption
 def _convert_fields_to_channels(
     data: xr.Dataset, min_max_values: MinMaxValues
 ) -> np.ndarray:
@@ -98,10 +105,12 @@ def _convert_fields_to_channels(
     )
 
 
+@utils.log_consumption
 def _convert_to_grayscale(d, min_, max_):
     return np.rint((d - min_) / max_ * 255)
 
 
+@utils.log_consumption
 def _save_channels_to_image_file(
     channels: np.ndarray,
     path: pathlib.Path,
