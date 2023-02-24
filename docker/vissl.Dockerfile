@@ -2,8 +2,8 @@ ARG CUDA_VERSION=10.2
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn7-devel as builder
 
-ARG PYTHON_VERSION=3.8
 ARG CUDA_VERSION
+ARG PYTHON_VERSION=3.8
 ARG PYTORCH_VERSION=1.8.1
 ARG TORCHVISION_VERSION=0.9.1
 ARG VISSL_VERSION=0.1.6
@@ -89,11 +89,11 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn7-devel
 
 ARG CUDA_VERSION
 
-ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/venv/bin:${PATH}
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/venv/bin:${PATH}
+ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/envs/vissl/bin:${PATH}
+ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/envs/vissl/bin:${PATH}
 
 # VISSL conda env and repo
-COPY --from=builder /opt/conda/envs/vissl /venv
+COPY --from=builder /opt/conda/envs/vissl /opt/conda/envs/vissl
 COPY --from=builder /opt/vissl /opt/vissl
 
 # See https://github.com/NVIDIA/nvidia-docker/issues/1631
@@ -109,14 +109,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN ln -sv /venv/bin/python /usr/bin/python
-
-## Check correct installation
-#RUN . /opt/conda/etc/profile.d/conda.sh && \
-#    conda activate vissl && \
-#    which python && \
-#    python --version && \
-#    python -c 'import torch, apex, vissl, cv2' \
+RUN ln -sv /opt/conda/envs/vissl/bin/python /usr/bin/python
 
 RUN which python && \
     python --version && \
