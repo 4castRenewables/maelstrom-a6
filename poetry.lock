@@ -1545,7 +1545,7 @@ name = "opencv-python"
 version = "4.7.0.68"
 description = "Wrapper package for OpenCV python bindings."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -2801,7 +2801,7 @@ notebooks = ["jupyter", "python-dotenv"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "29b0c5bd331e1a946c61d45f60000dec1e8771b1e39447456a9606c21319cd81"
+content-hash = "f2b05012b00bd54027f55cf3753172a270e41f82beeee7f0abe820140bb4ce9e"
 
 [metadata.files]
 alembic = [
