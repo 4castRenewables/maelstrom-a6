@@ -99,18 +99,23 @@ build-python:
       - dist/
       - venv/
 
+
+.relevant-mlflow-project-changes:
+  rules:
+    - changes:
+        - docker/a6.Dockerfile
+        - gitlab-ci.yml
+        - 'src/a6/**/*.py'
+        - pyproject.toml
+        - poetry.lock
+        -
 build-docker:
   extends: .build-docker
   needs:
     - job: build-python
       artifacts: true
-  only:
-    changes:
-      - docker/a6.Dockerfile
-      - gitlab-ci.yml
-      - 'src/a6/**/*.py'
-      - pyproject.toml
-      - poetry.lock
+  rules:
+    - !reference [.relevant-mlflow-project-changes, rules]
 
 build-apptainer-vissl:
   stage: build
@@ -120,8 +125,8 @@ build-apptainer-vissl:
     entrypoint: [""]
   script:
     - apptainer build vissl.sif apptainer/vissl.def
-  only:
-    changes:
+  rules:
+    - changes:
       - apptainer/vissl.def
       - gitlab-ci.yml
 
@@ -150,14 +155,8 @@ build-apptainer-vissl:
     - alias mlflow="python3 ${PWD}/venv/bin/mlflow"
     # MLproject expects MLFLOW_TRACKING_TOKEN env var to be set
     - export MLFLOW_TRACKING_TOKEN="test-token"
-  only:
-    changes:
-      - docker/a6.Dockerfile
-      - gitlab-ci.yml
-      - 'src/a6/**/*.py'
-      - pyproject.toml
-      - poetry.lock
-      - mlflow/a6/**/*
+  rules:
+    - !reference [.relevant-mlflow-project-changes, rules]
 
 test-cluster:
   extends: .test-integration
