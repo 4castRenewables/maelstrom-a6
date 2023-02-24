@@ -87,7 +87,9 @@ def _convert_fields_to_channels(
         _convert_to_grayscale(data[var], min_=min_, max_=max_)
         for var, (min_, max_) in min_max_values.items()
     ]
-    return np.array(channels, dtype=np.uint8).reshape((*channels[0].shape, 3))
+    return np.array(channels, dtype=np.uint8).reshape(
+        (*channels[0].shape, 3), order="F"
+    )
 
 
 def _convert_to_grayscale(d, min_, max_):
