@@ -99,7 +99,7 @@ build-python:
       - dist/
       - venv/
 
-build-docker-a6:
+build-docker:
   extends: .build-docker
   needs:
     - job: build-python
