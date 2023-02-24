@@ -1,4 +1,5 @@
 import a6.features.methods.averaging
+import a6.features.methods.convert
 import a6.features.methods.convolution
 import a6.features.methods.geopotential
 import a6.features.methods.pooling
