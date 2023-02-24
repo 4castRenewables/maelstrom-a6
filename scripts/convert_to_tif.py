@@ -3,8 +3,7 @@ import pathlib
 
 import a6
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+a6.utils.logging.log_to_stdout(level=logging.DEBUG)
 
 level = 500
 coordinates = a6.datasets.coordinates.Coordinates()
@@ -16,8 +15,6 @@ preprocessing = a6.datasets.methods.select.select_dwd_area(
 ) >> a6.datasets.methods.select.select_levels_and_calculate_daily_mean(
     levels=level
 )
-
-logger.info("Reading data")
 
 data = a6.datasets.EcmwfIfsHres(
     path=path,
