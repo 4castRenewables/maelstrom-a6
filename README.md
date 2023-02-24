@@ -2,6 +2,23 @@
 
 Lifetime determination of large-scale weather regimes.
 
+## Prerequisites
+
+Installation of the following packages is required:
+
+* gcc (build-essential) (required by HDBSCAN)
+* libgeos and libgeos-dev (required by Cartopy)
+* python3-opencv (required by opencv)
+
+```bash
+
+apt install -y \
+  build-essential \
+  libgeos-3.9.0 \
+  libgeos-dev \
+  python3-opencv
+```
+
 ## Running with MLflow
 
 ### Running directly via Python
