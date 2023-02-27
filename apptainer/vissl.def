@@ -1,13 +1,13 @@
 # Always use cudnn version 7
 Bootstrap: docker
-From: nvidia/cuda:10.2-cudnn7-devel
+From: nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
 Stage: builder
 
 %post
-    export CUDA_VERSION=10.2
-    export PYTHON_VERSION=3.8
-    export PYTORCH_VERSION=1.8.1
-    export TORCHVISION_VERSION=0.9.1
+    export CUDA_VERSION=11.1
+    export PYTHON_VERSION=3.9
+    export PYTORCH_VERSION=1.9.1
+    export TORCHVISION_VERSION=0.10.1
     export VISSL_VERSION=0.1.6
     export PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
 
@@ -46,8 +46,10 @@ Stage: builder
         torchvision=${TORCHVISION_VERSION} \
         cudatoolkit=${CUDA_VERSION}
 
-    # Install apex and vissl
-    conda install -c vissl -c iopath -c conda-forge -c pytorch -c defaults apex
+    # Install apex
+    # For compatible Python, PyTorch and CUDA versions see
+    # https://anaconda.org/vissl/apex/files
+    conda install -c vissl apex
 
     # Install VISSL
     # Clone repository
@@ -56,9 +58,9 @@ Stage: builder
     git checkout v${VISSL_VERSION}
 
     # Install VISSL dependencies and package
-    python -m pip install --no-cache -r requirements.txt
-    python -m pip install --no-cache opencv-python
-    python -m pip install --no-cache -e ".[dev]"
+    python -m pip install --no-cache-dir -r requirements.txt
+    python -m pip install --no-cache-dir opencv-python
+    python -m pip install --no-cache-dir -e ".[dev]"
 
     # Update classy vision install to commit stable for vissl.
     # Note: If building from vissl main, use classyvision main.
@@ -69,7 +71,7 @@ Stage: builder
         classy_vision \
         fairscale \
         numpy
-    python -m pip install --no-cache \
+    python -m pip install --no-cache-dir \
         classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d \
         fairscale==0.4.6 \
         numpy==1.21.0
@@ -81,15 +83,16 @@ Stage: builder
 
 # Always use cudnn version 7
 Bootstrap: docker
-From: nvidia/cuda:10.2-cudnn7-devel
+From: nvidia/cuda:11.1.1-cudnn8-runtime-ubuntu18.04
+
 Stage: final
 
 %files from builder
-    /opt/conda/envs/vissl /opt/conda/envs/vissl
+    /opt/conda /opt/conda
     /opt/vissl /opt/vissl
 
 %environment
-    export PATH=/usr/local/cuda-10.2/bin:/usr/local/bin:/opt/conda/envs/vissl/bin:${PATH}
+    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}
 
 %post
     # See https://github.com/NVIDIA/nvidia-docker/issues/1631
@@ -103,10 +106,11 @@ Stage: final
     apt-get clean
     rm -rf /var/lib/apt/lists/*
 
-    ln -sv /opt/conda/envs/vissl/bin/python /usr/bin/python
-
 %test
-    export PATH=/usr/local/cuda-10.2/bin:/usr/local/bin:/opt/conda/envs/vissl/bin:${PATH}
+    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate vissl
+
     which python
     python --version
     python -c 'import torch, apex, vissl, cv2'
@@ -114,11 +118,15 @@ Stage: final
 %runscript
     echo "[$NOW] Running VISSL"
     echo "Arguments: $*"
+    echo "Activating VISSL environment"
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate vissl
+    echo "Running command"
     exec "$@"
 
 %labels
     Author Fabian Emmerich
-    Version v1.6.0-cu10.2-py3.8
+    Version v1.6.0-cu11.1-py3.9
 
 %help
     Provides the VISSL library and all required dependencies.
