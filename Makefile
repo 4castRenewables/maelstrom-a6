@@ -5,7 +5,7 @@ E4_DIR = $(NOTEBOOKS_DIR)/e4
 
 JSC_USER = ${MANTIK_UNICORE_USERNAME}
 JSC_PROJECT_DIR = /p/project/deepacf/maelstrom/$(JSC_USER)
-JSC_SSH = $(JSC_USER)@juwels-cluster.fz-juelich.de
+JSC_SSH = $(JSC_USER)@judac.fz-juelich.de
 JSC_SSH_PRIVATE_KEY_FILE = -e "ssh -i $(HOME)/.ssh/jsc"
 
 E4_USER = ${E4_USERNAME}
