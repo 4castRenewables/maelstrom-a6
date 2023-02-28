@@ -52,6 +52,8 @@ Stage: builder
     # https://anaconda.org/vissl/apex/files
     conda install -c vissl apex
 
+    conda clean --all
+
     # Use conda-pack to create a standalone env in /venv
     conda-pack -n vissl -o /opt/env.tar.gz
     conda deactivate
@@ -100,9 +102,7 @@ Stage: final
 %environment
     export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
 
-%post -c /bin/bash
-    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
-
+%post
     # See https://github.com/NVIDIA/nvidia-docker/issues/1631
     apt-key del 7fa2af80
     apt-key del 3bf863cc
@@ -114,17 +114,16 @@ Stage: final
     apt-get clean
     rm -rf /var/lib/apt/lists/*
 
-%test -c /bin/bash
-    . /venv/bin/activate
+%test
+    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
     which python
     python --version
     python -c 'import torch, apex, vissl, cv2'
 
-%runscript -c /bin/bash
+%runscript
     echo "[$(date)] Running VISSL"
     echo "Arguments: $*"
     echo "Activating VISSL environment"
-    . /venv/bin/activate
     echo "Running command"
     exec "$@"
 
