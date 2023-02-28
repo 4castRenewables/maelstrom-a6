@@ -3,9 +3,9 @@ Bootstrap: docker
 From: nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
 Stage: builder
 
-%post
+%post -c /bin/bash
     export CUDA_VERSION=11.1
-    export PYTHON_VERSION=3.9
+    export PYTHON_VERSION=3.8
     export PYTORCH_VERSION=1.9.1
     export TORCHVISION_VERSION=0.10.1
     export VISSL_VERSION=0.1.6
@@ -33,10 +33,11 @@ Stage: builder
 
     . /opt/conda/etc/profile.d/conda.sh
     conda config --add channels conda-forge
+    conda install conda-pack
     conda update pip setuptools
 
     # Create and activate conda environment
-    conda create --name vissl python=${PYTHON_VERSION}
+    conda create -n vissl python=${PYTHON_VERSION}
     conda activate vissl
     python --version
 
@@ -51,11 +52,21 @@ Stage: builder
     # https://anaconda.org/vissl/apex/files
     conda install -c vissl apex
 
+    # Use conda-pack to create a standalone env in /venv
+    conda-pack -n vissl -o /opt/env.tar.gz
+    conda deactivate
+    mkdir /venv
+    tar -xzf /opt/env.tar.gz -C /venv
+    . /venv/bin/activate
+    which python
+    conda-unpack
+
     # Install VISSL
-    # Clone repository
+    # Clone VISSL repository
     git clone --recursive https://github.com/facebookresearch/vissl.git /opt/vissl
     cd /opt/vissl
     git checkout v${VISSL_VERSION}
+    git checkout -b v${VISSL_VERSION}
 
     # Install VISSL dependencies and package
     python -m pip install --no-cache-dir -r requirements.txt
@@ -76,25 +87,22 @@ Stage: builder
         fairscale==0.4.6 \
         numpy==1.21.0
 
-    # Delete Python cache
-    find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-    cd ${CONDA_PREFIX}
-    find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 # Always use cudnn version 7
 Bootstrap: docker
 From: nvidia/cuda:11.1.1-cudnn8-runtime-ubuntu18.04
-
 Stage: final
 
 %files from builder
-    /opt/conda /opt/conda
+    /venv /venv
     /opt/vissl /opt/vissl
 
 %environment
-    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}
+    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
 
-%post
+%post -c /bin/bash
+    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
+
     # See https://github.com/NVIDIA/nvidia-docker/issues/1631
     apt-key del 7fa2af80
     apt-key del 3bf863cc
@@ -106,28 +114,24 @@ Stage: final
     apt-get clean
     rm -rf /var/lib/apt/lists/*
 
-%test
-    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/opt/conda/bin:/opt/conda/envs/vissl/bin:${PATH}
-    . /opt/conda/etc/profile.d/conda.sh
-    conda activate vissl
-
+%test -c /bin/bash
+    . /venv/bin/activate
     which python
     python --version
     python -c 'import torch, apex, vissl, cv2'
 
-%runscript
-    echo "[$NOW] Running VISSL"
+%runscript -c /bin/bash
+    echo "[$(date)] Running VISSL"
     echo "Arguments: $*"
     echo "Activating VISSL environment"
-    . /opt/conda/etc/profile.d/conda.sh
-    conda activate vissl
+    . /venv/bin/activate
     echo "Running command"
     exec "$@"
 
 %labels
     Author Fabian Emmerich
-    Version v1.6.0-cu11.1-py3.9
+    Version v1.6.0-cu11.1-py3.8
 
 %help
     Provides the VISSL library and all required dependencies.
-    The git repository is located at `/opt/vissl`.
+    The git repository is located at `/opt/vissl` and installed in editable mode.
