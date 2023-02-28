@@ -56,7 +56,10 @@ apptainer run \
 or submit via `sbatch`
 
 ```bash
-NODES=<number_of_nodes> N_GPUS=<number_of_gpus_per_node> EPOCHS=<number_of_epochs> sbatch -A <account> --partition <partition> --nodes=${NODES} --gres=gpu:${N_GPUS} mlflow/deepclusterv2/run.sbatch
+export NODES=<number_of_nodes>
+export N_GPUS=<number_of_gpus_per_node>
+export EPOCHS=<number_of_epochs>
+sbatch -A <account> --partition <partition> --nodes=${NODES} --gres=gpu:${N_GPUS} mlflow/deepclusterv2/run.sbatch
 ```
 
 ## Running with mantik
