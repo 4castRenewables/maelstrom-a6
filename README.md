@@ -1,4 +1,4 @@
-# lifetime-determination
+# Maelstrom Application 6
 
 Lifetime determination of large-scale weather regimes.
 
@@ -11,7 +11,6 @@ Installation of the following packages is required:
 * python3-opencv (required by opencv)
 
 ```bash
-
 apt install -y \
   build-essential \
   libgeos-3.9.0 \
