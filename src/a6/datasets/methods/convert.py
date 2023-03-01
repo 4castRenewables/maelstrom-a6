@@ -17,6 +17,37 @@ FileNameFactory = Callable[[xr.DataArray], pathlib.Path]
 logger = logging.getLogger(__name__)
 
 
+class _FileNameCreator:
+    def __init__(
+        self,
+        path: pathlib.Path,
+        filename_prefix: str,
+        variables: Variables,
+        level: int,
+    ):
+        self._path = path
+        self._filename_prefix = (
+            f"{filename_prefix}_"
+            if filename_prefix and filename_prefix[-1] != "_"
+            else filename_prefix
+        )
+        self._variables = variables
+        self._variables_str = "_".join(variables)
+        self._level = level
+
+    def create(self, date: xr.DataArray) -> pathlib.Path:
+        date_str = np.datetime_as_string(date.values, unit="m")
+        return pathlib.Path(
+            self._path
+            / (
+                f"{self._filename_prefix}{date_str}_"
+                f"level_{self._level}_"
+                f"{self._variables_str}"
+                ".tif"
+            )
+        )
+
+
 @utils.log_consumption
 def convert_fields_to_grayscale_images(
     data: xr.Dataset,
@@ -68,27 +99,38 @@ def convert_fields_to_grayscale_images(
     min_max_values = _get_min_max_values(data, variables=variables)
 
     logger.info("Starting conversion of images to .tif")
-    filename_factory = _create_file_name(
+    filename_creator = _FileNameCreator(
         path=path,
         filename_prefix=filename_prefix,
         variables=variables,
         level=level,
     )
-
     for step in data[coordinates.time]:
         _convert_time_step_and_save_to_file(
             data=data,
-            time_step=step,
             min_max_values=min_max_values,
-            filename_factory=filename_factory,
+            filename_creator=filename_creator,
+            time_step=step,
         )
+    steps = (step for step in data[coordinates.time])
+    kwargs = dict(
+        data=data,
+        min_max_values=min_max_values,
+        filename_creator=filename_creator,
+    )
+    utils.parallelize(
+        function=_convert_time_step_and_save_to_file,
+        args_zipped=steps,
+        single_arg=True,
+        kwargs_as_dict=kwargs,
+    )
 
 
 def _convert_time_step_and_save_to_file(
-    data: xr.Dataset,
     time_step: xr.DataArray,
+    data: xr.Dataset,
     min_max_values: MinMaxValues,
-    filename_factory: FileNameFactory,
+    filename_creator: _FileNameCreator,
 ) -> None:
     logger.debug("Converting time step %s", time_step.values)
     channels = _convert_fields_to_channels(
@@ -98,7 +140,7 @@ def _convert_time_step_and_save_to_file(
     _save_channels_to_image_file(
         channels,
         date=time_step,
-        filename_factory=filename_factory,
+        filename_creator=filename_creator,
     )
 
 
@@ -132,29 +174,9 @@ def _convert_to_grayscale(d, min_, max_):
 @utils.log_consumption
 def _save_channels_to_image_file(
     channels: np.ndarray,
-    filename_factory: FileNameFactory,
+    filename_creator: _FileNameCreator,
     date: xr.DataArray,
 ) -> None:
-    name = filename_factory(date)
+    name = filename_creator.create(date)
     if not cv2.imwrite(name.as_posix(), channels):
         raise RuntimeError(f"Could not save image {name}")
-
-
-def _create_file_name(
-    path: pathlib.Path,
-    filename_prefix: str,
-    variables: Variables,
-    level: int,
-) -> FileNameFactory:
-    variables_str = "_".join(variables)
-    if filename_prefix and filename_prefix[-1] != "_":
-        filename_prefix = f"{filename_prefix}_"
-
-    def _add_date_to_file_name(date: xr.DataArray) -> pathlib.Path:
-        date_str = np.datetime_as_string(date.values, unit="m")
-        return pathlib.Path(
-            path
-            / f"{filename_prefix}{date_str}_level_{level}_{variables_str}.tif"
-        )
-
-    return _add_date_to_file_name

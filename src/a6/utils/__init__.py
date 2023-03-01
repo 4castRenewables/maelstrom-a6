@@ -5,6 +5,7 @@ from a6.utils.logging import log_consumption
 from a6.utils.logging import log_to_stdout
 from a6.utils.mantik import log_logs_as_file
 from a6.utils.matrix import np_dot
+from a6.utils.parallelize import parallelize
 from a6.utils.paths import list_files
 from a6.utils.time_measurement import print_execution_time
 from a6.utils.times import get_time_step_intersection
