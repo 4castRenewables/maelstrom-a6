@@ -51,7 +51,7 @@ variables_selection = [
     variables.wind_speed,
 ]
 
-a6.features.methods.convert.convert_fields_to_grayscale_images(
+a6.datasets.methods.convert.convert_fields_to_grayscale_images(
     processed,
     variables=variables_selection,
     path=path,
