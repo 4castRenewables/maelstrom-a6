@@ -2,7 +2,7 @@
 #SBATCH --partition=booster
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
-#SBATCH --time=06:00:00
+#SBATCH --time=02:00:00
 #SBATCH --output=/p/home/jusers/emmerich1/juwels/job-logs/%j.log
 #SBATCH --error=/p/home/jusers/emmerich1/juwels/job-logs/%j.log
 
