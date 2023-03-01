@@ -1,6 +1,6 @@
 import pathlib
 
-import a6.features.methods.convert as convert
+import a6.datasets.methods.convert as convert
 
 
 def test_convert_fields_to_grayscale_images(
