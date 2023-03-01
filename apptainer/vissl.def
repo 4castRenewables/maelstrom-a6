@@ -1,4 +1,3 @@
-# Always use cudnn version 7
 Bootstrap: docker
 From: nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
 Stage: builder
@@ -52,15 +51,12 @@ Stage: builder
     # https://anaconda.org/vissl/apex/files
     conda install -c vissl apex
 
-    conda clean --all
-
     # Use conda-pack to create a standalone env in /venv
     conda-pack -n vissl -o /opt/env.tar.gz
     conda deactivate
     mkdir /venv
     tar -xzf /opt/env.tar.gz -C /venv
     . /venv/bin/activate
-    which python
     conda-unpack
 
     # Install VISSL
@@ -71,26 +67,25 @@ Stage: builder
     git checkout -b v${VISSL_VERSION}
 
     # Install VISSL dependencies and package
-    python -m pip install --no-cache-dir -r requirements.txt
-    python -m pip install --no-cache-dir opencv-python
-    python -m pip install --no-cache-dir -e ".[dev]"
+    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir opencv-python
+    pip install --no-cache-dir -e ".[dev]"
 
     # Update classy vision install to commit stable for vissl.
     # Note: If building from vissl main, use classyvision main.
     # Update fairscale install to commit stable for vissl.
     # Update numpy to fix ModuleNotFoundError: No module named 'numpy.core._multiarray_umath'
     # See https://stackoverflow.com/a/74934626/16814206
-    python -m pip uninstall -y \
+    pip uninstall -y \
         classy_vision \
         fairscale \
         numpy
-    python -m pip install --no-cache-dir \
+    pip install --no-cache-dir \
         classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d \
         fairscale==0.4.6 \
         numpy==1.21.0
 
 
-# Always use cudnn version 7
 Bootstrap: docker
 From: nvidia/cuda:11.1.1-cudnn8-runtime-ubuntu18.04
 Stage: final
@@ -123,7 +118,6 @@ Stage: final
 %runscript
     echo "[$(date)] Running VISSL"
     echo "Arguments: $*"
-    echo "Activating VISSL environment"
     echo "Running command"
     exec "$@"
 
