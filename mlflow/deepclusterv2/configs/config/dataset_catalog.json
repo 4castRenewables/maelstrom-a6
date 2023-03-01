@@ -1,12 +1,22 @@
 {
-  "remote_test_dataset":
-    {
-      "train": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""],
-      "val": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""]
-    },
   "local_test_dataset":
   {
     "train": ["/data", ""],
     "val": ["/data", ""]
+  },
+  "remote_test_dataset":
+  {
+    "train": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""],
+    "val": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""]
+  },
+  "remote_dataset_daily":
+  {
+    "train": ["/p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily", ""],
+    "val": ["/p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily", ""]
+  },
+  "remote_dataset_hourly":
+  {
+    "train": ["/p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/hourly", ""],
+    "val": ["/p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/hourly", ""]
   }
 }
