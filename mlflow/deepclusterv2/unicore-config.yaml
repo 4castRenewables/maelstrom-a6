@@ -5,7 +5,7 @@ Environment:
 UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
 Resources:
   Runtime: 6h
-  Queue: develbooster
+  Queue: booster
   Nodes: 1
   #NodeConstraints: largedata
 Exclude:
