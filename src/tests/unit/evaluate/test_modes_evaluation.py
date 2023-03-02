@@ -57,7 +57,7 @@ def test_evaluate_scores_per_mode(mode_appearances):
 
 
 def test_evaluate_scores_per_mode_with_real_data():
-    data_dir = _FILE_DIR / "../../../../data"
+    data_dir = _FILE_DIR / "../../data"
 
     scores = xr.open_dataset(data_dir / "scores.nc")
 
