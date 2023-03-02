@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 from collections.abc import Callable
@@ -98,6 +99,9 @@ def convert_fields_to_grayscale_images(
 
     min_max_values = _get_min_max_values(data, variables=variables)
 
+    with open(path / "min_max_values.json", "w") as f:
+        f.write(json.dumps(min_max_values, sort_keys=True, indent=2))
+
     logger.info("Starting conversion of images to .tif")
     filename_creator = _FileNameCreator(
         path=path,
@@ -141,7 +145,10 @@ def _convert_time_step_and_save_to_file(
 def _get_min_max_values(data: xr.Dataset, variables: Variables) -> MinMaxValues:
     logger.debug("Getting min and max values for data variables %s", variables)
     return {
-        var: (data[var].min().compute(), data[var].max().compute())
+        var: (
+            data[var].min().compute().item(),
+            data[var].max().compute().item(),
+        )
         for var in variables
     }
 
