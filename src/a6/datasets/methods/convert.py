@@ -105,13 +105,6 @@ def convert_fields_to_grayscale_images(
         variables=variables,
         level=level,
     )
-    for step in data[coordinates.time]:
-        _convert_time_step_and_save_to_file(
-            data=data,
-            min_max_values=min_max_values,
-            filename_creator=filename_creator,
-            time_step=step,
-        )
     steps = (step for step in data[coordinates.time])
     kwargs = dict(
         data=data,
