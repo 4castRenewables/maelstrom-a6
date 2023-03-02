@@ -28,7 +28,7 @@ make upload-vissl
 ## Testing locally
 
 **Note**: To make the `dataset_catalog.json` available in the image, the `configs` directory
-has to be bound into the container, i.e. `-B $PWD/configs:/opt/vissl/configs`.
+on the local machine needs to be bound to the respective path in the image, i.e. `-B $PWD/configs:/opt/vissl/configs`.
 
 ```bash
 apptainer run \
