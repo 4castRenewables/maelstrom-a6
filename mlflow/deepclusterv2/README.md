@@ -33,7 +33,7 @@ has to be bound into the container, i.e. `-B $PWD/configs:/opt/vissl/configs`.
 ```bash
 apptainer run \
     -B $PWD/mlflow/deepclusterv2/configs:/opt/vissl/configs \
-    -B $PWD/data/deepclusterv2:/data \
+    -B $PWD/src/tests/data/deepclusterv2:/data \
     mlflow/deepclusterv2/vissl.sif \
     python /opt/vissl/tools/run_distributed_engines.py \
     config=local

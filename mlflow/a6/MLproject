@@ -2,7 +2,7 @@ name: a6
 
 docker_env:
   image: a6:latest
-  volumes: ["${PWD}/../../data:/data"]
+  volumes: ["${PWD}/../../src/tests/data:/data"]
   environment: ["MLFLOW_TRACKING_TOKEN"]
 
 entry_points:

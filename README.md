@@ -44,7 +44,7 @@ apt install -y \
      a6 \
      --log-to-mantik true \
      train cluster \
-     --weather-data data/temperature_level_128_daily_averages_2020.nc \
+     --weather-data src/tests/data/temperature_level_128_daily_averages_2020.nc \
      --level 128 \
      --config mlflow/cluster.yaml
    ```
@@ -90,7 +90,7 @@ Docker image manually if any of these files was modified
    apptainer run \
      mlflow/a6.sif \
      a6 train cluster \
-     --weather-data ${PWD}/data/temperature_level_128_daily_averages_2020.nc \
+     --weather-data ${PWD}/src/tests/data/temperature_level_128_daily_averages_2020.nc \
      --config cluster.yaml \
      --use-varimax true
    ```
@@ -152,7 +152,7 @@ Docker image manually if any of these files was modified
 4. Run the inference per the deployed SageMaker endpoint
    ```commandline
    poetry run a6 inference a6-kmeans \
-     --weather-data $PWD/data/temperature_level_128_daily_averages_2020.nc
+     --weather-data $PWD/src/tests/data/temperature_level_128_daily_averages_2020.nc
      --n-components 3
      --use-varimax false
    ```
