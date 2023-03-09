@@ -50,9 +50,9 @@ CHECKPOINTS_DIR=${BASE_DIR}/checkpoints
 TENSORBOARD_LOG_DIR=${BASE_DIR}/tensorboard-logs
 TMP_DATA_DIR=${BASE_DIR}/tmp
 
-echo "Run directory created at ${BASE_DIR}"
-
 mkdir -p ${BASE_DIR} ${CHECKPOINTS_DIR} ${TENSORBOARD_LOG_DIR} ${TMP_DATA_DIR}
+
+echo "Run directory created at ${BASE_DIR}"
 
 srun apptainer run \
   -B /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2/configs:/opt/vissl/configs \
