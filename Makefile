@@ -39,7 +39,7 @@ upload:
 upload-e4:
 	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
 		mlflow/a6/$(IMAGE_NAME).sif \
-		$(E4_SSH):$(E4_PROJECT_DIR)/$(VISSL_IMAGE_NAME).sif
+		$(E4_SSH):$(E4_PROJECT_DIR)/$(IMAGE_NAME).sif
 
 deploy: build upload
 
