@@ -141,6 +141,8 @@ build-vissl-docker:
 build-vissl:
 	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif apptainer/vissl.def
 
+build-vissl-rocm:
+	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME)-rocm.sif apptainer/vissl-rocm.def
 
 upload-vissl:
 	$(SSH_COPY_COMMAND) $(JSC_SSH_OPTIONS) \
@@ -152,4 +154,13 @@ upload-vissl-e4:
 		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif \
 		$(E4_SSH):$(E4_PROJECT_DIR)/$(VISSL_IMAGE_NAME).sif
 
+upload-vissl-rocm-e4:
+	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
+		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME)-rocm.sif \
+		$(E4_SSH):$(E4_PROJECT_DIR)/$(VISSL_IMAGE_NAME)-rocm.sif
+
 deploy-vissl: build-vissl upload-vissl
+
+deploy-vissl-e4: build-vissl upload-vissl-e4
+
+deploy-vissl-rocm-e4: build-vissl-rocm upload-vissl-rocm-e4
