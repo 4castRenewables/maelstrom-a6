@@ -6,70 +6,77 @@ parameterset:
   - name: trainingParameters
     parameter:
       - name: epochs
+        tag: "!test"
         type: int
-        _: 2
-      - name: lenghts
-        mode: shell
-        _: >
-           if [ "$epochs" -gt "999" ]; then
-               echo "[0.01,0.99]";
-           elif [ "$epochs" -gt "799" ]; then
-               echo "[0.0125,0.9875]";
-           elif [ "$epochs" -gt "599" ]; then
-               echo "[0.0166667,0.9833333]";
-           elif [ "$epochs" -gt "499" ]; then
-               echo "[0.02,0.98]";
-           elif [ "$epochs" -gt "399" ]; then
-               echo "[0.025,0.975]";
-           elif [ "$epochs" -gt "101" ]; then
-               echo "[0.05,0.95]";
-           elif [ "$epochs" -gt "5" ]; then
-                echo "[0.1,0.9]";
-           elif [ "$epochs" -gt "2" ]; then
-                echo "[0.002563,0.997437]";
-           elif [ "$epochs" -gt "1" ]; then
-                echo "[0.00641,0.99359]";
-           else
-                echo "[0.0128,0.9872]";
-           fi
+        _: 40
+      - name: epochs
+        tag: test
+        type: int
+        _: 1
       - name: dataset
         tag: jwb|jwc
-        _: "remote_dataset_hourly"
-  - name: systemParameters
+        _: remote_dataset_hourly
+  - name: globalParameters
     parameter:
       - name: modules
-        tag: "jwb|jwc"
-        separator: |
-        _:
-          module load Apptainer-Tools/2023
+        tag: jwb|jwc
+        mode: text
+        _: module load Apptainer-Tools/2023
+      - name: modules
+        tag: e4
+        mode: text
+        _: module load go-1.19/singularity-3.10.2
       - name: systemname
         tag: jwc
         _: jwc
       - name: systemname
         tag: jwb
         _: jwb
+      - name: systemname
+        tag: e4
+        _: e4
   - name: executeset
     init_with: platform.xml
-  - name: jobParameters
+  - name: systemParameter
     init_with: platform.xml
     parameter:
       - name: preprocess
         mode: text
         separator: |
-        _:
-          $modules;
+        _: >
+           $modules;
       - name: threadspertask
         _: 1
       - name: nodes
         _: 1
+      - name: nodes
+        tag: (jwc|jwb)+!test
+        _: "1,2,4"
+      - name: nodes
+        tag: e4
+        _: "1,2"
       - name: gpus
         _: 1
+      - name: gpus
+        tag: (jwc|jwb)+!test
+        _: 4
+      - name: gpus
+        tag: e4+!test
+        _: "1,2"
       - name: taskspernode
         _: $gpus
       - name: timelimit
+        tag: "!test"
+        _: "06:00:00"
+      - name: timelimit
+        tag: test
         _: "02:00:00"
       - name: account
+        tag: jwb|jwc
         _: deepacf
+      - name: account
+        tag: e4
+        _: maelstrom
       - name: queue
         tag: jwb+!test
         _: booster
@@ -82,58 +89,112 @@ parameterset:
       - name: queue
         tag: jwc+test
         _: develgpus
+      - name: queue
+        tag: e4+intel
+        _: i-gpu-a100
+      - name: queue
+        tag: e4+amd
+        _: a-gpu-mi100
+      - name: queue
+        tag: e4+arm
+        _: t-gpu-a100
       - name: gres
+        tag: jwc|jwb
         _: gpu:$gpus
+      - name: node_name
+        tag: jwc|jwb
+        _: $${SLURMD_NODENAME}i
+      - name: node_name
+        tag: e4
+        _: $${SLURMD_NODENAME}
       - name: run_id
-        mode: shell
-        _: >
-          if [ "$nodes" -gt "1" ]; then
-              echo "${SLURMD_NODENAME}i:29500";
-          else
-              echo "auto";
-          fi
-      - name: base_dir
-        mode: shell
-        _: echo "/p/scratch/deepacf/maelstrom/emmerich1/deepclusterv2/${SLURM_JOB_ID}"
-      - name: checkpoint_dir
-        mode: python
-        _: 'f"{$base_dir}/checkpoints"'
-      - name: tensorboard_dir
-        mode: python
-        _: 'f"{$base_dir}/tensorboard"'
-      - name: tmp_data_dir
-        mode: python
-        _: 'f"{$base_dir}/tmp"'
-      - name: executable
-        _: >
-          apptainer run
-          -B /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2/configs:/opt/vissl/configs
-          -B /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2/modified/log_hooks.py:/opt/vissl/vissl/hooks/log_hooks.py
-          --nv
-          /p/project/deepacf/maelstrom/emmerich1/vissl.sif
-          python /opt/vissl/tools/run_distributed_engines.py
-      - name: args
         mode: text
+        _: $$(if [ "$nodes" -gt "1" ]; then echo $node_name:29500; else echo auto; fi)
+      - name: lengths
+        type: text
+        mode: shell
+        separator: |
         _: >
-          config=remote
-          config.DISTRIBUTED.NUM_NODES=${nodes}
-          config.DISTRIBUTED.NUM_PROC_PER_NODE=${gpus}
-          config.DISTRIBUTED.RUN_ID=${run_id}
-          config.CHECKPOINT.DIR=${checkpoints_dir}
-          config.DATA.TRAIN.COPY_DESTINATION_DIR=${tmp_data_dir}
-          config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${tensorboard_dir}
-          config.OPTIMIZER.num_epochs=${epochs}
-          config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
-          config.DATA.TRAIN.DATASET_NAMES=[$dataset]
+           if [ "$epochs" -gt "999" ]; then
+             echo '"[0.01,0.99]"';
+           elif [ "$epochs" -gt "799" ]; then
+             echo '"[0.0125,0.9875]"';
+           elif [ "$epochs" -gt "599" ]; then
+             echo '"[0.0166667,0.9833333]"';
+           elif [ "$epochs" -gt "499" ]; then
+             echo '"[0.02,0.98]"';
+           elif [ "$epochs" -gt "399" ]; then
+             echo '"[0.025,0.975]"';
+           elif [ "$epochs" -gt "101" ]; then
+             echo '"[0.05,0.95]"';
+           elif [ "$epochs" -gt "5" ]; then
+             echo '"[0.1,0.9]"';
+           elif [ "$epochs" -gt "2" ]; then
+             echo '"[0.002563,0.997437]"';
+           elif [ "$epochs" -gt "1" ]; then
+            echo '"[0.00641,0.99359]"';
+           else
+             echo '"[0.0128,0.9872]"';
+           fi
+      - name: base_dir
+        tag: jwc|jwb
+        _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/${jube_benchmark_id}
+      - name: base_dir
+        tag: e4
+        _: /scratch/femmerich/jube-benchmarks/${jube_benchmark_id}
+      - name: checkpoints_dir
+        _: $base_dir/checkpoints
+      - name: tensorboard_dir
+        _: $base_dir/tensorboard
+      - name: tmp_data_dir
+        _: $base_dir/tmp
+      - name: executable
+        mode: text
+        _: apptainer
+      - name: repo_dir
+        tag: jwc|jwb
+        _: /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
+      - name: repo_dir
+        tag: e4
+        _: /home/femmerich/code/a6/mlflow/deepclusterv2
+      - name: image_path
+        tag: jwc|jwb
+        _: /p/project/deepacf/maelstrom/emmerich1/vissl.sif
+      - name: image_path
+        tag: e4
+        _: /scratch/femmerich/vissl.sif
+      - name: image_path
+        tag: e4+amd
+        _: /scratch/femmerich/vissl-rocm.sif
+      - name: args_exec
+        mode: text
+        separator: |
+        _: >
+           run
+           -B ${repo_dir}/configs:/opt/vissl/configs
+           -B ${repo_dir}/modified/log_hooks.py:/opt/vissl/vissl/hooks/log_hooks.py
+           --nv
+           ${image_path}
+           python /opt/vissl/tools/run_distributed_engines.py
+           config=remote
+           config.DISTRIBUTED.NUM_NODES=${nodes}
+           config.DISTRIBUTED.NUM_PROC_PER_NODE=${gpus}
+           config.DISTRIBUTED.RUN_ID=${run_id}
+           config.CHECKPOINT.DIR=${checkpoints_dir}
+           config.DATA.TRAIN.COPY_DESTINATION_DIR=${tmp_data_dir}
+           config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${tensorboard_dir}
+           config.OPTIMIZER.num_epochs=${epochs}
+           config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
+           config.DATA.TRAIN.DATASET_NAMES=[${dataset}]
 
 patternset:
    - name: perf_patterns
      pattern:
       - {name: epoch, type: int, _: "epoch:\\s+$jube_pat_int/\\s+$jube_pat_nint"}
-      - {name: epoch_time, type: int, _: "epochtime\(ms\):\\s+${jube_pat_nint}"}
-      - {name: batch_time, type: int, _: "batchtime\(ms\):\\s+${jube_pat_nint}"}
+      - {name: epoch_time, type: int, _: "epochtime\\(ms\\):\\s+${jube_pat_nint}"}
+      - {name: batch_time, type: int, _: "batchtime\\(ms\\):\\s+${jube_pat_nint}"}
       - {name: loss, type: float, _: "loss:\\s+$jube_pat_fp"}
-      - {name: memory_usage, type: int, _: "pear_mem(\M\):\\s+$jube_pat_nint" }
+      - {name: memory_usage, type: int, _: "pear_mem(\\M\\):\\s+$jube_pat_nint" }
       - {name: jobid, type: int, _: "Submitted batch job $jube_pat_int" }
 
 analyser:
@@ -171,14 +232,14 @@ result:
 step:
   - name: setup_directories
     use:
-      - jobParameters
+      - systemParameter
     do:
       _: mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir}
   - name: submit
     use:
       - trainingParameters
-      - systemParameters
-      - jobParameters
+      - globalParameters
+      - systemParameter
       - executeset
       - from: platform.xml
         _: jobfiles

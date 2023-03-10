@@ -64,3 +64,16 @@ sbatch -A <account> --partition <partition> --nodes=${NODES} --gres=gpu:${N_GPUS
 ```bash
 mantik runs submit mlflow/deepclusterv2
 ```
+
+## Using JUBE for benchmarking
+
+[JUBE](https://apps.fz-juelich.de/jsc/jube/jube2/docu/) can be used for benchmarking.
+The benchmarks are defined in `jube.yaml`.
+To run the benchmarks, use 
+
+```bash
+jube run jube.yaml --tag jwc test
+```
+
+*Note:*
+For debugging consider the `--debug`, `--devel`, and/or `-v` options.
