@@ -15,10 +15,10 @@ parameterset:
         _: 1
       - name: dataset
         tag: test
-        _: remote_dataset_daily
+        _: "[remote_dataset_daily]"
       - name: dataset
         tag: "!test"
-        _: remote_dataset_hourly
+        _: "[remote_dataset_hourly]"
   - name: globalParameters
     parameter:
       - name: modules
@@ -135,7 +135,7 @@ parameterset:
            elif [ "$epochs" -gt "2" ]; then
              echo '"[0.002563,0.997437]"';
            elif [ "$epochs" -gt "1" ]; then
-            echo '"[0.00641,0.99359]"';
+             echo '"[0.00641,0.99359]"';
            else
              echo '"[0.0128,0.9872]"';
            fi
@@ -194,9 +194,10 @@ parameterset:
            config.DATA.TRAIN.COPY_DESTINATION_DIR=${tmp_data_dir}
            config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${tensorboard_dir}
            config.OPTIMIZER.num_epochs=${epochs}
-           config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
-           config.DATA.TRAIN.DATASET_NAMES="[${dataset}]"
+           config.DATA.TRAIN.DATASET_NAMES=${dataset}
            ${rocm_args}
+           config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
+# Note: the lengths arg must be last since it will contain a newline due to the parsing
 
 patternset:
    - name: perf_patterns
