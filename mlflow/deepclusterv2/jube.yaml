@@ -202,11 +202,11 @@ parameterset:
 patternset:
    - name: perf_patterns
      pattern:
-      - {name: epoch, type: int, _: "epoch:\\s+$jube_pat_int/\\s+$jube_pat_nint"}
-      - {name: epoch_time, type: int, _: "epochtime\\(ms\\):\\s+${jube_pat_nint}"}
-      - {name: batch_time, type: int, _: "batchtime\\(ms\\):\\s+${jube_pat_nint}"}
-      - {name: loss, type: float, _: "loss:\\s+$jube_pat_fp"}
-      - {name: memory_usage, type: int, _: "pear_mem(\\M\\):\\s+$jube_pat_nint" }
+      - {name: epoch, type: int, _: "epoch:\\s+$jube_pat_int/\\s+($jube_pat_nint)"}
+      - {name: epoch_time, type: int, _: "epochtime\\(ms\\):\\s+($jube_pat_nint)"}
+      - {name: batch_time, type: int, _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"}
+      - {name: loss, type: float, _: "loss:\\s+($jube_pat_fp)"}
+      - {name: memory_usage, type: int, _: "peak_mem\\(M\\):\\s+($jube_pat_nint)" }
       - {name: jobid, type: int, _: "Submitted batch job $jube_pat_int" }
 
 analyser:
@@ -237,7 +237,10 @@ result:
         - {title: "avg. epoch time [s]", _: epoch_time_avg}
         - {title: "first batch time [s]", _: batch_time_first}
         - {title: "last batch time [s]", _: batch_time_last}
-        - {title: "avg. batch time [s]", _: batch_time_avg}
+        - {title: "avg. batch time [MB]", _: memory_usage_avg}
+        - {title: "first memory usage [MB]", _: memory_usage_first}
+        - {title: "last memory usage [MB]", _: memory_usage_last}
+        - {title: "avg.  [s]", _: batch_time_avg}
         - {title: "last loss", _: loss_last}
         - {title: "min loss", _: loss_min}
 
