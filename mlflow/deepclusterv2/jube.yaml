@@ -149,8 +149,10 @@ parameterset:
       - name: tmp_data_dir
         _: $base_dir/tmp
       - name: executable
-        mode: text
         _: apptainer
+      - name: executable
+        tag: e4
+        _: singularity
       - name: repo_dir
         tag: jwc|jwb
         _: /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
