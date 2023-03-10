@@ -14,7 +14,10 @@ parameterset:
         type: int
         _: 1
       - name: dataset
-        tag: jwb|jwc
+        tag: test
+        _: remote_dataset_daily
+      - name: dataset
+        tag: "!test"
         _: remote_dataset_hourly
   - name: globalParameters
     parameter:
