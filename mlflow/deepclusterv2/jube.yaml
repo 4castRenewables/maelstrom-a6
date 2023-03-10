@@ -195,7 +195,7 @@ parameterset:
            config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${tensorboard_dir}
            config.OPTIMIZER.num_epochs=${epochs}
            config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
-           config.DATA.TRAIN.DATASET_NAMES=[${dataset}]
+           config.DATA.TRAIN.DATASET_NAMES="[${dataset}]"
            ${rocm_args}
 
 patternset:
