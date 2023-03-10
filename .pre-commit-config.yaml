@@ -43,6 +43,7 @@ repos:
             "--py39-plus",
             "--py310-plus",
         ]
+        exclude: (mlflow/deepclusterv2/modified/.*.py)
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
@@ -50,6 +51,7 @@ repos:
       - id: black
         args: ["--config", "pyproject.toml"]
         types_or: [python, pyi]
+        exclude: (mlflow/deepclusterv2/modified/.*.py)
       - id: black-jupyter
         args: ["--config", "pyproject.toml"]
         types_or: [jupyter]
