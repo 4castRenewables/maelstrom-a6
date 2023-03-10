@@ -30,6 +30,7 @@ repos:
           "--application-directories=.:src",
           "--py310-plus",
         ]
+        exclude: (mlflow/deepclusterv2/modified/.*.py)
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1
@@ -68,6 +69,7 @@ repos:
           - flake8-blind-except
           - flake8-logging-format
           - pep8-naming
+        exclude: (mlflow/deepclusterv2/modified/.*.py)
 
   - repo: local
     hooks:

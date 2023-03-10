@@ -5,6 +5,7 @@
 All the hooks involved in human-readable logging
 """
 # flake8: noqa
+
 import atexit
 import datetime
 import json
@@ -14,13 +15,11 @@ from typing import Optional
 
 import torch
 from classy_vision import tasks
-from classy_vision.generic.distributed_util import get_rank
-from classy_vision.generic.distributed_util import is_primary
+from classy_vision.generic.distributed_util import get_rank, is_primary
 from classy_vision.hooks.classy_hook import ClassyHook
 from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
 from iopath.common.file_io import g_pathmgr
-from vissl.utils.checkpoint import CheckpointWriter
-from vissl.utils.checkpoint import is_checkpoint_phase
+from vissl.utils.checkpoint import CheckpointWriter, is_checkpoint_phase
 from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
@@ -67,13 +66,11 @@ class LogGpuMemoryHook(ClassyHook):
         """
         self._print_memory_summary(task, "on_update")
 
-    def _print_memory_summary(
-        self, task: "tasks.ClassyTask", stage_name: str
-    ) -> None:
+    def _print_memory_summary(self, task: "tasks.ClassyTask", stage_name: str) -> None:
         if (
-            is_primary()
-            and (task.device.type == "cuda")
-            and task.local_iteration_num == self.log_iteration_num
+                is_primary()
+                and (task.device.type == "cuda")
+                and task.local_iteration_num == self.log_iteration_num
         ):
             logging.info(
                 f"========= Memory Summary at {stage_name} ======="
@@ -118,7 +115,7 @@ class DumpMemoryOnException(ClassyHook):
     @staticmethod
     def _is_pytorch(obj):
         return torch.is_tensor(obj) or (
-            hasattr(obj, "data") and torch.is_tensor(obj.data)
+                hasattr(obj, "data") and torch.is_tensor(obj.data)
         )
 
 
@@ -151,9 +148,9 @@ class LogGpuStatsHook(ClassyHook):
         useful for monitoring memory usage.
         """
         if (
-            is_primary()
-            and (task.device.type == "cuda")
-            and task.local_iteration_num == 50
+                is_primary()
+                and (task.device.type == "cuda")
+                and task.local_iteration_num == 50
         ):
             log_gpu_stats()
 
@@ -174,7 +171,7 @@ class LogLossLrEtaHook(ClassyHook):
     on_loss_and_meter = ClassyHook._noop
 
     def __init__(
-        self, checkpoint_folder: str, btime_freq: int | None = None
+            self, checkpoint_folder: str, btime_freq: Optional[int] = None
     ) -> None:
         """
         Args:
@@ -183,7 +180,7 @@ class LogLossLrEtaHook(ClassyHook):
                           batches also.
         """
         super().__init__()
-        self.btime_freq: int | None = btime_freq
+        self.btime_freq: Optional[int] = btime_freq
         self.json_stdout_logger = None
         if is_primary():
             self.json_stdout_logger = g_pathmgr.open(
@@ -211,16 +208,14 @@ class LogLossLrEtaHook(ClassyHook):
             iteration = task.iteration
 
             if torch.cuda.is_available():
-                peak_mem_used = int(
-                    torch.cuda.max_memory_allocated() / 1024.0 / 1024.0
-                )
+                peak_mem_used = int(torch.cuda.max_memory_allocated() / 1024.0 / 1024.0)
             else:
                 peak_mem_used = -1
 
             if (
-                (iteration == 1)
-                or (iteration % log_freq == 0)
-                or (iteration <= 100 and iteration % 5 == 0)
+                    (iteration == 1)
+                    or (iteration % log_freq == 0)
+                    or (iteration <= 100 and iteration % 5 == 0)
             ):
                 loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
                 if len(task.batch_time) > 0:
@@ -255,7 +250,7 @@ class LogLossLrEtaHook(ClassyHook):
 
                 if self.btime_freq and len(batch_times) >= self.btime_freq:
                     rolling_avg_time = (
-                        sum(batch_times[-self.btime_freq :]) / self.btime_freq
+                            sum(batch_times[-self.btime_freq :]) / self.btime_freq
                     )
                     rolling_eta_secs = int(
                         rolling_avg_time * (task.max_iteration - iteration)
@@ -264,9 +259,7 @@ class LogLossLrEtaHook(ClassyHook):
                         datetime.timedelta(seconds=int(rolling_eta_secs))
                     )
                     rolling_btime = int(1000.0 * rolling_avg_time)
-                    log_data[
-                        f"btime({self.btime_freq}iters)(ms)"
-                    ] = rolling_btime
+                    log_data[f"btime({self.btime_freq}iters)(ms)"] = rolling_btime
                     log_data["rolling_eta"] = rolling_eta_str
 
                 # to maintain the backwards compatibility with the log.txt
@@ -323,9 +316,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
 
         if has_nan:
             _, dist_rank = get_machine_local_and_dist_rank()
-            logging.info(
-                f"Infinite Model output or NaN at iteration={task.iteration}."
-            )
+            logging.info(f"Infinite Model output or NaN at iteration={task.iteration}.")
             self._checkpoint_model(
                 task,
                 mode_frequency=1,
@@ -351,9 +342,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         If we want to checkpoint after every N iterations, check the checkpoint
         frequency matches and checkpoint if it does.
         """
-        checkpoint_frequency = task.config["CHECKPOINT"][
-            "CHECKPOINT_ITER_FREQUENCY"
-        ]
+        checkpoint_frequency = task.config["CHECKPOINT"]["CHECKPOINT_ITER_FREQUENCY"]
         if checkpoint_frequency > 0:
             self._checkpoint_model(
                 task,
@@ -378,11 +367,11 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         )
 
     def _checkpoint_model(
-        self,
-        task: "tasks.ClassyTask",
-        mode_frequency: int,
-        mode_num: int,
-        mode: str = "phase",
+            self,
+            task: "tasks.ClassyTask",
+            mode_frequency: int,
+            mode_num: int,
+            mode: str = "phase",
     ):
         """
         Checkpoint model. Can be called in 3 possible scenarios:
@@ -410,19 +399,16 @@ class LogLossMetricsCheckpointHook(ClassyHook):
             mode_num, mode_frequency, train_phase_idx, num_train_phases, mode
         )
         is_final_train_phase = (
-            (train_phase_idx == (num_train_phases - 1))
-            and task.train
-            and mode == "phase"
+                (train_phase_idx == (num_train_phases - 1))
+                and task.train
+                and mode == "phase"
         )
 
         # handle checkpoint:
         if task.train and (is_final_train_phase or is_checkpointing_phase):
             #  - if sharded state consolidate the state
             # /!\ All the ranks have to participate
-            if (
-                hasattr(task.optimizer, "consolidate_state_dict")
-                and mode != "phase"
-            ):
+            if hasattr(task.optimizer, "consolidate_state_dict") and mode != "phase":
                 logging.info(
                     f"[{mode}: {mode_num}] Consolidating sharded state on all replicas"
                 )
@@ -443,9 +429,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 # save the incremented phase_idx as it will incorrectly assume that model
                 # trained for that phase already.
                 if mode == "iteration":
-                    model_state_dict["phase_idx"] = (
-                        model_state_dict["phase_idx"] - 1
-                    )
+                    model_state_dict["phase_idx"] = model_state_dict["phase_idx"] - 1
                     if task.train:
                         train_phase_idx = train_phase_idx - 1
                         model_state_dict["train_phase_idx"] = train_phase_idx
@@ -482,9 +466,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                         world_size=self.world_size,
                     )
                 else:
-                    checkpoint_writer.save_consolidated_checkpoint(
-                        checkpoint_content
-                    )
+                    checkpoint_writer.save_consolidated_checkpoint(checkpoint_content)
 
     def _print_and_save_meters(self, task, train_phase_idx):
         """
@@ -501,8 +483,8 @@ class LogLossMetricsCheckpointHook(ClassyHook):
         save_metrics["train_phase_idx"] = train_phase_idx
         for meter in task.meters:
             if len(task.meters) > 0 and (
-                (task.train and task.config["METERS"]["enable_training_meter"])
-                or (not task.train)
+                    (task.train and task.config["METERS"]["enable_training_meter"])
+                    or (not task.train)
             ):
                 meter_value = meter.value
                 metric_key = f"{phase_type}_{meter.name}"
@@ -510,9 +492,7 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                     task.metrics[metric_key] = []
                 task.metrics[metric_key].append(meter_value)
                 save_metrics[metric_key] = meter_value
-                logging.info(
-                    f"Rank: {rank}, name: {metric_key}, value: {meter_value}"
-                )
+                logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
         save_file(save_metrics, meter_file, append_to_json=True)
 
@@ -533,14 +513,14 @@ class LogPerfTimeMetricsHook(ClassyHook):
     on_update = ClassyHook._noop
     on_step = ClassyHook._noop
 
-    def __init__(self, log_freq: int | None = None) -> None:
+    def __init__(self, log_freq: Optional[int] = None) -> None:
         """
         Args:
             log_freq: if specified, logs every log_freq batches also.
         """
         super().__init__()
-        self.log_freq: int | None = log_freq
-        self.start_time: float | None = None
+        self.log_freq: Optional[int] = log_freq
+        self.start_time: Optional[float] = None
 
     def on_phase_start(self, task: "tasks.ClassyTask") -> None:
         """
