@@ -4,7 +4,6 @@
 """
 All the hooks involved in human-readable logging
 """
-# flake8: noqa
 
 import atexit
 import datetime
@@ -24,7 +23,6 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
-
 
 class LogGpuMemoryHook(ClassyHook):
     """
