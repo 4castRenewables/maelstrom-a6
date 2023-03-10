@@ -49,8 +49,20 @@ parameterset:
         _: 1
       - name: nodes
         _: 1
+      - name: nodes
+        tag: (jwc|jwb)+!test
+        _: "1,2,4"
+      - name: nodes
+        tag: e4
+        _: "1,2"
       - name: gpus
         _: 1
+      - name: gpus
+        tag: (jwc|jwb)+!test
+        _: 4
+      - name: gpus
+        tag: e4+!test
+        _: "1,2"
       - name: taskspernode
         _: $gpus
       - name: timelimit
@@ -98,6 +110,32 @@ parameterset:
       - name: run_id
         mode: text
         _: $$(if [ "$nodes" -gt "1" ]; then echo $node_name:29500; else echo auto; fi)
+      - name: lengths
+        type: text
+        mode: shell
+        separator: |
+        _: >
+           if [ "$epochs" -gt "999" ]; then
+             echo '"[0.01,0.99]"';
+           elif [ "$epochs" -gt "799" ]; then
+             echo '"[0.0125,0.9875]"';
+           elif [ "$epochs" -gt "599" ]; then
+             echo '"[0.0166667,0.9833333]"';
+           elif [ "$epochs" -gt "499" ]; then
+             echo '"[0.02,0.98]"';
+           elif [ "$epochs" -gt "399" ]; then
+             echo '"[0.025,0.975]"';
+           elif [ "$epochs" -gt "101" ]; then
+             echo '"[0.05,0.95]"';
+           elif [ "$epochs" -gt "5" ]; then
+             echo '"[0.1,0.9]"';
+           elif [ "$epochs" -gt "2" ]; then
+             echo '"[0.002563,0.997437]"';
+           elif [ "$epochs" -gt "1" ]; then
+            echo '"[0.00641,0.99359]"';
+           else
+             echo '"[0.0128,0.9872]"';
+           fi
       - name: base_dir
         tag: jwc|jwb
         _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/${jube_benchmark_id}
@@ -118,15 +156,19 @@ parameterset:
         _: /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
       - name: repo_dir
         tag: e4
-        _: 
+        _: /home/femmerich/code/a6/mlflow/deepclusterv2
       - name: image_path
         tag: jwc|jwb
         _: /p/project/deepacf/maelstrom/emmerich1/vissl.sif
       - name: image_path
         tag: e4
         _: /scratch/femmerich/vissl.sif
+      - name: image_path
+        tag: e4+amd
+        _: /scratch/femmerich/vissl-rocm.sif
       - name: args_exec
         mode: text
+        separator: |
         _: >
            run
            -B ${repo_dir}/configs:/opt/vissl/configs
@@ -142,7 +184,7 @@ parameterset:
            config.DATA.TRAIN.COPY_DESTINATION_DIR=${tmp_data_dir}
            config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${tensorboard_dir}
            config.OPTIMIZER.num_epochs=${epochs}
-           config.OPTIMIZER.param_schedulers.lr.lengths=$${LENGTHS}
+           config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
            config.DATA.TRAIN.DATASET_NAMES=[${dataset}]
 
 patternset:
@@ -208,29 +250,4 @@ step:
       error_file: $error_file
       _:
         $modules;
-
-        if [ "$epochs" -gt "999" ]; then
-          export LENGTHS="[0.01,0.99]";
-        elif [ "$epochs" -gt "799" ]; then
-          export LENGTHS="[0.0125,0.9875]";
-        elif [ "$epochs" -gt "599" ]; then
-          export LENGTHS="[0.0166667,0.9833333]";
-        elif [ "$epochs" -gt "499" ]; then
-          export LENGTHS="[0.02,0.98]";
-        elif [ "$epochs" -gt "399" ]; then
-          export LENGTHS="[0.025,0.975]";
-        elif [ "$epochs" -gt "101" ]; then
-          export LENGTHS="[0.05,0.95]";
-        elif [ "$epochs" -gt "5" ]; then
-          export LENGTHS="[0.1,0.9]";
-        elif [ "$epochs" -gt "2" ]; then
-          export LENGTHS="[0.002563,0.997437]";
-        elif [ "$epochs" -gt "1" ]; then
-         export LENGTHS="[0.00641,0.99359]";
-        else
-          export LENGTHS="[0.0128,0.9872]";
-        fi
-
-        echo LENGTHS=$${LENGTHS};
-
         $submit $submit_script
