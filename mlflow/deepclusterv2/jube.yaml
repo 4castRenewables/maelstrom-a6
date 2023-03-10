@@ -14,7 +14,10 @@ parameterset:
         type: int
         _: 1
       - name: dataset
-        tag: jwb|jwc
+        tag: test
+        _: remote_dataset_daily
+      - name: dataset
+        tag: "!test"
         _: remote_dataset_hourly
   - name: globalParameters
     parameter:
@@ -168,6 +171,11 @@ parameterset:
       - name: image_path
         tag: e4+amd
         _: /scratch/femmerich/vissl-rocm.sif
+      - name: rocm_args
+        _: ""
+      - name: rocm_args
+        tag: amd
+        _: "config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False"
       - name: args_exec
         mode: text
         separator: |
@@ -188,6 +196,7 @@ parameterset:
            config.OPTIMIZER.num_epochs=${epochs}
            config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
            config.DATA.TRAIN.DATASET_NAMES=[${dataset}]
+           ${rocm_args}
 
 patternset:
    - name: perf_patterns
