@@ -202,12 +202,51 @@ parameterset:
 patternset:
    - name: perf_patterns
      pattern:
-      - {name: epoch, type: int, _: "epoch:\\s+$jube_pat_int/\\s+($jube_pat_nint)"}
-      - {name: epoch_time, type: int, _: "epochtime\\(ms\\):\\s+($jube_pat_nint)"}
-      - {name: batch_time, type: int, _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"}
-      - {name: loss, type: float, _: "loss:\\s+($jube_pat_fp)"}
-      - {name: memory_usage, type: int, _: "peak_mem\\(M\\):\\s+($jube_pat_nint)" }
-      - {name: jobid, type: int, _: "Submitted batch job $jube_pat_int" }
+      - name: epoch
+        type: int
+        _: "epoch:\\s+($jube_pat_int)/\\s+($jube_pat_nint)"
+      - name: epoch_time
+        type: int
+        _: "epochtime\\(ms\\):\\s+($jube_pat_nint)"
+      - name: batch_time
+        type: int
+        _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
+      - name: read_sample_time
+        type: float
+        _: "read_sample:\\s+($jube_pat_nfp)"
+      - name: loss_compute_time
+        type: float
+        _: "loss_compute_time:\\s+($jube_pat_nfp)"
+      - name: loss_all_reduce_time
+        type: float
+        _: "loss_all_reduce_time:\\s+($jube_pat_nfp)"
+      - name: forward_time
+        type: float
+        _: "forward_time:\\s+($jube_pat_nfp)"
+      - name: backward_time
+        type: float
+        _: "backward_time:\\s+($jube_pat_nfp)"
+      - name: optimizer_step_time
+        type: float
+        _: "optimizer_step_time:\\s+($jube_pat_nfp)"
+      - name: train_step_time
+        type: float
+        _: "train_step_time:\\s+($jube_pat_nfp)"
+      - name: loss
+        type: float
+        _: "loss:\\s+($jube_pat_nfp)"
+      - name: learning_rate
+        type: float
+        _: "lr:\\s+($jube_pat_nfp)"
+      - name: memory_usage
+        type: int
+        _: "peak_mem\\(M\\):\\s+($jube_pat_nint)" 
+      - name: total_runtime
+        type: float
+        _: "Total runtime\\(s\\):\\s+($jube_pat_nfp)"
+      - name: job_id
+        type: int
+        _: "Submitted batch job $jube_pat_int" 
 
 analyser:
     name: analyse
@@ -226,8 +265,9 @@ result:
       style: pretty
       sort: iter_pat
       column:
-        - {title: "JobID", _: jobid}
+        - {title: "JobID", _: job_id}
         - {title: "Job_Time", _: timelimit}
+        - {title: "total runtime", _: total_runtime_first}
         - {title: "# epochs", _: epochs}
         - {title: "# nodes", _: nodes}
         - {title: "# gpus", _: gpus}
@@ -235,12 +275,23 @@ result:
         - {title: "first epoch time [s]", _: epoch_time_first}
         - {title: "last epoch time [s]", _: epoch_time_last}
         - {title: "avg. epoch time [s]", _: epoch_time_avg}
+        - {title: "std. epoch time [s]", _: epoch_time_std}
         - {title: "first batch time [s]", _: batch_time_first}
         - {title: "last batch time [s]", _: batch_time_last}
-        - {title: "avg. batch time [MB]", _: memory_usage_avg}
+        - {title: "avg. batch time [s]", _: batch_usage_avg}
+        - {title: "std. batch time [s]", _: batch_usage_std}
+        - {title: "first forward time [s]", _: forward_time_first}
+        - {title: "last forward time [s]", _: forward_time_last}
+        - {title: "avg. forward time [s]", _: forward_usage_avg}
+        - {title: "std. forward time [s]", _: forward_usage_std}
+        - {title: "first backward time [s]", _: backward_time_first}
+        - {title: "last backward time [s]", _: backward_time_last}
+        - {title: "avg. backward time [s]", _: backward_usage_avg}
+        - {title: "std. backward time [s]", _: backward_usage_std}
         - {title: "first memory usage [MB]", _: memory_usage_first}
         - {title: "last memory usage [MB]", _: memory_usage_last}
-        - {title: "avg.  [s]", _: batch_time_avg}
+        - {title: "avg. memory usage [MB]", _: memory_usage_avg}
+        - {title: "max. memory usage [MB]", _: memory_usage_max}
         - {title: "last loss", _: loss_last}
         - {title: "min loss", _: loss_min}
 
