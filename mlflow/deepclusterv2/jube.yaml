@@ -93,6 +93,9 @@ parameterset:
         tag: jwc+test
         _: develgpus
       - name: queue
+        tag: e4+test
+        _: i-gpu-a100
+      - name: queue
         tag: e4+intel
         _: i-gpu-a100
       - name: queue
