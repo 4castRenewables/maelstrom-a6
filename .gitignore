@@ -3,3 +3,4 @@
 kernel.json
 dist/
 .checkpoints/
+ap6-run/
