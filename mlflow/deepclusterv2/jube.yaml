@@ -14,11 +14,17 @@ parameterset:
         type: int
         _: 1
       - name: dataset
-        tag: test
-        _: "[remote_dataset_daily]"
+        tag: (jwc|jwb)+test
+        _: "[remote_dataset_jsc_daily]"
       - name: dataset
-        tag: "!test"
-        _: "[remote_dataset_hourly]"
+        tag: (jwc|jwb)+!test
+        _: "[remote_dataset_jsc_hourly]"
+      - name: dataset
+        tag: e4+test
+        _: "[remote_dataset_e4_daily]"
+      - name: dataset
+        tag: e4+!test
+        _: "[remote_dataset_e4_hourly]"
   - name: globalParameters
     parameter:
       - name: modules
@@ -48,6 +54,16 @@ parameterset:
         separator: |
         _: >
            $modules;
+      - name: hostname_power_script
+        tag: i-gpu-a100
+        _: icnode0102
+      - name: preprocess
+        tag: e4
+        mode: text
+        separator: |
+        _: >
+           . /opt/share/scripts/powerdiscovery/getpower.sh $hostname_power_script 360 >> consumption.log &;
+           $modules;
       - name: threadspertask
         _: 1
       - name: nodes
@@ -64,8 +80,11 @@ parameterset:
         tag: (jwc|jwb)+!test
         _: 4
       - name: gpus
-        tag: e4+!test
+        tag: e4+(t-gpu-a100|t-gpu-v100|a-gpu-mi100)+!test
         _: "1,2"
+      - name: gpus
+        tag: e4+i-gpu-a100+!test
+        _: "1"
       - name: taskspernode
         _: $gpus
       - name: timelimit
@@ -104,8 +123,11 @@ parameterset:
       - name: queue
         tag: e4+arm
         _: t-gpu-a100
+      - name: queue
+        tag: e4+arm+v100
+        _: t-gpu-v100
       - name: gres
-        tag: jwc|jwb
+        tag: jwc|jwb|e4
         _: gpu:$gpus
       - name: node_name
         tag: jwc|jwb
@@ -248,6 +270,12 @@ patternset:
       - name: total_runtime
         type: float
         _: "Total runtime\\(s\\):\\s+($jube_pat_nfp)"
+      - name: power_consumption
+        type: int
+        _: ",($jube_pat_nint),"
+      - name: apparent_power
+        type: int
+        _: ",($jube_pat_nint)\$"
       - name: job_id
         type: int
         _: "Submitted batch job $jube_pat_int" 
@@ -261,6 +289,7 @@ analyser:
         file:
           - job.out
           - stdout
+          - consumption.log
 
 result:
     use: analyse
@@ -298,6 +327,14 @@ result:
         - {title: "max. memory usage [MB]", _: memory_usage_max}
         - {title: "last loss", _: loss_last}
         - {title: "min loss", _: loss_min}
+        - {title: "first power consumption [W]", _: power_consumption_first}
+        - {title: "last power consumption [W]", _: power_consumption_last}
+        - {title: "avg. power consumption [W]", _: power_consumption_avg}
+        - {title: "std. power consumption [W]", _: power_consumption_max}
+        - {title: "first apparent power [VA]", _: apparent_power_first}
+        - {title: "last apparent power [VA]", _: apparent_power_last}
+        - {title: "avg. apparent power [VA]", _: apparent_power_avg}
+        - {title: "std. apparent power [VA]", _: apparent_power_max}
 
 step:
   - name: setup_directories
