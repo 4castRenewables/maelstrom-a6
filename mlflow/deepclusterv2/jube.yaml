@@ -13,6 +13,33 @@ parameterset:
         tag: test
         type: int
         _: 1
+      - name: lengths
+        type: text
+        separator: |
+        _: >
+           $$(
+           if [ "$epochs" -gt "999" ]; then
+             echo '"[0.01,0.99]"';
+           elif [ "$epochs" -gt "799" ]; then
+             echo '"[0.0125,0.9875]"';
+           elif [ "$epochs" -gt "599" ]; then
+             echo '"[0.0166667,0.9833333]"';
+           elif [ "$epochs" -gt "499" ]; then
+             echo '"[0.02,0.98]"';
+           elif [ "$epochs" -gt "399" ]; then
+             echo '"[0.025,0.975]"';
+           elif [ "$epochs" -gt "101" ]; then
+             echo '"[0.05,0.95]"';
+           elif [ "$epochs" -gt "5" ]; then
+             echo '"[0.1,0.9]"';
+           elif [ "$epochs" -gt "2" ]; then
+             echo '"[0.002563,0.997437]"';
+           elif [ "$epochs" -gt "1" ]; then
+             echo '"[0.00641,0.99359]"';
+           else
+             echo '"[0.0128,0.9872]"';
+           fi
+           )
       - name: dataset
         tag: (jwc|jwb)+test
         _: "[remote_dataset_jsc_daily]"
@@ -55,15 +82,21 @@ parameterset:
         _: >
            $modules;
       - name: hostname_power_script
-        tag: i-gpu-a100
-        _: icnode0102
+        tag: intel
+        _: awnode0104
+      - name: hostname_power_script
+        tag: amd
+        _: awnode0104
+      - name: hostname_power_script
+        tag: arm
+        _: awnode0104
       - name: preprocess
         tag: e4
         mode: text
         separator: |
         _: >
-           . /opt/share/scripts/powerdiscovery/getpower.sh $hostname_power_script 360 >> consumption.log &;
            $modules;
+           . /opt/share/scripts/powerdiscovery/getpower.sh $hostname_power_script 360 > consumption.log 2>&1 &
       - name: threadspertask
         _: 1
       - name: nodes
@@ -72,7 +105,7 @@ parameterset:
         tag: (jwc|jwb)+!test
         _: "1,2,4"
       - name: nodes
-        tag: e4
+        tag: e4+!test
         _: "1,2"
       - name: gpus
         _: 1
@@ -86,7 +119,7 @@ parameterset:
         tag: e4+i-gpu-a100+!test
         _: "1"
       - name: taskspernode
-        _: $gpus
+        _: 1
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -137,33 +170,7 @@ parameterset:
         _: $${SLURMD_NODENAME}
       - name: run_id
         mode: text
-        _: $$(if [ "$nodes" -gt "1" ]; then echo $node_name:29500; else echo auto; fi)
-      - name: lengths
-        type: text
-        mode: shell
-        separator: |
-        _: >
-           if [ "$epochs" -gt "999" ]; then
-             echo '"[0.01,0.99]"';
-           elif [ "$epochs" -gt "799" ]; then
-             echo '"[0.0125,0.9875]"';
-           elif [ "$epochs" -gt "599" ]; then
-             echo '"[0.0166667,0.9833333]"';
-           elif [ "$epochs" -gt "499" ]; then
-             echo '"[0.02,0.98]"';
-           elif [ "$epochs" -gt "399" ]; then
-             echo '"[0.025,0.975]"';
-           elif [ "$epochs" -gt "101" ]; then
-             echo '"[0.05,0.95]"';
-           elif [ "$epochs" -gt "5" ]; then
-             echo '"[0.1,0.9]"';
-           elif [ "$epochs" -gt "2" ]; then
-             echo '"[0.002563,0.997437]"';
-           elif [ "$epochs" -gt "1" ]; then
-             echo '"[0.00641,0.99359]"';
-           else
-             echo '"[0.0128,0.9872]"';
-           fi
+        _: $$(if [ $nodes -gt "1" ]; then echo $node_name:29500; else echo auto; fi)
       - name: base_dir
         tag: jwc|jwb
         _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/${jube_benchmark_id}
@@ -198,6 +205,11 @@ parameterset:
         _: /scratch/femmerich/vissl-rocm.sif
       - name: rocm_args
         _: ""
+      - name: data_bind
+        _: ""
+      - name: data_bind
+        tag: e4
+        _: -B /data:/data
       - name: rocm_args
         tag: amd
         _: "config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False"
@@ -206,6 +218,7 @@ parameterset:
         separator: |
         _: >
            run
+           ${data_bind}
            -B ${repo_dir}/configs:/opt/vissl/configs
            -B ${repo_dir}/modified/hooks/log_hooks.py:/opt/vissl/vissl/hooks/log_hooks.py
            -B ${repo_dir}/modified/utils/distributed_launcher.py:/opt/vissl/vissl/utils/distributed_launcher.py
@@ -222,7 +235,7 @@ parameterset:
            config.OPTIMIZER.num_epochs=${epochs}
            config.DATA.TRAIN.DATASET_NAMES=${dataset}
            ${rocm_args}
-           config.OPTIMIZER.param_schedulers.lr.lengths=${lengths}
+           config.OPTIMIZER.param_schedulers.lr.lengths=$${LENGTHS}
 # Note: the lengths arg must be last since it will contain a newline due to the parsing
 
 patternset:
@@ -275,7 +288,7 @@ patternset:
         _: ",($jube_pat_nint),"
       - name: apparent_power
         type: int
-        _: ",($jube_pat_nint)\$"
+        _: ",($jube_pat_nint)\\$"
       - name: job_id
         type: int
         _: "Submitted batch job $jube_pat_int" 
@@ -357,4 +370,6 @@ step:
       error_file: $error_file
       _:
         $modules;
+        export LENGTHS=$lengths;
+        echo LENGTHS=$$LENGTHS;
         $submit $submit_script
