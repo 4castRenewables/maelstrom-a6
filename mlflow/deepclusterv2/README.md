@@ -77,3 +77,9 @@ jube run jube.yaml --tag jwc test
 
 *Note:*
 For debugging consider the `--debug`, `--devel`, and/or `-v` options.
+
+Once all runs are finnished, analysis can be performed via
+
+```bash
+jube analyse ap6-run/
+```
