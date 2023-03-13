@@ -75,6 +75,17 @@ To run the benchmarks, use
 jube run jube.yaml --tag jwc test
 ```
 
+Replace the tags with the respective tags.
+Available tags:
+
+* test (single node/gpu, devel queues, small data sample)
+* jwc (JUWELS Cluster)
+* jwb (JUWELS Booster)
+* e4 (E4 systems)
+  * intel (Intel CPU + NVIDIA A100 GPU nodes)
+  * amd (AMD CPU + AMD MI100 GPU nodes)
+  * arm (ARM CPU + NVIDIA A100 GPU nodes)
+
 *Note:*
 For debugging consider the `--debug`, `--devel`, and/or `-v` options.
 
