@@ -55,11 +55,19 @@ addopts = "--cov=a6 --cov-report term-missing"
 
 [tool.black]
 line-length = 80
+extend-exclude = """
+(
+    ^/mlflow/deepclusterv2/modified/.*.py
+)
+"""
 
 [tool.flake8]
 max-line-length = 80
 per-file-ignores = [
     "__init__.py:F401,E501",
+]
+exclude = [
+    "mlflow/deepclusterv2/modified/*.py",
 ]
 
 [tool.mypy]

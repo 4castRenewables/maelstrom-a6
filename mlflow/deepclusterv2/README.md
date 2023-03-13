@@ -69,7 +69,7 @@ mantik runs submit mlflow/deepclusterv2
 
 [JUBE](https://apps.fz-juelich.de/jsc/jube/jube2/docu/) can be used for benchmarking.
 The benchmarks are defined in `jube.yaml`.
-To run the benchmarks, use 
+To run the benchmarks, use
 
 ```bash
 jube run jube.yaml --tag jwc test
