@@ -84,18 +84,6 @@ parameterset:
         _: ready
       - name: job_name
         _: $jube_benchmark_name-$jube_benchmark_padid-$jube_wp_padid-$jube_step_name
-      - name: preprocess
-        mode: text
-        separator: |
-        _: >
-           $modules;
-      - name: preprocess
-        tag: e4
-        mode: text
-        separator: |
-        _: >
-           $modules;
-           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &
       - name: nodes
         _: 1
       - name: nodes
@@ -181,6 +169,20 @@ parameterset:
         _: $base_dir/tensorboard
       - name: tmp_data_dir
         _: $base_dir/tmp
+      - name: preprocess
+        mode: text
+        separator: |
+        _: >
+           $modules;
+           mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
+      - name: preprocess
+        tag: e4
+        mode: text
+        separator: |
+        _: >
+           $modules;
+           mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
+           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &
       - name: executable
         _: srun apptainer
       - name: executable
@@ -377,7 +379,7 @@ step:
     use:
       - systemParameter
     do:
-      _: mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir}
+      _: 
   - name: submit
     use:
       - trainingParameters
