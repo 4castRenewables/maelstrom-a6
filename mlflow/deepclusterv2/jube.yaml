@@ -76,29 +76,26 @@ parameterset:
   - name: systemParameter
     init_with: platform.xml
     parameter:
+      - name: job_file
+        _: jube.sbatch
+      - name: job_file_final
+        _: ${jube_wp_abspath}/$job_file
+      - name: ready_file
+        _: ready
+      - name: job_name
+        _: $jube_benchmark_name-$jube_benchmark_padid-$jube_wp_padid-$jube_step_name
       - name: preprocess
         mode: text
         separator: |
         _: >
            $modules;
-      - name: hostname_power_script
-        tag: intel
-        _: awnode0104
-      - name: hostname_power_script
-        tag: amd
-        _: awnode0104
-      - name: hostname_power_script
-        tag: arm
-        _: awnode0104
       - name: preprocess
         tag: e4
         mode: text
         separator: |
         _: >
            $modules;
-           . /opt/share/scripts/powerdiscovery/getpower.sh $hostname_power_script 360 > consumption.log 2>&1 &
-      - name: threadspertask
-        _: 1
+           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &
       - name: nodes
         _: 1
       - name: nodes
@@ -121,8 +118,6 @@ parameterset:
       - name: gpus
         tag: e4+i-gpu-a100+!test
         _: "1"
-      - name: taskspernode
-        _: 1
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -176,10 +171,10 @@ parameterset:
         _: $$(if [ $nodes -gt "1" ]; then echo $node_name:29500; else echo auto; fi)
       - name: base_dir
         tag: jwc|jwb
-        _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/${jube_benchmark_id}
+        _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/$job_name
       - name: base_dir
         tag: e4
-        _: /scratch/femmerich/jube-benchmarks/${jube_benchmark_id}
+        _: /scratch/femmerich/jube-benchmarks/$job_name
       - name: checkpoints_dir
         _: $base_dir/checkpoints
       - name: tensorboard_dir
@@ -301,6 +296,26 @@ patternset:
         type: int
         _: "Submitted batch job $jube_pat_int" 
 
+fileset:
+  name: files
+  copy: ${jube_benchmark_home}/${job_file}.in
+
+substituteset:
+  name: subJob
+  iofile: {in: "${job_file}.in", out: "$job_file_final"}
+  sub:
+    - {source: "#JOBNAME#", dest: $job_name}
+    - {source: "#ACCOUNT#", dest: $account}
+    - {source: "#PARTITION#", dest: $queue}
+    - {source: "#NODES#", dest: $nodes}
+    - {source: "#GRES#", dest: $gres}
+    - {source: "#WALLTIME#", dest: $timelimit}
+    - {source: "#ERROR#", dest: job.err}
+    - {source: "#OUTPUT#", dest: job.out}
+    - {source: "#PREPROCESS#", dest: $preprocess}
+    - {source: "#EXEC#", dest: "${executable} ${args_exec}"}
+    - {source: "#READY#", dest: $ready_file }
+
 analyser:
     name: analyse
     reduce: false
@@ -369,15 +384,16 @@ step:
       - globalParameters
       - systemParameter
       - executeset
+      - files
+      - subJob
       - from: platform.xml
         _: jobfiles
       - from: platform.xml
         _: executesub
     do:
       done_file: $ready_file
-      error_file: $error_file
       _:
         $modules;
         export LENGTHS=$lengths;
         echo LENGTHS=$$LENGTHS;
-        $submit $submit_script
+        $submit $job_file;
