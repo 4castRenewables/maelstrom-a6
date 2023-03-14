@@ -19,25 +19,25 @@ parameterset:
         _: >
            $$(
            if [ "$epochs" -gt "999" ]; then
-             echo '"[0.01,0.99]"';
+             echo "[0.01,0.99]";
            elif [ "$epochs" -gt "799" ]; then
-             echo '"[0.0125,0.9875]"';
+             echo "[0.0125,0.9875]";
            elif [ "$epochs" -gt "599" ]; then
-             echo '"[0.0166667,0.9833333]"';
+             echo "[0.0166667,0.9833333]";
            elif [ "$epochs" -gt "499" ]; then
-             echo '"[0.02,0.98]"';
+             echo "[0.02,0.98]";
            elif [ "$epochs" -gt "399" ]; then
-             echo '"[0.025,0.975]"';
+             echo "[0.025,0.975]";
            elif [ "$epochs" -gt "101" ]; then
-             echo '"[0.05,0.95]"';
+             echo "[0.05,0.95]";
            elif [ "$epochs" -gt "5" ]; then
-             echo '"[0.1,0.9]"';
+             echo "[0.1,0.9]";
            elif [ "$epochs" -gt "2" ]; then
-             echo '"[0.002563,0.997437]"';
+             echo "[0.002563,0.997437]";
            elif [ "$epochs" -gt "1" ]; then
-             echo '"[0.00641,0.99359]"';
+             echo "[0.00641,0.99359]";
            else
-             echo '"[0.0128,0.9872]"';
+             echo "[0.0128,0.9872]";
            fi
            )
       - name: dataset
@@ -182,10 +182,10 @@ parameterset:
       - name: tmp_data_dir
         _: $base_dir/tmp
       - name: executable
-        _: apptainer
+        _: srun apptainer
       - name: executable
         tag: e4
-        _: singularity
+        _: srun singularity
       - name: repo_dir
         tag: jwc|jwb
         _: /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
