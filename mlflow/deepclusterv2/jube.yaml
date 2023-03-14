@@ -8,7 +8,7 @@ parameterset:
       - name: epochs
         tag: "!test"
         type: int
-        _: 40
+        _: 100
       - name: epochs
         tag: test
         type: int
