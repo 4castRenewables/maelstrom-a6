@@ -165,7 +165,7 @@ def launch_distributed(
         _cleanup_local_dir(cfg)
 
     logging.info("All Done!")
-    logging.info("Total runtime(s): %s", start - time.time())
+    logging.info("Total runtime(s): %s", time.time() - start)
     shutdown_logging()
 
 
