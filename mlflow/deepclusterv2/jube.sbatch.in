@@ -7,9 +7,13 @@
 #SBATCH --time=#WALLTIME#
 #SBATCH --output=#OUTPUT#
 #SBATCH --error=#ERROR#
+#MEMORY#
 
 #PREPROCESS#
 
 #EXEC#
+
+#POSTPROCESS#
+
 touch #READY#
 

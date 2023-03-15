@@ -92,6 +92,20 @@ parameterset:
       - name: nodes
         tag: e4+!test
         _: "1,2"
+      - name: nodelist
+        _: ""
+      - name: nodelist
+        tag: e4+intel
+        _: --nodelist=icnode01,icnode02
+      - name: nodelist
+        tag: e4+amd
+        _: --nodelist=acnode01,acnode02
+      - name: nodelist
+        tag: e4+arm
+        _: --nodelist=tcnode11,tcnode12
+      - name: nodelist
+        tag: e4+arm+v100
+        _: --nodelist=tcnode05,tcnode07
       - name: gpus
         _: 1
       - name: gpus
@@ -106,6 +120,11 @@ parameterset:
       - name: gpus
         tag: e4+i-gpu-a100+!test
         _: "1"
+      - name: memory
+        _: ""
+      - name: memory
+        tag: e4
+        _: "#SBATCH --mem=128Gb"
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -156,13 +175,13 @@ parameterset:
         _: $${SLURMD_NODENAME}
       - name: run_id
         mode: text
-        _: $$(if [ $nodes -gt "1" ]; then echo $node_name:29500; else echo auto; fi)
+        _: $$(if [ $nodes -gt "1" ]; then echo $node_name:29500; else echo localhost:29500; fi)
       - name: base_dir
         tag: jwc|jwb
         _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/$job_name
       - name: base_dir
         tag: e4
-        _: /scratch/femmerich/jube-benchmarks/$job_name
+        _: /scratch/femmerich/jube
       - name: checkpoints_dir
         _: $base_dir/checkpoints
       - name: tensorboard_dir
@@ -182,7 +201,16 @@ parameterset:
         _: >
            $modules;
            mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
-           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &
+           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &;
+           GETPOWER_PID=$!;
+      - name: postprocess
+        mode: text
+        _: ""
+      - name: postprocess
+        tag: e4
+        mode: text
+        separator: |
+        _: kill $$GETPOWER_PID;
       - name: executable
         _: srun apptainer
       - name: executable
@@ -213,17 +241,22 @@ parameterset:
       - name: rocm_args
         tag: amd
         _: "config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False"
-      - name: data_bind
+      - name: additional_args
         _: ""
-      - name: data_bind
+      - name: additional_args
         tag: e4
-        _: -B /data:/data
+        mode: text
+        _: >
+           -B /data:/data 
+           -B /scratch:/scratch
+           --cleanenv
+           --contain
       - name: args_exec
         mode: text
         separator: |
         _: >
            run
-           ${data_bind}
+           ${additional_args}
            -B ${repo_dir}/configs:/opt/vissl/configs
            -B ${repo_dir}/modified/hooks/log_hooks.py:/opt/vissl/vissl/hooks/log_hooks.py
            -B ${repo_dir}/modified/utils/distributed_launcher.py:/opt/vissl/vissl/utils/distributed_launcher.py
@@ -311,11 +344,13 @@ substituteset:
     - {source: "#PARTITION#", dest: $queue}
     - {source: "#NODES#", dest: $nodes}
     - {source: "#GRES#", dest: $gres}
+    - {source: "#MEMORY#", dest: $memory}
     - {source: "#WALLTIME#", dest: $timelimit}
     - {source: "#ERROR#", dest: job.err}
     - {source: "#OUTPUT#", dest: job.out}
     - {source: "#PREPROCESS#", dest: $preprocess}
     - {source: "#EXEC#", dest: "${executable} ${args_exec}"}
+    - {source: "#POSTPROCESS#", dest: $postprocess}
     - {source: "#READY#", dest: $ready_file }
 
 analyser:
@@ -398,4 +433,4 @@ step:
         $modules;
         export LENGTHS=$lengths;
         echo LENGTHS=$$LENGTHS;
-        $submit $job_file;
+        $submit $nodelist $job_file;
