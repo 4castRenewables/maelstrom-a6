@@ -55,7 +55,7 @@ addopts = "--cov=a6 --cov-report term-missing"
 
 [tool.black]
 line-length = 80
-extend-exclude = """
+force-exclude = """
 (
     ^/mlflow/deepclusterv2/modified/.*.py
 )

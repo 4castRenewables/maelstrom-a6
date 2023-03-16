@@ -236,7 +236,6 @@ class LogLossLrEtaHook(ClassyHook):
                     "iter": iteration,
                     "lr": lr_val,
                     "loss": loss_val,
-                    "epochtime(ms)": int(1000 * sum(batch_times)),
                     "batchtime(ms)": batch_time,
                     "eta": eta_string,
                     "peak_mem(M)": peak_mem_used,
@@ -561,6 +560,10 @@ class LogPerfTimeMetricsHook(ClassyHook):
             logging.info(
                 "Average %s batch time (ms) for %d batches: %d"
                 % (phase_type, batches, 1000.0 * average_batch_time)
+            )
+            logging.info(
+                "Total %s epoch time (ms) for %d batches: %d"
+                % (phase_type, batches, 1000.0 * total_batch_time)
             )
 
         # Train step time breakdown
