@@ -10,6 +10,10 @@ parameterset:
         type: int
         _: 100
       - name: epochs
+        tag: e4+!test
+        type: int
+        _: 50
+      - name: epochs
         tag: test
         type: int
         _: 1
@@ -76,12 +80,6 @@ parameterset:
   - name: systemParameter
     init_with: platform.xml
     parameter:
-      - name: job_file
-        _: jube.sbatch
-      - name: job_file_final
-        _: ${jube_wp_abspath}/$job_file
-      - name: ready_file
-        _: ready
       - name: job_name
         _: $jube_benchmark_name-$jube_benchmark_padid-$jube_wp_padid-$jube_step_name
       - name: nodes
@@ -92,20 +90,6 @@ parameterset:
       - name: nodes
         tag: e4+!test
         _: "1,2"
-      - name: nodelist
-        _: ""
-      - name: nodelist
-        tag: e4+intel
-        _: --nodelist=icnode01,icnode02
-      - name: nodelist
-        tag: e4+amd
-        _: --nodelist=acnode01,acnode02
-      - name: nodelist
-        tag: e4+arm
-        _: --nodelist=tcnode11,tcnode12
-      - name: nodelist
-        tag: e4+arm+v100
-        _: --nodelist=tcnode05,tcnode07
       - name: gpus
         _: 1
       - name: gpus
@@ -124,7 +108,7 @@ parameterset:
         _: ""
       - name: memory
         tag: e4
-        _: "#SBATCH --mem=128Gb"
+        _: --mem=128Gb
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -181,7 +165,7 @@ parameterset:
         _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/$job_name
       - name: base_dir
         tag: e4
-        _: /scratch/femmerich/jube
+        _: /scratch/femmerich/jube-benchmarks/$job_name
       - name: checkpoints_dir
         _: $base_dir/checkpoints
       - name: tensorboard_dir
@@ -201,21 +185,18 @@ parameterset:
         _: >
            $modules;
            mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
-           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &;
+           bash /opt/share/scripts/powerdiscovery/getpower_local.sh 21600 > $jube_wp_abspath/consumption.log 2>&1 &
            GETPOWER_PID=$!;
       - name: postprocess
-        mode: text
         _: ""
       - name: postprocess
         tag: e4
-        mode: text
-        separator: |
-        _: kill $$GETPOWER_PID;
+        _: kill $$GETPOWER_PID
       - name: executable
-        _: srun apptainer
+        _: apptainer
       - name: executable
         tag: e4
-        _: srun singularity
+        _: singularity
       - name: repo_dir
         tag: jwc|jwb
         _: /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
@@ -246,6 +227,7 @@ parameterset:
       - name: additional_args
         tag: e4
         mode: text
+        separator: |
         _: >
            -B /data:/data 
            -B /scratch:/scratch
@@ -282,9 +264,6 @@ patternset:
       - name: epoch
         type: int
         _: "epoch:\\s+($jube_pat_int)/\\s+($jube_pat_nint)"
-      - name: epoch_time
-        type: int
-        _: "epochtime\\(ms\\):\\s+($jube_pat_nint)"
       - name: batch_time
         type: int
         _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
@@ -293,22 +272,22 @@ patternset:
         _: "read_sample:\\s+($jube_pat_nfp)"
       - name: loss_compute_time
         type: float
-        _: "loss_compute_time:\\s+($jube_pat_nfp)"
+        _: "loss_compute:\\s+($jube_pat_nfp)"
       - name: loss_all_reduce_time
         type: float
-        _: "loss_all_reduce_time:\\s+($jube_pat_nfp)"
+        _: "loss_all_reduce:\\s+($jube_pat_nfp)"
       - name: forward_time
         type: float
-        _: "forward_time:\\s+($jube_pat_nfp)"
+        _: "forward:\\s+($jube_pat_nfp)"
       - name: backward_time
         type: float
-        _: "backward_time:\\s+($jube_pat_nfp)"
+        _: "backward:\\s+($jube_pat_nfp)"
       - name: optimizer_step_time
         type: float
-        _: "optimizer_step_time:\\s+($jube_pat_nfp)"
+        _: "optimizer_step:\\s+($jube_pat_nfp)"
       - name: train_step_time
         type: float
-        _: "train_step_time:\\s+($jube_pat_nfp)"
+        _: "train_step_total:\\s+($jube_pat_nfp)"
       - name: loss
         type: float
         _: "loss:\\s+($jube_pat_nfp)"
@@ -330,28 +309,9 @@ patternset:
       - name: job_id
         type: int
         _: "Submitted batch job $jube_pat_int" 
-
-fileset:
-  name: files
-  copy: ${jube_benchmark_home}/${job_file}.in
-
-substituteset:
-  name: subJob
-  iofile: {in: "${job_file}.in", out: "$job_file_final"}
-  sub:
-    - {source: "#JOBNAME#", dest: $job_name}
-    - {source: "#ACCOUNT#", dest: $account}
-    - {source: "#PARTITION#", dest: $queue}
-    - {source: "#NODES#", dest: $nodes}
-    - {source: "#GRES#", dest: $gres}
-    - {source: "#MEMORY#", dest: $memory}
-    - {source: "#WALLTIME#", dest: $timelimit}
-    - {source: "#ERROR#", dest: job.err}
-    - {source: "#OUTPUT#", dest: job.out}
-    - {source: "#PREPROCESS#", dest: $preprocess}
-    - {source: "#EXEC#", dest: "${executable} ${args_exec}"}
-    - {source: "#POSTPROCESS#", dest: $postprocess}
-    - {source: "#READY#", dest: $ready_file }
+      - name: node_ids
+        type: string
+        _: "SLURM_NODELIST:\\s+($jube_pat_nwrd)" 
 
 analyser:
     name: analyse
@@ -371,29 +331,32 @@ result:
       style: pretty
       sort: iter_pat
       column:
-        - {title: "JobID", _: job_id}
-        - {title: "Job_Time", _: timelimit}
-        - {title: "total runtime", _: total_runtime_first}
+        - {title: "job ID", _: job_id}
+        - {title: "system", _: systemname}
+        - {title: "queue", _: queue}
+        - {title: "walltime [HH:MM:SS]", _: timelimit}
+        - {title: "total runtime [s]", _: total_runtime_first}
         - {title: "# epochs", _: epochs}
         - {title: "# nodes", _: nodes}
+        - {title: "node IDs", _: node_ids}
         - {title: "# gpus", _: gpus}
         - {title: "last epoch ", _: epoch_last}
-        - {title: "first epoch time [s]", _: epoch_time_first}
-        - {title: "last epoch time [s]", _: epoch_time_last}
-        - {title: "avg. epoch time [s]", _: epoch_time_avg}
-        - {title: "std. epoch time [s]", _: epoch_time_std}
         - {title: "first batch time [s]", _: batch_time_first}
         - {title: "last batch time [s]", _: batch_time_last}
-        - {title: "avg. batch time [s]", _: batch_usage_avg}
-        - {title: "std. batch time [s]", _: batch_usage_std}
-        - {title: "first forward time [s]", _: forward_time_first}
-        - {title: "last forward time [s]", _: forward_time_last}
-        - {title: "avg. forward time [s]", _: forward_usage_avg}
-        - {title: "std. forward time [s]", _: forward_usage_std}
-        - {title: "first backward time [s]", _: backward_time_first}
-        - {title: "last backward time [s]", _: backward_time_last}
-        - {title: "avg. backward time [s]", _: backward_usage_avg}
-        - {title: "std. backward time [s]", _: backward_usage_std}
+        - {title: "avg. batch time [s]", _: batch_time_avg}
+        - {title: "std. batch time [s]", _: batch_time_std}
+        - {title: "first read sample time [ms]", _: read_sample_time_first}
+        - {title: "last read sample time [ms]", _: read_sample_time_last}
+        - {title: "avg. read sample time [ms]", _: read_sample_time_avg}
+        - {title: "std. read sample time [ms]", _: read_sample_time_std}
+        - {title: "first forward time [ms]", _: forward_time_first}
+        - {title: "last forward time [ms]", _: forward_time_last}
+        - {title: "avg. forward time [ms]", _: forward_time_avg}
+        - {title: "std. forward time [ms]", _: forward_time_std}
+        - {title: "first backward time [ms]", _: backward_time_first}
+        - {title: "last backward time [ms]", _: backward_time_last}
+        - {title: "avg. backward time [ms]", _: backward_time_avg}
+        - {title: "std. backward time [ms]", _: backward_time_std}
         - {title: "first memory usage [MB]", _: memory_usage_first}
         - {title: "last memory usage [MB]", _: memory_usage_last}
         - {title: "avg. memory usage [MB]", _: memory_usage_avg}
@@ -421,16 +384,15 @@ step:
       - globalParameters
       - systemParameter
       - executeset
-      - files
-      - subJob
       - from: platform.xml
         _: jobfiles
       - from: platform.xml
         _: executesub
     do:
       done_file: $ready_file
+      error_file: $error_file
       _:
         $modules;
         export LENGTHS=$lengths;
         echo LENGTHS=$$LENGTHS;
-        $submit $nodelist $job_file;
+        $submit $memory $submit_script;
