@@ -51,7 +51,7 @@ RUN python${PYTHON_VERSION} -m venv /venv \
       fairscale \
       numpy \
  && pip install --no-cache-dir \
-      classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d \
+      git+https://github.com/facebookresearch/ClassyVision.git \
       fairscale==0.4.6 \
       numpy==1.21.0
 
