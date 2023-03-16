@@ -264,9 +264,6 @@ patternset:
       - name: epoch
         type: int
         _: "epoch:\\s+($jube_pat_int)/\\s+($jube_pat_nint)"
-      - name: epoch_time
-        type: int
-        _: "epochtime\\(ms\\):\\s+($jube_pat_nint)"
       - name: batch_time
         type: int
         _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
@@ -344,14 +341,10 @@ result:
         - {title: "node IDs", _: node_ids}
         - {title: "# gpus", _: gpus}
         - {title: "last epoch ", _: epoch_last}
-        - {title: "first epoch time [s]", _: epoch_time_first}
-        - {title: "last epoch time [s]", _: epoch_time_last}
-        - {title: "avg. epoch time [s]", _: epoch_time_avg}
-        - {title: "std. epoch time [s]", _: epoch_time_std}
         - {title: "first batch time [s]", _: batch_time_first}
         - {title: "last batch time [s]", _: batch_time_last}
-        - {title: "avg. batch time [s]", _: batch_usage_avg}
-        - {title: "std. batch time [s]", _: batch_usage_std}
+        - {title: "avg. batch time [s]", _: batch_time_avg}
+        - {title: "std. batch time [s]", _: batch_time_std}
         - {title: "first read sample time [ms]", _: read_sample_time_first}
         - {title: "last read sample time [ms]", _: read_sample_time_last}
         - {title: "avg. read sample time [ms]", _: read_sample_time_avg}
