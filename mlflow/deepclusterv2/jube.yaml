@@ -165,7 +165,7 @@ parameterset:
         _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/$job_name
       - name: base_dir
         tag: e4
-        _: /scratch/femmerich/jube-benchmakrs/$job_name
+        _: /scratch/femmerich/jube-benchmarks/$job_name
       - name: checkpoints_dir
         _: $base_dir/checkpoints
       - name: tensorboard_dir
