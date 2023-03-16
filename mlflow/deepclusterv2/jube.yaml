@@ -80,12 +80,6 @@ parameterset:
   - name: systemParameter
     init_with: platform.xml
     parameter:
-      - name: job_file
-        _: jube.sbatch
-      - name: job_file_final
-        _: $jube_wp_abspath/$job_file
-      - name: ready_file
-        _: ready
       - name: job_name
         _: $jube_benchmark_name-$jube_benchmark_padid-$jube_wp_padid-$jube_step_name
       - name: nodes
@@ -114,7 +108,7 @@ parameterset:
         _: ""
       - name: memory
         tag: e4
-        _: "#SBATCH --mem=128Gb"
+        _: --mem=128Gb
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -194,19 +188,15 @@ parameterset:
            bash /opt/share/scripts/powerdiscovery/getpower_local.sh 21600 > $jube_wp_abspath/consumption.log 2>&1 &
            GETPOWER_PID=$!;
       - name: postprocess
-        mode: text
         _: ""
       - name: postprocess
         tag: e4
-        mode: text
-        separator: |
-        _: >
-           kill $$GETPOWER_PID;
+        _: kill $$GETPOWER_PID
       - name: executable
-        _: srun apptainer
+        _: apptainer
       - name: executable
         tag: e4
-        _: srun singularity
+        _: singularity
       - name: repo_dir
         tag: jwc|jwb
         _: /p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
@@ -323,28 +313,6 @@ patternset:
         type: int
         _: "Submitted batch job $jube_pat_int" 
 
-fileset:
-  name: files
-  copy: ${jube_benchmark_home}/${job_file}.in
-
-substituteset:
-  name: subJob
-  iofile: {in: "${job_file}.in", out: "$job_file_final"}
-  sub:
-    - {source: "#JOBNAME#", dest: $job_name}
-    - {source: "#ACCOUNT#", dest: $account}
-    - {source: "#PARTITION#", dest: $queue}
-    - {source: "#NODES#", dest: $nodes}
-    - {source: "#GRES#", dest: $gres}
-    - {source: "#MEMORY#", dest: $memory}
-    - {source: "#WALLTIME#", dest: $timelimit}
-    - {source: "#ERROR#", dest: job.err}
-    - {source: "#OUTPUT#", dest: job.out}
-    - {source: "#PREPROCESS#", dest: $preprocess}
-    - {source: "#EXEC#", dest: "${executable} ${args_exec}"}
-    - {source: "#POSTPROCESS#", dest: $postprocess}
-    - {source: "#READY#", dest: $ready_file }
-
 analyser:
     name: analyse
     reduce: false
@@ -413,16 +381,15 @@ step:
       - globalParameters
       - systemParameter
       - executeset
-      - files
-      - subJob
       - from: platform.xml
         _: jobfiles
       - from: platform.xml
         _: executesub
     do:
       done_file: $ready_file
+      error_file: $error_file
       _:
         $modules;
         export LENGTHS=$lengths;
         echo LENGTHS=$$LENGTHS;
-        $submit $job_file;
+        $submit $memory $submit_script;
