@@ -17,6 +17,7 @@ Run
 ```bash
 make deploy-vissl
 ```
+(or `deploy-vissl-e4`)
 
 or, alternatively
 
@@ -24,6 +25,7 @@ or, alternatively
 make build-vissl
 make upload-vissl
 ```
+(or `build/upload-vissl-e4`)
 
 ## Testing locally
 
@@ -85,6 +87,7 @@ Available tags:
   * intel (Intel CPU + NVIDIA A100 GPU nodes)
   * amd (AMD CPU + AMD MI100 GPU nodes)
   * arm (ARM CPU + NVIDIA A100 GPU nodes)
+    * v100 (ARM CPU + NVIDIA V100 GPU nodes)
 
 *Note:*
 For debugging consider the `--debug`, `--devel`, and/or `-v` options.
@@ -94,3 +97,19 @@ Once all runs are finnished, analysis can be performed via
 ```bash
 jube analyse ap6-run/
 ```
+
+## Using AMD GPUS (ROCm)
+
+```bash
+make deploy-vissl-rocm-e4
+```
+
+or, alternatively
+
+```bash
+make build-vissl-rocm
+make upload-vissl-rocm-e4
+```
+
+Running with ROCm required passing
+`config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False`.
