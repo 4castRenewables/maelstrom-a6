@@ -83,7 +83,7 @@ parameterset:
       - name: job_file
         _: jube.sbatch
       - name: job_file_final
-        _: ${jube_wp_abspath}/$job_file
+        _: $jube_wp_abspath/$job_file
       - name: ready_file
         _: ready
       - name: job_name
@@ -191,8 +191,8 @@ parameterset:
         _: >
            $modules;
            mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
-           "bash /opt/share/scripts/powerdiscovery/getpower_local.sh 360 > consumption.log 2>&1 &;"
-           GETPOWER_PID=$!
+           bash /opt/share/scripts/powerdiscovery/getpower_local.sh 21600 > $jube_wp_abspath/consumption.log 2>&1 &
+           GETPOWER_PID=$!;
       - name: postprocess
         mode: text
         _: ""
@@ -201,7 +201,7 @@ parameterset:
         mode: text
         separator: |
         _: >
-           kill $$GETPOWER_PID
+           kill $$GETPOWER_PID;
       - name: executable
         _: srun apptainer
       - name: executable
