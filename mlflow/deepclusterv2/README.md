@@ -95,7 +95,7 @@ For debugging consider the `--debug`, `--devel`, and/or `-v` options.
 Once all runs are finnished, analysis can be performed via
 
 ```bash
-jube analyse ap6-run/
+jube result ap6-run/ --id <benchmark IDs> --analyse --update jube.yaml > benchmark-results.md
 ```
 
 ## Using AMD GPUS (ROCm)
