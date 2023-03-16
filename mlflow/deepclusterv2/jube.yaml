@@ -331,11 +331,11 @@ result:
       style: pretty
       sort: iter_pat
       column:
-        - {title: "JobID", _: job_id}
+        - {title: "job ID", _: job_id}
         - {title: "system", _: systemname}
         - {title: "queue", _: queue}
-        - {title: "Job_Time", _: timelimit}
-        - {title: "total runtime", _: total_runtime_first}
+        - {title: "walltime [HH:MM:SS]", _: timelimit}
+        - {title: "total runtime [s]", _: total_runtime_first}
         - {title: "# epochs", _: epochs}
         - {title: "# nodes", _: nodes}
         - {title: "# gpus", _: gpus}
