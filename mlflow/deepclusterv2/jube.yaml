@@ -275,22 +275,22 @@ patternset:
         _: "read_sample:\\s+($jube_pat_nfp)"
       - name: loss_compute_time
         type: float
-        _: "loss_compute_time:\\s+($jube_pat_nfp)"
+        _: "loss_compute:\\s+($jube_pat_nfp)"
       - name: loss_all_reduce_time
         type: float
-        _: "loss_all_reduce_time:\\s+($jube_pat_nfp)"
+        _: "loss_all_reduce:\\s+($jube_pat_nfp)"
       - name: forward_time
         type: float
-        _: "forward_time:\\s+($jube_pat_nfp)"
+        _: "forward:\\s+($jube_pat_nfp)"
       - name: backward_time
         type: float
-        _: "backward_time:\\s+($jube_pat_nfp)"
+        _: "backward:\\s+($jube_pat_nfp)"
       - name: optimizer_step_time
         type: float
-        _: "optimizer_step_time:\\s+($jube_pat_nfp)"
+        _: "optimizer_step:\\s+($jube_pat_nfp)"
       - name: train_step_time
         type: float
-        _: "train_step_time:\\s+($jube_pat_nfp)"
+        _: "train_step_total:\\s+($jube_pat_nfp)"
       - name: loss
         type: float
         _: "loss:\\s+($jube_pat_nfp)"
@@ -312,6 +312,9 @@ patternset:
       - name: job_id
         type: int
         _: "Submitted batch job $jube_pat_int" 
+      - name: node_ids
+        type: string
+        _: "SLURM_NODELIST:\\s+($jube_pat_nwrd)" 
 
 analyser:
     name: analyse
@@ -338,6 +341,7 @@ result:
         - {title: "total runtime [s]", _: total_runtime_first}
         - {title: "# epochs", _: epochs}
         - {title: "# nodes", _: nodes}
+        - {title: "node IDs", _: node_ids}
         - {title: "# gpus", _: gpus}
         - {title: "last epoch ", _: epoch_last}
         - {title: "first epoch time [s]", _: epoch_time_first}
@@ -348,18 +352,18 @@ result:
         - {title: "last batch time [s]", _: batch_time_last}
         - {title: "avg. batch time [s]", _: batch_usage_avg}
         - {title: "std. batch time [s]", _: batch_usage_std}
-        - {title: "first read sample time [s]", _: read_sample_time_first}
-        - {title: "last read sample time [s]", _: read_sample_time_last}
-        - {title: "avg. read sample time [s]", _: read_sample_time_avg}
-        - {title: "std. read sample time [s]", _: read_sample_time_std}
-        - {title: "first forward time [s]", _: forward_time_first}
-        - {title: "last forward time [s]", _: forward_time_last}
-        - {title: "avg. forward time [s]", _: forward_time_avg}
-        - {title: "std. forward time [s]", _: forward_time_std}
-        - {title: "first backward time [s]", _: backward_time_first}
-        - {title: "last backward time [s]", _: backward_time_last}
-        - {title: "avg. backward time [s]", _: backward_time_avg}
-        - {title: "std. backward time [s]", _: backward_time_std}
+        - {title: "first read sample time [ms]", _: read_sample_time_first}
+        - {title: "last read sample time [ms]", _: read_sample_time_last}
+        - {title: "avg. read sample time [ms]", _: read_sample_time_avg}
+        - {title: "std. read sample time [ms]", _: read_sample_time_std}
+        - {title: "first forward time [ms]", _: forward_time_first}
+        - {title: "last forward time [ms]", _: forward_time_last}
+        - {title: "avg. forward time [ms]", _: forward_time_avg}
+        - {title: "std. forward time [ms]", _: forward_time_std}
+        - {title: "first backward time [ms]", _: backward_time_first}
+        - {title: "last backward time [ms]", _: backward_time_last}
+        - {title: "avg. backward time [ms]", _: backward_time_avg}
+        - {title: "std. backward time [ms]", _: backward_time_std}
         - {title: "first memory usage [MB]", _: memory_usage_first}
         - {title: "last memory usage [MB]", _: memory_usage_last}
         - {title: "avg. memory usage [MB]", _: memory_usage_avg}
