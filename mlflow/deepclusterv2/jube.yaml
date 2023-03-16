@@ -10,6 +10,10 @@ parameterset:
         type: int
         _: 100
       - name: epochs
+        tag: e4+!test
+        type: int
+        _: 50
+      - name: epochs
         tag: test
         type: int
         _: 1
@@ -92,20 +96,6 @@ parameterset:
       - name: nodes
         tag: e4+!test
         _: "1,2"
-      - name: nodelist
-        _: ""
-      - name: nodelist
-        tag: e4+intel
-        _: --nodelist=icnode01,icnode02
-      - name: nodelist
-        tag: e4+amd
-        _: --nodelist=acnode01,acnode02
-      - name: nodelist
-        tag: e4+arm
-        _: --nodelist=tcnode11,tcnode12
-      - name: nodelist
-        tag: e4+arm+v100
-        _: --nodelist=tcnode05,tcnode07
       - name: gpus
         _: 1
       - name: gpus
@@ -181,7 +171,7 @@ parameterset:
         _: /p/scratch/deepacf/maelstrom/emmerich1/jube-benchmarks/$job_name
       - name: base_dir
         tag: e4
-        _: /scratch/femmerich/jube
+        _: /scratch/femmerich/jube-benchmakrs/$job_name
       - name: checkpoints_dir
         _: $base_dir/checkpoints
       - name: tensorboard_dir
@@ -201,8 +191,8 @@ parameterset:
         _: >
            $modules;
            mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
-           . /opt/share/scripts/powerdiscovery/getpower.sh $${SLURMD_NODENAME} 360 > consumption.log 2>&1 &;
-           GETPOWER_PID=$!;
+           "bash /opt/share/scripts/powerdiscovery/getpower_local.sh 360 > consumption.log 2>&1 &;"
+           GETPOWER_PID=$!
       - name: postprocess
         mode: text
         _: ""
@@ -210,7 +200,8 @@ parameterset:
         tag: e4
         mode: text
         separator: |
-        _: kill $$GETPOWER_PID;
+        _: >
+           kill $$GETPOWER_PID
       - name: executable
         _: srun apptainer
       - name: executable
@@ -246,6 +237,7 @@ parameterset:
       - name: additional_args
         tag: e4
         mode: text
+        separator: |
         _: >
            -B /data:/data 
            -B /scratch:/scratch
@@ -433,4 +425,4 @@ step:
         $modules;
         export LENGTHS=$lengths;
         echo LENGTHS=$$LENGTHS;
-        $submit $nodelist $job_file;
+        $submit $job_file;
