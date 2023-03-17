@@ -19,7 +19,6 @@ Stage: builder
       python3.8-venv \
       python3.8-dev \
       git
-        git
 
     # Install VISSL
     # Clone VISSL repository
@@ -64,20 +63,13 @@ Stage: final
     export CONFIG_AMD_ARGS="config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False"
 
 %post
-    # See https://github.com/NVIDIA/nvidia-docker/issues/1631
-    apt-key del 7fa2af80
-    apt-key del 3bf863cc
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-
     apt-get update
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
       python${PYTORCH_VERSION} \
       python${PYTHON_VERSION}-dev \
-      python3-opencv \
-      git
-    apt-get clean \
+      python3-opencv
+    apt-get clean
     rm -rf /var/lib/apt/lists/*
 
 %test
