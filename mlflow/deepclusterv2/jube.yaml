@@ -266,13 +266,13 @@ patternset:
         _: "epoch:\\s+($jube_pat_int)/\\s+($jube_pat_nint)"
       - name: epoch_time
         type: int
-        _: "Total.*epoch\\stime\\s+\\(ms\\).*+($jube_pat_nint)"
+        _: "Total.*epoch\\stime\\s+\\(ms\\).*:\\s+($jube_pat_nint)"
       - name: batch_time
         type: int
         _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
       - name: average_batch_time
         type: int
-        _: "Average.*batch time\\s+\\(ms\\):\\s+($jube_pat_nint)"
+        _: "Average.*batch time\\s+\\(ms\\).*:\\s+($jube_pat_nint)"
       - name: read_sample_time
         type: float
         _: "read_sample:\\s+($jube_pat_nfp)"
