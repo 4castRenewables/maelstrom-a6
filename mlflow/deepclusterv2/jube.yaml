@@ -264,9 +264,15 @@ patternset:
       - name: epoch
         type: int
         _: "epoch:\\s+($jube_pat_int)/\\s+($jube_pat_nint)"
+      - name: epoch_time
+        type: int
+        _: "Total.*epoch\\stime\\s+\\(ms\\).*+($jube_pat_nint)"
       - name: batch_time
         type: int
         _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
+      - name: average_batch_time
+        type: int
+        _: "Average.*batch time\\s+\\(ms\\):\\s+($jube_pat_nint)"
       - name: read_sample_time
         type: float
         _: "read_sample:\\s+($jube_pat_nfp)"
@@ -345,10 +351,18 @@ result:
         - {title: "last train step time [ms]", _: train_step_time_last}
         - {title: "avg. train step time [ms]", _: train_step_time_avg}
         - {title: "std. train step time [ms]", _: train_step_time_std}
+        - {title: "first epoch time [ms]", _: epoch_time_first}
+        - {title: "last epoch time [ms]", _: epoch_time_last}
+        - {title: "avg. epoch time [ms]", _: epoch_time_avg}
+        - {title: "std. epoch time [ms]", _: epoch_time_std}
         - {title: "first batch time [ms]", _: batch_time_first}
         - {title: "last batch time [ms]", _: batch_time_last}
         - {title: "avg. batch time [ms]", _: batch_time_avg}
         - {title: "std. batch time [ms]", _: batch_time_std}
+        - {title: "first average batch time [ms]", _: average_batch_time_first}
+        - {title: "last average batch time [ms]", _: average_batch_time_last}
+        - {title: "avg. average batch time [ms]", _: average_batch_time_avg}
+        - {title: "std. average batch time [ms]", _: average_batch_time_std}
         - {title: "first read sample time [ms]", _: read_sample_time_first}
         - {title: "last read sample time [ms]", _: read_sample_time_last}
         - {title: "avg. read sample time [ms]", _: read_sample_time_avg}
