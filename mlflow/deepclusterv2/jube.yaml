@@ -229,7 +229,7 @@ parameterset:
         mode: text
         separator: |
         _: >
-           -B /data:/data 
+           -B /data:/data
            -B /scratch:/scratch
            --cleanenv
            --contain
@@ -296,7 +296,7 @@ patternset:
         _: "lr:\\s+($jube_pat_nfp)"
       - name: memory_usage
         type: int
-        _: "peak_mem\\(M\\):\\s+($jube_pat_nint)" 
+        _: "peak_mem\\(M\\):\\s+($jube_pat_nint)"
       - name: total_runtime
         type: float
         _: "Total runtime\\(s\\):\\s+($jube_pat_nfp)"
@@ -308,10 +308,10 @@ patternset:
         _: ",($jube_pat_nint)\\$"
       - name: job_id
         type: int
-        _: "Submitted batch job $jube_pat_int" 
+        _: "Submitted batch job $jube_pat_int"
       - name: node_ids
         type: string
-        _: "SLURM_NODELIST:\\s+($jube_pat_nwrd)" 
+        _: "SLURM_NODELIST:\\s+($jube_pat_nwrd)"
 
 analyser:
     name: analyse
@@ -341,10 +341,14 @@ result:
         - {title: "node IDs", _: node_ids}
         - {title: "# gpus", _: gpus}
         - {title: "last epoch ", _: epoch_last}
-        - {title: "first batch time [s]", _: batch_time_first}
-        - {title: "last batch time [s]", _: batch_time_last}
-        - {title: "avg. batch time [s]", _: batch_time_avg}
-        - {title: "std. batch time [s]", _: batch_time_std}
+        - {title: "first train step time [ms]", _: train_step_time_first}
+        - {title: "last train step time [ms]", _: train_step_time_last}
+        - {title: "avg. train step time [ms]", _: train_step_time_avg}
+        - {title: "std. train step time [ms]", _: train_step_time_std}
+        - {title: "first batch time [ms]", _: batch_time_first}
+        - {title: "last batch time [ms]", _: batch_time_last}
+        - {title: "avg. batch time [ms]", _: batch_time_avg}
+        - {title: "std. batch time [ms]", _: batch_time_std}
         - {title: "first read sample time [ms]", _: read_sample_time_first}
         - {title: "last read sample time [ms]", _: read_sample_time_last}
         - {title: "avg. read sample time [ms]", _: read_sample_time_avg}
@@ -377,7 +381,7 @@ step:
     use:
       - systemParameter
     do:
-      _: 
+      _:
   - name: submit
     use:
       - trainingParameters
