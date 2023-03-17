@@ -96,7 +96,7 @@ parameterset:
         _: "1,2,4"
       - name: nodes
         tag: e4+!test
-        _: "2"
+        _: "1,2"
       - name: gpus
         _: 1
       - name: gpus
@@ -163,7 +163,7 @@ parameterset:
         _: $${SLURMD_NODENAME}i
       - name: node_name
         tag: e4
-        _: $${SLURMD_NODENAME}
+        _: $${SLURMD_NODENAME}.e4red
       - name: run_id
         mode: text
         _: $$(if [ $nodes -gt "1" ]; then echo $node_name:29500; else echo localhost:29500; fi)
@@ -238,7 +238,6 @@ parameterset:
         _: >
            -B /data:/data
            -B /scratch:/scratch
-           --cleanenv
            --contain
       - name: additional_args
         tag: e4+amd
@@ -281,7 +280,7 @@ patternset:
         _: "epoch:\\s+($jube_pat_nint)"
       - name: epoch_time
         type: int
-        _: "Total.*epoch\\stime\\s+\\(ms\\).*:\\s+($jube_pat_nint)"
+        _: "Total.*epoch time\\s+\\(ms\\).*:\\s+($jube_pat_nint)"
       - name: batch_time
         type: int
         _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
@@ -326,7 +325,7 @@ patternset:
         _: ",($jube_pat_nint),"
       - name: apparent_power
         type: int
-        _: ",($jube_pat_nint)\\$"
+        _: ",($jube_pat_nint)$"
       - name: job_id
         type: int
         _: "Submitted batch job $jube_pat_int"
