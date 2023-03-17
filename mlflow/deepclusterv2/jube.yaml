@@ -405,11 +405,6 @@ result:
         - {title: "std. apparent power [VA]", _: apparent_power_max}
 
 step:
-  - name: setup_directories
-    use:
-      - systemParameter
-    do:
-      _:
   - name: submit
     use:
       - trainingParameters
