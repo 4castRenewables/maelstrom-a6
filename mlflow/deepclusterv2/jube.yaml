@@ -66,6 +66,13 @@ parameterset:
         tag: e4
         mode: text
         _: module load go-1.19/singularity-3.10.2
+      - name: modules
+        tag: e4+amd
+        mode: text
+        separator: |
+        _: >
+           module load go-1.19/singularity-3.10.2;
+           module load amd/rocm-5.2.1
       - name: systemname
         tag: jwc
         _: jwc
@@ -89,7 +96,7 @@ parameterset:
         _: "1,2,4"
       - name: nodes
         tag: e4+!test
-        _: "1,2"
+        _: "2"
       - name: gpus
         _: 1
       - name: gpus
@@ -233,6 +240,14 @@ parameterset:
            -B /scratch:/scratch
            --cleanenv
            --contain
+      - name: additional_args
+        tag: e4+amd
+        mode: text
+        separator: |
+        _: >
+           -B /data:/data 
+           -B /scratch:/scratch
+           -B /usr/bin/hipconfig.pl:/usr/bin/hipconfig.pl
       - name: args_exec
         mode: text
         separator: |
@@ -263,7 +278,7 @@ patternset:
      pattern:
       - name: epoch
         type: int
-        _: "epoch:\\s+($jube_pat_int)/\\s+($jube_pat_nint)"
+        _: "epoch:\\s+($jube_pat_nint)"
       - name: batch_time
         type: int
         _: "batchtime\\(ms\\):\\s+($jube_pat_nint)"
