@@ -53,7 +53,8 @@ RUN python${PYTHON_VERSION} -m venv /venv \
  && pip install --no-cache-dir \
       git+https://github.com/facebookresearch/ClassyVision.git \
       fairscale==0.4.6 \
-      numpy==1.21.0
+      numpy==1.21.0 \
+ && pip install --no-cache-dir mantik==0.1.2
 
 FROM rocm/dev-ubuntu-20.04:${ROCM_VERSION}
 
