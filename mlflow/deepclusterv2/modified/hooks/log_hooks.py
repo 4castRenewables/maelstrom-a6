@@ -10,8 +10,10 @@ import datetime
 import json
 import logging
 import time
+import os
 from typing import Optional
 
+import mlflow
 import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
@@ -23,6 +25,9 @@ from vissl.utils.env import get_machine_local_and_dist_rank
 from vissl.utils.io import save_file
 from vissl.utils.logger import log_gpu_stats
 from vissl.utils.perf_stats import PerfStats
+
+LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
+
 
 class LogGpuMemoryHook(ClassyHook):
     """
@@ -550,21 +555,47 @@ class LogPerfTimeMetricsHook(ClassyHook):
         """
         phase_type = task.phase_type
         batches = len(task.losses)
+        epoch = task.train_phase_idx
+        log_freq = task.config["LOG_FREQUENCY"]
+
 
         if self.start_time is None:
             logging.warning("start_time not initialized")
         else:
             # Average batch time calculation
-            total_batch_time = time.time() - self.start_time
-            average_batch_time = total_batch_time / batches
+            total_batch_time = 1000 * (time.time() - self.start_time)
+            average_batch_time = 1000 * (total_batch_time / batches)
             logging.info(
                 "Average %s batch time (ms) for %d batches: %d"
-                % (phase_type, batches, 1000.0 * average_batch_time)
+                % (phase_type, batches, average_batch_time)
             )
             logging.info(
                 "Total %s epoch time (ms) for %d batches: %d"
-                % (phase_type, batches, 1000.0 * total_batch_time)
+                % (phase_type, batches, total_batch_time)
             )
+
+            if LOG_TO_MANTIK and (
+                    (epoch == 0)
+                    or (epoch % log_freq == 0)
+                    or (epoch <= 100 and epoch % 20 == 0)
+            ):
+                loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
+
+                if isinstance(task.optimizer.options_view.lr, (set, list)):
+                    lr_val = list(task.optimizer.options_view.lr)
+                else:
+                    lr_val = round(task.optimizer.options_view.lr, 5)
+
+                mlflow.log_metrics(
+                    {
+                        "loss": loss_val,
+                        "learning_rate": lr_val,
+                        "batch_time": total_batch_time,
+                        "batch_time_avg": average_batch_time,
+                    },
+                    step=epoch,
+                )
+
 
         # Train step time breakdown
         if task.perf_stats is None:

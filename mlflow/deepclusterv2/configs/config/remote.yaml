@@ -88,6 +88,7 @@ config:
       memory_params:
         crops_for_mb: [0,1]
         embedding_dim: 128
+      output_dir: ""
   OPTIMIZER:
       name: sgd
       use_larc: True # ratio between gradient and parameter magnitudes is used to calculate an adaptive local learning rate for each individual parameter

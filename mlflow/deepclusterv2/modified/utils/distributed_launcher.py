@@ -10,12 +10,17 @@ Supports two engines: train and extract_features
 
 import logging
 import time
+import os
+import contextlib
 
 import tempfile
 from typing import Any, Callable, List
 
+import mantik
+import mlflow
 import torch
 from iopath.common.file_io import g_pathmgr
+
 from vissl.config import AttrDict
 from vissl.data.dataset_catalog import get_data_files
 from vissl.engines import run_engine
@@ -30,6 +35,8 @@ from vissl.utils.io import cleanup_dir, copy_data_to_local, makedir
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import get_dist_run_id
 from vissl.utils.slurm import get_node_id
+
+LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
 
 
 def _get_available_splits(cfg: AttrDict):
@@ -80,93 +87,121 @@ def launch_distributed(
             for this engine
     """
 
-    start = time.time()
-    setup_logging(__name__)
-    node_id = get_node_id(node_id)
-    dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
-    world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
+    context = mlflow.start_run if LOG_TO_MANTIK else contextlib.nullcontext
 
-    # If using gpus, we check that the user has specified <= gpus available on user system.
-    if cfg.MACHINE.DEVICE == "gpu":
-        assert cfg.DISTRIBUTED.NUM_PROC_PER_NODE <= torch.cuda.device_count(), (
-            f"User system doesn't have requested {cfg.DISTRIBUTED.NUM_PROC_PER_NODE} gpus "
-            f"available. Number of gpus found on user system={torch.cuda.device_count()}. "
-            "Please set the DISTRIBUTED.NUM_PROC_PER_NODE properly."
-        )
+    with context():
+        if LOG_TO_MANTIK:
+            mantik.init_tracking()
+            mlflow.log_params(cfg)
 
-    # set the environment variables including local rank, node id etc.
-    set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+        start = time.time()
+        setup_logging(__name__)
+        node_id = get_node_id(node_id)
+        dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
+        world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
 
-    # given the checkpoint folder, we check that there's not already a final checkpoint
-    # and that if there already exists a final checkpoint and user is not overriding
-    # to ignore the final checkpoint
-    checkpoint_folder = get_checkpoint_folder(cfg)
-    if is_training_finished(cfg, checkpoint_folder=checkpoint_folder):
-        logging.info(f"Training already succeeded on node: {node_id}, exiting.")
-        return
+        if LOG_TO_MANTIK:
+            mlflow.log_params({
+                "node_id": node_id,
+                "dist_run_id": dist_run_id,
+                "n_gpus_total": world_size,
+            })
 
-    # Get the checkpoint where to resume from. The get_resume_checkpoint function will
-    # automatically take care of detecting whether it's a resume or not.
-    symlink_checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
-    if cfg.CHECKPOINT.USE_SYMLINK_CHECKPOINT_FOR_RESUME and g_pathmgr.exists(
-        symlink_checkpoint_path
-    ):
-        checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
-    else:
-        checkpoint_path = get_resume_checkpoint(
-            cfg, checkpoint_folder=checkpoint_folder
-        )
-
-    # assert that if the user set the PARAMS_FILE, it must exist and be valid.
-    # we only use the PARAMS_FILE init if the checkpoint doesn't exist for the
-    # given training. This ensures that if the same training resumes, then it
-    # resumes from the checkpoint and not the weight init
-    if checkpoint_path is None and cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]:
-        params_file = cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
-        error_message = f"Specified PARAMS_FILE does NOT exist: {params_file}"
-        assert g_pathmgr.exists(params_file), error_message
-
-    # copy the data to local if user wants. This can speed up dataloading.
-    _copy_to_local(cfg)
-
-    try:
-        if world_size > 1:
-            torch.multiprocessing.spawn(
-                _distributed_worker,
-                nprocs=cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
-                args=(
-                    cfg,
-                    node_id,
-                    dist_run_id,
-                    engine_name,
-                    checkpoint_path,
-                    checkpoint_folder,
-                    hook_generator,
-                ),
-                daemon=False,
+        # If using gpus, we check that the user has specified <= gpus available on user system.
+        if cfg.MACHINE.DEVICE == "gpu":
+            assert cfg.DISTRIBUTED.NUM_PROC_PER_NODE <= torch.cuda.device_count(), (
+                f"User system doesn't have requested {cfg.DISTRIBUTED.NUM_PROC_PER_NODE} gpus "
+                f"available. Number of gpus found on user system={torch.cuda.device_count()}. "
+                "Please set the DISTRIBUTED.NUM_PROC_PER_NODE properly."
             )
+
+        # set the environment variables including local rank, node id etc.
+        set_env_vars(local_rank=0, node_id=node_id, cfg=cfg)
+
+        # given the checkpoint folder, we check that there's not already a final checkpoint
+        # and that if there already exists a final checkpoint and user is not overriding
+        # to ignore the final checkpoint
+        checkpoint_folder = get_checkpoint_folder(cfg)
+        if is_training_finished(cfg, checkpoint_folder=checkpoint_folder):
+            logging.info(f"Training already succeeded on node: {node_id}, exiting.")
+            return
+
+        # Get the checkpoint where to resume from. The get_resume_checkpoint function will
+        # automatically take care of detecting whether it's a resume or not.
+        symlink_checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
+        if cfg.CHECKPOINT.USE_SYMLINK_CHECKPOINT_FOR_RESUME and g_pathmgr.exists(
+            symlink_checkpoint_path
+        ):
+            checkpoint_path = f"{checkpoint_folder}/checkpoint.torch"
         else:
-            _distributed_worker(
-                local_rank=0,
-                cfg=cfg,
-                node_id=node_id,
-                dist_run_id=dist_run_id,
-                engine_name=engine_name,
-                checkpoint_path=checkpoint_path,
-                checkpoint_folder=checkpoint_folder,
-                hook_generator=hook_generator,
+            checkpoint_path = get_resume_checkpoint(
+                cfg, checkpoint_folder=checkpoint_folder
             )
 
-    except (KeyboardInterrupt, RuntimeError) as e:
-        logging.error("Wrapping up, caught exception: ", e)
-        if isinstance(e, RuntimeError):
-            raise e
-    finally:
-        _cleanup_local_dir(cfg)
+        # assert that if the user set the PARAMS_FILE, it must exist and be valid.
+        # we only use the PARAMS_FILE init if the checkpoint doesn't exist for the
+        # given training. This ensures that if the same training resumes, then it
+        # resumes from the checkpoint and not the weight init
+        if checkpoint_path is None and cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]:
+            params_file = cfg["MODEL"]["WEIGHTS_INIT"]["PARAMS_FILE"]
+            error_message = f"Specified PARAMS_FILE does NOT exist: {params_file}"
+            assert g_pathmgr.exists(params_file), error_message
 
-    logging.info("All Done!")
-    logging.info("Total runtime(s): %s", time.time() - start)
-    shutdown_logging()
+        # copy the data to local if user wants. This can speed up dataloading.
+        _copy_to_local(cfg)
+
+        try:
+            if world_size > 1:
+                torch.multiprocessing.spawn(
+                    _distributed_worker,
+                    nprocs=cfg.DISTRIBUTED.NUM_PROC_PER_NODE,
+                    args=(
+                        cfg,
+                        node_id,
+                        dist_run_id,
+                        engine_name,
+                        checkpoint_path,
+                        checkpoint_folder,
+                        hook_generator,
+                    ),
+                    daemon=False,
+                )
+            else:
+                _distributed_worker(
+                    local_rank=0,
+                    cfg=cfg,
+                    node_id=node_id,
+                    dist_run_id=dist_run_id,
+                    engine_name=engine_name,
+                    checkpoint_path=checkpoint_path,
+                    checkpoint_folder=checkpoint_folder,
+                    hook_generator=hook_generator,
+                )
+
+        except (KeyboardInterrupt, RuntimeError) as e:
+            logging.error("Wrapping up, caught exception: ", e)
+            if isinstance(e, RuntimeError):
+                raise e
+        finally:
+            _cleanup_local_dir(cfg)
+
+        logging.info("All Done!")
+
+        runtime = time.time() - start
+        logging.info("Total runtime(s): %s", runtime)
+
+        def _create_path(file_name: str) -> str:
+            return f"{cfg.LOSS.deepclusterv2_loss.output_dir}/{file_name}"
+
+        if LOG_TO_MANTIK:
+            mlflow.log_metric("total_runtime [s]", runtime)
+
+            mlflow.log_artifact(_create_path("centroids.pt"), "centroids.pt")
+            mlflow.log_artifact(_create_path("assignments.pt"), "assignments.pt")
+            mlflow.log_artifact(_create_path("indexes.pt"), "indexes.pt")
+            mlflow.log_artifact(_create_path("distances.pt"), "distances.pt")
+
+        shutdown_logging()
 
 
 def _distributed_worker(
