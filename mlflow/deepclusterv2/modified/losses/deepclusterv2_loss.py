@@ -226,7 +226,7 @@ class DeepClusterV2Loss(ClassyLoss):
 
                 j = (j + 1) % self.nmb_mbs
 
-            centroids_last_iter = getattr(self, f"centroids{self.num_clusters - 1}")
+            centroids_last_iter = getattr(self, f"centroids{len(self.num_clusters) - 1}")
 
             logging.info("Saving clustering information to disk")
 

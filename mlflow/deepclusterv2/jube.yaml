@@ -185,6 +185,13 @@ parameterset:
         _: >
            $modules;
            mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
+           module load Python;
+           source /p/project/deepacf/maelstrom/emmerich1/venvs/mantik/bin/activate;
+           source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env;
+           eval $(mantik init);
+           unset MANTIK_USERNAME;
+           unset MANTIK_PASSWORD;
+           export LOG_TO_MANTIK="True";
       - name: preprocess
         tag: e4
         mode: text

@@ -12,6 +12,7 @@ import logging
 import time
 import os
 import contextlib
+import yaml
 
 import tempfile
 from typing import Any, Callable, List
@@ -91,8 +92,11 @@ def launch_distributed(
 
     with context():
         if LOG_TO_MANTIK:
-            mantik.init_tracking()
-            mlflow.log_params(cfg)
+            #mantik.init_tracking()
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.yml') as f:
+                yaml.dump(cfg, f)
+                f.seek(0) # You cannot close the file as it will be removed. You have to move back to its head
+                mlflow.log_artifact(f.name, "config.yaml")
 
         start = time.time()
         setup_logging(__name__)
