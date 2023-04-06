@@ -85,7 +85,8 @@ RUN . /venv/bin/activate \
  && pip install --no-cache-dir \
       classy-vision@https://github.com/facebookresearch/ClassyVision/tarball/4785d5ee19d3bcedd5b28c1eb51ea1f59188b54d \
       fairscale==0.4.6 \
-      numpy==1.21.0
+      numpy==1.21.0 \
+ && pip install --no-cache-dir mantik==0.1.2
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu18.04
 
