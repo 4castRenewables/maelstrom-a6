@@ -516,7 +516,7 @@ gmpy2 = ["gmpy2"]
 
 [[package]]
 name = "ecmwflibs"
-version = "0.4.17"
+version = "0.5.2"
 description = "Wraps ECMWF tools (experimental)"
 category = "main"
 optional = false
@@ -2801,7 +2801,7 @@ notebooks = ["jupyter", "python-dotenv"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "f2b05012b00bd54027f55cf3753172a270e41f82beeee7f0abe820140bb4ce9e"
+content-hash = "82efc4bdb8feefc2dce1932162cdb2dbfb02ebb8e31652039fa6779c149185de"
 
 [metadata.files]
 alembic = [
@@ -3232,29 +3232,16 @@ ecdsa = [
     {file = "ecdsa-0.18.0.tar.gz", hash = "sha256:190348041559e21b22a1d65cee485282ca11a6f81d503fddb84d5017e9ed1e49"},
 ]
 ecmwflibs = [
-    {file = "ecmwflibs-0.4.17-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:9319818c3e27bc0f2370b7f7e869c5224a8f52e241858e502321453e3d212528"},
-    {file = "ecmwflibs-0.4.17-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:1efe023038a5075643169d43cdcaad10b34180c30d10fc55ff051b302229dd5a"},
-    {file = "ecmwflibs-0.4.17-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e33acb76a99cac2d558f021bc1d7ddadf530de2c2f5adfbdbfc51c182341c0b3"},
-    {file = "ecmwflibs-0.4.17-cp310-cp310-win32.whl", hash = "sha256:df71f300c96278ecf004bd2259ea78f6e0c97a519280e2c4720306685b257c7f"},
-    {file = "ecmwflibs-0.4.17-cp310-cp310-win_amd64.whl", hash = "sha256:dd5d06eda50bfffbed0dea7c206adccd0b3f84d1b47a678491d3ee38933f9fd5"},
-    {file = "ecmwflibs-0.4.17-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:504b9fc5cb0b2fe11fc7d53bd48e1517b9bf30969438844e6b82645fa3073ee1"},
-    {file = "ecmwflibs-0.4.17-cp36-cp36m-win32.whl", hash = "sha256:cec768a92cb2138987e0bc1b85925ae2ef2ffb2767355b96ee69d5303868b3c2"},
-    {file = "ecmwflibs-0.4.17-cp36-cp36m-win_amd64.whl", hash = "sha256:bdc8cb1bc830831b9cec1d4f1065794270b6c3a441ebe60abd4882172b4e4928"},
-    {file = "ecmwflibs-0.4.17-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:5096b35c28ddd7f44b89ff19fd2465dabeb79b29a2537a0567851c37dd3e770e"},
-    {file = "ecmwflibs-0.4.17-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:47229fb6cc3c2d2cf34258abf359db245883584c3182e54651501f7cab46daee"},
-    {file = "ecmwflibs-0.4.17-cp37-cp37m-win32.whl", hash = "sha256:064fdffab8be211a04d544c2f0d087b2f29c1ec62deedc2e413711db90e9b5cf"},
-    {file = "ecmwflibs-0.4.17-cp37-cp37m-win_amd64.whl", hash = "sha256:ac31ebf5b279aedca16e1e114d0f0df3c118d17b8349b5e55706bacfdae85a1b"},
-    {file = "ecmwflibs-0.4.17-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:114e4e6bd64d2d4f9da16a55e5ee75c6fd6e0a4d38a68dbd33ecf8ef90c8d6b2"},
-    {file = "ecmwflibs-0.4.17-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:709fc35f15d95b9572f1b86cf01f38cd490540c69a58e7a4d800e0f8c0e1bd60"},
-    {file = "ecmwflibs-0.4.17-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0435659ac86b1be5943b37c0bb57923aeab70a2e09ae4fb051106ac66179021d"},
-    {file = "ecmwflibs-0.4.17-cp38-cp38-win32.whl", hash = "sha256:2b1876ca384143e2ae713897732f668108121e807088836cad3a25d8bf387a29"},
-    {file = "ecmwflibs-0.4.17-cp38-cp38-win_amd64.whl", hash = "sha256:746bda074e81141e05d66d4cc6ae595d4b1fc74788644e96f82f62a82f64f3e0"},
-    {file = "ecmwflibs-0.4.17-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:04aee684b24ae210328b0195c132f4411779a5e86bb8d128be1572efe4fa2a4c"},
-    {file = "ecmwflibs-0.4.17-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:49fa91a24e30b1729a9bbe2fea083199ffa366e9c8d090793120459404b765ca"},
-    {file = "ecmwflibs-0.4.17-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:817f61fff5aa7b3067f373febd50ba8bea1d74d7b31cbccc957b0e1e04897e75"},
-    {file = "ecmwflibs-0.4.17-cp39-cp39-win32.whl", hash = "sha256:351b3e062dd224367c8cd2d5056abca4fb53244f9174313461b6797e3c375c4b"},
-    {file = "ecmwflibs-0.4.17-cp39-cp39-win_amd64.whl", hash = "sha256:b7c08345d1554b86bfa15c4c6d80421baf490f0b05b6db0122683e2af561338c"},
-    {file = "ecmwflibs-0.4.17-py2.py3-none-any.whl", hash = "sha256:9aab964b5778a8b24558cfddb8cd2d94c2f9c77f4432d5a3174105117178dcc8"},
+    {file = "ecmwflibs-0.5.2-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:b53a958b85c2df0a19d9801f2d76de6e4f71ef5d5558a0a7b6a40c54ec1631a0"},
+    {file = "ecmwflibs-0.5.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bfd909a710b7b3873e99f214366fdd3447a73f1a003a5e09cbe09ec4f9c56e61"},
+    {file = "ecmwflibs-0.5.2-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:49fc23e99f00054056bcd7b7becb030931e2966d6827452eb679753ca061baa9"},
+    {file = "ecmwflibs-0.5.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c7893cd4c3e1a3fcc95f5f986a1351f25315fd42ea47504340e492d04749bd10"},
+    {file = "ecmwflibs-0.5.2-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:ebc1af8030c3cd11eac09885b6585024d66ebfd181486f00837c1a846de2aa47"},
+    {file = "ecmwflibs-0.5.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5628ef347b03c1b958eac38772b420d10eedab5da56b39280ff3f245f87a796a"},
+    {file = "ecmwflibs-0.5.2-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:35c2fc70b3b8549131c293ad99b4fdc6dfb196e09b4ab6a65823bc5fc69ce916"},
+    {file = "ecmwflibs-0.5.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:49cb40423b2b2acd45bbd3e7b1587571409a549b195a6bd91541fce4fc7d7699"},
+    {file = "ecmwflibs-0.5.2-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:b12a9ef238d79d59c0ab4a56c3f9341d5d6da53c23e98cc21af10b763ca53310"},
+    {file = "ecmwflibs-0.5.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ad6f94b60f6b2160d2d5ee155df2617be7effe5e2910dbab4e494790bcfc1101"},
 ]
 entrypoints = [
     {file = "entrypoints-0.4-py3-none-any.whl", hash = "sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f"},
