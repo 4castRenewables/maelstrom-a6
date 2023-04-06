@@ -51,7 +51,7 @@ Stage: builder
 
 
 Bootstrap: docker
-From: rocm/dev-ubuntu-20.04:5.2
+From: rocm/dev-ubuntu-20.04:5.2-complete
 Stage: final
 
 %files from builder
@@ -60,7 +60,6 @@ Stage: final
 
 %environment
     export PATH=/usr/local/bin:/venv/bin:${PATH}
-    export CONFIG_AMD_ARGS="config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False"
 
 %post
     apt-get update
@@ -81,8 +80,8 @@ Stage: final
 %runscript
     echo "[$(date)] Running VISSL"
     echo "Arguments: $*"
-    echo "Running command and appending ${CONFIG_AMD_ARGS}"
-    exec "$@ ${CONFIG_AMD_ARGS}"
+    echo "Running command"
+    exec "$@"
 
 %labels
     Author Fabian Emmerich
