@@ -99,7 +99,7 @@ class DiskImageDataset(QueueDataset):
             if LOG_TO_MANTIK:
                 logging.info("Logging sample indexes to MLflow")
                 save_file(self.image_dataset.samples, "sample_indexes.npy")
-                mlflow.log_artifact("sample_indexes.npy", "sample_indexes.npy")
+                mlflow.log_artifact("sample_indexes.npy")
                 logging.info("Done with logging of sample indexes")
 
             logging.info(f"Loaded {len(self.image_dataset)} samples from folder {path}")
