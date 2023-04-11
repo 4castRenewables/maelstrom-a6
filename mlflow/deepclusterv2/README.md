@@ -27,6 +27,22 @@ make upload-vissl
 ```
 (or `build/upload-vissl-e4`)
 
+### Building for AMD GPUS (ROCm)
+
+```bash
+make deploy-vissl-rocm-e4
+```
+
+or, alternatively
+
+```bash
+make build-vissl-rocm
+make upload-vissl-rocm-e4
+```
+
+_Note:_ Running with ROCm required passing
+`config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False`.
+
 ## Testing locally
 
 **Note**: To make the `dataset_catalog.json` available in the image, the `configs` directory
@@ -97,19 +113,3 @@ Once all runs are finnished, analysis can be performed via
 ```bash
 jube result ap6-run/ --id <benchmark IDs> --analyse --update jube.yaml > benchmark-results.md
 ```
-
-## Using AMD GPUS (ROCm)
-
-```bash
-make deploy-vissl-rocm-e4
-```
-
-or, alternatively
-
-```bash
-make build-vissl-rocm
-make upload-vissl-rocm-e4
-```
-
-Running with ROCm required passing
-`config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False`.
