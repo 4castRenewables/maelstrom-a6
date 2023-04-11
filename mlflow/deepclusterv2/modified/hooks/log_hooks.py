@@ -14,6 +14,7 @@ import os
 from typing import Optional
 
 import mlflow
+import numpy as np
 import torch
 from classy_vision import tasks
 from classy_vision.generic.distributed_util import get_rank, is_primary
@@ -564,7 +565,7 @@ class LogPerfTimeMetricsHook(ClassyHook):
         else:
             # Average batch time calculation
             total_batch_time = 1000 * (time.time() - self.start_time)
-            average_batch_time = 1000 * (total_batch_time / batches)
+            average_batch_time = total_batch_time / batches
             logging.info(
                 "Average %s batch time (ms) for %d batches: %d"
                 % (phase_type, batches, average_batch_time)
@@ -574,12 +575,13 @@ class LogPerfTimeMetricsHook(ClassyHook):
                 % (phase_type, batches, total_batch_time)
             )
 
-            if LOG_TO_MANTIK and (
+            if LOG_TO_MANTIK and is_primary() and (
                     (epoch == 0)
                     or (epoch % log_freq == 0)
                     or (epoch <= 100 and epoch % 20 == 0)
             ):
-                loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
+                #loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
+                loss_val = np.mean(task.losses)
 
                 if isinstance(task.optimizer.options_view.lr, (set, list)):
                     lr_val = list(task.optimizer.options_view.lr)

@@ -96,6 +96,8 @@ def launch_distributed(
         #mantik.init_tracking()
 
         mlflow.start_run()
+
+        # Set run ID as env var for passing to all sub-processes
         run = mlflow.active_run()
         os.environ["MLFLOW_RUN_ID"] = run.info.run_id
 
@@ -206,12 +208,13 @@ def launch_distributed(
         return f"{cfg.LOSS.deepclusterv2_loss.output_dir}/{file_name}"
 
     if LOG_TO_MANTIK:
-        mlflow.log_metric("total_runtime [s]", runtime)
+        mlflow.log_metric("total_runtime", runtime)
 
-        mlflow.log_artifact(_create_path("centroids.pt"), "centroids.pt")
-        mlflow.log_artifact(_create_path("assignments.pt"), "assignments.pt")
-        mlflow.log_artifact(_create_path("indexes.pt"), "indexes.pt")
-        mlflow.log_artifact(_create_path("distances.pt"), "distances.pt")
+        # The following files are saved to disk in `modified/losses/deepclusterv2_loss.py:233`
+        mlflow.log_artifact(_create_path("centroids.pt"))
+        mlflow.log_artifact(_create_path("assignments.pt"))
+        mlflow.log_artifact(_create_path("indexes.pt"))
+        mlflow.log_artifact(_create_path("distances.pt"))
 
         mlflow.end_run()
 
