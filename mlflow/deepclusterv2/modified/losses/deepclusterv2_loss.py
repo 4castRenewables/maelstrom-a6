@@ -229,13 +229,13 @@ class DeepClusterV2Loss(ClassyLoss):
                 self.distance[i_K][indexes_all] = distance_all
 
                 j = (j + 1) % self.nmb_mbs
-            
+
             if LOG_TO_MANTIK and is_primary():
                 epoch = _get_required_env_var("CURRENT_EPOCH")
                 log_freq = _get_required_env_var("LOG_FREQUENCY")
-                
+
                 if (
-                    epoch == 0
+                    epoch == 1
                     or (epoch < 100 and epoch % log_freq == 0)
                     or epoch % 100 == 0
                 ):

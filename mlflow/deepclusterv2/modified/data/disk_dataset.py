@@ -69,6 +69,7 @@ class DiskImageDataset(QueueDataset):
         self._path = path
         self.image_dataset = []
         self.is_initialized = False
+        self._data_load_time = 0
         self._load_data(path)
         self._num_samples = len(self.image_dataset)
         self._remove_prefix = cfg["DATA"][self.split]["REMOVE_IMG_PATH_PREFIX"]
@@ -86,6 +87,7 @@ class DiskImageDataset(QueueDataset):
                 "data_source": self.data_source,
                 "n_samples": self._num_samples,
             })
+            mlflow.log_metric("data_load_time", self._data_load_time)
 
             assert isinstance(self.image_dataset, ImageFolder)
             save_file(
@@ -94,8 +96,10 @@ class DiskImageDataset(QueueDataset):
                     for index, sample in enumerate(self.image_dataset.samples)
                 ],
                 self._create_path("image_samples.json"),
+                append_to_json=False,
             )
-            save_file(self.image_dataset.samples, self._create_path("image_samples.npy"))
+            # numpy file is larger than the JSON
+            # save_file(self.image_dataset.samples, self._create_path("image_samples.npy"))
             os.environ["DATASET_INFO_LOGGED"] = "True"
 
     def _load_data(self, path):
@@ -105,9 +109,12 @@ class DiskImageDataset(QueueDataset):
             else:
                 self.image_dataset = load_file(path)
         elif self.data_source == "disk_folder":
+            start = time.time()
             self.image_dataset = ImageFolder(path)
 
-            logging.info("Saving sample images to disk")
+            end = time.time()
+
+            self._data_load_time = (end - start) * 1e3
 
             logging.info(f"Loaded {len(self.image_dataset)} samples from folder {path}")
 

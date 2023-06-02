@@ -571,14 +571,14 @@ class LogPerfTimeMetricsHook(ClassyHook):
             logging.warning("start_time not initialized")
         else:
             # Average batch time calculation
-            total_batch_time = 1000 * (time.time() - self.start_time)
+            total_batch_time = (time.time() - self.start_time) * 1e3
             average_batch_time = total_batch_time / batches
             logging.info(
-                "Average %s batch time (ms) for %d batches: %d"
+                "Average %s batch time (s) for %d batches: %d"
                 % (phase_type, batches, average_batch_time)
             )
             logging.info(
-                "Total %s epoch time (ms) for %d batches: %d"
+                "Total %s epoch time (s) for %d batches: %d"
                 % (phase_type, batches, total_batch_time)
             )
 
@@ -613,19 +613,19 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     )
 
                 if (
-                    epoch == 0
+                    epoch == 1
                     or epoch % log_freq == 0
                     or (epoch <= 100 and epoch % 20 == 0)
                 ):
+
                     perf_stats = [
                         {
                             "name": name,
-                            "value": metric.get_avg() * 1000.0,
-                            "cudaEvent": self._cuda_stats[name].get_avg() * 1000.0,
+                            "value": metric.get_avg() * 1e3,
+                            "cudaEvent": self._cuda_stats[name].get_avg() * 1e3,
                         }
                         for name, metric in task.perf_stats._host_stats.items()
                     ]
-
                     metrics |= {
                         "losses": task.loss.state_dict(),
                         "classy_state_dict": task.get_classy_state(),

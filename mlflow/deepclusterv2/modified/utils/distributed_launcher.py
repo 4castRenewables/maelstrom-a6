@@ -201,8 +201,8 @@ def launch_distributed(
 
     logging.info("All Done!")
 
-    runtime = time.time() - start
-    logging.info("Total runtime(s): %s", runtime)
+    runtime = (time.time() - start) * 1e3
+    logging.info("Total runtime (ms): %s", runtime)
 
     def _create_path(file_name: str) -> str:
         return f"{cfg.LOSS.deepclusterv2_loss.output_dir}/{file_name}"
