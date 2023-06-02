@@ -632,9 +632,13 @@ class LogPerfTimeMetricsHook(ClassyHook):
                         "classy_state_dict": task.get_classy_state(),
                         "time_breakdown": perf_stats,
                     }
+
+                    def _create_path(file_name: str) -> str:
+                        return f"{task.config['LOSS']['deepclusterv2_loss']['output_dir']}/{file_name}"
+
                     save_file(
                         metrics,
-                        self._create_path("metrics.json"),
+                        _create_path("metrics.json"),
                         append_to_json=True,
                     )
 
@@ -649,6 +653,3 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     task.perf_stats.report_str(),
                 )
             )
-
-    def _create_path(self, file_name: str) -> str:
-        return f"{self.loss_config.output_dir}/{file_name}"
