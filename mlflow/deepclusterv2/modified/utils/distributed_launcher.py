@@ -99,6 +99,9 @@ def launch_distributed(
         mlflow.end_run("FAILED")
         slurm_job_id = os.getenv("SLURM_JOB_ID")
 
+        stdout_file = os.getenv("SLURM_JOB_STDOUT").replace("%j", slurm_job_id)
+        stderr_file = os.getenv("SLURM_JOB_STDERR").replace("%j", slurm_job_id)
+
         mlflow.start_run(run_name=f"slurm-{slurm_job_id}")
 
         mlflow.log_params(
@@ -217,6 +220,9 @@ def launch_distributed(
             KeyboardInterrupt, RuntimeError, torch.multiprocessing.ProcessRaisedException
     ) as e:
         if LOG_TO_MANTIK:
+            mlflow.log_artifact(stderr_file)
+            mlflow.log_artifact(stdout_file)
+
             mlflow.end_run("FAILED")
             LOG_TO_MANTIK = False
 
@@ -249,6 +255,9 @@ def launch_distributed(
 
         # Metrics saved to disk at `hooks/log_hooks.py:634`
         mlflow.log_artifact(_create_path("metrics.json"))
+
+        mlflow.log_artifact(stderr_file)
+        mlflow.log_artifact(stdout_file)
 
         mlflow.end_run()
 
