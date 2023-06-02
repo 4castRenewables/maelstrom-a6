@@ -99,6 +99,23 @@ def launch_distributed(
         mlflow.end_run("FAILED")
         mlflow.start_run()
 
+        mlflow.log_params(
+            {
+                "SLURM_JOB_ID": os.getenv("SLURM_JOB_ID"),
+                "SLURM_JOB_NAME": os.getenv("SLURM_JOB_NAME"),
+                "SLURM_JOB_ACCOUNT": os.getenv("SLURM_JOB_ACCOUNT"),
+                "SLURM_CLUSTER_NAME": os.getenv("SLURM_CLUSTER_NAME"),
+                "SLURM_JOB_PARTITION": os.getenv("SLURM_JOB_PARTITION"),
+                "SLURM_JOB_NUM_NODES": os.getenv("SLURM_JOB_NUM_NODES"),
+                "SLURM_NODELIST": os.getenv("SLURM_NODELIST"),
+                "SLURM_JOB_CPUS_PER_NODE": os.getenv("SLURM_JOB_CPUS_PER_NODE"),
+                "SLURM_CPUS_PER_TASK": os.getenv("SLURM_CPUS_PER_TASK"),
+                "SLURM_NPROCS": os.getenv("SLURM_NPROCS"),
+                "SLURM_NTASKS": os.getenv("SLURM_NTASKS"),
+                "SLURM_JOB_GPUS": os.getenv("SLURM_JOB_GPUS"),
+            }
+        )
+
         # Set run ID as env var for passing to all sub-processes
         run = mlflow.active_run()
         os.environ["MLFLOW_RUN_ID"] = run.info.run_id
