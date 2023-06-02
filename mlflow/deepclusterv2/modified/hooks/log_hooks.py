@@ -592,53 +592,24 @@ class LogPerfTimeMetricsHook(ClassyHook):
                 else:
                     lr_val = round(task.optimizer.options_view.lr, 5)
 
-                metrics = {
-                    "rank": get_rank(),
-                    "phase_idx": task.phase_idx,
-                    "train_phase_idx": task.train_phase_idx,
-                    "epoch": epoch,
-                    "iteration": task.iteration,
-                    "iteration_num": task.local_iteration_num,
-                    "loss_mean": loss_val,
-                    "loss_std": loss_val_std,
-                    "learning_rate": lr_val,
-                    "batch_time_ms": total_batch_time,
-                    "batch_time_avg_ms": average_batch_time,
-                }
+                rank = get_rank()
 
-                if get_rank() == 0:
+                if rank == 0:
                     mlflow.log_metrics(
-                        metrics,
-                        step=epoch,
-                    )
-
-                if (
-                    epoch == 0
-                    or epoch % log_freq == 0
-                    or (epoch <= 100 and epoch % 20 == 0)
-                ):
-
-                    perf_stats = [
                         {
-                            "name": name,
-                            "value_ms": metric.get_avg() * 1e3,
-                            "cudaEvent_ms": task.perf_stats._cuda_stats[name].get_avg() * 1e3,
-                        }
-                        for name, metric in task.perf_stats._host_stats.items()
-                    ]
-                    metrics = {
-                        **metrics,
-                        "classy_state_dict": task.get_classy_state(),
-                        "time_breakdown": perf_stats,
-                    }
-
-                    def _create_path(file_name: str) -> str:
-                        return f"{task.config['LOSS']['deepclusterv2_loss']['output_dir']}/{file_name}"
-
-                    save_file(
-                        metrics,
-                        _create_path("metrics.json"),
-                        append_to_json=True,
+                            "rank": rank,
+                            "phase_idx": task.phase_idx,
+                            "train_phase_idx": task.train_phase_idx,
+                            "epoch": epoch,
+                            "iteration": task.iteration,
+                            "iteration_num": task.local_iteration_num,
+                            "loss_mean": loss_val,
+                            "loss_std": loss_val_std,
+                            "learning_rate": lr_val,
+                            "batch_time_ms": total_batch_time,
+                            "batch_time_avg_ms": average_batch_time,
+                        },
+                        step=epoch,
                     )
 
         # Train step time breakdown
