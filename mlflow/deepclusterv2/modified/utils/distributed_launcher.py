@@ -97,11 +97,13 @@ def launch_distributed(
     if LOG_TO_MANTIK:
         #mantik.init_tracking()
         mlflow.end_run("FAILED")
-        mlflow.start_run()
+        slurm_job_id = os.getenv("SLURM_JOB_ID")
+
+        mlflow.start_run(run_name=f"slurm-{slurm_job_id}")
 
         mlflow.log_params(
             {
-                "SLURM_JOB_ID": os.getenv("SLURM_JOB_ID"),
+                "SLURM_JOB_ID": slurm_job_id,
                 "SLURM_JOB_NAME": os.getenv("SLURM_JOB_NAME"),
                 "SLURM_JOB_ACCOUNT": os.getenv("SLURM_JOB_ACCOUNT"),
                 "SLURM_CLUSTER_NAME": os.getenv("SLURM_CLUSTER_NAME"),
