@@ -94,12 +94,11 @@ class DiskImageDataset(QueueDataset):
 
             assert isinstance(self.image_dataset, ImageFolder)
             save_file(
-                [
-                    {"index": index, "path": sample[0]}
+                {
+                    index: sample[0]
                     for index, sample in enumerate(self.image_dataset.samples)
-                ],
-                self._create_path("image_samples.json"),
-                append_to_json=False,
+                },
+                self._create_path("image-samples.yaml"),
             )
             # numpy file is larger than the JSON
             # save_file(self.image_dataset.samples, self._create_path("image_samples.npy"))

@@ -235,7 +235,7 @@ class DeepClusterV2Loss(ClassyLoss):
                 log_freq = _get_required_env_var("LOG_FREQUENCY")
 
                 if (
-                    epoch == 1
+                    epoch == 0
                     or (epoch < 100 and epoch % log_freq == 0)
                     or epoch % 100 == 0
                 ):

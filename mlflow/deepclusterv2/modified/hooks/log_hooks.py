@@ -613,7 +613,7 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     )
 
                 if (
-                    epoch == 1
+                    epoch == 0
                     or epoch % log_freq == 0
                     or (epoch <= 100 and epoch % 20 == 0)
                 ):
@@ -626,13 +626,14 @@ class LogPerfTimeMetricsHook(ClassyHook):
                         }
                         for name, metric in task.perf_stats._host_stats.items()
                     ]
-                    metrics |= {
+                    metrics = {
+                        **metrics,
                         "losses": task.loss.state_dict(),
                         "classy_state_dict": task.get_classy_state(),
                         "time_breakdown": perf_stats,
                     }
                     save_file(
-                        [metrics],
+                        metrics,
                         self._create_path("metrics.json"),
                         append_to_json=True,
                     )
