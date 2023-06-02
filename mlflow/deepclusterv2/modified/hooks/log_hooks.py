@@ -628,7 +628,6 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     ]
                     metrics = {
                         **metrics,
-                        "losses": task.loss.state_dict(),
                         "classy_state_dict": task.get_classy_state(),
                         "time_breakdown": perf_stats,
                     }
