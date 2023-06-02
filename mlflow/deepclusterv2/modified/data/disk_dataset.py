@@ -18,6 +18,7 @@ from vissl.utils.io import save_file
 
 LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
 
+
 class DiskImageDataset(QueueDataset):
     """
     Base Dataset class for loading images from Disk.

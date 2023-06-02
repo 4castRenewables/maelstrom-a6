@@ -20,6 +20,7 @@ from typing import Any, Callable, List
 import mantik
 import mlflow
 import torch
+import torch.multiprocessing
 from iopath.common.file_io import g_pathmgr
 
 from vissl.config import AttrDict
@@ -192,7 +193,13 @@ def launch_distributed(
                 hook_generator=hook_generator,
             )
 
-    except (KeyboardInterrupt, RuntimeError) as e:
+    except (
+            KeyboardInterrupt, RuntimeError, torch.multiprocessing.ProcessRaisedException
+    ) as e:
+        if LOG_TO_MANTIK:
+            mlflow.end_run("FAILED")
+            LOG_TO_MANTIK = False
+
         logging.error("Wrapping up, caught exception: ", e)
         if isinstance(e, RuntimeError):
             raise e
