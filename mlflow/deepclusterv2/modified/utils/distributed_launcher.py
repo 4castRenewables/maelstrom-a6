@@ -40,7 +40,6 @@ from vissl.utils.slurm import get_node_id
 
 from vissl.utils.io import save_file
 
-LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
 
 
 def _get_available_splits(cfg: AttrDict):
@@ -93,9 +92,11 @@ def launch_distributed(
 
     start = time.time()
 
+    LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
+
     if LOG_TO_MANTIK:
         #mantik.init_tracking()
-        mlflow.end_run()
+        mlflow.end_run("FAILED")
         mlflow.start_run()
 
         # Set run ID as env var for passing to all sub-processes
