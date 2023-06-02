@@ -185,9 +185,9 @@ parameterset:
         _: >
            $modules;
            mkdir -p ${base_dir} ${checkpoints_dir} ${tensorboard_dir} ${tmp_data_dir};
-           module load Python;
+           module load Stages/2023  GCCcore/.11.3.0 Python/3.10.4;
            source /p/project/deepacf/maelstrom/emmerich1/venvs/mantik/bin/activate;
-           source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env;
+           source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env > /dev/null 2>&1;
            eval $(mantik init);
            unset MANTIK_USERNAME;
            unset MANTIK_PASSWORD;
@@ -237,7 +237,17 @@ parameterset:
         tag: amd
         _: "config.OPTIMIZER.use_larc=False config.MODEL.AMP_PARAMS.USE_AMP=False"
       - name: additional_args
-        _: ""
+        tag: jwc|jwb
+        mode: text
+        _: >
+           -B /p/home:/p/home
+           -B /p/project:/p/project
+           -B /p/scratch:/p/scratch
+           -B /p/cscratch:/p/cscratch
+           -B /p/largedata:/p/largedata
+           -B /p/largedata2:/p/largedata2
+           -B /p/fastdata:/p/fastdata
+           --contain
       - name: additional_args
         tag: e4
         mode: text
@@ -279,7 +289,8 @@ parameterset:
            config.DATA.TRAIN.DATASET_NAMES=${dataset}
            config.LOSS.deepclusterv2_loss.output_dir=${base_dir}
            ${rocm_args}
-           config.OPTIMIZER.param_schedulers.lr.lengths=$${LENGTHS}
+           config.OPTIMIZER.param_schedulers.lr.lengths="[0.00641,0.99359]"
+#config.OPTIMIZER.param_schedulers.lr.lengths=$${LENGTHS}
 # Note: the lengths arg must be last since it will contain a newline due to the parsing
 
 patternset:

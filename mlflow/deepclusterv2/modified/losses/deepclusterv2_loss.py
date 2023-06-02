@@ -6,6 +6,7 @@
 import logging
 import math
 import pprint
+import os
 
 import torch
 import torch.distributed as dist
@@ -14,12 +15,15 @@ from classy_vision.generic.distributed_util import (
     gather_from_all,
     get_rank,
     get_world_size,
+    is_primary
 )
 from classy_vision.losses import ClassyLoss, register_loss
 from torch import nn
 from vissl.config import AttrDict
 from vissl.utils.misc import get_indices_sparse
 from vissl.utils.io import save_file
+
+LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
 
 torch.cuda.empty_cache()
 
@@ -225,15 +229,24 @@ class DeepClusterV2Loss(ClassyLoss):
                 self.distance[i_K][indexes_all] = distance_all
 
                 j = (j + 1) % self.nmb_mbs
+            
+            if LOG_TO_MANTIK and is_primary():
+                epoch = _get_required_env_var("CURRENT_EPOCH")
+                log_freq = _get_required_env_var("LOG_FREQUENCY")
+                
+                if (
+                    epoch == 0
+                    or (epoch < 100 and epoch % log_freq == 0)
+                    or epoch % 100 == 0
+                ):
+                    centroids_last_iter = getattr(self, f"centroids{len(self.num_clusters) - 1}")
 
-            centroids_last_iter = getattr(self, f"centroids{len(self.num_clusters) - 1}")
+                    logging.info("Saving clustering information to disk")
 
-            logging.info("Saving clustering information to disk")
-
-            torch.save(centroids_last_iter, self._create_path("centroids.pt"))
-            torch.save(self.assignments, self._create_path("assignments.pt"))
-            torch.save(self.indexes, self._create_path("indexes.pt"))
-            torch.save(self.distance, self._create_path("distances.pt"))
+                    torch.save(centroids_last_iter, self._create_path("centroids.pt"))
+                    torch.save(self.assignments, self._create_path("assignments.pt"))
+                    torch.save(self.indexes, self._create_path("indexes.pt"))
+                    torch.save(self.distance, self._create_path("distances.pt"))
 
         logging.info(f"Rank: {get_rank()}, clustering of the memory bank done")
 
@@ -243,3 +256,9 @@ class DeepClusterV2Loss(ClassyLoss):
 
     def _create_path(self, file_name: str) -> str:
         return f"{self.loss_config.output_dir}/{file_name}"
+
+def _get_required_env_var(name: str) -> int:
+    value = os.getenv(name)
+    if value is None:
+        raise RuntimeError(f"Environment variable {name} unset")
+    return int(value)

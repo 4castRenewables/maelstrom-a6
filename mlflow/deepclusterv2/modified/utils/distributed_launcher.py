@@ -94,7 +94,7 @@ def launch_distributed(
 
     if LOG_TO_MANTIK:
         #mantik.init_tracking()
-
+        mlflow.end_run()
         mlflow.start_run()
 
         # Set run ID as env var for passing to all sub-processes
@@ -215,6 +215,10 @@ def launch_distributed(
         mlflow.log_artifact(_create_path("assignments.pt"))
         mlflow.log_artifact(_create_path("indexes.pt"))
         mlflow.log_artifact(_create_path("distances.pt"))
+        
+        # Sample indexes are saved to disk at `data/disk_dataset.py:91
+        mlflow.log_artifact(_create_path("image_samples.npy"))
+        mlflow.log_artifact(_create_path("image_samples.json"))
 
         mlflow.end_run()
 

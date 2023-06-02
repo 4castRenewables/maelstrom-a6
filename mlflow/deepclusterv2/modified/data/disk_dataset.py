@@ -80,12 +80,23 @@ class DiskImageDataset(QueueDataset):
         # whether to use QueueDataset class to handle invalid images or not
         self.enable_queue_dataset = cfg["DATA"][self.split]["ENABLE_QUEUE_DATASET"]
 
-        if LOG_TO_MANTIK:
+        if LOG_TO_MANTIK and os.getenv("DATASET_INFO_LOGGED") is None:
             mlflow.log_params({
                 "dataset_name": self.dataset_name,
                 "data_source": self.data_source,
                 "n_samples": self._num_samples,
             })
+            
+            assert isinstance(self.image_dataset, ImageFolder)
+            save_file(
+                [
+                    {"index": index, "path": sample[0]} 
+                    for index, sample in enumerate(self.image_dataset.samples)
+                ],
+                self._create_path("image_samples.json"),
+            )
+            save_file(self.image_dataset.samples, self._create_path("image_samples.npy"))
+            os.environ["DATASET_INFO_LOGGED"] = "True"
 
     def _load_data(self, path):
         if self.data_source == "disk_filelist":
@@ -95,13 +106,9 @@ class DiskImageDataset(QueueDataset):
                 self.image_dataset = load_file(path)
         elif self.data_source == "disk_folder":
             self.image_dataset = ImageFolder(path)
-
-            if LOG_TO_MANTIK:
-                logging.info("Logging sample indexes to MLflow")
-                save_file(self.image_dataset.samples, "sample_indexes.npy")
-                mlflow.log_artifact("sample_indexes.npy")
-                logging.info("Done with logging of sample indexes")
-
+            
+            logging.info("Saving sample images to disk")
+            
             logging.info(f"Loaded {len(self.image_dataset)} samples from folder {path}")
 
             # mark as initialized.
@@ -156,14 +163,7 @@ class DiskImageDataset(QueueDataset):
             self._init_queues()
         is_success = True
         image_path = self.image_dataset[idx]
-        #save_file(self.get_image_paths(), "/p/project/deepacf/kiste/DC/juelich_2x85_128x128_15k/checkpoints_train_400ep_exp/disk_dataset_getitem_get_image_paths.json")
-        #
-        #print('###########################################################################################################################')
-        #print('')
-        #print('idx')
-        #print(idx)
-        #image_paths_1 = []
-        #idx1=[]
+
         try:
             if self.data_source == "disk_filelist":
                 image_path = self._replace_img_path_prefix(
@@ -171,11 +171,10 @@ class DiskImageDataset(QueueDataset):
                     replace_prefix=self._remove_prefix,
                     new_prefix=self._new_prefix,
                 )
+                # TODO: Adapt opening of image, e.g. to convolve N-D to 3-D
                 with PathManager.open(image_path, "rb") as fopen:
                     img = Image.open(fopen).convert("RGB")
             elif self.data_source == "disk_folder":
-                #image_paths_1.append(self.get_image_paths())
-                #idx1.append(idx)
                 img = self.image_dataset[idx][0]
             if is_success and self.enable_queue_dataset:
                 self.on_sucess(img)
@@ -194,6 +193,9 @@ class DiskImageDataset(QueueDataset):
                     )
             else:
                 img = get_mean_image(self.cfg["DATA"][self.split].DEFAULT_GRAY_IMG_SIZE)
-        #save_file(image_paths_1, "/p/project/deepacf/kiste/DC/juelich_2x85_128x128_15k/checkpoints_train_400ep_exp/disk_dataset_getitem_get_image_paths.json",append_to_json=False)
-        #save_file(idx, "/p/project/deepacf/kiste/DC/juelich_2x85_128x128_15k/checkpoints_train_400ep_exp/disk_dataset_getitem_idx1.json",append_to_json=True)
+
         return img, is_success
+
+    
+    def _create_path(self, file_name: str) -> str:
+        return f"{self.cfg['LOSS']['deepclusterv2_loss']['output_dir']}/{file_name}"

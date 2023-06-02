@@ -498,6 +498,13 @@ class LogLossMetricsCheckpointHook(ClassyHook):
                 logging.info(f"Rank: {rank}, name: {metric_key}, value: {meter_value}")
         meter_file = f"{checkpoint_folder}/metrics.json"
         save_file(save_metrics, meter_file, append_to_json=True)
+        
+        
+            if LOG_TO_MANTIK and (
+                    epoch == 0
+                    or epoch % log_freq == 0
+                    or (epoch <= 100 and epoch % 20 == 0)
+            ):
 
 
 class LogPerfTimeMetricsHook(ClassyHook):
@@ -558,7 +565,11 @@ class LogPerfTimeMetricsHook(ClassyHook):
         batches = len(task.losses)
         epoch = task.train_phase_idx
         log_freq = task.config["LOG_FREQUENCY"]
-
+        
+        if is_primary():
+            # Set current epoch as env var.
+            os.environ["CURRENT_EPOCH"] = str(epoch)
+            os.environ["LOG_FREQUENCY"] = str(log_freq)
 
         if self.start_time is None:
             logging.warning("start_time not initialized")
@@ -575,9 +586,9 @@ class LogPerfTimeMetricsHook(ClassyHook):
                 % (phase_type, batches, total_batch_time)
             )
 
-            if LOG_TO_MANTIK and is_primary() and (
-                    (epoch == 0)
-                    or (epoch % log_freq == 0)
+            if LOG_TO_MANTIK and (
+                    epoch == 0
+                    or epoch % log_freq == 0
                     or (epoch <= 100 and epoch % 20 == 0)
             ):
                 #loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
@@ -587,16 +598,25 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     lr_val = list(task.optimizer.options_view.lr)
                 else:
                     lr_val = round(task.optimizer.options_view.lr, 5)
-
-                mlflow.log_metrics(
-                    {
-                        "loss": loss_val,
-                        "learning_rate": lr_val,
-                        "batch_time": total_batch_time,
-                        "batch_time_avg": average_batch_time,
-                    },
-                    step=epoch,
+                
+                metrics = {
+                    "rank": get_rank(),
+                    "loss": loss_val,
+                    "learning_rate": lr_val,
+                    "batch_time": total_batch_time,
+                    "batch_time_avg": average_batch_time,
+                }
+                if is_primary():
+                    mlflow.log_metrics(
+                        metrics,
+                        step=epoch,
+                    )
+                save_file(
+                    [metrics], 
+                    self._create_path("metrics.json"),
+                    append_to_json=True,
                 )
+
 
 
         # Train step time breakdown
@@ -610,3 +630,6 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     task.perf_stats.report_str(),
                 )
             )
+            
+    def _create_path(self, file_name: str) -> str:
+        return f"{self.loss_config.output_dir}/{file_name}"
