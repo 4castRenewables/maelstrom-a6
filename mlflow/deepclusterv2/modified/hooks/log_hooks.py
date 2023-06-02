@@ -622,7 +622,7 @@ class LogPerfTimeMetricsHook(ClassyHook):
                         {
                             "name": name,
                             "value": metric.get_avg() * 1e3,
-                            "cudaEvent": self._cuda_stats[name].get_avg() * 1e3,
+                            "cudaEvent": task.perf_stats._cuda_stats[name].get_avg() * 1e3,
                         }
                         for name, metric in task.perf_stats._host_stats.items()
                     ]
