@@ -86,11 +86,11 @@ class DiskImageDataset(QueueDataset):
                 "data_source": self.data_source,
                 "n_samples": self._num_samples,
             })
-            
+
             assert isinstance(self.image_dataset, ImageFolder)
             save_file(
                 [
-                    {"index": index, "path": sample[0]} 
+                    {"index": index, "path": sample[0]}
                     for index, sample in enumerate(self.image_dataset.samples)
                 ],
                 self._create_path("image_samples.json"),
@@ -106,9 +106,9 @@ class DiskImageDataset(QueueDataset):
                 self.image_dataset = load_file(path)
         elif self.data_source == "disk_folder":
             self.image_dataset = ImageFolder(path)
-            
+
             logging.info("Saving sample images to disk")
-            
+
             logging.info(f"Loaded {len(self.image_dataset)} samples from folder {path}")
 
             # mark as initialized.
@@ -196,6 +196,5 @@ class DiskImageDataset(QueueDataset):
 
         return img, is_success
 
-    
     def _create_path(self, file_name: str) -> str:
         return f"{self.cfg['LOSS']['deepclusterv2_loss']['output_dir']}/{file_name}"

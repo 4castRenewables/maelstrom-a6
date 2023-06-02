@@ -215,10 +215,13 @@ def launch_distributed(
         mlflow.log_artifact(_create_path("assignments.pt"))
         mlflow.log_artifact(_create_path("indexes.pt"))
         mlflow.log_artifact(_create_path("distances.pt"))
-        
-        # Sample indexes are saved to disk at `data/disk_dataset.py:91
+
+        # Sample indexes are saved to disk at `data/disk_dataset.py:91`
         mlflow.log_artifact(_create_path("image_samples.npy"))
         mlflow.log_artifact(_create_path("image_samples.json"))
+
+        # Metrics saved to disk at `hooks/log_hooks.py:634`
+        mlflow.log_artifact(_create_path("metrics.json"))
 
         mlflow.end_run()
 
