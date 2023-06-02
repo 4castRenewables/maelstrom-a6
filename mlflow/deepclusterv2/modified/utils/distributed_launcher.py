@@ -245,7 +245,7 @@ def launch_distributed(
         return f"{cfg.LOSS.deepclusterv2_loss.output_dir}/{file_name}"
 
     if LOG_TO_MANTIK:
-        mlflow.log_metric("total_runtime", runtime)
+        mlflow.log_metric("total_runtime_ms", runtime)
 
         # The following files are saved to disk in `modified/losses/deepclusterv2_loss.py:233`
         mlflow.log_artifact(_create_path("centroids.pt"))

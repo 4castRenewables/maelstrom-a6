@@ -602,8 +602,8 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     "loss_mean": loss_val,
                     "loss_std": loss_val_std,
                     "learning_rate": lr_val,
-                    "batch_time": total_batch_time,
-                    "batch_time_avg": average_batch_time,
+                    "batch_time_ms": total_batch_time,
+                    "batch_time_avg_ms": average_batch_time,
                 }
 
                 if get_rank() == 0:
@@ -621,8 +621,8 @@ class LogPerfTimeMetricsHook(ClassyHook):
                     perf_stats = [
                         {
                             "name": name,
-                            "value": metric.get_avg() * 1e3,
-                            "cudaEvent": task.perf_stats._cuda_stats[name].get_avg() * 1e3,
+                            "value_ms": metric.get_avg() * 1e3,
+                            "cudaEvent_ms": task.perf_stats._cuda_stats[name].get_avg() * 1e3,
                         }
                         for name, metric in task.perf_stats._host_stats.items()
                     ]

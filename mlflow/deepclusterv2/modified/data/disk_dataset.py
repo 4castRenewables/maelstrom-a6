@@ -90,7 +90,7 @@ class DiskImageDataset(QueueDataset):
                 "data_source": self.data_source,
                 "n_samples": self._num_samples,
             })
-            mlflow.log_metric("data_load_time", self._data_load_time)
+            mlflow.log_metric("data_load_time_ms", self._data_load_time)
 
             assert isinstance(self.image_dataset, ImageFolder)
             save_file(
