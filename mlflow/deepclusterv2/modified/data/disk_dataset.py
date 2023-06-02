@@ -101,7 +101,7 @@ class DiskImageDataset(QueueDataset):
                 self._create_path("image-samples.yaml"),
             )
             # numpy file is larger than the JSON
-            # save_file(self.image_dataset.samples, self._create_path("image_samples.npy"))
+            # save_file(self.image_dataset.samples, self._create_path("image-samples.npy"))
             os.environ["DATASET_INFO_LOGGED"] = "True"
 
     def _load_data(self, path):

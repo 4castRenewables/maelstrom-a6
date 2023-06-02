@@ -254,8 +254,8 @@ def launch_distributed(
         mlflow.log_artifact(_create_path("distances.pt"))
 
         # Sample indexes are saved to disk at `data/disk_dataset.py:91`
-        mlflow.log_artifact(_create_path("image_samples.npy"))
-        mlflow.log_artifact(_create_path("image_samples.json"))
+        #mlflow.log_artifact(_create_path("image_samples.npy"))
+        mlflow.log_artifact(_create_path("image-samples.yaml"))
 
         mlflow.log_artifact(stderr_file)
         mlflow.log_artifact(stdout_file)
