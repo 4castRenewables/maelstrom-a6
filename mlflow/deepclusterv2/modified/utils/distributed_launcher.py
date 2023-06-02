@@ -257,9 +257,6 @@ def launch_distributed(
         mlflow.log_artifact(_create_path("image_samples.npy"))
         mlflow.log_artifact(_create_path("image_samples.json"))
 
-        # Metrics saved to disk at `hooks/log_hooks.py:634`
-        mlflow.log_artifact(_create_path("metrics.json"))
-
         mlflow.log_artifact(stderr_file)
         mlflow.log_artifact(stdout_file)
 
