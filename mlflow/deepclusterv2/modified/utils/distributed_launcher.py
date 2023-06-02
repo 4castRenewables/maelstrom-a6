@@ -202,7 +202,7 @@ def launch_distributed(
             LOG_TO_MANTIK = False
 
         logging.error("Wrapping up, caught exception: ", e)
-        if isinstance(e, RuntimeError):
+        if isinstance(e, (RuntimeError, torch.multiprocessing.ProcessRaisedException)):
             raise e
     finally:
         _cleanup_local_dir(cfg)
