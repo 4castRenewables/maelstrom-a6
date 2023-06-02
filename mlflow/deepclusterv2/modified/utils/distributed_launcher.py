@@ -220,6 +220,10 @@ def launch_distributed(
             KeyboardInterrupt, RuntimeError, torch.multiprocessing.ProcessRaisedException
     ) as e:
         if LOG_TO_MANTIK:
+            with open(stderr_file, "a") as f:
+                f.write(e)
+
+            mlflow.log_text(e, "error.txt")
             mlflow.log_artifact(stderr_file)
             mlflow.log_artifact(stdout_file)
 
