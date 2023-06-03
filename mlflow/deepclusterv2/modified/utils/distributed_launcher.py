@@ -104,7 +104,11 @@ def launch_distributed(
         num_nodes = int(os.getenv("SLURM_JOB_NUM_NODES"))
 
         if num_nodes > 1:
-            mlflow.start_run(run_name=f"slurm-{slurm_job_id}-{get_node_id(node_id)}", nested=True)
+            mlflow.start_run(
+                run_name=f"slurm-{slurm_job_id}-{get_node_id(node_id)}",
+                nested=True,
+                tags={"MLFLOW_PARENT_RUN_ID": os.getenv("MLFLOW_PARENT_RUN_ID")},
+            )
         else:
             mlflow.start_run(run_name=f"slurm-{slurm_job_id}")
 

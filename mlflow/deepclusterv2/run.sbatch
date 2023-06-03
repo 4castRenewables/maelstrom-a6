@@ -70,7 +70,8 @@ echo "MLFLOW_TRACKING_TOKEN=${MLFLOW_TRACKING_TOKEN}"
 export LOG_TO_MANTIK="True"
 
 if [ "$NODES" -gt "1" ]; then
-  python -c "import mlflow; mlflow.start_run('${SLURM_JOB_ID}')"
+  # DOESN'T WORK BECAUSE THIS APPARENTLY IS NOT EXECUTED ON THE NODES
+  export MLFLOW_PARENT_RUN_ID=$(python -c "import mlflow; mlflow.start_run(run_name='${SLURM_JOB_ID}'); run = mlflow.active_run(); print(run.info.run_id)")
 fi
 
 srun apptainer run \
@@ -93,13 +94,3 @@ srun apptainer run \
   config.DATA.TRAIN.DATASET_NAMES=${DATASET} \
   config.LOSS.deepclusterv2_loss.output_dir=${CLUSTERING_DIR} \
   config.OPTIMIZER.param_schedulers.lr.lengths=${LENGTHS}
-
-status=$?
-
-if [ "$NODES" -gt "1" ]; then
-  if [ $status -eq 0 ]; then
-    python -c "import mlflow; mlflow.end_run()"
-  else
-    python -c "import mlflow; mlflow.end_run('FAILED')"
-  fi;
-fi
