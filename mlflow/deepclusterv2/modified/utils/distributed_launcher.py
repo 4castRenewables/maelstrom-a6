@@ -37,7 +37,7 @@ from vissl.utils.io import cleanup_dir, copy_data_to_local, makedir
 from vissl.utils.logger import setup_logging, shutdown_logging
 from vissl.utils.misc import get_dist_run_id
 from vissl.utils.slurm import get_node_id
-
+from classy_vision.generic.distributed_util import get_rank, is_primary
 from vissl.utils.io import save_file
 
 
@@ -90,19 +90,23 @@ def launch_distributed(
             for this engine
     """
 
-    start = time.time()
+    rank = get_rank()
 
     LOG_TO_MANTIK = True if os.getenv("LOG_TO_MANTIK") == "True" else False
 
-    if LOG_TO_MANTIK:
+    if LOG_TO_MANTIK and rank == 0:
         #mantik.init_tracking()
-        mlflow.end_run("FAILED")
         slurm_job_id = os.getenv("SLURM_JOB_ID")
 
         stdout_file = os.getenv("SLURM_JOB_STDOUT").replace("%j", slurm_job_id)
         stderr_file = os.getenv("SLURM_JOB_STDERR").replace("%j", slurm_job_id)
 
-        mlflow.start_run(run_name=f"slurm-{slurm_job_id}")
+        num_nodes = int(os.getenv("SLURM_JOB_NUM_NODES"))
+
+        if num_nodes > 1:
+            mlflow.start_run(run_name=f"slurm-{slurm_job_id}-{get_node_id(node_id)}", nested=True)
+        else:
+            mlflow.start_run(run_name=f"slurm-{slurm_job_id}")
 
         mlflow.log_params(
             {
@@ -111,7 +115,7 @@ def launch_distributed(
                 "SLURM_JOB_ACCOUNT": os.getenv("SLURM_JOB_ACCOUNT"),
                 "SLURM_CLUSTER_NAME": os.getenv("SLURM_CLUSTER_NAME"),
                 "SLURM_JOB_PARTITION": os.getenv("SLURM_JOB_PARTITION"),
-                "SLURM_JOB_NUM_NODES": os.getenv("SLURM_JOB_NUM_NODES"),
+                "SLURM_JOB_NUM_NODES": str(num_nodes),
                 "SLURM_NODELIST": os.getenv("SLURM_NODELIST"),
                 "SLURM_JOB_CPUS_PER_NODE": os.getenv("SLURM_JOB_CPUS_PER_NODE"),
                 "SLURM_CPUS_PER_TASK": os.getenv("SLURM_CPUS_PER_TASK"),
@@ -134,7 +138,6 @@ def launch_distributed(
     node_id = get_node_id(node_id)
     dist_run_id = get_dist_run_id(cfg, cfg.DISTRIBUTED.NUM_NODES)
     world_size = cfg.DISTRIBUTED.NUM_NODES * cfg.DISTRIBUTED.NUM_PROC_PER_NODE
-
 
     # If using gpus, we check that the user has specified <= gpus available on user system.
     if cfg.MACHINE.DEVICE == "gpu":
@@ -179,7 +182,7 @@ def launch_distributed(
     # copy the data to local if user wants. This can speed up dataloading.
     _copy_to_local(cfg)
 
-    if LOG_TO_MANTIK:
+    if LOG_TO_MANTIK and is_primary():
         mlflow.log_params({
             "engine_name": engine_name,
             "node_id": node_id,
@@ -244,11 +247,11 @@ def launch_distributed(
     def _create_path(file_name: str) -> str:
         return f"{cfg.LOSS.deepclusterv2_loss.output_dir}/{file_name}"
 
-    if LOG_TO_MANTIK:
+    if LOG_TO_MANTIK and rank == 0:
         mlflow.log_metric("total_runtime_ms", runtime)
 
         # The following files are saved to disk in `modified/losses/deepclusterv2_loss.py:233`
-        mlflow.log_artifact(_create_path("centroids.pt"))
+        mlflow.log_artifacts(_create_path("clustering"))
         mlflow.log_artifact(_create_path("assignments.pt"))
         mlflow.log_artifact(_create_path("indexes.pt"))
         mlflow.log_artifact(_create_path("distances.pt"))

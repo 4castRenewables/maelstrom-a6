@@ -582,7 +582,7 @@ class LogPerfTimeMetricsHook(ClassyHook):
                 % (phase_type, batches, total_batch_time)
             )
 
-            if LOG_TO_MANTIK:
+            if LOG_TO_MANTIK and is_primary():
                 #loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
                 loss_val = np.mean(task.losses)
                 loss_val_std = np.std(task.losses)
@@ -592,25 +592,22 @@ class LogPerfTimeMetricsHook(ClassyHook):
                 else:
                     lr_val = round(task.optimizer.options_view.lr, 5)
 
-                rank = get_rank()
-
-                if rank == 0:
-                    mlflow.log_metrics(
-                        {
-                            "rank": rank,
-                            "phase_idx": task.phase_idx,
-                            "train_phase_idx": task.train_phase_idx,
-                            "epoch": epoch,
-                            "iteration": task.iteration,
-                            "iteration_num": task.local_iteration_num,
-                            "loss_mean": loss_val,
-                            "loss_std": loss_val_std,
-                            "learning_rate": lr_val,
-                            "batch_time_ms": total_batch_time,
-                            "batch_time_avg_ms": average_batch_time,
-                        },
-                        step=epoch,
-                    )
+                mlflow.log_metrics(
+                    {
+                        "rank": get_rank(),
+                        "phase_idx": task.phase_idx,
+                        "train_phase_idx": task.train_phase_idx,
+                        "epoch": epoch,
+                        "iteration": task.iteration,
+                        "iteration_num": task.local_iteration_num,
+                        "loss_mean": loss_val,
+                        "loss_std": loss_val_std,
+                        "learning_rate": lr_val,
+                        "batch_time_ms": total_batch_time,
+                        "batch_time_avg_ms": average_batch_time,
+                    },
+                    step=epoch,
+                )
 
         # Train step time breakdown
         if task.perf_stats is None:

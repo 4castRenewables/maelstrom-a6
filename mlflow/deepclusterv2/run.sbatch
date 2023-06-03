@@ -54,6 +54,7 @@ BASE_DIR=/p/scratch/deepacf/maelstrom/emmerich1/deepclusterv2/real
 CHECKPOINTS_DIR=${BASE_DIR}/checkpoints
 TENSORBOARD_LOG_DIR=${BASE_DIR}/tensorboard-logs
 TMP_DATA_DIR=${BASE_DIR}/tmp
+CLUSTERING_DIR=${BASE_DIR}/clustering
 
 mkdir -p ${BASE_DIR} ${CHECKPOINTS_DIR} ${TENSORBOARD_LOG_DIR} ${TMP_DATA_DIR}
 
@@ -62,11 +63,15 @@ echo "Run directory created at ${BASE_DIR}"
 source /p/project/deepacf/maelstrom/emmerich1/venvs/mantik/bin/activate
 source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env > /dev/null 2>&1
 eval $(mantik init)
-unset MANTIK_USERNAME 
+unset MANTIK_USERNAME
 unset MANTIK_PASSWORD
 echo "MLFLOW_TRACKING_TOKEN=${MLFLOW_TRACKING_TOKEN}"
 
 export LOG_TO_MANTIK="True"
+
+if [ "$NODES" -gt "1" ]; then
+  python -c "import mlflow; mlflow.start_run('${SLURM_JOB_ID}')"
+fi
 
 srun apptainer run \
   -B ${REPO_DIR}/configs:/opt/vissl/configs \
@@ -86,5 +91,15 @@ srun apptainer run \
   config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${TENSORBOARD_LOG_DIR} \
   config.OPTIMIZER.num_epochs=${EPOCHS} \
   config.DATA.TRAIN.DATASET_NAMES=${DATASET} \
-  config.LOSS.deepclusterv2_loss.output_dir=${BASE_DIR} \
+  config.LOSS.deepclusterv2_loss.output_dir=${CLUSTERING_DIR} \
   config.OPTIMIZER.param_schedulers.lr.lengths=${LENGTHS}
+
+status=$?
+
+if [ "$NODES" -gt "1" ]; then
+  if [ $status -eq 0 ]; then
+    python -c "import mlflow; mlflow.end_run()"
+  else
+    python -c "import mlflow; mlflow.end_run('FAILED')"
+  fi;
+fi

@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+
 import math
 import pprint
 import os
@@ -230,7 +231,7 @@ class DeepClusterV2Loss(ClassyLoss):
 
                 j = (j + 1) % self.nmb_mbs
 
-            if LOG_TO_MANTIK and is_primary():
+            if LOG_TO_MANTIK and get_rank() == 0:
                 epoch = _get_required_env_var("CURRENT_EPOCH")
                 log_freq = _get_required_env_var("LOG_FREQUENCY")
 
@@ -243,10 +244,10 @@ class DeepClusterV2Loss(ClassyLoss):
 
                     logging.info("Saving clustering information to disk")
 
-                    torch.save(centroids_last_iter, self._create_path("centroids.pt"))
-                    torch.save(self.assignments, self._create_path("assignments.pt"))
-                    torch.save(self.indexes, self._create_path("indexes.pt"))
-                    torch.save(self.distance, self._create_path("distances.pt"))
+                    torch.save(centroids_last_iter, self._create_path("centroids.pt", epoch=epoch))
+                    torch.save(self.assignments, self._create_path("assignments.pt", epoch=epoch))
+                    torch.save(self.indexes, self._create_path("indexes.pt", epoch=epoch))
+                    torch.save(self.distance, self._create_path("distances.pt", epoch=epoch))
 
         logging.info(f"Rank: {get_rank()}, clustering of the memory bank done")
 
@@ -254,8 +255,8 @@ class DeepClusterV2Loss(ClassyLoss):
         repr_dict = {"name": self._get_name()}
         return pprint.pformat(repr_dict, indent=2)
 
-    def _create_path(self, file_name: str) -> str:
-        return f"{self.loss_config.output_dir}/{file_name}"
+    def _create_path(self, file_name: str, epoch: int) -> str:
+        return f"{self.loss_config.output_dir}/epoch-{epoch}-{file_name}"
 
 def _get_required_env_var(name: str) -> int:
     value = os.getenv(name)
