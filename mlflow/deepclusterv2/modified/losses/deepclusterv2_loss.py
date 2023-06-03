@@ -231,15 +231,10 @@ class DeepClusterV2Loss(ClassyLoss):
 
                 j = (j + 1) % self.nmb_mbs
 
-            if LOG_TO_MANTIK and get_rank() == 0:
+            if LOG_TO_MANTIK and ():
                 epoch = _get_required_env_var("CURRENT_EPOCH")
-                log_freq = _get_required_env_var("LOG_FREQUENCY")
 
-                if (
-                    epoch == 0
-                    or (epoch < 100 and epoch % log_freq == 0)
-                    or epoch % 100 == 0
-                ):
+                if epoch == 0 or epoch == 1 or (epoch <= 100 and epoch % 20 == 0) or epoch % 100 == 0:
                     centroids_last_iter = getattr(self, f"centroids{len(self.num_clusters) - 1}")
 
                     logging.info("Saving clustering information to disk")
@@ -257,6 +252,7 @@ class DeepClusterV2Loss(ClassyLoss):
 
     def _create_path(self, file_name: str, epoch: int) -> str:
         return f"{self.loss_config.output_dir}/epoch-{epoch}-{file_name}"
+
 
 def _get_required_env_var(name: str) -> int:
     value = os.getenv(name)

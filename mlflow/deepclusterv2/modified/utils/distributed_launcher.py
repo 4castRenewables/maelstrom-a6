@@ -193,6 +193,7 @@ def launch_distributed(
             "dist_run_id": dist_run_id,
             "n_gpus_total": world_size,
             "checkpoint_folder": checkpoint_folder,
+            "output_dir": cfg.LOSS.deepclusterv2_loss.output_dir,
         })
 
     try:
@@ -248,21 +249,11 @@ def launch_distributed(
     runtime = (time.time() - start) * 1e3
     logging.info("Total runtime (ms): %s", runtime)
 
-    def _create_path(file_name: str) -> str:
-        return f"{cfg.LOSS.deepclusterv2_loss.output_dir}/{file_name}"
-
     if LOG_TO_MANTIK and rank == 0:
         mlflow.log_metric("total_runtime_ms", runtime)
 
         # The following files are saved to disk in `modified/losses/deepclusterv2_loss.py:233`
-        mlflow.log_artifacts(_create_path("clustering"))
-        mlflow.log_artifact(_create_path("assignments.pt"))
-        mlflow.log_artifact(_create_path("indexes.pt"))
-        mlflow.log_artifact(_create_path("distances.pt"))
-
-        # Sample indexes are saved to disk at `data/disk_dataset.py:91`
-        #mlflow.log_artifact(_create_path("image_samples.npy"))
-        mlflow.log_artifact(_create_path("image-samples.yaml"))
+        mlflow.log_artifacts(cfg.LOSS.deepclusterv2_loss.output_dir)
 
         mlflow.log_artifact(stderr_file)
         mlflow.log_artifact(stdout_file)

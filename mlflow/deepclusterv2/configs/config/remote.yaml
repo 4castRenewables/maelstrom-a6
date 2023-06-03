@@ -83,7 +83,7 @@ config:
       num_crops: 2
       temperature: 0.1
       #num_clusters: [3000, 3000, 3000]
-      num_clusters: [7, 7, 7]
+      num_clusters: [30, 30, 30]
       kmeans_iters: 10
       memory_params:
         crops_for_mb: [0,1]

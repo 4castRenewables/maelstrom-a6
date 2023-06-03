@@ -582,7 +582,7 @@ class LogPerfTimeMetricsHook(ClassyHook):
                 % (phase_type, batches, total_batch_time)
             )
 
-            if LOG_TO_MANTIK and is_primary():
+            if LOG_TO_MANTIK and get_rank() == 0:
                 #loss_val = round(task.last_batch.loss.data.cpu().item(), 5)
                 loss_val = np.mean(task.losses)
                 loss_val_std = np.std(task.losses)
