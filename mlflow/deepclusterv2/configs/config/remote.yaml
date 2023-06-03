@@ -78,7 +78,7 @@ config:
   LOSS:
     name: deepclusterv2_loss
     deepclusterv2_loss:
-      num_train_samples: 54864
+      num_train_samples: 35064
       BATCHSIZE_PER_REPLICA: 750
       num_crops: 2
       temperature: 0.1
