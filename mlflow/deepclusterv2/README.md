@@ -61,7 +61,14 @@ export NODES=<number_of_nodes> N_GPUS=<number_of_gpus_per_node> EPOCHS=<number_o
 sbatch -A <account> --partition <partition> --nodes=${NODES} --gres=gpu:${N_GPUS} mlflow/deepclusterv2/run.sbatch
 ```
 
-> **Note:** time limit on devel queues is `--time=02:00:00`.
+Running with `sbatch` will create a folder at `/p/scratch/<account>/maelstrom/<user>/deepcluster/<SLURM job ID>`,
+where the model checkpoints will be saved.
+
+**Notes:** 
+ 
+* In order to continue a failed job at the last checkpoint, set the `CHECKPOINT_FOLDER_ID` env var to the SLURM job ID of that job:
+  `CHECKPOINT_FOLDER_ID=<SLURM job ID>`.
+* Time limit on devel queues is `--time=02:00:00`.
 
 ## Running with mantik
 

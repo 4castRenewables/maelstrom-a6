@@ -10,6 +10,7 @@ NODES=${NODES:-1}
 N_GPUS=${N_GPUS:-4}
 EPOCHS=${EPOCHS:-1}
 DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
+CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
 
 if [ "$NODES" -gt "1" ]; then
     RUN_ID=${SLURMD_NODENAME}i:29500;
@@ -49,8 +50,7 @@ echo "DATASET=${DATASET}"
 
 REPO_DIR=/p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
 
-# BASE_DIR=/p/scratch/deepacf/maelstrom/emmerich1/deepclusterv2/${SLURM_JOB_ID}
-BASE_DIR=/p/scratch/deepacf/maelstrom/emmerich1/deepclusterv2/real
+BASE_DIR=/p/scratch/${SLURM_JOB_ACCOUNT}/maelstrom/${SLURM_JOB_USER}/deepclusterv2/${CHECKPOINT_FOLDER_ID}
 CHECKPOINTS_DIR=${BASE_DIR}/checkpoints
 TENSORBOARD_LOG_DIR=${BASE_DIR}/tensorboard-logs
 TMP_DATA_DIR=${BASE_DIR}/tmp
