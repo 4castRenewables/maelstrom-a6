@@ -535,10 +535,9 @@ class LogPerfTimeMetricsHook(ClassyHook):
         epoch = task.train_phase_idx
         log_freq = task.config["LOG_FREQUENCY"]
 
-        if is_primary():
-            # Set current epoch as env var.
-            os.environ["CURRENT_EPOCH"] = str(epoch)
-            os.environ["LOG_FREQUENCY"] = str(log_freq)
+        # Set current epoch as env var.
+        os.environ["CURRENT_EPOCH"] = str(epoch)
+        os.environ["LOG_FREQUENCY"] = str(log_freq)
 
     #def on_loss_and_meter(self, task: "tasks.ClassyTask") -> None:
     #    """
