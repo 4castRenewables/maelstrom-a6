@@ -233,8 +233,9 @@ class DeepClusterV2Loss(ClassyLoss):
 
             if LOG_TO_MANTIK:
                 epoch = _get_required_env_var("CURRENT_EPOCH")
+                epoch_comp = epoch + 1
 
-                if epoch == 0 or epoch == 1 or (epoch <= 100 and epoch % 20 == 0) or epoch % 100 == 0:
+                if epoch_comp == 1 or (epoch_comp <= 100 and epoch_comp % 20 == 0) or epoch_comp % 100 == 0:
                     logging.info("Saving clustering data on rank %s at epoch %s", get_rank(), epoch)
 
                     centroids_last_iter = getattr(self, f"centroids{len(self.num_clusters) - 1}")
