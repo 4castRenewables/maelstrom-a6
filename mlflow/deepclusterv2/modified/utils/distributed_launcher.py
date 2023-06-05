@@ -102,7 +102,7 @@ def launch_distributed(
         stderr_file = os.getenv("SLURM_JOB_STDERR").replace("%j", slurm_job_id)
 
         mlflow.start_run(
-            run_name=f"slurm-{slurm_job_id}-{get_node_id(node_id)}",
+            run_name=f"slurm-{slurm_job_id}-node-{get_node_id(node_id)}",
         )
 
         mlflow.log_params(
