@@ -89,6 +89,7 @@ def launch_distributed(
         hook_generator (Callable): Callback to generate all the ClassyVision hooks
             for this engine
     """
+    start = time.time()
 
     rank = get_rank()
 
