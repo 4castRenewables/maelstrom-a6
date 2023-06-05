@@ -101,16 +101,9 @@ def launch_distributed(
         stdout_file = os.getenv("SLURM_JOB_STDOUT").replace("%j", slurm_job_id)
         stderr_file = os.getenv("SLURM_JOB_STDERR").replace("%j", slurm_job_id)
 
-        num_nodes = int(os.getenv("SLURM_JOB_NUM_NODES"))
-
-        if num_nodes > 1:
-            mlflow.start_run(
-                run_name=f"slurm-{slurm_job_id}-{get_node_id(node_id)}",
-                nested=True,
-                tags={"MLFLOW_PARENT_RUN_ID": os.getenv("MLFLOW_PARENT_RUN_ID")},
-            )
-        else:
-            mlflow.start_run(run_name=f"slurm-{slurm_job_id}")
+        mlflow.start_run(
+            run_name=f"slurm-{slurm_job_id}-{get_node_id(node_id)}",
+        )
 
         mlflow.log_params(
             {
@@ -119,7 +112,7 @@ def launch_distributed(
                 "SLURM_JOB_ACCOUNT": os.getenv("SLURM_JOB_ACCOUNT"),
                 "SLURM_CLUSTER_NAME": os.getenv("SLURM_CLUSTER_NAME"),
                 "SLURM_JOB_PARTITION": os.getenv("SLURM_JOB_PARTITION"),
-                "SLURM_JOB_NUM_NODES": str(num_nodes),
+                "SLURM_JOB_NUM_NODES": os.getenv("SLURM_JOB_NUM_NODES"),
                 "SLURM_NODELIST": os.getenv("SLURM_NODELIST"),
                 "SLURM_JOB_CPUS_PER_NODE": os.getenv("SLURM_JOB_CPUS_PER_NODE"),
                 "SLURM_CPUS_PER_TASK": os.getenv("SLURM_CPUS_PER_TASK"),

@@ -69,11 +69,6 @@ echo "MLFLOW_TRACKING_TOKEN=${MLFLOW_TRACKING_TOKEN}"
 
 export LOG_TO_MANTIK="True"
 
-if [ "$NODES" -gt "1" ]; then
-  # DOESN'T WORK BECAUSE THIS APPARENTLY IS NOT EXECUTED ON THE NODES
-  export MLFLOW_PARENT_RUN_ID=$(python -c "import mlflow; mlflow.start_run(run_name='${SLURM_JOB_ID}'); run = mlflow.active_run(); print(run.info.run_id)")
-fi
-
 srun apptainer run \
   -B ${REPO_DIR}/configs:/opt/vissl/configs \
   -B ${REPO_DIR}/modified/data/disk_dataset.py:/opt/vissl/vissl/data/disk_dataset.py \
