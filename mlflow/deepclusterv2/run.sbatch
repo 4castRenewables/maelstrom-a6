@@ -3,8 +3,8 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
 #SBATCH --time=06:00:00
-#SBATCH --output=/p/home/jusers/emmerich1/juwels/job-logs/%j.out
-#SBATCH --error=/p/home/jusers/emmerich1/juwels/job-logs/%j.err
+#SBATCH --output=/p/home/jusers/emmerich1/juwels/job-logs/%j-stdout.txt
+#SBATCH --error=/p/home/jusers/emmerich1/juwels/job-logs/%j-stderr.txt
 
 NODES=${NODES:-1}
 N_GPUS=${N_GPUS:-4}
