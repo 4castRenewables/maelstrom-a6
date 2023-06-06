@@ -223,7 +223,7 @@ class DeepClusterV2Loss(ClassyLoss):
                 getattr(self, "centroids" + str(i_K)).copy_(centroids)
 
                 logging.info(
-                    "Clustering result on rank %s: assignments=%s (unique values: )",
+                    "Clustering result on rank %s: assignments=%s (unique values: %s)",
                     get_rank(),
                     assignments,
                     assignments.unique(),
