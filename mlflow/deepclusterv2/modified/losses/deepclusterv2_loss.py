@@ -186,6 +186,13 @@ class DeepClusterV2Loss(ClassyLoss):
                         self.local_memory_embeddings[j], centroids.t()
                     )
                     distance, assignments = dot_products.max(dim=1)
+                    logging.info(
+                        "Intermediate clustering result on rank %s: "
+                        "assignments=%s (unique values: %s) ",
+                        get_rank(),
+                        assignments,
+                        assignments.unique(),
+                    )
 
                     # finish
                     if n_iter == self.nmb_kmeans_iters:
@@ -215,10 +222,31 @@ class DeepClusterV2Loss(ClassyLoss):
 
                 getattr(self, "centroids" + str(i_K)).copy_(centroids)
 
+                logging.info(
+                    "Clustering result on rank %s: assignments=%s (unique values: )",
+                    get_rank(),
+                    assignments,
+                    assignments.unique(),
+                )
+
                 # gather the assignments
                 assignments_all = gather_from_all(assignments)
                 indexes_all = gather_from_all(self.local_memory_index)
                 distance_all = gather_from_all(distance)
+
+                logging.info(
+                    "Clustering result on rank %s after gathering from all ranks: "
+                    "assignments=%s (unique values: %s) "
+                    "indexes=%s (unique indexes: %s) "
+                    "local indexes=%s (unique local indexes: %s) ",
+                    get_rank(),
+                    assignments_all,
+                    assignments_all.unique(),
+                    indexes_all,
+                    indexes_all.unique(),
+                    self.local_memory_index,
+                    self.local_memory_index.unique(),
+                )
 
                 self.assignments[i_K] = -100
                 self.assignments[i_K][indexes_all] = assignments_all
@@ -235,7 +263,7 @@ class DeepClusterV2Loss(ClassyLoss):
                 epoch = _get_required_env_var("CURRENT_EPOCH")
                 epoch_comp = epoch + 1
 
-                if epoch_comp == 1 or (epoch_comp <= 100 and epoch_comp % 20 == 0) or epoch_comp % 100 == 0:
+                if epoch_comp == 1 or (epoch_comp <= 100 and epoch_comp % 5 == 0) or epoch_comp % 100 == 0:
                     logging.info("Saving clustering data on rank %s at epoch %s", get_rank(), epoch)
 
                     centroids_last_iter = getattr(self, f"centroids{len(self.num_clusters) - 1}")
