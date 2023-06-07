@@ -74,6 +74,7 @@ srun apptainer run \
   -B ${REPO_DIR}/modified/data/disk_dataset.py:/opt/vissl/vissl/data/disk_dataset.py \
   -B ${REPO_DIR}/modified/hooks/log_hooks.py:/opt/vissl/vissl/hooks/log_hooks.py \
   -B ${REPO_DIR}/modified/losses/deepclusterv2_loss.py:/opt/vissl/vissl/losses/deepclusterv2_loss.py \
+  -B ${REPO_DIR}/modified/models/trunks/resnext.py:/opt/vissl/vissl/models/trunks/resnext.py \
   -B ${REPO_DIR}/modified/utils/distributed_launcher.py:/opt/vissl/vissl/utils/distributed_launcher.py \
   --nv \
   /p/project/deepacf/maelstrom/emmerich1/vissl.sif \
