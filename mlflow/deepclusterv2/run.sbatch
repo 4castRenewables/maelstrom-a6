@@ -48,7 +48,7 @@ echo "LENGTHS=${LENGTHS}"
 echo "RUN_ID=${RUN_ID}"
 echo "DATASET=${DATASET}"
 
-REPO_DIR=/p/home/jusers/emmerich1/juwels/code/a6/mlflow/deepclusterv2
+REPO_DIR=/p/home/jusers/emmerich1/juwels/code/vissl
 
 BASE_DIR=/p/scratch/${SLURM_JOB_ACCOUNT}/maelstrom/${SLURM_JOB_USER}/deepclusterv2/${CHECKPOINT_FOLDER_ID}
 CHECKPOINTS_DIR=${BASE_DIR}/checkpoints
@@ -67,15 +67,10 @@ unset MANTIK_USERNAME
 unset MANTIK_PASSWORD
 echo "MLFLOW_TRACKING_TOKEN=${MLFLOW_TRACKING_TOKEN}"
 
-export LOG_TO_MANTIK="True"
+export TRACK_TO_MANTIK="True"
 
 srun apptainer run \
-  -B ${REPO_DIR}/configs:/opt/vissl/configs \
-  -B ${REPO_DIR}/modified/data/disk_dataset.py:/opt/vissl/vissl/data/disk_dataset.py \
-  -B ${REPO_DIR}/modified/hooks/log_hooks.py:/opt/vissl/vissl/hooks/log_hooks.py \
-  -B ${REPO_DIR}/modified/losses/deepclusterv2_loss.py:/opt/vissl/vissl/losses/deepclusterv2_loss.py \
-  -B ${REPO_DIR}/modified/models/trunks/resnext.py:/opt/vissl/vissl/models/trunks/resnext.py \
-  -B ${REPO_DIR}/modified/utils/distributed_launcher.py:/opt/vissl/vissl/utils/distributed_launcher.py \
+  -B ${REPO_DIR}:/opt/vissl \
   --nv \
   /p/project/deepacf/maelstrom/emmerich1/vissl.sif \
   python /opt/vissl/tools/run_distributed_engines.py \
