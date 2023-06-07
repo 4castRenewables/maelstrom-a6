@@ -6,8 +6,8 @@
   },
   "remote_test_dataset":
   {
-    "train": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""],
-    "val": ["/p/project/deepacf/kiste/DC/dataset/germany_all_2013/test_germany_128", ""]
+    "train": ["/p/project/deepacf/maelstrom/emmerich1/deepclusterv2/test_dataset", ""],
+    "val": ["/p/project/deepacf/maelstrom/emmerich1/deepclusterv2/test_dataset", ""]
   },
   "remote_dataset_jsc_daily":
   {
