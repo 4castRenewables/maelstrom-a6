@@ -69,6 +69,11 @@ where the model checkpoints will be saved.
 * In order to continue a failed job at the last checkpoint, set the `CHECKPOINT_FOLDER_ID` env var to the SLURM job ID of that job:
   `CHECKPOINT_FOLDER_ID=<SLURM job ID>`.
 * Time limit on devel queues is `--time=02:00:00`.
+* To run on CPUs only, set the `N_CPUS=2` env var (2 CPUs per node on JUWELS and JUWELS Booser)
+
+  ```bash
+  N_CPUS=2 sbatch ...
+  ```
 
 ## Running with mantik
 

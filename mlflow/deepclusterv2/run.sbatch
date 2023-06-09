@@ -12,6 +12,19 @@ EPOCHS=${EPOCHS:-1}
 DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
 CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
 
+if [ -z "$N_CPUS" ]; then
+    echo "Using ${N_GPUS} GPUs per node";
+else
+    echo "Using ${N_CPUS} CPUs per node"
+    CPU_CONFIG_ARGS='
+        config.MACHINE.DEVICE=cpu
+        config.DISTRIBUTED.BACKEND=gloo
+        config.OPTIMIZER.use_larc=False
+        config.MODEL.AMP_PARAMS.USE_AMP=False
+    '
+    export CUDA_VISIBLE_DEVICES="";
+fi
+
 if [ "$NODES" -gt "1" ]; then
     RUN_ID=${SLURMD_NODENAME}i:29500;
 else
@@ -42,11 +55,13 @@ fi
 
 echo "Submitting VISSL"
 echo "NODES=${NODES}"
+echo "N_CPUS=${N_CPUS}"
 echo "N_GPUS=${N_GPUS}"
 echo "EPOCHS=${EPOCHS}"
 echo "LENGTHS=${LENGTHS}"
 echo "RUN_ID=${RUN_ID}"
 echo "DATASET=${DATASET}"
+echo "CPU_CONFIG_ARGS=${CPU_CONFIG_ARGS}"
 
 REPO_DIR=/p/home/jusers/emmerich1/juwels/code/vissl
 
@@ -60,23 +75,26 @@ mkdir -p ${BASE_DIR} ${CHECKPOINTS_DIR} ${TENSORBOARD_LOG_DIR} ${TMP_DATA_DIR} $
 
 echo "Run directory created at ${BASE_DIR}"
 
-source /p/project/deepacf/maelstrom/emmerich1/venvs/mantik/bin/activate
-source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env > /dev/null 2>&1
-eval $(mantik init)
-unset MANTIK_USERNAME
-unset MANTIK_PASSWORD
-echo "MLFLOW_TRACKING_TOKEN=${MLFLOW_TRACKING_TOKEN}"
+TRACK_TO_MANTIK=${TRACK_TO_MANTIK:-True}
 
-export TRACK_TO_MANTIK="True"
+if [ $TRACK_TO_MANTIK == "True" ]; then
+    source /p/project/deepacf/maelstrom/emmerich1/venvs/mantik/bin/activate
+    source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env > /dev/null 2>&1
+    eval $(mantik init)
+    unset MANTIK_USERNAME
+    unset MANTIK_PASSWORD
+    echo "MLFLOW_TRACKING_TOKEN=${MLFLOW_TRACKING_TOKEN}";
+fi
+
 
 srun apptainer run \
   -B ${REPO_DIR}:/opt/vissl \
   --nv \
   /p/project/deepacf/maelstrom/emmerich1/vissl.sif \
   python /opt/vissl/tools/run_distributed_engines.py \
-  config=remote \
+  config=remote ${CPU_CONFIG_ARGS} \
   config.DISTRIBUTED.NUM_NODES=${SLURM_NNODES} \
-  config.DISTRIBUTED.NUM_PROC_PER_NODE=${N_GPUS} \
+  config.DISTRIBUTED.NUM_PROC_PER_NODE=${N_CPUS:-$N_GPUS} \
   config.DISTRIBUTED.RUN_ID=${RUN_ID} \
   config.CHECKPOINT.DIR=${CHECKPOINTS_DIR} \
   config.DATA.TRAIN.COPY_DESTINATION_DIR=${TMP_DATA_DIR} \
