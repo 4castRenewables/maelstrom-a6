@@ -11,6 +11,7 @@ N_GPUS=${N_GPUS:-4}
 EPOCHS=${EPOCHS:-1}
 DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
 CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
+LOG_LEVEL=${LOG_LEVEL:-INFO}
 
 if [ -z "$N_CPUS" ]; then
     echo "Using ${N_GPUS} GPUs per node";
@@ -62,6 +63,7 @@ echo "LENGTHS=${LENGTHS}"
 echo "RUN_ID=${RUN_ID}"
 echo "DATASET=${DATASET}"
 echo "CPU_CONFIG_ARGS=${CPU_CONFIG_ARGS}"
+echo "LOG_LEVEL=${LOG_LEVEL}"
 
 REPO_DIR=/p/home/jusers/emmerich1/juwels/code/vissl
 
