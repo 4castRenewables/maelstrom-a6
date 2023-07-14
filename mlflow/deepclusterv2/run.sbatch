@@ -13,6 +13,12 @@ DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
 CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
 LOG_LEVEL=${LOG_LEVEL:-INFO}
 
+if [ "$DATASET" = "[remote_dataset_jsc_hourly]" ]; then
+    N_SAMPLES = "35064";
+else 
+    N_SAMPLES = "1461";
+fi
+
 if [ -z "$N_CPUS" ]; then
     echo "Using ${N_GPUS} GPUs per node";
 else
@@ -62,6 +68,7 @@ echo "EPOCHS=${EPOCHS}"
 echo "LENGTHS=${LENGTHS}"
 echo "RUN_ID=${RUN_ID}"
 echo "DATASET=${DATASET}"
+echo "N_SAMPLES=${N_SAMPLES}"
 echo "CPU_CONFIG_ARGS=${CPU_CONFIG_ARGS}"
 echo "LOG_LEVEL=${LOG_LEVEL}"
 
@@ -103,5 +110,6 @@ srun apptainer run \
   config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${TENSORBOARD_LOG_DIR} \
   config.OPTIMIZER.num_epochs=${EPOCHS} \
   config.DATA.TRAIN.DATASET_NAMES=${DATASET} \
+  config.LOSS.deepclusterv2_loss.num_train_samples=${N_SAMPLES} \
   config.LOSS.deepclusterv2_loss.output_dir=${CLUSTERING_DIR} \
   config.OPTIMIZER.param_schedulers.lr.lengths=${LENGTHS}
