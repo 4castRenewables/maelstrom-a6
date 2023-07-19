@@ -12,6 +12,7 @@ EPOCHS=${EPOCHS:-1}
 DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
 CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
 LOG_LEVEL=${LOG_LEVEL:-INFO}
+TRACK_TO_MANTIK=${TRACK_TO_MANTIK:-True}
 
 if [ "$DATASET" = "[remote_dataset_jsc_hourly]" ]; then
     N_SAMPLES = "35064";
@@ -84,8 +85,6 @@ mkdir -p ${BASE_DIR} ${CHECKPOINTS_DIR} ${TENSORBOARD_LOG_DIR} ${TMP_DATA_DIR} $
 
 echo "Run directory created at ${BASE_DIR}"
 
-TRACK_TO_MANTIK=${TRACK_TO_MANTIK:-True}
-
 if [ $TRACK_TO_MANTIK == "True" ]; then
     source /p/project/deepacf/maelstrom/emmerich1/venvs/mantik/bin/activate
     source /p/home/jusers/emmerich1/juwels/code/a6/mantik.env > /dev/null 2>&1
@@ -102,6 +101,7 @@ srun apptainer run \
   /p/project/deepacf/maelstrom/emmerich1/vissl.sif \
   python /opt/vissl/tools/run_distributed_engines.py \
   config=remote ${CPU_CONFIG_ARGS} \
+  config.TRACK_TO_MANTIK=${TRACK_TO_MANTIK} \
   config.DISTRIBUTED.NUM_NODES=${SLURM_NNODES} \
   config.DISTRIBUTED.NUM_PROC_PER_NODE=${N_CPUS:-$N_GPUS} \
   config.DISTRIBUTED.RUN_ID=${RUN_ID} \
