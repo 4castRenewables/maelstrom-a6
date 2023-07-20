@@ -1,30 +1,31 @@
 #!/bin/bash -x
 #SBATCH --partition=booster
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:4
+#SBATCH --gpus-per-node=4
 #SBATCH --time=06:00:00
 #SBATCH --output=/p/home/jusers/emmerich1/juwels/job-logs/%j-stdout.txt
 #SBATCH --error=/p/home/jusers/emmerich1/juwels/job-logs/%j-stderr.txt
 
 NODES=${NODES:-1}
-N_GPUS=${N_GPUS:-4}
+GPUS=${GPUS:-4}
 EPOCHS=${EPOCHS:-1}
-DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
+DATASET=${DATASET:-daily}
 CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
 LOG_LEVEL=${LOG_LEVEL:-INFO}
 TRACK_TO_MANTIK=${TRACK_TO_MANTIK:-True}
-DROP_LAST=${DROP_LAST:-True}
 
-if [ "$DATASET" = "[remote_dataset_jsc_hourly]" ]; then
+if [ "$DATASET" = "hourly" ]; then
+    DATASET="[remote_dataset_jsc_hourly]"
     N_SAMPLES="35064";
 else 
+    DATASET="[remote_dataset_jsc_daily]"
     N_SAMPLES="1461";
 fi
 
-if [ -z "$N_CPUS" ]; then
-    echo "Using ${N_GPUS} GPUs per node";
+if [ -z "$CPUS" ]; then
+    echo "Using ${GPUS} GPUs per node";
 else
-    echo "Using ${N_CPUS} CPUs per node"
+    echo "Using ${CPUS} CPUs per node"
     CPU_CONFIG_ARGS='
         config.MACHINE.DEVICE=cpu
         config.DISTRIBUTED.BACKEND=gloo
@@ -63,9 +64,9 @@ else
 fi
 
 echo "Submitting VISSL"
-echo "NODES=${NODES}"
-echo "N_CPUS=${N_CPUS}"
-echo "N_GPUS=${N_GPUS}"
+echo "NODES=${SLURM_NNODES}"
+echo "N_CPUS=${SLURM_CPUS_ON_NODE}"
+echo "GPUS=${SLURM_GPUS_PER_NODE}"
 echo "EPOCHS=${EPOCHS}"
 echo "LENGTHS=${LENGTHS}"
 echo "RUN_ID=${RUN_ID}"
@@ -104,10 +105,9 @@ srun apptainer run \
   config=remote ${CPU_CONFIG_ARGS} \
   config.TRACK_TO_MANTIK=${TRACK_TO_MANTIK} \
   config.DISTRIBUTED.NUM_NODES=${SLURM_NNODES} \
-  config.DISTRIBUTED.NUM_PROC_PER_NODE=${N_CPUS:-$N_GPUS} \
+  config.DISTRIBUTED.NUM_PROC_PER_NODE=${CPUS:-$SLURM_GPUS_PER_NODE} \
   config.DISTRIBUTED.RUN_ID=${RUN_ID} \
   config.CHECKPOINT.DIR=${CHECKPOINTS_DIR} \
-  config.DATA.TRAIN.DROP_LAST=${DROP_LAST} \
   config.DATA.TRAIN.COPY_DESTINATION_DIR=${TMP_DATA_DIR} \
   config.DATA.TRAIN.DATASET_NAMES=${DATASET} \
   config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${TENSORBOARD_LOG_DIR} \
