@@ -13,11 +13,12 @@ DATASET=${DATASET:-"[remote_dataset_jsc_hourly]"}
 CHECKPOINT_FOLDER_ID=${CHECKPOINT_FOLDER_ID:-$SLURM_JOB_ID}
 LOG_LEVEL=${LOG_LEVEL:-INFO}
 TRACK_TO_MANTIK=${TRACK_TO_MANTIK:-True}
+DROP_LAST=${DROP_LAST:-True}
 
 if [ "$DATASET" = "[remote_dataset_jsc_hourly]" ]; then
-    N_SAMPLES = "35064";
+    N_SAMPLES="35064";
 else 
-    N_SAMPLES = "1461";
+    N_SAMPLES="1461";
 fi
 
 if [ -z "$N_CPUS" ]; then
@@ -106,10 +107,11 @@ srun apptainer run \
   config.DISTRIBUTED.NUM_PROC_PER_NODE=${N_CPUS:-$N_GPUS} \
   config.DISTRIBUTED.RUN_ID=${RUN_ID} \
   config.CHECKPOINT.DIR=${CHECKPOINTS_DIR} \
+  config.DATA.TRAIN.DROP_LAST=${DROP_LAST} \
   config.DATA.TRAIN.COPY_DESTINATION_DIR=${TMP_DATA_DIR} \
-  config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${TENSORBOARD_LOG_DIR} \
-  config.OPTIMIZER.num_epochs=${EPOCHS} \
   config.DATA.TRAIN.DATASET_NAMES=${DATASET} \
+  config.HOOKS.TENSORBOARD_SETUP.LOG_DIR=${TENSORBOARD_LOG_DIR} \
   config.LOSS.deepclusterv2_loss.num_train_samples=${N_SAMPLES} \
   config.LOSS.deepclusterv2_loss.output_dir=${CLUSTERING_DIR} \
+  config.OPTIMIZER.num_epochs=${EPOCHS} \
   config.OPTIMIZER.param_schedulers.lr.lengths=${LENGTHS}
