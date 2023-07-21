@@ -10,10 +10,22 @@ Installation of the following packages is required:
 * libgeos and libgeos-dev (required by Cartopy)
 * python3-opencv (required by opencv)
 
+Ubuntu 20:
+
 ```bash
-apt install -y \
+sudo apt-get install -y \
   build-essential \
   libgeos-3.9.0 \
+  libgeos-dev \
+  python3-opencv
+```
+
+Ubuntu 22:
+
+```bash
+sudo apt-get install -y \
+  build-essential \
+  libgeos3.10.2 \
   libgeos-dev \
   python3-opencv
 ```
