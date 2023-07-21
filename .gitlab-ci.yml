@@ -12,7 +12,7 @@ include:
 variables:
   POETRY_IMAGE_VERSION: 3.10-1.2.1-bullseye
   PY_SRC: src/a6
-  PY_LINT_DIRS: src/a6 src/tests scripts mlflow/a6
+  PY_LINT_DIRS: src/a6 src/tests scripts mlflow
   PY_PYUPGRADE_ARGS: |
     --py3-plus
     --py36-plus
@@ -146,14 +146,14 @@ build-docker:
   rules:
     - !reference [.relevant-mlflow-project-changes, rules]
     - changes:
-      - mlflow/a6/**/*
+      - mlflow/**/*
 
 test-cluster:
   extends: .test-integration
   script:
     - >
       mlflow
-      run mlflow/a6
+      run mlflow/
       -e cluster
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P config=cluster.yaml
@@ -165,7 +165,7 @@ test-temporal:
   script:
     - >
       mlflow
-      run mlflow/a6
+      run mlflow/
       -e temporal
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
       -P use_varimax=false
@@ -176,7 +176,7 @@ test-grid-search:
   script:
     - >
       mlflow
-      run mlflow/a6
+      run mlflow/
       -e grid-search
       -P weather_data=/data/model_level_133_jan_2020.nc
       -P turbine_data=/data/turbine.nc
