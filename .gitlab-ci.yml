@@ -10,7 +10,7 @@ include:
     file: /docker/templates.yml
 
 variables:
-  POETRY_IMAGE_VERSION: 3.10-1.2.1-bullseye
+  POETRY_IMAGE_VERSION: 3.10-1.5.1-bullseye
   PY_SRC: src/a6
   PY_LINT_DIRS: src/a6 src/tests scripts mlflow
   PY_PYUPGRADE_ARGS: |
