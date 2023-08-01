@@ -50,12 +50,10 @@ python-dotenv = "^0.20.0"
 torch = {version = "^2.0.1+cpu", source = "pytorch-cpu"}
 opentsne = "^1.0.0"
 
-
 [[tool.poetry.source]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
-priority = "supplemental"
-
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
