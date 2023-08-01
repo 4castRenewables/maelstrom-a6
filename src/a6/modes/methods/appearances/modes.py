@@ -12,6 +12,16 @@ class Modes:
     def __iter__(self) -> Iterator:
         yield from self.modes
 
+    def __getitem__(self, key: int | datetime.datetime) -> _mode.Mode:
+        if isinstance(key, int):
+            return self.get_mode(label=key)
+        elif isinstance(key, datetime.datetime):
+            return self.get_appearance(date=key)
+        raise KeyError(
+            f"Type {type(key)} not supported as key, "
+            "must be int or datetime.datetime"
+        )
+
     @property
     def size(self) -> int:
         """Return the number of existing modes."""
