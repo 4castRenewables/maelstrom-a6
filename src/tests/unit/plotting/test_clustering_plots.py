@@ -9,7 +9,9 @@ def clusters(request, kmeans, hdbscan):
 
 
 def test_plot_first_three_components_timeseries_clusters(clusters):
-    clustering.plot_first_three_components_timeseries_clusters(clusters)
+    clustering.plot_first_three_components_timeseries_clusters(
+        clusters, display=False
+    )
 
 
 def test_plot_condensed_tree(hdbscan):
