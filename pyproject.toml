@@ -20,8 +20,7 @@ hdbscan = "^0.8.28"
 joblib = "1.1.0" # HDBSCAN import fails for joblib>1.1.0
 ipyparallel = "^8.2.0"
 matplotlib = "^3.5.1"
-mantik = "^0.1.1"
-mlflow-skinny = "^1.30.0"
+mlflow-skinny = "^2.5.0"
 netCDF4 = "^1.5.8"
 numpy = "^1.21.4"
 opencv-python = "^4.7.0.68"
@@ -35,10 +34,6 @@ xarray = "^2022.10.0"
 pytest = "^6.2.5"
 pre-commit = "^2.17.0"
 pytest-cov = "^3.0.0"
-
-[tool.poetry.extras]
-mlflow = ["boto3", "sagemaker"]
-notebooks = ["jupyter", "python-dotenv"]
 
 [tool.poetry.group.mlflow.dependencies]
 boto3 = "^1.23.0"
