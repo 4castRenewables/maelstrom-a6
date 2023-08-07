@@ -51,5 +51,3 @@ RUN which python \
  && python --version \
  && pip list \
  && python -c 'import a6'
-
-ENTRYPOINT [ "/bin/bash" ]
