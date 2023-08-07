@@ -23,7 +23,7 @@ build-python:
 	poetry build -f wheel
 
 build-docker: build-python
-	sudo docker build --no-cache -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
+	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
 
 build-apptainer: build-python
 	sudo apptainer build --force mlflow/$(IMAGE_NAME).sif apptainer/a6.def
