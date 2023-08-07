@@ -16,6 +16,7 @@ Cartopy = "^0.21.0"
 dask = {extras = ["distributed"], version = "^2022.10.2"}
 dask-jobqueue = "^0.7.3"
 debugpy = "1.6.7"  # poetry fixes debugpy to 1.6.8, which is not available on pypi
+docker = "^6"  # required by MLflow projects, not given in mlflow-skinny
 ecmwflibs = "^0.5.0" # cartopy dependency 0.4.3 not on pypi
 hdbscan = "^0.8.28"
 joblib = "1.1.0" # HDBSCAN import fails for joblib>1.1.0
