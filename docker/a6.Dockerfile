@@ -1,10 +1,16 @@
 ARG PYTHON_VERSION="3.10"
 
-FROM python:${PYTHON_VERSION}-slim-bullseye as builder
+FROM fabianemmi/python-poetry:${PYTHON_VERSION}-1.5.1-slim-bullseye as builder
 
-ADD dist/ /opt/dist/
+COPY README.md/ /opt/a6/
+COPY pyproject.toml /opt/a6/
+COPY poetry.lock /opt/a6/
+COPY src/a6/ /opt/a6/src/a6
 
-WORKDIR /opt
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /opt/a6
 
 RUN apt-get update -y \
  && apt-get install -y \
@@ -18,12 +24,11 @@ RUN apt-get update -y \
 RUN python -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip \
- && pip install /opt/dist/*.whl
+ && POETRY_VIRTUALENVS_CREATE=false poetry install --only=main
 
-# Delete Python cache
-RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf \
- && cd /venv \
- && find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+# Delete Python cache files
+WORKDIR /venv
+RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 FROM python:${PYTHON_VERSION}-slim-bullseye
 
@@ -38,4 +43,12 @@ RUN apt-get update -y \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /venv /venv
+COPY --from=builder /opt/a6 /opt/a6
+
 ENV PATH=/venv/bin:$PATH
+ENV GIT_PYTHON_REFRESH=quiet
+
+RUN which python \
+ && python --version \
+ && pip list \
+ && python -c 'import a6'

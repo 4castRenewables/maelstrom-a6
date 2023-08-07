@@ -1,7 +1,6 @@
 import json
 import pathlib
 
-import boto3
 import click
 import pandas as pd
 import sklearn.decomposition as decomposition
@@ -29,6 +28,8 @@ def perform_inference(
     use_varimax: bool,
 ):
     """Use an AWS SageMaker Endpoint for inference."""
+    import boto3
+
     options.exit_if_dry_run()
     df = _prepare_data(
         path=weather_data,

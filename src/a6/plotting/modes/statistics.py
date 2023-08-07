@@ -6,11 +6,17 @@ import a6.modes.methods.appearances as appearances
 def plot_modes_durations(
     modes: appearances.Modes,
     figsize: tuple[int, int] = (12, 6),
+    colors: list[str] | None = None,
     display: bool = True,
+    start_at_index_0: bool = False,
 ) -> tuple[plt.Figure, plt.Axes]:
     """Plot the mode mean durations and standard deviation."""
     fig, ax = plt.subplots(figsize=figsize)
-    n_modes_ticks = list(range(1, modes.size + 1))
+    n_modes_ticks = (
+        list(range(1, modes.size + 1))
+        if not start_at_index_0
+        else list(range(modes.size))
+    )
 
     durations, stds = _calculate_mean_durations_and_standard_deviations(modes)
 
@@ -18,8 +24,9 @@ def plot_modes_durations(
         n_modes_ticks,
         durations,
         yerr=stds,
+        color=colors,
         align="center",
-        alpha=0.5,
+        alpha=1,
         ecolor="black",
         capsize=10,
     )

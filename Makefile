@@ -11,34 +11,28 @@ E4_SSH = $(E4_USERNAME)@$(E4_SERVER_IP)
 E4_SSH_OPTIONS = -e "ssh -i $(E4_SSH_PRIVATE_KEY_FILE)"
 
 IMAGE_NAME = a6
-VISSL_IMAGE_NAME = vissl
 
 SSH_COPY_COMMAND = rsync -Pvra --progress
 
 install:
 	poetry install
 
-build-python:
-	# Remove old build
-	rm -rf dist/
-	poetry build -f wheel
-
-build-docker: build-python
-	sudo docker build --no-cache -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
+build-docker:
+	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
 
 build-apptainer: build-python
-	sudo apptainer build --force mlflow/a6/$(IMAGE_NAME).sif apptainer/a6.def
+	sudo apptainer build --force mlflow/$(IMAGE_NAME).sif apptainer/a6.def
 
 build: build-docker build-apptainer
 
 upload:
 	$(SSH_COPY_COMMAND) $(JSC_SSH_OPTIONS) \
-		mlflow/a6/$(IMAGE_NAME).sif \
+		mlflow/$(IMAGE_NAME).sif \
 		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(IMAGE_NAME).sif
 
 upload-e4:
 	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
-		mlflow/a6/$(IMAGE_NAME).sif \
+		mlflow/$(IMAGE_NAME).sif \
 		$(E4_SSH):$(E4_PROJECT_DIR)/$(IMAGE_NAME).sif
 
 deploy: build upload
@@ -132,35 +126,3 @@ upload-e4-kernel:
 	rm $(KERNEL_FILE)
 
 deploy-e4-kernel: build-e4-kernel upload-e4-kernel
-
-# VISSL-related steps
-
-build-vissl-docker:
-	sudo docker build -t $(VISSL_IMAGE_NAME):latest -f docker/vissl.Dockerfile .
-
-build-vissl:
-	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif apptainer/vissl.def
-
-build-vissl-rocm:
-	sudo apptainer build --force mlflow/deepclusterv2/$(VISSL_IMAGE_NAME)-rocm.sif apptainer/vissl-rocm.def
-
-upload-vissl:
-	$(SSH_COPY_COMMAND) $(JSC_SSH_OPTIONS) \
-		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif \
-		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(VISSL_IMAGE_NAME).sif
-
-upload-vissl-e4:
-	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
-		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME).sif \
-		$(E4_SSH):$(E4_PROJECT_DIR)/$(VISSL_IMAGE_NAME).sif
-
-upload-vissl-rocm-e4:
-	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
-		mlflow/deepclusterv2/$(VISSL_IMAGE_NAME)-rocm.sif \
-		$(E4_SSH):$(E4_PROJECT_DIR)/$(VISSL_IMAGE_NAME)-rocm.sif
-
-deploy-vissl: build-vissl upload-vissl
-
-deploy-vissl-e4: build-vissl upload-vissl-e4
-
-deploy-vissl-rocm-e4: build-vissl-rocm upload-vissl-rocm-e4
