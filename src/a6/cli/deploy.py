@@ -10,7 +10,6 @@ import click
 import a6.cli.arguments as arguments
 import a6.cli.main as main
 import a6.cli.options as _options
-import mlflow.sagemaker
 
 _DEFAULT_SAGEMAKER_INSTANCE_TYPE = "ml.m5.large"
 
@@ -121,6 +120,8 @@ def deploy_model_to_sagemaker(
     instance_count: int,
 ):
     """Deploy a registered MLflow model to an AWS SageMaker Endpoint."""
+    import mlflow.sagemaker
+
     options.exit_if_dry_run()
     mlflow.sagemaker.deploy(
         app_name=endpoint,
