@@ -46,6 +46,7 @@ COPY --from=builder /venv /venv
 COPY --from=builder /opt/a6 /opt/a6
 
 ENV PATH=/venv/bin:$PATH
+ENV GIT_PYTHON_REFRESH=quiet
 
 RUN which python \
  && python --version \

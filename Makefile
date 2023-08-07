@@ -17,12 +17,7 @@ SSH_COPY_COMMAND = rsync -Pvra --progress
 install:
 	poetry install
 
-build-python:
-	# Remove old build
-	rm -rf dist/
-	poetry build -f wheel
-
-build-docker: build-python
+build-docker:
 	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
 
 build-apptainer: build-python

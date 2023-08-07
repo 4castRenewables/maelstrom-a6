@@ -156,7 +156,7 @@ test-cluster:
       run mlflow/
       -e cluster
       -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
-      -P config=cluster.yaml
+      -P config=/mlproject/cluster.yaml
       -P use_varimax=false
       -P log_to_mantik=false
 
@@ -180,5 +180,5 @@ test-grid-search:
       -e grid-search
       -P weather_data=/data/model_level_133_jan_2020.nc
       -P turbine_data=/data/turbine.nc
-      -P config=grid-search.yaml
+      -P config=/mlproject/grid-search.yaml
       -P log_to_mantik=false
