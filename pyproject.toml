@@ -47,6 +47,11 @@ python-dotenv = "^0.20.0"
 torch = {version = "^2.0.1+cpu", source = "pytorch-cpu"}
 opentsne = "^1.0.0"
 
+
+[tool.poetry.group.dcv2.dependencies]
+torch = "^2.0.1"
+torchvision = "^0.15.2"
+
 [[tool.poetry.source]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
@@ -73,6 +78,7 @@ force-exclude = """
 max-line-length = 80
 per-file-ignores = [
     "__init__.py:F401,E501",
+    "src/a6/dcv2/cluster.py:N806",
 ]
 exclude = [
     "mlflow/deepclusterv2/modified/*.py",
