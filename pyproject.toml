@@ -9,18 +9,14 @@ authors = ["Fabian Emmerich <fabian.emmerich@4-cast.de>"]
 a6 = "a6.cli.main:cli"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
-bokeh = "^2.4"  # required by dask-distributed
+python = ">=3.11,<3.12"
 click = "^8.1.3"
 Cartopy = "^0.21.0"
-dask = {extras = ["distributed"], version = "^2022.10.2"}
-dask-jobqueue = "^0.7.3"
 debugpy = "1.6.7"  # poetry fixes debugpy to 1.6.8, which is not available on pypi
 docker = "^6"  # required by MLflow projects, not given in mlflow-skinny
-ecmwflibs = "^0.5.0" # cartopy dependency 0.4.3 not on pypi
+ecmwflibs = "0.5.3" # cartopy dependency 0.4.3 not on pypi
 hdbscan = "^0.8.28"
 joblib = "1.1.0" # HDBSCAN import fails for joblib>1.1.0
-ipyparallel = "^8.2.0"
 matplotlib = "^3.5.1"
 mlflow-skinny = "^2.5.0"
 netCDF4 = "^1.5.8"
@@ -31,31 +27,19 @@ scikit-image = "^0.19.3"
 scikit-learn = "^1.0.2"
 scipy = "^1.9.2"
 xarray = "^2023.7.0"
+torch = "2.0.1"
+torchvision = "0.15.2"
+psutil = "^5.9.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
 pre-commit = "^2.17.0"
 pytest-cov = "^3.0.0"
 
-[tool.poetry.group.mlflow.dependencies]
-boto3 = "^1.23.0"
-sagemaker = "^2.89.0"
-
 [tool.poetry.group.notebooks.dependencies]
 jupyter = "^1.0.0"
 python-dotenv = "^0.20.0"
-torch = {version = "^2.0.1+cpu", source = "pytorch-cpu"}
 opentsne = "^1.0.0"
-
-
-[tool.poetry.group.dcv2.dependencies]
-torch = "^2.0.1"
-torchvision = "^0.15.2"
-
-[[tool.poetry.source]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
