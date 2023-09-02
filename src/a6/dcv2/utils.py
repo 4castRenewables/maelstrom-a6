@@ -64,22 +64,21 @@ def init_distributed_mode(args):
             logger.warning("RANK unset, using default value")
         if "WORLD_SIZE" not in os.environ:
             logger.warning("WORLD_SIZE unset, using default value")
-        args.rank = int(os.getenv("RANK", 1))
+        args.rank = int(os.getenv("RANK", 0))
         args.world_size = int(os.getenv("WORLD_SIZE", 1))
+    os.environ["RANK"] = str(args.rank)
+    os.environ["LOCAL_RANK"] = str(args.rank)
+    os.environ["WORLD_SIZE"] = str(args.world_size)
 
     if args.use_cpu:
-        rank = 0
-        os.environ["RANK"] = str(rank)
-        os.environ["WORLD_SIZE"] = "1"
         os.environ["MASTER_ADDR"] = "127.0.0.1"
         os.environ["MASTER_PORT"] = str(_find_free_tcp_port())
         dist.init_process_group(backend="gloo")
-        args.gpu_to_work_on = rank
+        args.gpu_to_work_on = args.rank
     else:
-        address = f"{os.environ['SLURMD_NODENAME']}i:29500"
         dist.init_process_group(
             backend="nccl",
-            init_method=f"{args.dist_url}{address}",
+            init_method=args.dist_url,
             world_size=args.world_size,
             rank=args.rank,
         )

@@ -30,6 +30,12 @@ def train_dcv2():
     utils.init_distributed_mode(args)
     utils.fix_random_seeds(args.seed)
     logger, training_stats = utils.initialize_exp(args, "epoch", "loss")
+    logger.info(
+        "%s",
+        "\n".join(
+            f"{k}: {str(v)}" for k, v in sorted(os.environ.items())
+        ),
+    )
 
     # build data
     train_dataset = dataset.MultiCropDataset(

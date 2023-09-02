@@ -165,7 +165,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--workers", default=1, type=int, help="number of data loading workers"
     )
     parser.add_argument(
-        "--checkpoint_freq",
+        "--checkpoint-freq",
         type=int,
         default=25,
         help="Save the model periodically",

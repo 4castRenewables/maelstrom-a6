@@ -115,7 +115,7 @@ def cluster_memory(
                 # normalize centroids
                 centroids = nn.functional.normalize(centroids, dim=1, p=2)
 
-            getattr(model.prototypes, "prototypes" + str(i_K)).weight.copy_(
+            getattr(model.prototypes if args.use_cpu else model.module.prototypes, "prototypes" + str(i_K)).weight.copy_(
                 centroids
             )
 

@@ -110,6 +110,6 @@ def train(
                 data_time.avg,
                 losses.val,
                 losses.avg,
-                optimizer.optim.param_groups[0]["lr"],
+                optimizer.state_dict()["param_groups"][0]["lr"],
             )
     return (epoch, losses.avg), local_memory_index, local_memory_embeddings
