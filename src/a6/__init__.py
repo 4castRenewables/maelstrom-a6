@@ -1,4 +1,3 @@
-import a6.benchmark
 import a6.cli
 import a6.datasets
 import a6.evaluation
