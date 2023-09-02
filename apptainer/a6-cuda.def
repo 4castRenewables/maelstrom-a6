@@ -1,0 +1,27 @@
+Bootstrap: docker-daemon
+From: a6-cuda:latest
+
+%environment
+    export PATH=/venv/bin:$PATH
+    # Silence git warning by MLflow
+    export GIT_PYTHON_REFRESH=quiet
+
+%test
+    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
+    which python
+    python --version
+    pip list
+    python -c 'import a6, torch, torchvision, apex'
+
+%startscript
+    exec "$@"
+
+%runscript
+    echo "[$(date)] Running a6"
+    echo "Arguments: $*"
+    echo "Running command"
+    exec "$@"
+
+%labels
+    Author Fabian Emmerich
+    Version cu11.7-py3.11
