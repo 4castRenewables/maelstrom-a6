@@ -13,34 +13,38 @@ import pandas as pd
 
 
 class LogFormatter:
-    def __init__(self):
+    def __init__(self, args):
         self.start_time = time.time()
+        self.rank = args.rank
+        self.local_rank = args.local_rank
 
     def format(self, record):
         elapsed_seconds = round(record.created - self.start_time)
 
-        prefix = "{} - {} - {}".format(
+        prefix = "{} - {} - {} - RANK {} (local {})".format(
             record.levelname,
             time.strftime("%Y-%m-%d %H:%M:%S"),
             datetime.timedelta(seconds=elapsed_seconds),
+            self.rank,
+            self.local_rank,
         )
         message = record.getMessage()
         message = message.replace("\n", "\n" + " " * (len(prefix) + 3))
         return f"{prefix} - {message}" if message else ""
 
 
-def create_logger(filepath, rank):
+def create_logger(filepath, args):
     """
     Create a logger.
     Use a different log file for each process.
     """
     # create log formatter
-    log_formatter = LogFormatter()
+    log_formatter = LogFormatter(args)
 
     # create file handler and set level to debug
     if filepath is not None:
-        if rank > 0:
-            filepath = "%s-%i" % (filepath, rank)
+        if args.rank > 0:
+            filepath = "%s-%i" % (filepath, args.rank)
         file_handler = logging.FileHandler(filepath, "a")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(log_formatter)
@@ -75,6 +79,7 @@ class Stats:
 
     def __init__(self, path, columns):
         self.path = path
+        self.columns = columns
 
         # reload path stats
         if os.path.isfile(self.path):

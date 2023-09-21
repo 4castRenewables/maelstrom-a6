@@ -4,9 +4,11 @@
 # This source code is licensed under the license found
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
+import logging
 import math
 import os
 import shutil
+import time
 
 import numpy as np
 import torch.backends.cudnn as cudnn
@@ -19,6 +21,7 @@ import a6.dcv2._initialization as _initialization
 import a6.dcv2._parse as _parse
 import a6.dcv2.cluster as cluster
 import a6.dcv2.dataset as dataset
+import a6.dcv2.logs as logs
 import a6.dcv2.models as models
 import a6.dcv2.train as train
 import a6.utils as utils
@@ -27,14 +30,25 @@ import mlflow
 
 
 def train_dcv2():
+    start = time.time()
+
     args = _parse.create_argparser().parse_args()
-    utils.distributed.init_distributed_mode(args)
-    _initialization.fix_random_seeds(args.seed)
-    logger, training_stats = _initialization.initialize_exp(
-        args, "epoch", "loss"
+
+    logger, training_stats = _initialization.initialize_logging(
+        args, columns=("epoch", "loss")
     )
 
+    _initialization.fix_random_seeds(args.seed)
+    utils.distributed.init_distributed_mode(args, local_rank=0, initial=True)
+
     utils.logging.log_env_vars()
+
+    stdout = utils.slurm.get_stdout_file()
+    stderr = utils.slurm.get_stderr_file()
+
+    node_id = utils.slurm.get_node_id()
+
+    logger.info("Starting training on node %s", node_id)
 
     if args.enable_tracking and utils.distributed.is_primary_device():
         slurm_job_id = utils.slurm.get_slurm_job_id()
@@ -42,13 +56,100 @@ def train_dcv2():
         if slurm_job_id is not None:
             mantik.call_mlflow_method(
                 mlflow.start_run,
-                run_name=f"slurm-{slurm_job_id}-node-{utils.slurm.get_node_id()}",  # noqa: E501
+                run_name=f"slurm-{slurm_job_id}-node-{node_id}",
             )
 
             mantik.call_mlflow_method(
                 mlflow.log_params,
                 utils.slurm.get_slurm_env_vars(),
             )
+
+    try:
+        if args.world_size > 1:
+            torch.multiprocessing.spawn(
+                _worker,
+                nprocs=utils.slurm.get_gpus_per_node(),
+                args=(
+                    args,
+                    logger,
+                    training_stats,
+                    node_id,
+                ),
+                daemon=False,
+            )
+        else:
+            _worker(
+                local_rank=0,
+                args=args,
+                logger=logger,
+                training_stats=training_stats,
+                node_id=node_id,
+            )
+
+    except (
+        KeyboardInterrupt,
+        RuntimeError,
+        torch.multiprocessing.ProcessRaisedException,
+    ) as e:
+        if args.enable_tracking:
+            with open(stdout, "a") as f:
+                f.write(str(e))
+
+            mantik.call_mlflow_method(mlflow.log_text, str(e), "error.txt")
+
+            _log_stdout_stderr(stdout=stdout, stderr=stderr)
+
+            mantik.call_mlflow_method(mlflow.end_run, "FAILED")
+
+        logging.exception("Wrapping up, caught exception")
+
+        if isinstance(
+            e, (RuntimeError, torch.multiprocessing.ProcessRaisedException)
+        ):
+            raise e
+
+    logging.info("All done!")
+
+    runtime = time.time() - start
+    logging.info("Total runtime (s): %s", runtime)
+
+    if args.enable_tracking and utils.distributed.is_primary_device():
+        mantik.call_mlflow_method(mlflow.log_metric, "total_runtime_s", runtime)
+
+        _log_stdout_stderr(stdout=stdout, stderr=stderr)
+
+        # The following files are saved to disk in `a6.dcv2.cluster.py`
+        mantik.call_mlflow_method(mlflow.log_artifacts, args.dump_results)
+
+        mantik.call_mlflow_method(mlflow.end_run)
+
+
+def _worker(
+    local_rank: int,
+    args,
+    logger: logging.Logger,
+    training_stats: logs.Stats,
+    node_id: int,
+):
+    logger, training_stats = _initialization.initialize_on_worker(
+        args, logger_=logger, training_stats=training_stats
+    )
+    args.local_rank = local_rank
+
+    utils.distributed.init_distributed_mode(
+        args, local_rank=args.local_rank, initial=False
+    )
+
+    logging.info(
+        (
+            "Spawning process for node %s, local rank %s, "
+            "global rank: %s, dist-url: %s"
+        ),
+        node_id,
+        args.local_rank,
+        args.rank,
+        args.dist_url,
+    )
 
     # build data
     train_dataset = dataset.MultiCropDataset(
@@ -148,7 +249,7 @@ def train_dcv2():
     if not args.use_cpu:
         model = nn.parallel.DistributedDataParallel(
             model,
-            device_ids=[args.gpu_to_work_on],
+            device_ids=[args.local_rank],
             find_unused_parameters=True,
         )
 
@@ -211,7 +312,7 @@ def train_dcv2():
                 shutil.copyfile(
                     os.path.join(args.dump_path, "checkpoint.pth.tar"),
                     os.path.join(
-                        args.dump_checkpoints, "ckp-" + str(epoch) + ".pth"
+                        args.dump_checkpoints, f"checkpoint-epoch-{epoch}.pth"
                     ),
                 )
         torch.save(
@@ -221,3 +322,9 @@ def train_dcv2():
             },
             mb_path,
         )
+
+
+def _log_stdout_stderr(stdout: str, stderr: str | None) -> None:
+    mantik.call_mlflow_method(mlflow.log_artifact, stdout)
+    if stderr is not None:
+        mantik.call_mlflow_method(mlflow.log_artifact, stderr)

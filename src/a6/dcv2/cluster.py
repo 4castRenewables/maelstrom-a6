@@ -206,31 +206,39 @@ def cluster_memory(
             torch.save(
                 centroids,
                 _create_path(
-                    path=args.dump_path, file_name="centroids.pt", epoch=epoch
+                    path=args.dump_tensors,
+                    file_name="centroids.pt",
+                    epoch=epoch,
                 ),
             )
             torch.save(
                 assignments,
                 _create_path(
-                    path=args.dump_path, file_name="assignments.pt", epoch=epoch
+                    path=args.dump_tensors,
+                    file_name="assignments.pt",
+                    epoch=epoch,
                 ),
             )
             torch.save(
                 embeddings,
                 _create_path(
-                    path=args.dump_path, file_name="embeddings.pt", epoch=epoch
+                    path=args.dump_tensors,
+                    file_name="embeddings.pt",
+                    epoch=epoch,
                 ),
             )
             torch.save(
                 indexes,
                 _create_path(
-                    path=args.dump_path, file_name="indexes.pt", epoch=epoch
+                    path=args.dump_tensors, file_name="indexes.pt", epoch=epoch
                 ),
             )
             torch.save(
                 distances,
                 _create_path(
-                    path=args.dump_path, file_name="distances.pt", epoch=epoch
+                    path=args.dump_tensors,
+                    file_name="distances.pt",
+                    epoch=epoch,
                 ),
             )
 
@@ -239,12 +247,11 @@ def cluster_memory(
                 torch.save(
                     random_idx,
                     _create_path(
-                        path=args.dump_path,
+                        path=args.dump_tensors,
                         file_name="centroid-indexes.pt",
                         epoch=epoch,
                     ),
                 )
-                plots_dir = args.dump_path / "plots"
                 plotting.embeddings.plot_embeddings_using_tsne(
                     embeddings=embeddings[-1],
                     # Use previous j since this represents which crops
@@ -253,17 +260,17 @@ def cluster_memory(
                     assignments=assignments[-1],
                     centroids=random_idx,
                     name=f"epoch-{epoch}-embeddings",
-                    output_dir=plots_dir,
+                    output_dir=args.dump_plots,
                 )
                 plotting.assignments.plot_abundance(
                     assignments=assignments[-1],
                     name=f"epoch-{epoch}-assignments-abundance",
-                    output_dir=plots_dir,
+                    output_dir=args.dump_plots,
                 )
                 plotting.assignments.plot_appearance_per_week(
                     assignments=assignments[-1],
                     name=f"epoch-{epoch}-appearance-per-week",
-                    output_dir=plots_dir,
+                    output_dir=args.dump_plots,
                 )
 
                 n_unassigned_samples = _calculate_number_of_unassigned_samples(

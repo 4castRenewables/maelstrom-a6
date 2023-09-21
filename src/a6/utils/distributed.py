@@ -4,6 +4,8 @@ import socket
 
 import torch.distributed
 
+import a6.utils.slurm as slurm
+
 logger = logging.getLogger(__name__)
 
 # Default to GPU 0
@@ -14,10 +16,63 @@ _CPU_DEVICE_INDEX = -1
 _PRIMARY_RANK = 0
 
 
-def get_device(args):
-    return torch.device(
-        "cpu" if args.use_cpu else f"cuda:{args.gpu_to_work_on}"
+def init_distributed_mode(args, local_rank: int, initial: bool):
+    """
+    Initialize the following variables:
+        - world_size
+        - rank
+    """
+    args.local_rank = local_rank
+
+    if slurm.is_slurm_job():
+        args.rank = get_rank()
+        args.world_size = slurm.get_world_size()
+    else:
+        # multi-GPU job (local or multi-node) - jobs started with
+        # torch.distributed.launch read environment variables
+        if "RANK" not in os.environ:
+            logger.warning("RANK unset, using default value")
+        if "WORLD_SIZE" not in os.environ:
+            logger.warning("WORLD_SIZE unset, using default value")
+        args.rank = int(os.getenv("RANK", 0))
+        args.world_size = int(os.getenv("WORLD_SIZE", 1))
+
+    os.environ["RANK"] = str(args.rank)
+    os.environ["LOCAL_RANK"] = str(args.local_rank)
+    os.environ["WORLD_SIZE"] = str(args.world_size)
+
+    logger.info(
+        (
+            "Required env vars for distributed mode set: "
+            "RANK=%s, LOCAL_RANK=%s, WORLD_SIZE=%s"
+        ),
+        args.rank,
+        args.rank,
+        args.local_rank,
+        args.world_size,
     )
+
+    if not initial and not torch.distributed.is_initialized():
+        logger.warning(
+            "Distributed not initialized, initializing process group"
+        )
+        if args.use_cpu:
+            logger.warning("Initializing CPU backend")
+            os.environ["MASTER_ADDR"] = "127.0.0.1"
+            os.environ["MASTER_PORT"] = str(_find_free_tcp_port())
+            torch.distributed.init_process_group(backend="gloo")
+        else:
+            logger.warning("Initializing GPU backend")
+            torch.distributed.init_process_group(
+                backend="nccl",
+                init_method=args.dist_url,
+                world_size=args.world_size,
+                rank=args.rank,
+            )
+
+
+def get_device(args):
+    return torch.device("cpu" if args.use_cpu else f"cuda:{args.local_rank}")
 
 
 def get_primary_rank() -> int:
@@ -55,54 +110,6 @@ def set_cuda_device_index(idx: int) -> None:
 def set_cpu_device() -> None:
     global _cuda_device_index
     _cuda_device_index = _CPU_DEVICE_INDEX
-
-
-def init_distributed_mode(args):
-    """
-    Initialize the following variables:
-        - world_size
-        - rank
-    """
-
-    args.is_slurm_job = "SLURM_JOB_ID" in os.environ
-
-    if args.is_slurm_job:
-        args.rank = int(os.environ["SLURM_PROCID"])
-        args.world_size = int(os.environ["SLURM_NNODES"]) * int(
-            os.environ["SLURM_TASKS_PER_NODE"][0]
-        )
-    else:
-        # multi-GPU job (local or multi-node) - jobs started with
-        # torch.distributed.launch read environment variables
-        if "RANK" not in os.environ:
-            logger.warning("RANK unset, using default value")
-        if "WORLD_SIZE" not in os.environ:
-            logger.warning("WORLD_SIZE unset, using default value")
-        args.rank = int(os.getenv("RANK", 0))
-        args.world_size = int(os.getenv("WORLD_SIZE", 1))
-    os.environ["RANK"] = str(args.rank)
-    os.environ["LOCAL_RANK"] = str(args.rank)
-    os.environ["WORLD_SIZE"] = str(args.world_size)
-
-    if args.use_cpu:
-        os.environ["MASTER_ADDR"] = "127.0.0.1"
-        os.environ["MASTER_PORT"] = str(_find_free_tcp_port())
-        torch.distributed.init_process_group(backend="gloo")
-        args.gpu_to_work_on = args.rank
-    else:
-        torch.distributed.init_process_group(
-            backend="nccl",
-            init_method=args.dist_url,
-            world_size=args.world_size,
-            rank=args.rank,
-        )
-        # set cuda device
-        args.gpu_to_work_on = args.rank % torch.cuda.device_count()
-        torch.cuda.set_device(args.gpu_to_work_on)
-
-    logger.info("Distributed initialized")
-
-    return
 
 
 def _find_free_tcp_port():
