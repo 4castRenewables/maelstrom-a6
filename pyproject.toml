@@ -30,6 +30,7 @@ xarray = "^2023.7.0"
 torch = "2.0.1"
 torchvision = "0.15.2"
 psutil = "^5.9.5"
+opentsne = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
