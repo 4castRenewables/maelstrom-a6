@@ -1,3 +1,4 @@
+import a6.testing.env
 import a6.testing.methods
 from a6.testing.contexts import expect_raise_if_exception
 from a6.testing.create import create_dummy_ecmwf_ifs_hres_dataset

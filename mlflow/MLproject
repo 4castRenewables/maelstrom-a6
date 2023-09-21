@@ -194,4 +194,4 @@ entry_points:
         --dist-url {dist_url}
         --arch {arch}
         --sync-bn {sync_bn}
-        --dump-path ${dump_path}
+        --dump-path {dump_path}

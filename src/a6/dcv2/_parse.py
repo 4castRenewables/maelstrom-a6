@@ -22,6 +22,13 @@ def create_argparser() -> argparse.ArgumentParser:
         default=False,
         help="Use CPU for training",
     )
+    parser.add_argument(
+        "--enable-tracking",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable tracking to Mantik",
+    )
 
     # data parameters
     parser.add_argument(

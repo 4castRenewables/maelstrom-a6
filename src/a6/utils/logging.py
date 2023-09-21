@@ -71,3 +71,10 @@ def log_to_stdout(level: int = logging.INFO) -> None:
 
     """
     logging.basicConfig(stream=sys.stdout, level=level)
+
+
+def log_env_vars() -> None:
+    logger.info(
+        "%s",
+        "\n".join(f"{k}: {str(v)}" for k, v in sorted(os.environ.items())),
+    )

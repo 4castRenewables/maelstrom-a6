@@ -4,7 +4,6 @@
 # This source code is licensed under the license found
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
-import logging
 import math
 import os
 import shutil
@@ -15,27 +14,41 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
 
+import a6.dcv2._checkpoints as _checkpoints
+import a6.dcv2._initialization as _initialization
 import a6.dcv2._parse as _parse
 import a6.dcv2.cluster as cluster
 import a6.dcv2.dataset as dataset
 import a6.dcv2.models as models
 import a6.dcv2.train as train
-import a6.dcv2.utils as utils
-
-logger = logging.getLogger(__name__)
+import a6.utils as utils
+import a6.utils.mantik as mantik
+import mlflow
 
 
 def train_dcv2():
     args = _parse.create_argparser().parse_args()
-    utils.init_distributed_mode(args)
-    utils.fix_random_seeds(args.seed)
-    logger, training_stats = utils.initialize_exp(args, "epoch", "loss")
-    logger.info(
-        "%s",
-        "\n".join(
-            f"{k}: {str(v)}" for k, v in sorted(os.environ.items())
-        ),
+    utils.distributed.init_distributed_mode(args)
+    _initialization.fix_random_seeds(args.seed)
+    logger, training_stats = _initialization.initialize_exp(
+        args, "epoch", "loss"
     )
+
+    utils.logging.log_env_vars()
+
+    if args.enable_tracking and utils.distributed.is_primary_device():
+        slurm_job_id = utils.slurm.get_slurm_job_id()
+
+        if slurm_job_id is not None:
+            mantik.call_mlflow_method(
+                mlflow.start_run,
+                run_name=f"slurm-{slurm_job_id}-node-{utils.slurm.get_node_id()}",  # noqa: E501
+            )
+
+            mantik.call_mlflow_method(
+                mlflow.log_params,
+                utils.slurm.get_slurm_env_vars(),
+            )
 
     # build data
     train_dataset = dataset.MultiCropDataset(
@@ -57,7 +70,7 @@ def train_dcv2():
     )
     logger.info("Building data done with %s images loaded", len(train_dataset))
 
-    device = utils.get_device(args)
+    device = utils.distributed.get_device(args)
 
     # build model
     model = models.__dict__[args.arch](
@@ -141,8 +154,9 @@ def train_dcv2():
 
     # optionally resume from a checkpoint
     to_restore = {"epoch": 0}
-    utils.restart_from_checkpoint(
+    _checkpoints.restart_from_checkpoint(
         os.path.join(args.dump_path, "checkpoint.pth.tar"),
+        args=args,
         run_variables=to_restore,
         state_dict=model,
         optimizer=optimizer,

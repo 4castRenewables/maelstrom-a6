@@ -27,6 +27,7 @@ sudo apt-get install -y \
   build-essential \
   libgeos3.10.2 \
   libgeos-dev \
+  python3-dev \
   python3-opencv
 ```
 

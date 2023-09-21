@@ -1,11 +1,18 @@
 import contextlib
 import logging
+import os
 import pathlib
 import shutil
 import sys
 import tempfile
+from collections.abc import Callable
 
 import mlflow
+
+
+_TRACKING_ENV_VAR = "TRACK_TO_MANTIK"
+_CURRENT_EPOCH_ENV_VAR = "CURRENT_EPOCH"
+_CPU_USAGE_ENV_VAR = "CPU_USAGE_ENABLED"
 
 
 @contextlib.contextmanager
@@ -70,3 +77,30 @@ def _log_file_to_mantik_and_remove_from_local_disk(path: pathlib.Path) -> None:
 
     mlflow.log_artifact(path.as_posix())
     shutil.rmtree(path.parent.as_posix(), ignore_errors=True)
+
+
+def set_current_epoch(epoch: int) -> None:
+    os.environ[_CURRENT_EPOCH_ENV_VAR] = str(epoch)
+
+
+def get_current_epoch() -> int:
+    return int(_get_required_env_var(_CURRENT_EPOCH_ENV_VAR))
+
+
+def _get_required_env_var(name: str) -> int:
+    value = os.getenv(name)
+    if value is None:
+        raise RuntimeError(f"Environment variable {name} unset")
+    return int(value)
+
+
+def call_mlflow_method(func: Callable, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except mlflow.exceptions.MlflowException:
+        logging.exception(
+            "Calling MLflow method %s with args %s and kwargs %s has failed",
+            func,
+            args,
+            kwargs,
+        )

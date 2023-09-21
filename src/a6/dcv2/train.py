@@ -7,10 +7,12 @@
 import logging
 import time
 
+import torch
 import torch.nn as nn
 
+import a6.dcv2._averaging as _averaging
 import a6.dcv2.cluster as cluster
-import a6.dcv2.utils as utils
+import a6.utils as utils
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +28,14 @@ def train(
     args,
     device,
 ):
-    batch_time = utils.AverageMeter()
-    data_time = utils.AverageMeter()
-    losses = utils.AverageMeter()
+    batch_time = _averaging.AverageMeter()
+    data_time = _averaging.AverageMeter()
+    losses = _averaging.AverageMeter()
     model.train()
     cross_entropy = nn.CrossEntropyLoss(ignore_index=-100)
 
     assignments = cluster.cluster_memory(
+        epoch=epoch,
         model=model,
         local_memory_index=local_memory_index,
         local_memory_embeddings=local_memory_embeddings,
@@ -111,5 +114,12 @@ def train(
                 losses.val,
                 losses.avg,
                 optimizer.state_dict()["param_groups"][0]["lr"],
+            )
+
+        if utils.distributed.is_primary_device() and (device.type == "cuda"):
+            logging.info(
+                "========= Memory Summary at epoch %s =======\n%s\n",
+                epoch,
+                torch.cuda.memory_summary(),
             )
     return (epoch, losses.avg), local_memory_index, local_memory_embeddings
