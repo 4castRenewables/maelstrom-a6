@@ -3,6 +3,8 @@ import os
 
 import torch.distributed
 
+import a6.utils as utils
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,17 +25,10 @@ def restart_from_checkpoint(ckp_paths, args, run_variables=None, **kwargs):
 
     logger.info("Found checkpoint at %s", ckp_path)
 
-    if not args.use_cpu:
-        map_location = (
-            f"cuda:{torch.distributed.get_rank() % torch.cuda.device_count()}"
-        )
-    else:
-        map_location = None
-
     # open checkpoint file
     checkpoint = torch.load(
         ckp_path,
-        map_location=map_location,
+        map_location=utils.distributed.get_device(args),
     )
 
     # key is what to look for in the checkpoint file

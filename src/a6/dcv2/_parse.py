@@ -126,36 +126,68 @@ def create_argparser() -> argparse.ArgumentParser:
 
     # dist parameters
     parser.add_argument(
+        "--distributed",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Whether training can be performed distributed. "
+            "If ``True``, torch will start a process group."
+        ),
+    )
+    parser.add_argument(
+        "--node-id",
+        default=0,
+        type=int,
+        help=("Node ID of the node that the process runs on."),
+    )
+    parser.add_argument(
+        "--host",
+        default=None,
+        type=str,
+        help=(
+            "URL used to set up distributed training. "
+            "It is set automatically and should not be passed as argument. "
+            "See https://pytorch.org/docs/stable/distributed.html"
+        ),
+    )
+    parser.add_argument(
         "--dist-url",
         default="tcp://",
         type=str,
         help=(
-            "url used to set up distributed"
-            "training; see https://pytorch.org/docs/stable/distributed.html"
+            "URL used to set up distributed training. "
+            "It is set automatically and should not be passed as argument. "
+            "See https://pytorch.org/docs/stable/distributed.html"
         ),
     )
     parser.add_argument(
         "--world-size",
         default=-1,
         type=int,
-        help="""
-                        number of processes: it is set automatically and
-                        should not be passed as argument""",
+        help=(
+            "Total number of processes. "
+            "This may e.g. be the total number of available GPU devices. "
+            "It is set automatically and should not be passed as argument."
+        ),
     )
     parser.add_argument(
-        "--rank",
+        "--global-rank",
         default=0,
         type=int,
         help=(
-            "rank of this process:"
-            "it is set automatically and should not be passed as argument"
+            "Global rank of this process. "
+            "It is set automatically and should not be passed as argument."
         ),
     )
     parser.add_argument(
         "--local-rank",
         default=0,
         type=int,
-        help="this argument is not used and should be ignored",
+        help=(
+            "This argument is passed by ``torch.distributed.launch``. "
+            "See https://pytorch.org/docs/stable/distributed.html#launch-utility"  # noqa: E501
+        ),
     )
 
     # other parameters

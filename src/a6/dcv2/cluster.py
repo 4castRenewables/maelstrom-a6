@@ -21,6 +21,8 @@ import mlflow
 
 logger = logging.getLogger(__name__)
 
+IGNORE_INDEX = -1
+
 
 def init_memory(dataloader, model, args, device):
     size_memory_per_process = len(dataloader) * args.batch_size
@@ -77,24 +79,22 @@ def cluster_memory(
     # 4. K=30, j=1
     j = 0
 
-    assignments = (
-        -100 * torch.ones(len(args.nmb_prototypes), size_dataset).long()
+    n_heads = len(args.nmb_prototypes)
+
+    assignments = (IGNORE_INDEX * torch.ones(n_heads, size_dataset).long()).to(
+        device
     )
-    indexes = -100 * torch.ones(len(args.nmb_prototypes), size_dataset).long()
-    embeddings = -100 * torch.ones(
-        len(args.nmb_prototypes),
+    indexes = IGNORE_INDEX * torch.ones(n_heads, size_dataset).long().to(device)
+
+    embeddings = float(IGNORE_INDEX) * torch.ones(
+        n_heads,
         len(args.crops_for_assign),
         size_dataset,
         args.feat_dim,
+    ).to(device)
+    distances = float(IGNORE_INDEX) * torch.ones(n_heads, size_dataset).to(
+        device
     )
-    distances = -100 * torch.ones(len(args.nmb_prototypes), size_dataset)
-
-    if args.use_cpu:
-        embeddings = embeddings.float()
-        distances = distances.float()
-    else:
-        embeddings = embeddings.half()
-        distances = distances.half()
 
     with torch.no_grad():
         for i_K, K in enumerate(args.nmb_prototypes):
@@ -104,7 +104,7 @@ def cluster_memory(
             centroids = torch.empty(K, args.feat_dim).to(
                 device=device, non_blocking=True
             )
-            if args.rank == 0:
+            if args.global_rank == 0:
                 # Init centroids with elements from memory bank of rank 0 by
                 # taking K random samples from its local memory embeddings
                 # (i.e. the cropped samples) as centroids
@@ -153,10 +153,12 @@ def cluster_memory(
                 # normalize centroids
                 centroids = nn.functional.normalize(centroids, dim=1, p=2)
 
+            # Copy centroids to model for forwarding
             getattr(
                 model.prototypes if args.use_cpu else model.module.prototypes,
                 "prototypes" + str(i_K),
             ).weight.copy_(centroids)
+
             assignments_all = utils.distributed.gather_from_all_ranks(
                 local_assignments
             )
@@ -176,14 +178,14 @@ def cluster_memory(
             assignments[i_K][indexes_all] = assignments_all
             logger.info("Assigments: %s", assignments_all)
 
-            assignments[i_K] = -1
+            assignments[i_K] = IGNORE_INDEX
             assignments[i_K][indexes_all] = assignments_all
-            indexes[i_K] = -1
+            indexes[i_K] = IGNORE_INDEX
             indexes[i_K][indexes_all] = indexes_all
-            distances[i_K] = -1.0
+            distances[i_K] = float(IGNORE_INDEX)
             distances[i_K][indexes_all] = distances_all
             # For the embeddings, make sure to use j for indexing
-            embeddings[i_K][j] = -1.0
+            embeddings[i_K][j] = float(IGNORE_INDEX)
             embeddings[i_K][j][indexes_all] = embeddings_all
 
             j_prev = j
@@ -198,8 +200,7 @@ def cluster_memory(
             or epoch_comp % 100 == 0
         ):
             logging.info(
-                "Saving clustering data on rank %s at epoch %s",
-                utils.distributed.get_rank(),
+                "Saving clustering data at epoch %s",
                 epoch,
             )
 
@@ -273,29 +274,30 @@ def cluster_memory(
                     output_dir=args.dump_plots,
                 )
 
-                n_unassigned_samples = _calculate_number_of_unassigned_samples(
-                    assignments[-1],
-                )
-                percent_unassigned_samples = (
-                    n_unassigned_samples / assignments.shape[-1]
-                )
-                logger.warning(
-                    "Number of unassigned samples: %s (%s%)",
+        if utils.distributed.is_primary_device():
+            n_unassigned_samples = _calculate_number_of_unassigned_samples(
+                assignments[-1],
+            )
+            percent_unassigned_samples = (
+                n_unassigned_samples / assignments.shape[-1]
+            )
+            logger.warning(
+                "Number of unassigned samples: %s (%s%%)",
+                n_unassigned_samples,
+                percent_unassigned_samples,
+            )
+            if args.enable_tracking:
+                mantik.call_mlflow_method(
+                    mlflow.log_metric,
+                    "unassigned_samples",
                     n_unassigned_samples,
+                    step=epoch,
+                )
+                mantik.call_mlflow_method(
+                    mlflow.log_metric,
+                    "unassigned_samples_percent",
                     percent_unassigned_samples,
                 )
-
-                if args.enable_tracking:
-                    mantik.call_mlflow_method(
-                        mlflow.log_metric,
-                        "unassigned_samples",
-                        n_unassigned_samples,
-                    )
-                    mantik.call_mlflow_method(
-                        mlflow.log_metric,
-                        "unassigned_samples_percent",
-                        percent_unassigned_samples,
-                    )
 
     return assignments
 

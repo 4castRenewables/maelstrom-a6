@@ -74,12 +74,13 @@ def log_to_stdout(level: int = logging.INFO) -> None:
 
 
 def log_env_vars() -> None:
-    env_vars = dict(sorted(os.environ.items()))
+    env_vars = filter(lambda x: not x[0].startswith("_"), os.environ.items())
+    env_vars_sorted = dict(sorted(env_vars))
 
-    env_vars.pop("MANTIK_USERNAME", None)
-    env_vars.pop("MANTIK_PASSWORD", None)
+    env_vars_sorted.pop("MANTIK_USERNAME", None)
+    env_vars_sorted.pop("MANTIK_PASSWORD", None)
 
     logger.info(
         "%s",
-        "\n".join(f"{k}: {str(v)}" for k, v in env_vars.items()),
+        "\n".join(f"{k}: {str(v)}" for k, v in env_vars_sorted.items()),
     )

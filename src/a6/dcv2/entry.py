@@ -8,10 +8,12 @@ import logging
 import math
 import os
 import shutil
+import socket
 import time
 
 import numpy as np
 import torch.backends.cudnn as cudnn
+import torch.distributed.elastic.multiprocessing.errors as errors
 import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
@@ -29,126 +31,92 @@ import a6.utils.mantik as mantik
 import mlflow
 
 
+@errors.record
 def train_dcv2():
-    start = time.time()
-
     args = _parse.create_argparser().parse_args()
+
+    args.node_id = utils.slurm.get_node_id()
+    utils.distributed.set_required_env_vars(args)
 
     logger, training_stats = _initialization.initialize_logging(
         args, columns=("epoch", "loss")
     )
 
-    _initialization.fix_random_seeds(args.seed)
-    utils.distributed.init_distributed_mode(args, local_rank=0, initial=True)
+    logger.info(
+        (
+            "Required env vars for distributed mode set: "
+            "RANK=%s, LOCAL_RANK=%s, WORLD_SIZE=%s"
+        ),
+        args.global_rank,
+        args.local_rank,
+        args.world_size,
+    )
 
-    utils.logging.log_env_vars()
+    utils.distributed.setup(args)
 
-    stdout = utils.slurm.get_stdout_file()
-    stderr = utils.slurm.get_stderr_file()
+    if utils.distributed.is_primary_device():
+        start = time.time()
 
-    node_id = utils.slurm.get_node_id()
+        utils.logging.log_env_vars()
 
-    logger.info("Starting training on node %s", node_id)
+        stdout = utils.slurm.get_stdout_file()
+        stderr = utils.slurm.get_stderr_file()
 
-    if args.enable_tracking and utils.distributed.is_primary_device():
-        slurm_job_id = utils.slurm.get_slurm_job_id()
-
-        if slurm_job_id is not None:
-            mantik.call_mlflow_method(
-                mlflow.start_run,
-                run_name=f"slurm-{slurm_job_id}-node-{node_id}",
-            )
-
-            mantik.call_mlflow_method(
-                mlflow.log_params,
-                utils.slurm.get_slurm_env_vars(),
-            )
-
-    try:
-        if args.world_size > 1:
-            torch.multiprocessing.spawn(
-                _worker,
-                nprocs=utils.slurm.get_gpus_per_node(),
-                args=(
-                    args,
-                    logger,
-                    training_stats,
-                    node_id,
-                ),
-                daemon=False,
-            )
-        else:
-            _worker(
-                local_rank=0,
-                args=args,
-                logger=logger,
-                training_stats=training_stats,
-                node_id=node_id,
-            )
-
-    except (
-        KeyboardInterrupt,
-        RuntimeError,
-        torch.multiprocessing.ProcessRaisedException,
-    ) as e:
         if args.enable_tracking:
-            with open(stdout, "a") as f:
-                f.write(str(e))
+            slurm_job_id = utils.slurm.get_slurm_job_id()
 
-            mantik.call_mlflow_method(mlflow.log_text, str(e), "error.txt")
+            if slurm_job_id is not None:
+                mantik.call_mlflow_method(
+                    mlflow.start_run,
+                    run_name=f"slurm-{slurm_job_id}-node-{args.node_id}",
+                )
+
+                mantik.call_mlflow_method(
+                    mlflow.log_params,
+                    utils.slurm.get_slurm_env_vars(),
+                )
+
+    _train(
+        args=args,
+        logger=logger,
+        training_stats=training_stats,
+    )
+
+    if utils.distributed.is_primary_device():
+        logging.info("All done!")
+        runtime = time.time() - start
+        logging.info("Total runtime (s): %s", runtime)
+
+        if args.enable_tracking:
+            mantik.call_mlflow_method(
+                mlflow.log_metric, "total_runtime_s", runtime
+            )
 
             _log_stdout_stderr(stdout=stdout, stderr=stderr)
 
-            mantik.call_mlflow_method(mlflow.end_run, "FAILED")
+            # The following files are saved to disk in `a6.dcv2.cluster.py`
+            mantik.call_mlflow_method(mlflow.log_artifacts, args.dump_results)
 
-        logging.exception("Wrapping up, caught exception")
+            mantik.call_mlflow_method(mlflow.end_run)
 
-        if isinstance(
-            e, (RuntimeError, torch.multiprocessing.ProcessRaisedException)
-        ):
-            raise e
-
-    logging.info("All done!")
-
-    runtime = time.time() - start
-    logging.info("Total runtime (s): %s", runtime)
-
-    if args.enable_tracking and utils.distributed.is_primary_device():
-        mantik.call_mlflow_method(mlflow.log_metric, "total_runtime_s", runtime)
-
-        _log_stdout_stderr(stdout=stdout, stderr=stderr)
-
-        # The following files are saved to disk in `a6.dcv2.cluster.py`
-        mantik.call_mlflow_method(mlflow.log_artifacts, args.dump_results)
-
-        mantik.call_mlflow_method(mlflow.end_run)
+    utils.distributed.destroy()
 
 
-def _worker(
-    local_rank: int,
+def _train(
     args,
     logger: logging.Logger,
     training_stats: logs.Stats,
-    node_id: int,
 ):
-    logger, training_stats = _initialization.initialize_on_worker(
-        args, logger_=logger, training_stats=training_stats
-    )
-    args.local_rank = local_rank
-
-    utils.distributed.init_distributed_mode(
-        args, local_rank=args.local_rank, initial=False
-    )
-
-    logging.info(
+    logger.info(
         (
-            "Spawning process for node %s, local rank %s, "
-            "global rank: %s, dist-url: %s"
+            "Starting training on host %s (node %s), global rank %s, "
+            "local rank %s (torch.distributed.get_rank()=%s)"
         ),
-        node_id,
+        socket.gethostname(),
+        args.node_id,
+        args.global_rank,
         args.local_rank,
-        args.rank,
-        args.dist_url,
+        torch.distributed.get_rank(),
     )
 
     # build data
@@ -200,16 +168,16 @@ def _worker(
             model, process_group=process_group
         )
 
-    if not args.use_cpu:
-        # copy model to GPU
-        model = model.cuda()
+    # Copy model to GPU
+    model = model.to(device)
 
-    if args.rank == 0:
+    if utils.distributed.is_primary_device():
         logger.info(model)
 
     logger.info("Building model done.")
 
     # build optimizer
+    # Should be done after moving the model to GPU
     optimizer = torch.optim.SGD(
         model.parameters(),
         lr=args.base_lr,
@@ -250,6 +218,7 @@ def _worker(
         model = nn.parallel.DistributedDataParallel(
             model,
             device_ids=[args.local_rank],
+            output_device=args.local_rank,
             find_unused_parameters=True,
         )
 
@@ -265,7 +234,9 @@ def _worker(
     start_epoch = to_restore["epoch"]
 
     # build the memory bank
-    mb_path = os.path.join(args.dump_path, "mb" + str(args.rank) + ".pth")
+    mb_path = os.path.join(
+        args.dump_path, "mb" + str(args.global_rank) + ".pth"
+    )
     if os.path.isfile(mb_path):
         mb_ckp = torch.load(mb_path)
         local_memory_index = mb_ckp["local_memory_index"]
@@ -278,7 +249,7 @@ def _worker(
     cudnn.benchmark = True
     for epoch in range(start_epoch, args.epochs):
         # train the network for one epoch
-        logger.info("============ Starting epoch %i ... ============", epoch)
+        logger.info("============ Starting epoch %i ============", epoch)
 
         # set sampler
         train_loader.sampler.set_epoch(epoch)
@@ -298,7 +269,7 @@ def _worker(
         training_stats.update(scores)
 
         # save checkpoints
-        if args.rank == 0:
+        if utils.distributed.is_primary_device():
             save_dict = {
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),

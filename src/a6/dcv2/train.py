@@ -13,6 +13,7 @@ import torch.nn as nn
 import a6.dcv2._averaging as _averaging
 import a6.dcv2.cluster as cluster
 import a6.utils as utils
+import mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def train(
     data_time = _averaging.AverageMeter()
     losses = _averaging.AverageMeter()
     model.train()
-    cross_entropy = nn.CrossEntropyLoss(ignore_index=-100)
+    cross_entropy = nn.CrossEntropyLoss(ignore_index=cluster.IGNORE_INDEX)
 
     assignments = cluster.cluster_memory(
         epoch=epoch,
@@ -57,6 +58,8 @@ def train(
             param_group["lr"] = schedule[iteration]
 
         # ============ multi-res forward passes ... ============
+        # Output here returns the output for each head (prototype)
+        # and hence has size ``len(args.nmb_prototypes)``.
         emb, output = model(inputs)
         emb = emb.detach()
         bs = inputs[0].size(0)
@@ -97,14 +100,13 @@ def train(
         losses.update(loss.item(), inputs[0].size(0))
         batch_time.update(time.time() - end)
         end = time.time()
-        if args.rank == 0 and it % 50 == 0:
+        if args.global_rank == 0 and it % 50 == 0:
             logger.info(
-                "Epoch: %i[{1}]\t"
-                "Iteration: %i\t"
-                "Time: %s (%s)\t"
-                "Data: %s (%s)\t"
-                "Loss: %s (%s)\t"
-                "Lr: %s",
+                "[EPOCH %i, ITERATION %i] "
+                "batch time: %s (%s) "
+                "data load time: %s (%s) "
+                "loss: %s (%s) "
+                "lr: %s",
                 epoch,
                 it,
                 batch_time.val,
@@ -116,10 +118,27 @@ def train(
                 optimizer.state_dict()["param_groups"][0]["lr"],
             )
 
-        if utils.distributed.is_primary_device() and (device.type == "cuda"):
-            logging.info(
-                "========= Memory Summary at epoch %s =======\n%s\n",
-                epoch,
-                torch.cuda.memory_summary(),
-            )
+    if args.enable_tracking and utils.distributed.is_primary_device():
+        metrics = {
+            "batch_time": batch_time.val,
+            "batch_time_avg": batch_time.avg,
+            "data_load_time": data_time.val,
+            "data_load_time_avg": data_time.avg,
+            "loss": losses.val,
+            "loss_avg": losses.avg,
+        }
+
+        utils.mantik.call_mlflow_method(
+            mlflow.log_metrics,
+            metrics,
+            step=epoch,
+        )
+
+    if utils.distributed.is_primary_device() and (device.type == "cuda"):
+        logging.info(
+            "========= Memory Summary at epoch %s =======\n%s\n",
+            epoch,
+            torch.cuda.memory_summary(),
+        )
+
     return (epoch, losses.avg), local_memory_index, local_memory_embeddings

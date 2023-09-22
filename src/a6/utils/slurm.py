@@ -1,33 +1,48 @@
+import logging
 import os
+
+import torch
+
+logger = logging.getLogger(__name__)
 
 
 def is_slurm_job() -> bool:
     return "SLURM_JOB_ID" in os.environ
 
 
-def get_node_id(node_id: int = 0):
-    return int(os.getenv("SLURM_NODEID", node_id))
+def get_daemon_node_name() -> str:
+    return os.getenv("SLURMD_NODENAME")
 
 
-def get_rank(local_rank: int) -> int:
-    return get_node_id() * get_gpus_per_node() + local_rank
+def get_number_of_nodes() -> int:
+    return int(os.getenv("SLURM_NNODES", 1))
+
+
+def get_node_id():
+    return int(os.getenv("SLURM_NODEID", 0))
+
+
+def get_global_rank(args) -> int:
+    return get_node_id() * get_gpus_per_node() + args.local_rank
 
 
 def get_world_size() -> int:
-    n_nodes = int(os.getenv("SLURM_NNODES", 1))
+    n_nodes = get_number_of_nodes()
     gpus_per_node = get_gpus_per_node()
-
-    if gpus_per_node > 0:
-        return n_nodes * gpus_per_node
-
-    return n_nodes
+    size = n_nodes * gpus_per_node if gpus_per_node > 0 else n_nodes
+    logger.info("Detected world size of %s devices", size)
+    return size
 
 
 def get_gpus_per_node() -> int:
-    visible_devices = os.getenv("CUDA_VISIBLE_DEVICES", "")
-    if visible_devices is None:
-        return 0
-    return len(visible_devices.split(","))
+    if torch.cuda.is_available():
+        gpus_per_node = torch.cuda.device_count()
+    elif visible_devices := os.getenv("CUDA_VISIBLE_DEVICES", ""):
+        gpus_per_node = len(visible_devices.split(","))
+    else:
+        gpus_per_node = 0
+    logger.info("Found %s GPUs available per node", gpus_per_node)
+    return gpus_per_node
 
 
 def get_slurm_job_id() -> str:

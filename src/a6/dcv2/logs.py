@@ -15,7 +15,7 @@ import pandas as pd
 class LogFormatter:
     def __init__(self, args):
         self.start_time = time.time()
-        self.rank = args.rank
+        self.rank = args.global_rank
         self.local_rank = args.local_rank
 
     def format(self, record):
@@ -43,8 +43,8 @@ def create_logger(filepath, args):
 
     # create file handler and set level to debug
     if filepath is not None:
-        if args.rank > 0:
-            filepath = "%s-%i" % (filepath, args.rank)
+        if args.global_rank > 0:
+            filepath = "%s-%i" % (filepath, args.global_rank)
         file_handler = logging.FileHandler(filepath, "a")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(log_formatter)

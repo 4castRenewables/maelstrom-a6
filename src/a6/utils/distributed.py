@@ -2,114 +2,85 @@ import logging
 import os
 import socket
 
+import numpy as np
 import torch.distributed
 
 import a6.utils.slurm as slurm
 
 logger = logging.getLogger(__name__)
 
-# Default to GPU 0
-_cuda_device_index: int = 0
 
-# Setting _cuda_device_index to -1 internally implies that we should use CPU
-_CPU_DEVICE_INDEX = -1
-_PRIMARY_RANK = 0
+def get_global_rank(args) -> int:
+    return slurm.get_global_rank(args)
 
 
-def init_distributed_mode(args, local_rank: int, initial: bool):
+def setup(args) -> None:
+    logging.info(
+        "Spawning process for node %s, local rank %s, global rank: %s",
+        args.node_id,
+        args.local_rank,
+        args.global_rank,
+    )
+    _fix_random_seeds(args.seed)
+    _get_dist_url_and_set_master_env_vars(args)
+    _init_process_group(args)
+    _set_device(args)
+
+
+def set_required_env_vars(args):
     """
     Initialize the following variables:
         - world_size
         - rank
     """
-    args.local_rank = local_rank
+    args.global_rank = _get_and_set_env_var("RANK", default=0)
+    args.local_rank = _get_and_set_env_var("LOCAL_RANK", default=0)
+    args.world_size = _get_and_set_env_var("WORLD_SIZE", default=1)
 
-    if slurm.is_slurm_job():
-        args.rank = get_rank()
-        args.world_size = slurm.get_world_size()
-    else:
-        # multi-GPU job (local or multi-node) - jobs started with
-        # torch.distributed.launch read environment variables
-        if "RANK" not in os.environ:
-            logger.warning("RANK unset, using default value")
-        if "WORLD_SIZE" not in os.environ:
-            logger.warning("WORLD_SIZE unset, using default value")
-        args.rank = int(os.getenv("RANK", 0))
-        args.world_size = int(os.getenv("WORLD_SIZE", 1))
 
-    os.environ["RANK"] = str(args.rank)
-    os.environ["LOCAL_RANK"] = str(args.local_rank)
-    os.environ["WORLD_SIZE"] = str(args.world_size)
-
-    logger.info(
-        (
-            "Required env vars for distributed mode set: "
-            "RANK=%s, LOCAL_RANK=%s, WORLD_SIZE=%s"
-        ),
-        args.rank,
-        args.rank,
-        args.local_rank,
-        args.world_size,
-    )
-
-    if not initial and not torch.distributed.is_initialized():
-        logger.warning(
-            "Distributed not initialized, initializing process group"
+def _get_and_set_env_var(name: str, default: int | str) -> int | str:
+    value = os.getenv(name)
+    if value is None:
+        print(
+            f"WARNING: Environment variable {name!r} unset, "
+            "using default value {default}"
         )
-        if args.use_cpu:
-            logger.warning("Initializing CPU backend")
-            os.environ["MASTER_ADDR"] = "127.0.0.1"
-            os.environ["MASTER_PORT"] = str(_find_free_tcp_port())
-            torch.distributed.init_process_group(backend="gloo")
-        else:
-            logger.warning("Initializing GPU backend")
-            torch.distributed.init_process_group(
-                backend="nccl",
-                init_method=args.dist_url,
-                world_size=args.world_size,
-                rank=args.rank,
-            )
+        return default
+    return type(default)(value)
 
 
-def get_device(args):
-    return torch.device("cpu" if args.use_cpu else f"cuda:{args.local_rank}")
+def _fix_random_seeds(seed=31):
+    """
+    Fix random seeds.
+    """
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
 
 
-def get_primary_rank() -> int:
-    return _PRIMARY_RANK
+def _get_dist_url_and_set_master_env_vars(args) -> str | None:
+    print(os.environ["MASTER_ADDR"])
+    print(os.environ["MASTER_PORT"])
+    default_port = 29500 if _is_multi_node() else _find_free_tcp_port()
+    host = _get_and_set_env_var("MASTER_ADDR", default="127.0.0.1")
+    port = _get_and_set_env_var("MASTER_PORT", default=default_port)
+
+    if not _is_multi_node():
+        host = "127.0.0.1"
+    elif ".juwels" in host:
+        # On JUWELS, hosts get resolved by appending an i to the hostname
+        host = f"{slurm.get_daemon_node_name()}i"
+
+    os.environ["MASTER_ADDR"] = host
+    os.environ["MASTER_PORT"] = str(port)
+
+    args.dist_url = f"tcp://{host}:{port}"
+
+    logger.info("Distributed URL is %s", args.dist_url)
 
 
-def is_primary_device() -> bool:
-    return get_rank() == _PRIMARY_RANK
-
-
-def get_rank() -> int:
-    return torch.distributed.get_rank() if _is_distributed() else 0
-
-
-def get_world_size() -> int:
-    return torch.distributed.get_world_size() if _is_distributed() else 1
-
-
-def _is_distributed() -> bool:
-    return (
-        torch.distributed.is_available() and torch.distributed.is_initialized()
-    )
-
-
-def get_cuda_device_index() -> int:
-    return _cuda_device_index
-
-
-def set_cuda_device_index(idx: int) -> None:
-    global _cuda_device_index
-    _cuda_device_index = idx
-    torch.cuda.set_device(_cuda_device_index)
-
-
-def set_cpu_device() -> None:
-    global _cuda_device_index
-    _cuda_device_index = _CPU_DEVICE_INDEX
+def _is_multi_node() -> bool:
+    return slurm.is_slurm_job() and slurm.get_number_of_nodes() > 1
 
 
 def _find_free_tcp_port():
@@ -120,6 +91,64 @@ def _find_free_tcp_port():
     sock.close()
     # NOTE: there is still a chance the port could be taken by other processes.
     return port
+
+
+def _init_process_group(args) -> None:
+    if not torch.distributed.is_initialized():
+        logger.warning(
+            "Distributed not initialized, initializing process group"
+        )
+        if args.use_cpu:
+            logger.warning("Initializing CPU backend")
+            torch.distributed.init_process_group(backend="gloo")
+        else:
+            logger.warning(
+                (
+                    "Initializing GPU backend using init_method=%s, "
+                    "world_size=%s, rank=%s"
+                ),
+                args.dist_url,
+                args.world_size,
+                args.global_rank,
+            )
+            torch.distributed.init_process_group(
+                backend="nccl",
+                init_method=args.dist_url,
+                rank=args.global_rank,
+                world_size=args.world_size,
+            )
+    else:
+        logger.warning(
+            "Torch distributed has already been initialized, "
+            "reusing existing configuration"
+        )
+
+
+def _set_device(args) -> None:
+    if not args.use_cpu and torch.cuda.is_available():
+        torch.cuda.set_device(args.local_rank)
+        # perform a dummy all-reduce to initialize the NCCL communicator
+        torch.distributed.all_reduce(torch.zeros(1).cuda())
+
+
+def get_device(args) -> torch.device:
+    device = "cpu" if args.use_cpu else f"cuda:{args.local_rank}"
+    logger.info(
+        "Rank %s with local rank %s using device %s",
+        args.global_rank,
+        args.local_rank,
+        device,
+    )
+    return torch.device(device)
+
+
+def is_primary_device() -> bool:
+    return int(os.getenv("RANK")) == 0
+
+
+def destroy() -> None:
+    logger.info("Destroying process group")
+    torch.distributed.destroy_process_group()
 
 
 def gather_from_all_ranks(tensor: torch.Tensor) -> torch.Tensor:
