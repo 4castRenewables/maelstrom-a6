@@ -69,7 +69,8 @@ def _get_dist_url_and_set_master_env_vars(args) -> str | None:
         host = "127.0.0.1"
     elif ".juwels" in host:
         # On JUWELS, hosts get resolved by appending an i to the hostname
-        host = f"{slurm.get_daemon_node_name()}i"
+        host, _ = host.split(".")
+        host = f"{host}i"
 
     os.environ["MASTER_ADDR"] = host
     os.environ["MASTER_PORT"] = str(port)
@@ -173,10 +174,7 @@ def _gather_tensors_from_all(tensor: torch.Tensor) -> list[torch.Tensor]:
             torch.zeros_like(tensor)
             for _ in range(torch.distributed.get_world_size())
         ]
-        process = torch.distributed.all_gather(
-            gathered_tensors, tensor, async_op=True
-        )
-        process.wait()
+        torch.distributed.all_gather(gathered_tensors, tensor)
         gathered_tensors = [
             _convert_to_normal_tensor(_tensor, orig_device)
             for _tensor in gathered_tensors
