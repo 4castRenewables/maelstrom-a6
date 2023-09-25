@@ -21,6 +21,11 @@ def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
     - create a panda object to keep track of the training statistics
 
     """
+    args.dump_checkpoints = args.dump_path / "checkpoints"
+    args.dump_results = args.dump_path / "results"
+    args.dump_plots = args.dump_results / "plots"
+    args.dump_tensors = args.dump_results / "tensors"
+
     if _is_primary_device(args):
         # dump parameters
         if not args.dump_path.exists():
@@ -33,18 +38,14 @@ def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
             yaml.safe_dump(data, stream=f, indent=2, default_flow_style=False)
 
         # create repo to store checkpoints
-        args.dump_checkpoints = args.dump_path / "checkpoints"
         if not args.global_rank and not args.dump_checkpoints.is_dir():
             args.dump_checkpoints.mkdir(parents=True, exist_ok=True)
 
-        args.dump_results = args.dump_path / "results"
         # create repo to store plots
-        args.dump_plots = args.dump_results / "plots"
         if not args.global_rank and not args.dump_plots.is_dir():
             args.dump_plots.mkdir(parents=True, exist_ok=True)
 
         # create repo to store tensors
-        args.dump_tensors = args.dump_results / "tensors"
         if not args.global_rank and not args.dump_tensors.is_dir():
             args.dump_tensors.mkdir(parents=True, exist_ok=True)
 
@@ -54,7 +55,9 @@ def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
     )
 
     # create a logger
-    logger_ = logs.create_logger(args.dump_path / "train.csv", args=args)
+    logger_ = logs.create_logger(
+        args.dump_path / "train-{args.global_rank}.csv", args=args
+    )
 
     if _is_primary_device(args):
         logger_.info("============ Initialized logging ============")
