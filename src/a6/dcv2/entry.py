@@ -6,7 +6,6 @@
 #
 import logging
 import math
-import os
 import shutil
 import socket
 import time
@@ -137,7 +136,7 @@ def _train(
         pin_memory=True,
         # ``drop_last=True`` gives each device the same amount of samples,
         # but removes some from the clustering.
-        drop_last=False,
+        drop_last=True,
     )
     logger.info("Building data done with %s images loaded", len(train_dataset))
 
@@ -176,7 +175,7 @@ def _train(
     if utils.distributed.is_primary_device():
         logger.info(model)
 
-    logger.info("Building model done.")
+    logger.info("Building model done")
 
     # build optimizer
     # Should be done after moving the model to GPU
@@ -220,14 +219,13 @@ def _train(
         model = nn.parallel.DistributedDataParallel(
             model,
             device_ids=[args.local_rank],
-            output_device=args.local_rank,
             find_unused_parameters=True,
         )
 
     # optionally resume from a checkpoint
     to_restore = {"epoch": 0}
     _checkpoints.restart_from_checkpoint(
-        os.path.join(args.dump_path, "checkpoint.pth.tar"),
+        args.dump_path / "checkpoint.pth.tar",
         args=args,
         run_variables=to_restore,
         state_dict=model,
@@ -238,7 +236,7 @@ def _train(
     # build the memory bank
     mb_path = args.dump_path / f"mb-{args.global_rank}.pth"
 
-    if os.path.isfile(mb_path):
+    if mb_path.is_file():
         mb_ckp = torch.load(mb_path)
         local_memory_index = mb_ckp["local_memory_index"]
         local_memory_embeddings = mb_ckp["local_memory_embeddings"]
@@ -279,14 +277,12 @@ def _train(
             }
             torch.save(
                 save_dict,
-                os.path.join(args.dump_path, "checkpoint.pth.tar"),
+                args.dump_path / "checkpoint.pth.tar",
             )
             if epoch % args.checkpoint_freq == 0 or epoch == args.epochs - 1:
                 shutil.copyfile(
-                    os.path.join(args.dump_path, "checkpoint.pth.tar"),
-                    os.path.join(
-                        args.dump_checkpoints, f"checkpoint-epoch-{epoch}.pth"
-                    ),
+                    args.dump_path / "checkpoint.pth.tar",
+                    args.dump_checkpoints / f"checkpoint-epoch-{epoch}.pth",
                 )
         torch.save(
             {
