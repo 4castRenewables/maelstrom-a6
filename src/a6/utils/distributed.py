@@ -173,7 +173,10 @@ def _gather_tensors_from_all(tensor: torch.Tensor) -> list[torch.Tensor]:
             torch.zeros_like(tensor)
             for _ in range(torch.distributed.get_world_size())
         ]
-        torch.distributed.all_gather(gathered_tensors, tensor)
+        process = torch.distributed.all_gather(
+            gathered_tensors, tensor, async_op=True
+        )
+        process.wait()
         gathered_tensors = [
             _convert_to_normal_tensor(_tensor, orig_device)
             for _tensor in gathered_tensors
