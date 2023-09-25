@@ -26,7 +26,7 @@ IGNORE_INDEX = -1
 
 def init_memory(dataloader, model, args, device):
     size_memory_per_process = len(dataloader) * args.batch_size
-    logger.info("Processing %s samples", size_memory_per_process)
+    logger.debug("Processing %s samples", size_memory_per_process)
     local_memory_index = (
         torch.zeros(size_memory_per_process).long().to(device=device)
     )
@@ -55,7 +55,10 @@ def init_memory(dataloader, model, args, device):
                     start_idx : start_idx + nmb_unique_idx  # noqa: E203
                 ] = embeddings
             start_idx += nmb_unique_idx
-    logger.info("Initialization of the memory banks done")
+    logger.debug(
+        "Initialization of the memory banks done with %s local memory indexes",
+        local_memory_index.size(),
+    )
     return local_memory_index, local_memory_embeddings
 
 
@@ -69,6 +72,8 @@ def cluster_memory(
     device: torch.device,
     nmb_kmeans_iters=10,
 ):
+    logger.debug("Clustering %s samples", size_dataset)
+
     # j defines which crops are used for the K-means run.
     # E.g. if the number of crops (``self.nmb_mbs``) is 2, and
     # ``self.num_clusters = [30, 30, 30, 30]``, the crops will
@@ -116,7 +121,7 @@ def cluster_memory(
                 centroids = local_memory_embeddings[j][random_idx]
 
             # Send random centroids from rank 0 to all processes
-            dist.broadcast(centroids, 0)
+            dist.broadcast(centroids, src=0)
 
             for n_iter in range(nmb_kmeans_iters + 1):
                 # E step
@@ -176,14 +181,40 @@ def cluster_memory(
                 local_distances
             )
 
+            for tensor, value in [
+                (assignments_all, IGNORE_INDEX),
+                (indexes_all, IGNORE_INDEX),
+                (embeddings_all, float(IGNORE_INDEX)),
+                (distances_all, float(IGNORE_INDEX)),
+            ]:
+                if _tensor_contains_value(tensor=tensor, value=value):
+                    indexes = _tensor_contains_value_at(
+                        tensor=tensor, value=value
+                    )
+                    logging.warning(
+                        (
+                            "After gathering from all ranks, "
+                            "tensor %s contains value %s at indexes %s"
+                        ),
+                        tensor,
+                        value,
+                        indexes,
+                    )
+
             # Save results to local tensors
+            assignments[i_K] = IGNORE_INDEX
             assignments[i_K][indexes_all] = assignments_all
+            indexes[i_K] = IGNORE_INDEX
             indexes[i_K][indexes_all] = indexes_all
+            distances[i_K] = float(IGNORE_INDEX)
             distances[i_K][indexes_all] = distances_all
             # For the embeddings, make sure to use j for indexing
+            embeddings[i_K][j] = float(IGNORE_INDEX)
             embeddings[i_K][j][indexes_all] = embeddings_all
 
-            logger.info("Assigments: %s", assignments_all)
+            logger.info(
+                "Assigments: %s, Indexes: %s", assignments_all, indexes_all
+            )
 
             j_prev = j
             # next memory bank to use
@@ -276,12 +307,13 @@ def cluster_memory(
                 assignments[-1],
             )
             percent_unassigned_samples = (
-                n_unassigned_samples / assignments.shape[-1]
+                n_unassigned_samples / assignments.shape[-1] * 100
             )
             logger.warning(
-                "Number of unassigned samples: %s (%s%%)",
+                "Number of unassigned samples: %s (%s%%), assignments.shape=%s",
                 n_unassigned_samples,
-                percent_unassigned_samples,
+                round(percent_unassigned_samples, 2),
+                assignments.shape[-1],
             )
             if args.enable_tracking:
                 mantik.call_mlflow_method(
@@ -312,6 +344,21 @@ def _create_path(path: pathlib.Path, file_name: str, epoch: int) -> str:
 
 
 def _calculate_number_of_unassigned_samples(assignments: torch.Tensor) -> int:
-    unassigned_sample_indexes = (assignments == -1).nonzero(as_tuple=True)[0]
+    unassigned_sample_indexes = (assignments == IGNORE_INDEX).nonzero(
+        as_tuple=True
+    )[0]
+    logger.debug("Unassigned indexes: %s", unassigned_sample_indexes)
     n_unassigned_samples = len(unassigned_sample_indexes)
     return n_unassigned_samples
+
+
+def _tensor_contains_value(tensor: torch.Tensor, value: int | float) -> bool:
+    indexes = _tensor_contains_value_at(tensor=tensor, value=value)
+    [size] = indexes.size()
+    return size != 0
+
+
+def _tensor_contains_value_at(
+    tensor: torch.Tensor, value: int | float
+) -> torch.Tensor:
+    return (tensor == value).nonzero(as_tuple=True)[0].int()

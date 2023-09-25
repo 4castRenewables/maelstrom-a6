@@ -16,6 +16,15 @@ def create_argparser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "-v",
+        "--verbose",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable verbose logging (logging level DEBUG)",
+    )
+
+    parser.add_argument(
         "--use-cpu",
         type=bool,
         action=argparse.BooleanOptionalAction,

@@ -50,6 +50,8 @@ def train(
     end = time.time()
     start_idx = 0
     for it, (idx, inputs) in enumerate(dataloader):
+        logger.debug("Calculating loss for index %s", idx)
+
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -64,6 +66,8 @@ def train(
         emb, output = model(inputs)
         emb = emb.detach()
         bs = inputs[0].size(0)
+
+        logger.debug("Batch size is %s", bs)
 
         # ============ deepcluster-v2 loss ... ============
         loss = 0

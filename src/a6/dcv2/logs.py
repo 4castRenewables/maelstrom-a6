@@ -48,8 +48,11 @@ def create_logger(filepath, args):
         file_handler.setFormatter(log_formatter)
 
     # create console handler and set level to info
+    # if not ``-v/--verbose`` passed.
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(
+        logging.INFO if not args.verbose else logging.DEBUG
+    )
     console_handler.setFormatter(log_formatter)
 
     # create logger and set level to debug
