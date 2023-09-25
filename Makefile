@@ -39,7 +39,7 @@ upload-e4:
 build-docker-cuda:
 	sudo docker build -t $(IMAGE_NAME)-cuda:latest -f docker/a6-cuda.Dockerfile .
 
-build-apptainer-cuda: build-docker
+build-apptainer-cuda: build-docker-cuda
 	sudo apptainer build --force mlflow/$(IMAGE_NAME)-cuda.sif apptainer/a6-cuda.def
 
 build-cuda: build-docker-cuda build-apptainer-cuda
@@ -58,12 +58,12 @@ deploy-cuda: build-cuda upload-cuda-cuda
 
 deploy-e4-cuda: build-cuda upload-e4-cuda
 
-build-jsc-kernel: build-python
+build-jsc-kernel:
 	sudo apptainer build --force \
 		$(JSC_DIR)/jupyter-kernel.sif \
 		$(JSC_DIR)/jupyter_kernel_recipe.def
 
-build-e4-kernel: build-python
+build-e4-kernel:
 	sudo apptainer build --force \
 		$(E4_DIR)/jupyter-kernel.sif \
 		$(E4_DIR)/jupyter_kernel_recipe.def
