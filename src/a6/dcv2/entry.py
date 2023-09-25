@@ -135,7 +135,9 @@ def _train(
         batch_size=args.batch_size,
         num_workers=args.workers,
         pin_memory=True,
-        drop_last=True,
+        # ``drop_last=True`` gives each device the same amount of samples,
+        # but removes some from the clustering.
+        drop_last=False,
     )
     logger.info("Building data done with %s images loaded", len(train_dataset))
 
@@ -211,7 +213,7 @@ def _train(
         ]
     )
     lr_schedule = np.concatenate((warmup_lr_schedule, cosine_lr_schedule))
-    logger.info("Building optimizer done.")
+    logger.info("Building optimizer done")
 
     # wrap model
     if not args.use_cpu:
@@ -234,9 +236,8 @@ def _train(
     start_epoch = to_restore["epoch"]
 
     # build the memory bank
-    mb_path = os.path.join(
-        args.dump_path, "mb" + str(args.global_rank) + ".pth"
-    )
+    mb_path = args.dump_path / f"mb-{args.global_rank}.pth"
+
     if os.path.isfile(mb_path):
         mb_ckp = torch.load(mb_path)
         local_memory_index = mb_ckp["local_memory_index"]
@@ -249,7 +250,8 @@ def _train(
     cudnn.benchmark = True
     for epoch in range(start_epoch, args.epochs):
         # train the network for one epoch
-        logger.info("============ Starting epoch %i ============", epoch)
+        if utils.distributed.is_primary_device():
+            logger.info("============ Starting epoch %i ============", epoch)
 
         # set sampler
         train_loader.sampler.set_epoch(epoch)
