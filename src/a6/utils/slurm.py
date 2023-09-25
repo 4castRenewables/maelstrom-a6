@@ -10,10 +10,6 @@ def is_slurm_job() -> bool:
     return "SLURM_JOB_ID" in os.environ
 
 
-def get_daemon_node_name() -> str:
-    return os.getenv("SLURMD_NODENAME")
-
-
 def get_number_of_nodes() -> int:
     return int(os.getenv("SLURM_NNODES", 1))
 
@@ -59,12 +55,15 @@ def get_slurm_env_vars() -> dict[str, str]:
         "SLURM_JOB_NUM_NODES": os.getenv("SLURM_JOB_NUM_NODES"),
         "SLURM_NODELIST": os.getenv("SLURM_NODELIST"),
         "SLURM_JOB_CPUS_PER_NODE": os.getenv("SLURM_JOB_CPUS_PER_NODE"),
+        "SLURM_GPUS_ON_NODE": os.getenv("SLURM_GPUS_ON_NODE"),
         "SLURM_CPUS_PER_TASK": os.getenv("SLURM_CPUS_PER_TASK"),
+        "SLURM_NNODES": os.getenv("SLURM_NNODES"),
         "SLURM_NPROCS": os.getenv("SLURM_NPROCS"),
         "SLURM_NTASKS": os.getenv("SLURM_NTASKS"),
         "SLURM_JOB_GPUS": os.getenv("SLURM_JOB_GPUS"),
         "SLURM_JOB_STDOUT": os.getenv("SLURM_JOB_STDOUT"),
         "SLURM_JOB_STDERR": os.getenv("SLURM_JOB_STDERR"),
+        "GPUS_PER_NODE": str(get_gpus_per_node()),
     }
 
 
