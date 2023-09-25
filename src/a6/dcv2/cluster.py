@@ -26,6 +26,7 @@ IGNORE_INDEX = -1
 
 def init_memory(dataloader, model, args, device):
     size_memory_per_process = len(dataloader) * args.batch_size
+    logger.info("Processing %s samples", size_memory_per_process)
     local_memory_index = (
         torch.zeros(size_memory_per_process).long().to(device=device)
     )
@@ -54,7 +55,7 @@ def init_memory(dataloader, model, args, device):
                     start_idx : start_idx + nmb_unique_idx  # noqa: E203
                 ] = embeddings
             start_idx += nmb_unique_idx
-    logger.info("Initialization of the memory banks done.")
+    logger.info("Initialization of the memory banks done")
     return local_memory_index, local_memory_embeddings
 
 
@@ -159,6 +160,7 @@ def cluster_memory(
                 "prototypes" + str(i_K),
             ).weight.copy_(centroids)
 
+            # Collect results
             assignments_all = utils.distributed.gather_from_all_ranks(
                 local_assignments
             )
@@ -174,19 +176,14 @@ def cluster_memory(
                 local_distances
             )
 
-            # log assignments
+            # Save results to local tensors
             assignments[i_K][indexes_all] = assignments_all
-            logger.info("Assigments: %s", assignments_all)
-
-            assignments[i_K] = IGNORE_INDEX
-            assignments[i_K][indexes_all] = assignments_all
-            indexes[i_K] = IGNORE_INDEX
             indexes[i_K][indexes_all] = indexes_all
-            distances[i_K] = float(IGNORE_INDEX)
             distances[i_K][indexes_all] = distances_all
             # For the embeddings, make sure to use j for indexing
-            embeddings[i_K][j] = float(IGNORE_INDEX)
             embeddings[i_K][j][indexes_all] = embeddings_all
+
+            logger.info("Assigments: %s", assignments_all)
 
             j_prev = j
             # next memory bank to use

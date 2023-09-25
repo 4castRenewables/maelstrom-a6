@@ -41,10 +41,10 @@ def restart_from_checkpoint(ckp_paths, args, run_variables=None, **kwargs):
                 print(msg)
             except TypeError:
                 msg = value.load_state_dict(checkpoint[key])
-            logger.info("=> loaded %s from checkpoint '%s'", key, ckp_path)
+            logger.info("Loaded %s from checkpoint '%s'", key, ckp_path)
         else:
             logger.warning(
-                "=> failed to load %s from checkpoint '%s'", key, ckp_path
+                "Failed to load %s from checkpoint '%s'", key, ckp_path
             )
 
     # re load variable important for the run

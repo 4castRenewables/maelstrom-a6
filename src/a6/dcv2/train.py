@@ -44,6 +44,7 @@ def train(
         args=args,
         device=device,
     )
+
     logger.info("Clustering for epoch %i done", epoch)
 
     end = time.time()
@@ -100,7 +101,8 @@ def train(
         losses.update(loss.item(), inputs[0].size(0))
         batch_time.update(time.time() - end)
         end = time.time()
-        if args.global_rank == 0 and it % 50 == 0:
+
+        if utils.distributed.is_primary_device() and it % 50 == 0:
             logger.info(
                 "[EPOCH %i, ITERATION %i] "
                 "batch time: %s (%s) "

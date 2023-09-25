@@ -43,7 +43,7 @@ def create_logger(filepath, args):
 
     # create file handler and set level to debug
     if filepath is not None:
-        file_handler = logging.FileHandler(filepath, "a")
+        file_handler = logging.FileHandler(filepath, "a+")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(log_formatter)
 

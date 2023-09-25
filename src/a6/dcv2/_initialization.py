@@ -56,7 +56,7 @@ def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
 
     # create a logger
     logger_ = logs.create_logger(
-        args.dump_path / "train-{args.global_rank}.csv", args=args
+        args.dump_path / f"train-{args.global_rank}.csv", args=args
     )
 
     if _is_primary_device(args):
