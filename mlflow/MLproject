@@ -112,27 +112,22 @@ entry_points:
     parameters:
       data_path:
         type: str
+        default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
       dump_path:
         type: str
-        default: ./dcv2_dump
-      dist_url:
-        type: str
-        default: tcp://
-      nbm_crops:
-        type: list[int]
-        default: 2 6
+        default: /p/scratch/deepacf/maelstrom/emmerich1/dcv2/dump
+      nmb_crops:
+        type: int
+        default: 2
       size_crops:
-        type: list[int]
-        default: 128 96
+        type: int
+        default: 96
       min_scale_crops:
-       type: list[float]
-       default: 0.14 0.05
-      max_scale_crops
-        type: list[float]
-        default: 1. 0.14
-      crops_for_assign:
-        type: list[int]
-        default: 0 1
+       type: float
+       default: 0.05
+      max_scale_crops:
+        type: float
+        default: 1.
       temperature:
         type: float
         default: 0.1
@@ -140,8 +135,11 @@ entry_points:
         type: int
         default: 128
       nmb_prototypes:
-        type: list[int]
-        default: 30 30 30
+        type: int
+        default: 3
+      nmb_clusters:
+        type: int
+        default: 40
       epochs:
         type: int
         default: 1
@@ -153,7 +151,7 @@ entry_points:
         default: 0.3
       final_lr:
         type: float
-        default: 0.0048
+        default: 0.05
       freeze_prototypes_niters:
         type: int
         default: 300000
@@ -173,16 +171,23 @@ entry_points:
         type: str
         default: apex
     command: >
-      python train_dcv2.py
-        --data_path {data_path}
+      torchrun
+        --nnodes=${{SLURM_NNODES:-1}}
+        --nproc-per-node=1
+        --rdzv-backend=c10d
+        --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
+        --rdzv-endpoint=$(hostname --ip-address):29500
+        train_dcv2.py
+        --data-path {data_path}
+        --dump-path {dump_path}
         --nmb-crops {nmb_crops}
-        --size_crops {size_crops}
+        --size-crops {size_crops}
         --min-scale-crops {min_scale_crops}
         --max-scale-crops {max_scale_crops}
-        --crops-for-assign {crops_for_assign}
         --temperature {temperature}
         --feat-dim {feat_dim}
         --nmb-prototypes {nmb_prototypes}
+        --nmb-clusters {nmb_clusters}
         --epochs {epochs}
         --batch-size {batch_size}
         --base-lr {base_lr}
@@ -191,7 +196,5 @@ entry_points:
         --wd {wd}
         --warmup-epochs {warmup_epochs}
         --start-warmup {start_warmup}
-        --dist-url {dist_url}
         --arch {arch}
         --sync-bn {sync_bn}
-        --dump-path {dump_path}
