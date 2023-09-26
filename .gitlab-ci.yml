@@ -65,6 +65,7 @@ pylint:
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
+    - pip install -r requirements-cpu.txt
 
 test-doc:
   extends: .test-base
