@@ -67,7 +67,6 @@ pylint:
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
-    -
 
 test-doc:
   extends: .test-base
