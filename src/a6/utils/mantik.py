@@ -97,10 +97,14 @@ def _get_required_env_var(name: str) -> int:
 def call_mlflow_method(func: Callable, *args, **kwargs):
     try:
         return func(*args, **kwargs)
-    except mlflow.exceptions.MlflowException:
-        logging.exception(
-            "Calling MLflow method %s with args %s and kwargs %s has failed",
+    except mlflow.exceptions.MlflowException as e:
+        logging.exception(  # noqa: G200
+            (
+                "Calling MLflow method %s with args %s and kwargs %s "
+                "has failed: %s"
+            ),
             func,
             args,
             kwargs,
+            str(e),
         )

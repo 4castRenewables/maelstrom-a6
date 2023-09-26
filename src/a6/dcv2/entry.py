@@ -79,14 +79,9 @@ def train_dcv2(raw_args: list[str] | None = None):
         stderr = utils.slurm.get_stderr_file()
 
         if args.enable_tracking:
-            slurm_job_id = utils.slurm.get_slurm_job_id()
+            mantik.call_mlflow_method(mlflow.start_run)
 
-            if slurm_job_id is not None:
-                mantik.call_mlflow_method(
-                    mlflow.start_run,
-                    run_name=f"slurm-{slurm_job_id}-node-{args.node_id}",
-                )
-
+            if utils.slurm.is_slurm_job():
                 mantik.call_mlflow_method(
                     mlflow.log_params,
                     utils.slurm.get_slurm_env_vars(),
