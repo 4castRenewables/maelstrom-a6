@@ -66,8 +66,8 @@ pylint:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
   script:
-    - !reference [ .include-functions-change-dir-set-py-root-env-var-upgrade-pip, script ]
-    - poetry run pip install pytest pytest-custom_exit_code
+    - !reference [.include-functions-change-dir-set-py-root-env-var-upgrade-pip, script]
+    - poetry run pip install pytest pytest-custom_exit_code pytest-cov
     - >
       export PY_PYTEST_ARGS="
         ${PY_PYTEST_ARGS}
