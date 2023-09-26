@@ -157,17 +157,23 @@ def _train(
         else:
             model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
     elif args.sync_bn == "apex":
-        import apex
-        from apex.parallel.LARC import LARC
+        if utils.distributed.is_multi_gpu():
+            import apex
+            from apex.parallel.LARC import LARC
 
-        # with apex syncbn we sync bn per group because it speeds up computation
-        # compared to global syncbn
-        process_group = apex.parallel.create_syncbn_process_group(
-            args.syncbn_process_group_size
-        )
-        model = apex.parallel.convert_syncbn_model(
-            model, process_group=process_group
-        )
+            # with apex syncbn we sync bn per group because it speeds up
+            # computation compared to global syncbn
+            process_group = apex.parallel.create_syncbn_process_group(
+                args.syncbn_process_group_size
+            )
+            model = apex.parallel.convert_syncbn_model(
+                model, process_group=process_group
+            )
+        else:
+            logger.warning(
+                "Sync batch norm 'apex' defined, but training is performed "
+                "on single GPU, hence using native PyTorch"
+            )
 
     # Copy model to GPU
     model = model.to(device)
@@ -187,9 +193,15 @@ def _train(
     )
 
     if args.sync_bn == "apex":
-        optimizer = LARC(
-            optimizer=optimizer, trust_coefficient=0.001, clip=False
-        )
+        if utils.distributed.is_multi_gpu():
+            optimizer = LARC(
+                optimizer=optimizer, trust_coefficient=0.001, clip=False
+            )
+        else:
+            logger.warning(
+                "Sync batch norm 'apex' defined, but training is performed "
+                "on single GPU, hence LARC is disabled"
+            )
 
     warmup_lr_schedule = np.linspace(
         args.start_warmup, args.base_lr, len(train_loader) * args.warmup_epochs

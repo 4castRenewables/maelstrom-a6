@@ -212,7 +212,7 @@ def cluster_memory(
             embeddings[i_K][j] = float(IGNORE_INDEX)
             embeddings[i_K][j][indexes_all] = embeddings_all
 
-            logger.info(
+            logger.debug(
                 "Assigments: %s, Indexes: %s", assignments_all, indexes_all
             )
 

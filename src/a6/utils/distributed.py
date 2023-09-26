@@ -80,6 +80,10 @@ def _get_dist_url_and_set_master_env_vars(args) -> str | None:
     logger.info("Distributed URL is %s", args.dist_url)
 
 
+def is_multi_gpu() -> bool:
+    return slurm.get_gpus_per_node() > 1
+
+
 def _is_multi_node() -> bool:
     return slurm.is_slurm_job() and slurm.get_number_of_nodes() > 1
 
