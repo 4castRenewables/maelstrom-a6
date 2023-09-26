@@ -61,18 +61,33 @@ pylint:
   extends: .test
   needs: []
   variables:
-    # Need to hack installation of requirements-cpu.txt after installation of package dependencies.
-    # Package has dependency torch by default, but for CI testing we require torch-cpu
-    PY_POETRY_INSTALL_ARGS: "--only=main; pip install -r requirements-cpu.txt"
+    PY_POETRY_INSTALL_ARGS: --only=main
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
+  script:
+    - !reference [ .include-functions-change-dir-set-py-root-env-var-upgrade-pip, script ]
+    - poetry run pip install pytest pytest-custom_exit_code
+    - >
+      export PY_PYTEST_ARGS="
+        ${PY_PYTEST_ARGS}
+        ${PY_PYTEST_DIR:-tests}
+        --suppress-no-test-exit-code
+        --junitxml=./report/pytest.xml
+        --cov=$PY_SRC
+        --cov-report term
+        --cov-report html"
+    - echo PY_PYTEST_ARGS=${PY_PYTEST_ARGS}
+    - echo PY_POETRY_INSTALL_ARGS=${PY_POETRY_INSTALL_ARGS}
+    - poetry install ${PY_POETRY_INSTALL_ARGS}
+    - poetry run pip install -r requirements-cpu.txt
+    - poetry run pytest ${PY_PYTEST_ARGS}
 
 test-doc:
   extends: .test-base
   variables:
     PY_PYTEST_DIR: src/a6
-    PY_PYTEST_RUN_DOCTESTS: "true"
+    PY_PYTEST_ARGS: --doctest-modules
 
 test-unit:
   extends: .test-base
