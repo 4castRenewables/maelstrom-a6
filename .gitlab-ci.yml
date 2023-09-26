@@ -61,11 +61,13 @@ pylint:
   extends: .test
   needs: []
   variables:
-    PY_PYTEST_NO_INSTALL_DEV_DEPENDENCIES: "true"
+    # Need to hack installation of requirements-cpu.txt after installation of package dependencies.
+    # Package has dependency torch by default, but for CI testing we require torch-cpu
+    PY_POETRY_INSTALL_ARGS: --only=main && pip install -r requirements-cpu.txt
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
-    - pip install -r requirements-cpu.txt
+    -
 
 test-doc:
   extends: .test-base
