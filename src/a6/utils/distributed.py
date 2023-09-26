@@ -10,10 +10,6 @@ import a6.utils.slurm as slurm
 logger = logging.getLogger(__name__)
 
 
-def get_global_rank(args) -> int:
-    return slurm.get_global_rank(args)
-
-
 def setup(args) -> None:
     logging.info(
         "Spawning process for node %s, local rank %s, global rank: %s",
@@ -82,7 +78,7 @@ def _get_dist_url_and_set_master_env_vars(args) -> str | None:
 
 
 def is_multi_gpu() -> bool:
-    return slurm.get_gpus_per_node() > 1
+    return int(os.getenv("WORLD_SIZE")) > 1
 
 
 def _is_multi_node() -> bool:
