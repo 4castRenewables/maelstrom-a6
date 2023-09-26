@@ -114,10 +114,12 @@ def cluster_memory(
                 # Init centroids with elements from memory bank of rank 0 by
                 # taking K random samples from its local memory embeddings
                 # (i.e. the cropped samples) as centroids
-                random_idx = torch.randperm(len(local_memory_embeddings[j]))[:K]
-                assert (
-                    len(random_idx) >= K
-                ), "please reduce the number of centroids"
+                batch_size = len(local_memory_embeddings[j])
+                random_idx = torch.randperm(batch_size)[:K]
+                assert len(random_idx) >= K, (
+                    f"Please reduce the number of centroids K={K}: "
+                    f"K must be smaller than batch size {batch_size}"
+                )
                 centroids = local_memory_embeddings[j][random_idx]
 
             # Send random centroids from rank 0 to all processes

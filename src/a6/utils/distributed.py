@@ -43,10 +43,13 @@ def _get_and_set_env_var(name: str, default: int | str) -> int | str:
     if value is None:
         print(
             f"WARNING: Environment variable {name!r} unset, "
-            "using default value {default}"
+            f"using default value {default}"
         )
-        return default
-    return type(default)(value)
+        value = default
+    else:
+        value = type(default)(value)
+    os.environ[name] = str(value)
+    return value
 
 
 def _fix_random_seeds(seed=31):
@@ -59,8 +62,6 @@ def _fix_random_seeds(seed=31):
 
 
 def _get_dist_url_and_set_master_env_vars(args) -> str | None:
-    print(os.environ["MASTER_ADDR"])
-    print(os.environ["MASTER_PORT"])
     default_port = 29500 if _is_multi_node() else _find_free_tcp_port()
     host = _get_and_set_env_var("MASTER_ADDR", default="127.0.0.1")
     port = _get_and_set_env_var("MASTER_PORT", default=default_port)

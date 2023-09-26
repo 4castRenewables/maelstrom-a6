@@ -31,14 +31,31 @@ import mlflow
 
 
 @errors.record
-def train_dcv2():
-    args = _parse.create_argparser().parse_args()
+def train_dcv2(raw_args: list[str] | None = None):
+    args = _parse.create_argparser().parse_args(raw_args)
 
     args.node_id = utils.slurm.get_node_id()
     utils.distributed.set_required_env_vars(args)
 
     logger, training_stats = _initialization.initialize_logging(
         args, columns=("epoch", "loss")
+    )
+
+    # Args of type list have to be manually set since MLflow doesn't allow
+    # to pass lists.
+    # ``crops_for_assign`` is the indexes of the crops used for clustering.
+    _parse.overwrite_arg(
+        args,
+        attribute="crops_for_assign",
+        value=[i for i in range(args.nmb_crops[0])],
+    )
+    # ``nmb_prototypes`` is a list with the number of clusters (``K``) to use
+    # for the K-means. The length of the list (``nmb_clusters``) defines how
+    # many times the clustering is performed.
+    _parse.overwrite_arg(
+        args,
+        attribute="nmb_prototypes",
+        value=[args.nmb_clusters for _ in range(args.nmb_prototypes)],
     )
 
     logger.info(

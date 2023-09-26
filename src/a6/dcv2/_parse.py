@@ -5,9 +5,13 @@
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
 import argparse
+import logging
 import pathlib
+from typing import Any
 
 ROOT_DIR = pathlib.Path(__file__).parent / "../../../"
+
+logger = logging.getLogger(__name__)
 
 
 def create_argparser() -> argparse.ArgumentParser:
@@ -94,10 +98,15 @@ def create_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--nmb-prototypes",
-        default=[2, 2, 2],
+        default=3,
         type=int,
-        nargs="+",
         help="number of prototypes - it can be multihead",
+    )
+    parser.add_argument(
+        "--nmb-clusters",
+        default=2,
+        type=int,
+        help="number of clusters per prototype",
     )
 
     # optim parameters
@@ -134,16 +143,6 @@ def create_argparser() -> argparse.ArgumentParser:
     )
 
     # dist parameters
-    parser.add_argument(
-        "--distributed",
-        type=bool,
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help=(
-            "Whether training can be performed distributed. "
-            "If ``True``, torch will start a process group."
-        ),
-    )
     parser.add_argument(
         "--node-id",
         default=0,
@@ -239,3 +238,9 @@ def create_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=31, help="seed")
 
     return parser
+
+
+def overwrite_arg(args, attribute: str, value: Any) -> None:
+    prev = getattr(args, attribute)
+    logger.warning("Overwriting args.%s=%s with %s", attribute, prev, value)
+    setattr(args, attribute, value)

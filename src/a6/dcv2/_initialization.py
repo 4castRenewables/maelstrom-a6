@@ -61,7 +61,7 @@ def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
                 f"{k}: {str(v)}" for k, v in sorted(dict(vars(args)).items())
             ),
         )
-        logger_.info("The experiment will be stored in %s\n", args.dump_path)
+        logger_.info("The experiment will be stored in %s", args.dump_path)
 
     return logger, training_stats
 
