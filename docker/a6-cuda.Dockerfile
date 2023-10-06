@@ -7,8 +7,8 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as builder
 
 ARG CUDA_VERSION
 ARG PYTHON_VERSION=3.11
-ARG PYTORCH_VERSION=2.0.1
-ARG TORCHVISION_VERSION=0.15.2
+ARG PYTORCH_VERSION=2.1.0
+ARG TORCHVISION_VERSION=0.16.0
 ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
 
 ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
@@ -119,6 +119,7 @@ RUN apt-get update \
 RUN which python \
  && python --version \
  && pip list \
- && python -c 'import a6, apex, torch, torchvision'
+ && python -c 'import a6, apex, torch, torchvision' \
+ && python -m cfgrib selfcheck
 
 ENTRYPOINT ["python"]

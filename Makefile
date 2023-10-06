@@ -17,6 +17,7 @@ SSH_COPY_COMMAND = rsync -Pvra --progress
 install:
 	poetry install
 	poetry run pip install -r requirements-cpu.txt
+	poetry run python -m cfgrib selfcheck
 
 build-docker:
 	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
