@@ -5,7 +5,8 @@ import pathlib
 import pandas as pd
 import xarray as xr
 
-import a6.datasets.ecmwf_ifs_hres as datasets
+import a6.datasets as datasets
+import a6.datasets._base as _base
 import a6.testing.data_points as data_points
 import a6.testing.grids as grids
 import a6.testing.types as types
@@ -49,7 +50,7 @@ class FakeDataset(datasets.EcmwfIfsHres):
 
     @functools.lru_cache
     def _to_xarray(
-        self, levels: datasets.Levels, drop_variables: list[str] | None
+        self, levels: _base.Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
         da = xr.DataArray(
             data=0.0,
