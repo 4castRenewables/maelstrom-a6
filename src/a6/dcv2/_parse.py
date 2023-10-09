@@ -48,8 +48,50 @@ def create_argparser() -> argparse.ArgumentParser:
         "--data-path",
         type=pathlib.Path,
         default=ROOT_DIR / "src/tests/data/deepclusterv2",
-        help="path to dataset repository",
+        help="Path to dataset repository",
     )
+    parser.add_argument(
+        "--pattern",
+        type=str,
+        default=None,
+        help=(
+            "Pattern of the data files within the given data path."
+            ""
+            "If given, data loader for ``xarray.Dataset`` will be used."
+        ),
+    )
+    parser.add_argument(
+        "--drop-variables",
+        type=str,
+        default=None,
+        nargs="+",
+        help="List of variables to drop from the dataset",
+    )
+    parser.add_argument(
+        "--level",
+        type=int,
+        default=500,
+        help=(
+            "The level to use from the dataset."
+            ""
+            "Training with multiple levels is not yet supported."
+        ),
+    )
+    parser.add_argument(
+        "--select-dwd-area",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Whether to select the area the DWD uses for Großwetterlagen."
+            ""
+            "The DWD uses an area of roughly 41.47°N-55.76°N and 0.0°E-19.66°E"
+            ""
+            "See https://www.dwd.de/DE/leistungen/wetterlagenklassifikation/beschreibung.html"  # noqa
+        ),
+    )
+
+    # Transform parameters
     parser.add_argument(
         "--nmb-crops",
         type=int,
@@ -59,10 +101,10 @@ def create_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--size-crops",
-        type=int,
-        default=[96],
+        type=float,
+        default=[0.75],
         nargs="+",
-        help="crops resolutions (example: [224, 96])",
+        help="Crops resolutions (example: [0.9, 0.75])",
     )
     parser.add_argument(
         "--min-scale-crops",
