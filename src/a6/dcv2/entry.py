@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
 
+import a6.datasets as datasets
 import a6.dcv2._checkpoints as _checkpoints
 import a6.dcv2._initialization as _initialization
 import a6.dcv2._parse as _parse
@@ -25,9 +26,12 @@ import a6.dcv2.dataset as dataset
 import a6.dcv2.logs as logs
 import a6.dcv2.models as models
 import a6.dcv2.train as train
+import a6.features as features
 import a6.utils as utils
 import a6.utils.mantik as mantik
 import mlflow
+
+logger = logging.getLogger(__name__)
 
 
 @errors.record
@@ -131,14 +135,8 @@ def _train(
     )
 
     # build data
-    train_dataset = dataset.MultiCropDataset(
-        args.data_path,
-        args.size_crops,
-        args.nmb_crops,
-        args.min_scale_crops,
-        args.max_scale_crops,
-        return_index=True,
-    )
+    train_dataset = _create_dataset(args)
+
     sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -157,6 +155,7 @@ def _train(
     # build model
     model = models.__dict__[args.arch](
         normalize=True,
+        in_channels=train_dataset.n_channels,
         hidden_mlp=args.hidden_mlp,
         output_dim=args.feat_dim,
         nmb_prototypes=args.nmb_prototypes,
@@ -315,6 +314,60 @@ def _train(
             },
             mb_path,
         )
+
+
+def _create_dataset(args) -> dataset.Base:
+    if args.pattern is not None:
+        # If a data pattern is given, it is assumed that the
+        # given data path is a folder with netCDF files.
+        logger.warning("Assuming `xarray.Dataset` from netCDF files")
+        coordinates = datasets.coordinates.Coordinates()
+        variables = datasets.variables.Model()
+        drop_variables = args.drop_variables or []
+
+        preprocessing = (
+            features.methods.weighting.weight_by_latitudes(
+                latitudes=coordinates.latitude,
+                use_sqrt=True,
+            )
+            >> features.methods.geopotential.calculate_geopotential_height(
+                variables=variables,
+            )
+            >> features.methods.variables.drop_variables(
+                names=[variables.z] + drop_variables
+            )
+        )
+
+        if args.select_dwd_area:
+            preprocessing = (
+                preprocessing
+                >> datasets.methods.select.select_dwd_area(
+                    coordinates=coordinates
+                )
+            )
+
+        ds = datasets.Era5(
+            path=args.data_path,
+            pattern=args.pattern,
+            preprocessing=preprocessing,
+        ).to_xarray(levels=args.level)
+        return dataset.MultiCropXarrayDataset(
+            data_path=args.data_path,
+            dataset=ds,
+            nmb_crops=args.nmb_crops,
+            size_crops=args.size_crops,
+            min_scale_crops=args.min_scale_crops,
+            max_scale_crops=args.max_scale_crops,
+            return_index=True,
+        )
+    return dataset.MultiCropDataset(
+        data_path=args.data_path,
+        nmb_crops=args.nmb_crops,
+        size_crops=args.size_crops,
+        min_scale_crops=args.min_scale_crops,
+        max_scale_crops=args.max_scale_crops,
+        return_index=True,
+    )
 
 
 def _log_stdout_stderr(stdout: str, stderr: str | None) -> None:

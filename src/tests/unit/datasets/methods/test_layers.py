@@ -1,7 +1,7 @@
 import pytest
 import xarray as xr
 
-import a6.features.methods.layers as layers
+import a6.datasets.methods.layers as layers
 
 
 @pytest.mark.parametrize(

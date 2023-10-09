@@ -4,11 +4,12 @@ from typing import TypeVar
 import hdbscan
 import numpy as np
 import sklearn.cluster as cluster
+import torch
 import xarray as xr
 
 Data = TypeVar("Data", np.ndarray, xr.DataArray)
 XarrayData = TypeVar("XarrayData", xr.DataArray, xr.Dataset)
-DataND = TypeVar("DataND", np.ndarray, xr.DataArray, xr.Dataset)
+DataND = TypeVar("DataND", np.ndarray, xr.DataArray, xr.Dataset, torch.Tensor)
 ClusterAlgorithm = TypeVar("ClusterAlgorithm", cluster.KMeans, hdbscan.HDBSCAN)
 
 
