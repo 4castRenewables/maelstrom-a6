@@ -6,6 +6,7 @@ import pytest
 import sklearn.cluster as cluster
 import xarray as xr
 
+import a6.datasets as datasets
 import a6.datasets.coordinates as _coordinates
 import a6.modes.methods.appearances as appearances
 import a6.modes.methods.clustering as clustering
@@ -33,6 +34,20 @@ def pl_path() -> pathlib.Path:
 @pytest.fixture(scope="session")
 def pl_ds(pl_path) -> xr.Dataset:
     return xr.open_dataset(pl_path)
+
+
+@pytest.fixture(scope="session")
+def era5_path() -> pathlib.Path:
+    return DATA_DIR / "era5"
+
+
+@pytest.fixture(scope="session")
+def era5_ds(era5_path) -> xr.Dataset:
+    return datasets.Era5(
+        path=era5_path,
+        pattern="**/*.nc",
+        parallel_loading=False,
+    ).to_xarray()
 
 
 @pytest.fixture(scope="session")
