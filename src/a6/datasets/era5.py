@@ -6,13 +6,10 @@ import a6.datasets._base as _base
 class Era5(_base.Dataset):
     """Represents the ERA5 data from ECMWF."""
 
-    _engine = "cfgrib"
-    _concat_dim = "time"
-
     def __init__(  # noqa: CFQ002
         self,
         path: pathlib.Path,
-        pattern: str | None = "**/*.grb",
+        pattern: str | None = "**/era5_*.nc",
         slice_time_dimension: bool = False,
         slice_time_time_dimension_after: int | None = None,
         preprocessing: _base.Processing | None = None,

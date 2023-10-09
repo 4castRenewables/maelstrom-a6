@@ -8,8 +8,7 @@ import a6.datasets.era5 as era5
 import a6.testing as testing
 
 FILE_PATH = pathlib.Path(__file__).parent
-# DATA_DIR = FILE_PATH / "../../data"
-DATA_DIR = pathlib.Path("/home/fabian/data/era5")
+DATA_DIR = FILE_PATH / "../../data/era5"
 
 
 class TestEra5:
@@ -17,35 +16,35 @@ class TestEra5:
         ("path", "pattern", "slice_time_dimension", "expected"),
         [
             (
-                DATA_DIR / "1979/01/1979010112_ml.grb",
+                DATA_DIR / "era5_pl_20000101_20000102.nc",
                 "should be ignored",
                 False,
                 # The data only contain a single time stamp at 12:00
                 pd.date_range(
-                    "1979-01-01T12:00", "1979-01-01T12:00", freq="1h"
+                    "2000-01-01T12:00", "2000-01-02T12:00", freq="1d"
                 ),
             ),
             # Test case: expected 1978123112_ml.grb and 1979123112_ml.grb
             # to be read.
             (
                 DATA_DIR,
-                "**/197*_ml.grb",
+                "**/era5_pl_*.nc",
                 False,
                 pd.date_range(
-                    "1979-01-01T12:00", "1979-01-01T12:00", freq="1h"
+                    "2000-01-01T12:00", "2000-01-02T12:00", freq="1d"
                 ).union(
                     pd.date_range(
-                        "1979-12-31T12:00", "1979-12-31T12:00", freq="1h"
+                        "2000-01-03T12:00", "2000-01-04T12:00", freq="1d"
                     )
                 ),
             ),
             # Test case: expected 1978123112_ml.grb to be read.
             (
                 DATA_DIR,
-                "**/1979010112_ml.grb",
+                "**/*20000102.nc",
                 False,
                 pd.date_range(
-                    "1979-01-01T12:00", "1979-01-01T12:00", freq="1h"
+                    "2000-01-01T12:00", "2000-01-02T12:00", freq="1d"
                 ),
             ),
         ],
