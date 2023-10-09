@@ -4,11 +4,27 @@
 # This source code is licensed under the license found
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
+from collections.abc import Callable
+from typing import Protocol
+
 import torch
 import torch.nn as nn
 
+TensorOperation = Callable[[torch.Tensor], torch.Tensor]
 
-def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
+
+class BatchNormalization(Protocol):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        ...
+
+
+def conv3x3(
+    in_planes: int,
+    out_planes: int,
+    stride: int = 1,
+    groups: int = 1,
+    dilation: int = 1,
+) -> nn.Conv2d:
     """3x3 convolution with padding"""
     return nn.Conv2d(
         in_planes,
@@ -22,7 +38,7 @@ def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     )
 
 
-def conv1x1(in_planes, out_planes, stride=1):
+def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
     """1x1 convolution"""
     return nn.Conv2d(
         in_planes, out_planes, kernel_size=1, stride=stride, bias=False
@@ -35,14 +51,14 @@ class BasicBlock(nn.Module):
 
     def __init__(
         self,
-        inplanes,
-        planes,
-        stride=1,
-        downsample=None,
-        groups=1,
-        base_width=64,
-        dilation=1,
-        norm_layer=None,
+        in_planes: int,
+        out_planes: int,
+        stride: int = 1,
+        downsample: TensorOperation | None = None,
+        groups: int = 1,
+        base_width: int = 64,
+        dilation: int = 1,
+        norm_layer: BatchNormalization | None = None,
     ):
         super().__init__()
         if norm_layer is None:
@@ -57,11 +73,11 @@ class BasicBlock(nn.Module):
             )
         # Both self.conv1 and self.downsample layers downsample the input
         # when stride != 1
-        self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = norm_layer(planes)
+        self.conv1 = conv3x3(in_planes, out_planes, stride)
+        self.bn1 = norm_layer(out_planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(planes, planes)
-        self.bn2 = norm_layer(planes)
+        self.conv2 = conv3x3(out_planes, out_planes)
+        self.bn2 = norm_layer(out_planes)
         self.downsample = downsample
         self.stride = stride
 
@@ -90,27 +106,27 @@ class Bottleneck(nn.Module):
 
     def __init__(
         self,
-        inplanes,
-        planes,
-        stride=1,
-        downsample=None,
-        groups=1,
-        base_width=64,
-        dilation=1,
-        norm_layer=None,
+        in_planes,
+        out_planes,
+        stride: int = 1,
+        downsample: TensorOperation | None = None,
+        groups: int = 1,
+        base_width: int = 64,
+        dilation: int = 1,
+        norm_layer: BatchNormalization | None = None,
     ):
         super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
-        width = int(planes * (base_width / 64.0)) * groups
+        width = int(out_planes * (base_width / 64.0)) * groups
         # Both self.conv2 and self.downsample layers downsample the input
         # when stride != 1
-        self.conv1 = conv1x1(inplanes, width)
+        self.conv1 = conv1x1(in_planes, width)
         self.bn1 = norm_layer(width)
         self.conv2 = conv3x3(width, width, stride, groups, dilation)
         self.bn2 = norm_layer(width)
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
+        self.conv3 = conv1x1(width, out_planes * self.expansion)
+        self.bn3 = norm_layer(out_planes * self.expansion)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -144,17 +160,18 @@ class ResNet(nn.Module):
         block,
         layers,
         device: torch.device,
-        zero_init_residual=False,
-        groups=1,
-        widen=1,
-        width_per_group=64,
-        replace_stride_with_dilation=None,
-        norm_layer=None,
-        normalize=False,
-        output_dim=0,
-        hidden_mlp=0,
-        nmb_prototypes=0,
-        eval_mode=False,
+        in_channels: int = 3,
+        zero_init_residual: bool = False,
+        groups: int = 1,
+        widen: int = 1,
+        width_per_group: int = 64,
+        replace_stride_with_dilation: list[bool] | None = None,
+        norm_layer: BatchNormalization | None = None,
+        normalize: bool = False,
+        output_dim: int = 0,
+        hidden_mlp: int = 0,
+        nmb_prototypes: int = 0,
+        eval_mode: bool = False,
     ):
         super().__init__()
         if norm_layer is None:
@@ -185,7 +202,12 @@ class ResNet(nn.Module):
         # added a padding layer
         num_out_filters = width_per_group * widen
         self.conv1 = nn.Conv2d(
-            3, num_out_filters, kernel_size=7, stride=2, padding=2, bias=False
+            in_channels,
+            num_out_filters,
+            kernel_size=7,
+            stride=2,
+            padding=2,
+            bias=False,
         )
         self.bn1 = norm_layer(num_out_filters)
         self.relu = nn.ReLU(inplace=True)
@@ -263,7 +285,9 @@ class ResNet(nn.Module):
                 elif isinstance(m, BasicBlock):
                     nn.init.constant_(m.bn2.weight, 0)
 
-    def _make_layer(self, block, planes, blocks, stride=1, dilate=False):
+    def _make_layer(
+        self, block, planes: int, blocks, stride: int = 1, dilate: bool = False
+    ):
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -304,7 +328,7 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward_backbone(self, x):
+    def forward_backbone(self, x: torch.Tensor) -> torch.Tensor:
         x = self.padding(x)
 
         x = self.conv1(x)
@@ -324,7 +348,9 @@ class ResNet(nn.Module):
 
         return x
 
-    def forward_head(self, x):
+    def forward_head(
+        self, x: torch.Tensor
+    ) -> torch.Tensor | tuple[torch.Tensor, list[torch.Tensor]]:
         if self.projection_head is not None:
             x = self.projection_head(x)
 
@@ -335,7 +361,7 @@ class ResNet(nn.Module):
             return x, self.prototypes(x)
         return x
 
-    def forward(self, inputs):
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         if not isinstance(inputs, list):
             inputs = [inputs]
         idx_crops = torch.cumsum(
@@ -361,7 +387,7 @@ class ResNet(nn.Module):
 
 
 class MultiPrototypes(nn.Module):
-    def __init__(self, output_dim, nmb_prototypes):
+    def __init__(self, output_dim: int, nmb_prototypes: list[int]):
         super().__init__()
         self.nmb_heads = len(nmb_prototypes)
         for i, k in enumerate(nmb_prototypes):
@@ -369,7 +395,7 @@ class MultiPrototypes(nn.Module):
                 "prototypes" + str(i), nn.Linear(output_dim, k, bias=False)
             )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         out = []
         for i in range(self.nmb_heads):
             out.append(getattr(self, "prototypes" + str(i))(x))
