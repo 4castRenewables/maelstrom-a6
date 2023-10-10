@@ -45,7 +45,6 @@ jupyter = "^1.0.0"
 python-dotenv = "^0.20.0"
 opentsne = "^1.0.0"
 
-
 [tool.poetry.group.mantik.dependencies]
 mantik = "^0.4.2"
 
@@ -60,20 +59,12 @@ addopts = "--cov=a6 --cov-report term-missing"
 
 [tool.black]
 line-length = 80
-force-exclude = """
-(
-    ^/mlflow/deepclusterv2/modified/.*.py
-)
-"""
 
 [tool.flake8]
 max-line-length = 80
 per-file-ignores = [
     "__init__.py:F401,E501",
     "src/a6/dcv2/cluster.py:N806",
-]
-exclude = [
-    "mlflow/deepclusterv2/modified/*.py",
 ]
 
 [tool.mypy]
