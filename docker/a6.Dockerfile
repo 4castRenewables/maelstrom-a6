@@ -2,11 +2,6 @@ ARG PYTHON_VERSION="3.11"
 
 FROM fabianemmi/python-poetry:${PYTHON_VERSION}-1.5.1-slim-bullseye as builder
 
-COPY README.md/ /opt/a6/
-COPY pyproject.toml /opt/a6/
-COPY poetry.lock /opt/a6/
-COPY src/a6/ /opt/a6/src/a6
-
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
@@ -19,6 +14,12 @@ RUN apt-get update -y \
     # Required by cartopy
     libgeos-3.9.0 \
     libgeos-dev
+
+COPY README.md/ /opt/a6/
+COPY pyproject.toml /opt/a6/
+COPY poetry.lock /opt/a6/
+COPY requirements-cpu.txt /opt/a6/
+COPY src/a6/ /opt/a6/src/a6
 
 # Install Python package
 RUN python -m venv /venv \

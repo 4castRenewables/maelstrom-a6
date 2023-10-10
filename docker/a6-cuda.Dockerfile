@@ -62,17 +62,17 @@ RUN conda install -n a6 \
         cudatoolkit=${CUDA_VERSION}
 RUN conda install -n a6 -c conda-forge nvidia-apex
 
-COPY README.md/ /opt/a6/
-COPY pyproject.toml /opt/a6/
-COPY poetry.lock /opt/a6/
-COPY src/a6/ /opt/a6/src/a6
-
 # Use conda-pack to create a standalone env in /venv and install vissl
 RUN conda-pack -n a6 -o /opt/env.tar.gz \
  && mkdir /venv \
  && tar -xzf /opt/env.tar.gz -C /venv \
  && . /venv/bin/activate \
  && conda-unpack
+
+COPY README.md/ /opt/a6/
+COPY pyproject.toml /opt/a6/
+COPY poetry.lock /opt/a6/
+COPY src/a6/ /opt/a6/src/a6
 
 # Must install a6 after unpacking since conda doesn't allow to pack
 # packages installed in editable mode.
