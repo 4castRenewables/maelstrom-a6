@@ -82,6 +82,17 @@ pylint:
     - poetry install ${PY_POETRY_INSTALL_ARGS}
     - poetry run pip install -r requirements-cpu.txt
     - poetry run pytest ${PY_PYTEST_ARGS}
+      # If coverage report should not be created, don't attempt
+      # to move the coverage report file.
+    - >
+      if [ -z "${PY_PYTEST_NO_COVERAGE}" ]; then
+        ls -al
+        echo "Moving coverage report"
+        mv .coverage .coverage.${CI_JOB_ID}
+        ls -al;
+      else
+        echo "Omitting move of coverage report"
+      fi
 
 test-doc:
   extends: .test-base
