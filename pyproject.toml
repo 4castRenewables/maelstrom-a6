@@ -75,11 +75,10 @@ ignore_missing_imports = true
 [tool.coverage.report]
 omit = [
     "*/testing/*",
-    "*/benchmark/*",
-    "*/parallel/*",
 ]
 exclude_lines = [
     'def __repr__',
+    'def __str__',
     # Don't complain if tests don't hit defensive assertion code:
     'raise NotImplementedError',
     'return NotImplementedError',
