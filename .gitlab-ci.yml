@@ -102,23 +102,6 @@ coverage:
     - job: test-unit
       artifacts: true
 
-build-python:
-  needs: []
-  extends: .build-python
-  script:
-    - !reference [.install-dependencies, script]
-    - !reference [.build-python, script]
-    - python -m venv venv
-    - source venv/bin/activate
-    - pip install --upgrade pip
-    - pip install dist/*.whl
-  artifacts:
-    when: always
-    paths:
-      - .cache/pip
-      - dist/
-      - venv/
-
 .relevant-mlflow-project-changes:
   rules:
     - changes:
@@ -130,17 +113,12 @@ build-python:
 
 build-docker:
   extends: .build-docker
-  needs:
-    - job: build-python
-      artifacts: true
   rules:
     - !reference [.relevant-mlflow-project-changes, rules]
 
 .test-integration:
   stage: integration
   needs:
-    - job: build-python
-      artifacts: true
     - job: build-docker
       artifacts: true
   services:
