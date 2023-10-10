@@ -20,9 +20,15 @@ def mock_select_dwd_area(monkeypatch) -> None:
     )
 
 
-def test_train_dcv2():
+def test_train_dcv2(tmp_path):
     # Train first epoc
-    raw_args_1 = ["--use-cpu", "--epochs", "1"]
+    raw_args_1 = [
+        "--use-cpu",
+        "--epochs",
+        "1",
+        "--dump-path",
+        tmp_path.as_posix(),
+    ]
     entry.train_dcv2(raw_args_1)
 
     # Train second epoch to restore from dump path
@@ -30,7 +36,7 @@ def test_train_dcv2():
     entry.train_dcv2(raw_args_2)
 
 
-def test_train_dcv2_with_era5(mock_select_dwd_area, era5_path):
+def test_train_dcv2_with_era5(tmp_path, mock_select_dwd_area, era5_path):
     # TODO:
     # Allow multiple levels for training
     #
@@ -41,10 +47,13 @@ def test_train_dcv2_with_era5(mock_select_dwd_area, era5_path):
         "1",
         "--data-path",
         era5_path.as_posix(),
+        "--no-parallel-loading",
         "--pattern",
         "**/*.nc",
         "--level",
         "500",
+        "--dump-path",
+        tmp_path.as_posix(),
     ]
     entry.train_dcv2(raw_args_1)
 
