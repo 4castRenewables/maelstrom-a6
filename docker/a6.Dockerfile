@@ -24,7 +24,8 @@ RUN apt-get update -y \
 RUN python -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip \
- && POETRY_VIRTUALENVS_CREATE=false poetry install --only=main
+ && POETRY_VIRTUALENVS_CREATE=false poetry install --only=main \
+ && pip install -r requirements-cpu.txt
 
 # Delete Python cache files
 WORKDIR /venv
