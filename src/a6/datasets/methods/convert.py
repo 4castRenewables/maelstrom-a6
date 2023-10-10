@@ -101,7 +101,13 @@ def convert_fields_to_grayscale_images(
     min_max_values = normalization.get_min_max_values(data, variables=variables)
 
     with open(path / "min_max_values.json", "w") as f:
-        f.write(json.dumps(min_max_values, sort_keys=True, indent=2))
+        f.write(
+            json.dumps(
+                [min_max.to_dict() for min_max in min_max_values],
+                sort_keys=True,
+                indent=2,
+            )
+        )
 
     logger.info("Starting conversion of images to .tif")
     filename_creator = _FileNameCreator(
@@ -147,10 +153,8 @@ def _convert_fields_to_channels(
     data: xr.Dataset, min_max_values: list[normalization.VariableMinMax]
 ) -> np.ndarray:
     channels = [
-        _convert_to_grayscale(
-            data[variable.name], min_=variable.min, max_=variable.max
-        )
-        for variable in min_max_values
+        _convert_to_grayscale(data, min_max=min_max)
+        for min_max in min_max_values
     ]
     return np.array(channels, dtype=np.uint8).reshape(
         (*channels[0].shape, 3), order="F"

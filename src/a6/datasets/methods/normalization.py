@@ -17,6 +17,9 @@ class VariableMinMax:
     min: float
     max: float
 
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)
+
 
 @utils.log_consumption
 def calculate_variable_statistics(ds: xr.Dataset, variable: Hashable) -> float:
