@@ -110,6 +110,9 @@ entry_points:
         --config {config}
   dcv2:
     parameters:
+      enable_tracking:
+        type: str
+        default: --enable-tracking
       data_path:
         type: str
         default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
@@ -172,6 +175,7 @@ entry_points:
         default: apex
     command: >
       torchrun
+        {enable_tracking}
         --nnodes=${{SLURM_NNODES:-1}}
         --nproc-per-node=1
         --rdzv-backend=c10d

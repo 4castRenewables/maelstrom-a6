@@ -370,7 +370,8 @@ def _create_dataset(args, logger) -> dataset.Base:
     )
 
 
-def _log_stdout_stderr(stdout: str, stderr: str | None) -> None:
-    mantik.call_mlflow_method(mlflow.log_artifact, stdout)
+def _log_stdout_stderr(stdout: str | None, stderr: str | None) -> None:
+    if stdout is not None:
+        mantik.call_mlflow_method(mlflow.log_artifact, stdout)
     if stderr is not None:
         mantik.call_mlflow_method(mlflow.log_artifact, stderr)
