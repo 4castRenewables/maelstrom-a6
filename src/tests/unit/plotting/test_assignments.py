@@ -54,7 +54,7 @@ def test_reshape_assignments_to_weeks():
 
     result = _assignments._reshape_assignments_to_weeks(assignments)
 
-    torch.testing.assert_equal(result, expected)
+    torch.testing.assert_close(result, expected)
 
 
 @pytest.mark.parametrize(

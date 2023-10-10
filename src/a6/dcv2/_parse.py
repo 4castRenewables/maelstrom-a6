@@ -90,6 +90,13 @@ def create_argparser() -> argparse.ArgumentParser:
             "See https://www.dwd.de/DE/leistungen/wetterlagenklassifikation/beschreibung.html"  # noqa
         ),
     )
+    parser.add_argument(
+        "--parallel-loading",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=("" ""),
+    )
 
     # Transform parameters
     parser.add_argument(
@@ -251,7 +258,7 @@ def create_argparser() -> argparse.ArgumentParser:
         help="hidden layer dimension in projection head",
     )
     parser.add_argument(
-        "--workers", default=1, type=int, help="number of data loading workers"
+        "--workers", default=0, type=int, help="number of data loading workers"
     )
     parser.add_argument(
         "--checkpoint-freq",

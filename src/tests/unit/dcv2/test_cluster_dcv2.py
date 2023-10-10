@@ -37,4 +37,4 @@ def test_tensor_contains_value(tensor, value, expected):
 def test_tensor_contains_value_at(tensor, value, expected):
     result = cluster._tensor_contains_value_at(tensor, value=value)
 
-    torch.testing.assert_equal(result, expected)
+    torch.testing.assert_close(result, expected)

@@ -16,6 +16,7 @@ import torch.distributed.elastic.multiprocessing.errors as errors
 import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
+import torch.utils.data
 
 import a6.datasets as datasets
 import a6.dcv2._checkpoints as _checkpoints
@@ -30,8 +31,6 @@ import a6.features as features
 import a6.utils as utils
 import a6.utils.mantik as mantik
 import mlflow
-
-logger = logging.getLogger(__name__)
 
 
 @errors.record
@@ -135,7 +134,7 @@ def _train(
     )
 
     # build data
-    train_dataset = _create_dataset(args)
+    train_dataset = _create_dataset(args, logger=logger)
 
     sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     train_loader = torch.utils.data.DataLoader(
@@ -146,7 +145,7 @@ def _train(
         pin_memory=True,
         # ``drop_last=True`` gives each device the same amount of samples,
         # but removes some from the clustering.
-        drop_last=True,
+        drop_last=False,
     )
     logger.info("Building data done with %s images loaded", len(train_dataset))
 
@@ -316,7 +315,7 @@ def _train(
         )
 
 
-def _create_dataset(args) -> dataset.Base:
+def _create_dataset(args, logger) -> dataset.Base:
     if args.pattern is not None:
         # If a data pattern is given, it is assumed that the
         # given data path is a folder with netCDF files.
@@ -350,6 +349,7 @@ def _create_dataset(args) -> dataset.Base:
             path=args.data_path,
             pattern=args.pattern,
             preprocessing=preprocessing,
+            parallel_loading=args.parallel_loading,
         ).to_xarray(levels=args.level)
         return dataset.MultiCropXarrayDataset(
             data_path=args.data_path,
