@@ -2,6 +2,7 @@ import dataclasses
 import logging
 from collections.abc import Hashable
 from collections.abc import Sequence
+from typing import Protocol
 
 import xarray as xr
 
@@ -9,6 +10,11 @@ import a6.types as types
 import a6.utils as utils
 
 logger = logging.getLogger(__name__)
+
+
+class StatisticsMethod(Protocol):
+    def __call__(self, ds: xr.Dataset, variable: Hashable) -> float:
+        pass
 
 
 @dataclasses.dataclass(frozen=True)
@@ -19,11 +25,6 @@ class VariableMinMax:
 
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)
-
-
-@utils.log_consumption
-def calculate_variable_statistics(ds: xr.Dataset, variable: Hashable) -> float:
-    return float(ds[variable].mean().compute())
 
 
 @utils.log_consumption

@@ -1,3 +1,4 @@
+import itertools
 import logging
 import random
 
@@ -18,7 +19,7 @@ class MinMaxScale:
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         channels = [
             normalization.min_max_scale(channel, min_max=min_max)
-            for channel, min_max in zip(x, self.min_max)
+            for channel, min_max in zip(x, itertools.cycle(self.min_max))
         ]
         return torch.stack(channels)
 

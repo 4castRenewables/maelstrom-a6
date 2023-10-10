@@ -9,6 +9,7 @@ import logging
 import pathlib
 from collections.abc import Iterable
 
+import numpy as np
 import torch
 import torchvision.datasets
 import torchvision.transforms
@@ -33,6 +34,8 @@ class Base(torchvision.datasets.VisionDataset):
 
 
 class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
+    _n_channels = 3
+
     def __init__(
         self,
         data_path: pathlib.Path,
@@ -57,8 +60,6 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
         size_crops = _convert_relative_to_specific_crop_size(
             size_crops, size_x=size_x, size_y=size_y
         )
-
-        self._n_channels = 3
 
         # TODO: Calculate mean and std on-the-fly from ``self.samples``
         # E.g. via running mean/std, see https://stackoverflow.com/a/17637351
@@ -128,26 +129,28 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             size_y=dataset[coordinates.longitude].size,
         )
 
-        if (n_levels := dataset[coordinates.level].size) > 1:
-            raise ValueError(
-                "Only training with single-level data supported, but data "
-                f"contain {n_levels} levels ({dataset[coordinates.level]})"
-            )
         self.dataset = dataset
+        # For single-level, levels is 0-D array and has to converted to a list
+        levels = self.dataset[coordinates.level].to_numpy().tolist()
+        self._levels = levels if isinstance(levels, list) else [levels]
+
         self._coordinates = coordinates
-        self._n_channels = len(dataset.data_vars)
+        self._n_channels = len(dataset.data_vars) * len(self._levels)
 
         self.return_index = return_index
 
-        mean = [
-            normalization.calculate_mean(self.dataset, variable=variable)
-            for variable in self.dataset.data_vars
-        ]
-        std = [
-            normalization.calculate_std(self.dataset, variable=variable)
-            for variable in self.dataset.data_vars
-        ]
-
+        mean = _get_statistics(
+            self.dataset,
+            method=normalization.calculate_mean,
+            levels=self._levels,
+            coordinates=self._coordinates,
+        )
+        std = _get_statistics(
+            self.dataset,
+            method=normalization.calculate_std,
+            levels=self._levels,
+            coordinates=self._coordinates,
+        )
         min_max_values = normalization.get_min_max_values(self.dataset)
 
         trans = []
@@ -189,10 +192,11 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
     def __getitem__(
         self, index: int
     ) -> list[torch.Tensor] | tuple[int, list[torch.Tensor]]:
-        sample = (
-            self.dataset.isel({self._coordinates.time: index})
-            .to_array()
-            .to_numpy()
+        sample = _concatenate_levels_to_channels(
+            self.dataset,
+            time_index=index,
+            levels=self._levels,
+            coordinates=self._coordinates,
         )
         image = torch.from_numpy(sample)
         multi_crops = list(map(lambda trans: trans(image), self.trans))
@@ -239,3 +243,45 @@ def _convert_relative_to_specific_crop_size(
     )
 
     return size_crops
+
+
+def _get_statistics(
+    data: xr.Dataset,
+    method: normalization.StatisticsMethod,
+    levels: list[int],
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> list[float]:
+    if len(levels) == 1:
+        return [method(data, variable=variable) for variable in data.data_vars]
+    return [
+        method(data.sel({coordinates.level: level}), variable=variable)
+        for level in levels
+        for variable in data.data_vars
+    ]
+
+
+def _concatenate_levels_to_channels(
+    data: xr.Dataset,
+    time_index: int,
+    levels: list[int],
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> np.ndarray:
+    if len(levels) == 1:
+        # If only single level given, argument for `level` to `xr.Dataset.sel`
+        # must be a single integer, otherwise the data will have an additional
+        # dimension.
+        return (
+            data.isel({coordinates.time: time_index})
+            .sel({coordinates.level: levels[0]})
+            .to_array()
+            .to_numpy()
+        )
+    return np.concatenate(
+        [
+            data.isel({coordinates.time: time_index})
+            .sel({coordinates.level: level})
+            .to_array()
+            .to_numpy()
+            for level in levels
+        ]
+    )

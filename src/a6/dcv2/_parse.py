@@ -68,13 +68,17 @@ def create_argparser() -> argparse.ArgumentParser:
         help="List of variables to drop from the dataset",
     )
     parser.add_argument(
-        "--level",
+        "--levels",
         type=int,
-        default=500,
+        default=None,
+        nargs="+",
         help=(
-            "The level to use from the dataset."
+            "The levels to use from the dataset."
             ""
-            "Training with multiple levels is not yet supported."
+            "Per default all levels will be passed to the first layer"
+            "of the CNN, where the levels are concatenated as channels. "
+            "E.g. 2 quantities on 2 levels give 4 channels as input for "
+            "the first layer."
         ),
     )
     parser.add_argument(
@@ -95,7 +99,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=bool,
         action=argparse.BooleanOptionalAction,
         default=True,
-        help=("" ""),
+        help="Enable parallel loading",
     )
 
     # Transform parameters

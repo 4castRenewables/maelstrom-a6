@@ -350,7 +350,7 @@ def _create_dataset(args, logger) -> dataset.Base:
             pattern=args.pattern,
             preprocessing=preprocessing,
             parallel_loading=args.parallel_loading,
-        ).to_xarray(levels=args.level)
+        ).to_xarray(levels=args.levels)
         return dataset.MultiCropXarrayDataset(
             data_path=args.data_path,
             dataset=ds,

@@ -6,10 +6,10 @@ import pandas as pd
 import xarray as xr
 
 import a6.datasets as datasets
-import a6.datasets._base as _base
 import a6.testing.data_points as data_points
 import a6.testing.grids as grids
-import a6.testing.types as types
+import a6.testing.types as testing_types
+import a6.types as types
 
 
 class FakeDataset(datasets.EcmwfIfsHres):
@@ -50,7 +50,7 @@ class FakeDataset(datasets.EcmwfIfsHres):
 
     @functools.lru_cache
     def _to_xarray(
-        self, levels: _base.Levels, drop_variables: list[str] | None
+        self, levels: types.Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
         da = xr.DataArray(
             data=0.0,
@@ -90,8 +90,8 @@ class FakeEcmwfIfsHresDataset(FakeDataset):
     def __init__(
         self,
         grid: grids.Grid | None,
-        start: types.Timestamp,
-        end: types.Timestamp,
+        start: testing_types.Timestamp,
+        end: testing_types.Timestamp,
         frequency: str,
         data: list[data_points.DataPoints] | None = None,
     ):

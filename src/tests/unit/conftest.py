@@ -42,12 +42,17 @@ def era5_path() -> pathlib.Path:
 
 
 @pytest.fixture(scope="session")
-def era5_ds(era5_path) -> xr.Dataset:
+def era5(era5_path) -> datasets.Era5:
     return datasets.Era5(
         path=era5_path,
         pattern="**/*.nc",
         parallel_loading=False,
-    ).to_xarray()
+    )
+
+
+@pytest.fixture(scope="session")
+def era5_ds(era5) -> xr.Dataset:
+    return era5.to_xarray()
 
 
 @pytest.fixture(scope="session")

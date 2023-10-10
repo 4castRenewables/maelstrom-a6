@@ -1,20 +1,15 @@
-from collections.abc import Sequence
-from typing import TypeVar
-
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
 import a6.features.methods as methods
+import a6.types as types
 import a6.utils as utils
-
-
-Levels = TypeVar("Levels", int, Sequence[int])
 
 
 @utils.make_functional
 def select_levels(
     dataset: xr.Dataset,
-    levels: Levels,
+    levels: types.Levels,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     """Select given level(s) from the dataset."""
@@ -24,7 +19,7 @@ def select_levels(
 @utils.make_functional
 def select_levels_and_calculate_daily_mean(
     dataset: xr.Dataset,
-    levels: Levels,
+    levels: types.Levels,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     """Select given level(s) from the dataset and calculate daily means."""

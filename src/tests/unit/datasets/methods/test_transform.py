@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 import a6.datasets.methods.normalization as normalization
@@ -5,7 +6,46 @@ import a6.datasets.methods.transform as transform
 
 
 class TestMinMaxScale:
-    def test_call(self):
+    @pytest.mark.parametrize(
+        ("data", "expected"),
+        [
+            # Test case: single-level data
+            (
+                torch.Tensor(
+                    [
+                        [3],
+                        [7.5],
+                    ]
+                ),
+                torch.Tensor(
+                    [
+                        [(3 - 2) / 4],
+                        [(7.5 - 5) / 10],
+                    ]
+                ),
+            ),
+            # Test case: multi-level data
+            (
+                torch.Tensor(
+                    [
+                        [3],
+                        [7.5],
+                        [3.5],
+                        [7],
+                    ]
+                ),
+                torch.Tensor(
+                    [
+                        [(3 - 2) / 4],
+                        [(7.5 - 5) / 10],
+                        [(3.5 - 2) / 4],
+                        [(7 - 5) / 10],
+                    ]
+                ),
+            ),
+        ],
+    )
+    def test_call(self, data, expected):
         min_max_values = [
             normalization.VariableMinMax(
                 name="test",
@@ -19,20 +59,6 @@ class TestMinMaxScale:
             ),
         ]
         scaler = transform.MinMaxScale(min_max=min_max_values)
-
-        data = torch.Tensor(
-            [
-                [3],
-                [7.5],
-            ]
-        )
-
-        expected = torch.Tensor(
-            [
-                [(3 - 2) / 4],
-                [(7.5 - 5) / 10],
-            ]
-        )
 
         result = scaler(data)
 

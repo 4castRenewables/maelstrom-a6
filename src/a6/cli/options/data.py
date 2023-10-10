@@ -1,11 +1,10 @@
 import pathlib
-from typing import Optional
 
 import click
 
 import a6.cli.options._callbacks as _callbacks
 
-Level = Optional[int]
+Level = int | None
 
 WEATHER_DATA = click.option(
     "--weather-data",

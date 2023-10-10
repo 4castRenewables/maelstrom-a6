@@ -36,10 +36,10 @@ def test_train_dcv2(tmp_path):
     entry.train_dcv2(raw_args_2)
 
 
-def test_train_dcv2_with_era5(tmp_path, mock_select_dwd_area, era5_path):
-    # TODO:
-    # Allow multiple levels for training
-    #
+@pytest.mark.parametrize("levels", [["500"], ["500", "950"]])
+def test_train_dcv2_with_era5(
+    tmp_path, mock_select_dwd_area, era5_path, levels
+):
     # Train first epoc without cutting DWD area
     raw_args_1 = [
         "--use-cpu",
@@ -51,7 +51,7 @@ def test_train_dcv2_with_era5(tmp_path, mock_select_dwd_area, era5_path):
         "--pattern",
         "**/*.nc",
         "--level",
-        "500",
+        *levels,
         "--dump-path",
         tmp_path.as_posix(),
     ]

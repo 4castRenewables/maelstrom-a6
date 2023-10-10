@@ -1,16 +1,14 @@
 import logging
 import pathlib
 from collections.abc import Callable
-from typing import Optional
 from typing import TypeVar
-from typing import Union
 
 import xarray as xr
 
 import a6.datasets.methods as methods
+import a6.types as types
 import a6.utils as utils
 
-Levels = Optional[Union[int, list[int]]]
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +76,7 @@ class Dataset:
     @utils.log_consumption
     def to_xarray(
         self,
-        levels: Levels = None,
+        levels: types.Levels = None,
         drop_variables: list[str] | None = None,
     ) -> xr.Dataset:
         """Return the dataset as an `xr.Dataset`.
@@ -109,7 +107,7 @@ class Dataset:
         return self._to_xarray(levels=levels, drop_variables=drop_variables)
 
     def _was_already_converted(
-        self, levels: Levels, drop_variables: list[str] | None
+        self, levels: types.Levels, drop_variables: list[str] | None
     ) -> bool:
         return (
             self._data is not None
@@ -118,7 +116,7 @@ class Dataset:
         )
 
     def _to_xarray(
-        self, levels: Levels, drop_variables: list[str] | None
+        self, levels: types.Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
         """Merge a set of files into a single datase"""
         if len(self.paths) == 1:
