@@ -84,7 +84,7 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
                             #         transform.PILRandomGaussianBlur(),
                             #     ]
                             # ),
-                            # torchvision.transforms.ToTensor(),
+                            torchvision.transforms.ToTensor(),
                             torchvision.transforms.Normalize(
                                 mean=mean, std=std
                             ),
