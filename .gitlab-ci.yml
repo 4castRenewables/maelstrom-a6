@@ -92,7 +92,7 @@ test-doc:
 test-unit:
   extends: .test-base
   variables:
-    PY_PYTEST_DIR: src/tests
+    PY_PYTEST_DIR: src/tests/unit
 
 coverage:
   extends: .coverage
