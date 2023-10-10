@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION="3.10"
+ARG PYTHON_VERSION="3.11"
 
 FROM fabianemmi/python-poetry:${PYTHON_VERSION}-1.5.1-slim-bullseye as builder
 
