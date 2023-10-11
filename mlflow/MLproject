@@ -199,6 +199,10 @@ entry_points:
         {enable_tracking}
         --data-path {data_path}
         --pattern {pattern}
+        --drop-variables {drop_variables}
+        --levels {levels}
+        {select_dwd_area}
+        {parallel_loading}
         --dump-path {dump_path}
         --nmb-crops {nmb_crops}
         --size-crops {size_crops}
