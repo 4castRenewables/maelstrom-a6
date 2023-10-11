@@ -13,6 +13,37 @@ ROOT_DIR = pathlib.Path(__file__).parent / "../../../"
 logger = logging.getLogger(__name__)
 
 
+class ExtendAction(argparse.Action):
+    def __init__(self, type: type, *args, **kwargs):
+        self._type = type
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = getattr(namespace, self.dest) or []
+        for value in values:
+            # If `None` is given, don't append
+            if parse_str_or_none(value) is None:
+                pass
+            # If single- or double-quote in string, split by spaces and extend
+            elif '"' in value or "'" in value:
+                value = value.replace('"', "").replace("'", "")
+                # Split space-separate quoted list
+                result = value.split(" ")
+                items.extend(map(self._type, result))
+            # If value is single value without quotes, append
+            else:
+                items.append(self._type(value))
+        # Only set attribute if items given, else attribute should be ``None``
+        if items:
+            setattr(namespace, self.dest, items)
+
+
+def parse_str_or_none(value: str) -> str | None:
+    if value.lower() == "none":
+        return None
+    return value
+
+
 def create_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Implementation of DeepCluster-v2"
@@ -51,7 +82,7 @@ def create_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--pattern",
-        type=str,
+        type=parse_str_or_none,
         default=None,
         help=(
             "Pattern of the data files within the given data path."
@@ -64,6 +95,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         nargs="+",
+        action=ExtendAction,
         help="List of variables to drop from the dataset",
     )
     parser.add_argument(
@@ -71,6 +103,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         nargs="+",
+        action=ExtendAction,
         help=(
             "The levels to use from the dataset."
             ""
@@ -105,29 +138,33 @@ def create_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--nmb-crops",
         type=int,
-        default=[2],
         nargs="+",
+        default=[2],
+        action=ExtendAction,
         help="list of number of crops (example: [2, 6])",
     )
     parser.add_argument(
         "--size-crops",
         type=float,
-        default=[0.75],
         nargs="+",
+        default=[0.75],
+        action=ExtendAction,
         help="Crops resolutions (example: [0.9, 0.75])",
     )
     parser.add_argument(
         "--min-scale-crops",
         type=float,
-        default=[0.14],
         nargs="+",
+        default=[0.14],
+        action=ExtendAction,
         help="argument in RandomResizedCrop (example: [0.14, 0.05])",
     )
     parser.add_argument(
         "--max-scale-crops",
         type=float,
-        default=[1],
         nargs="+",
+        default=[1],
+        action=ExtendAction,
         help="argument in RandomResizedCrop (example: [1., 0.14])",
     )
 
@@ -137,6 +174,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=int,
         nargs="+",
         default=[0, 1],
+        action=ExtendAction,
         help="list of crops id used for computing assignments",
     )
     parser.add_argument(
