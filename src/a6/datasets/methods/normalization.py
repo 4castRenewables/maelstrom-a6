@@ -60,4 +60,4 @@ def min_max_scale_variable(
 
 
 def min_max_scale(data: types.DataND, min_max: VariableMinMax) -> types.DataND:
-    return (data - min_max.min) / min_max.max
+    return (data - min_max.min) / (min_max.max - min_max.min)

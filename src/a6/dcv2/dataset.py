@@ -17,7 +17,6 @@ import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods.normalization as normalization
-import a6.datasets.methods.transform as transform
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +150,6 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             levels=self._levels,
             coordinates=self._coordinates,
         )
-        min_max_values = normalization.get_min_max_values(self.dataset)
 
         trans = []
         for i in range(len(size_crops)):
@@ -173,9 +171,6 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
                             #     ]
                             # ),
                             # torchvision.transforms.ToTensor(),
-                            torchvision.transforms.Compose(
-                                [transform.MinMaxScale(min_max=min_max_values)]
-                            ),
                             torchvision.transforms.Normalize(
                                 mean=mean, std=std
                             ),
