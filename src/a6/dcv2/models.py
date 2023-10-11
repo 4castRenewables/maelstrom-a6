@@ -4,6 +4,7 @@
 # This source code is licensed under the license found
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
+import enum
 from collections.abc import Callable
 from typing import Protocol
 
@@ -416,3 +417,10 @@ def resnet50w4(**kwargs):
 
 def resnet50w5(**kwargs):
     return ResNet(Bottleneck, [3, 4, 6, 3], widen=5, **kwargs)
+
+
+class Architecture(enum.StrEnum):
+    ResNet50 = "resnet50"
+    ResNet50W2 = "resnet50w2"
+    ResNet50W4 = "resnet50w4"
+    ResNet50W5 = "resnet50w5"

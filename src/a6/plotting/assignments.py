@@ -9,7 +9,7 @@ import a6.plotting._colors as _colors
 
 
 def plot_abundance(
-    assignments: torch.Tensor, name: str, output_dir: str
+    assignments: torch.Tensor, name: str, output_dir: pathlib.Path
 ) -> None:
     labels = np.arange(
         int(assignments.min()), int(assignments.max()) + 1, 1, dtype=int
@@ -24,7 +24,7 @@ def plot_abundance(
         labels=labels,
         x_lims=x_lims,
         density=False,
-        outfile=pathlib.Path(output_dir) / f"{name}-total.pdf",
+        outfile=output_dir / f"{name}-total.pdf",
     )
     _plot_histogram(
         assignments=assignments,
@@ -33,7 +33,7 @@ def plot_abundance(
         labels=labels,
         x_lims=x_lims,
         density=True,
-        outfile=pathlib.Path(output_dir) / f"{name}-relative.pdf",
+        outfile=output_dir / f"{name}-relative.pdf",
     )
 
 
@@ -72,7 +72,7 @@ def _plot_histogram(
 
 
 def plot_appearance_per_week(
-    assignments: torch.Tensor, name: str, output_dir: str
+    assignments: torch.Tensor, name: str, output_dir: pathlib.Path
 ) -> None:
     fig, ax = plt.subplots()
 
@@ -90,7 +90,7 @@ def plot_appearance_per_week(
     ax.set_xlabel("Day of week")
     ax.set_ylabel("Week")
 
-    plt.savefig(pathlib.Path(output_dir) / f"{name}.pdf")
+    plt.savefig(output_dir / f"{name}.pdf")
 
 
 def _create_assignments_subset(assignments: torch.Tensor) -> torch.Tensor:

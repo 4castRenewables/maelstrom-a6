@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import os
 import socket
@@ -10,28 +11,57 @@ import a6.utils.slurm as slurm
 logger = logging.getLogger(__name__)
 
 
-def setup(args) -> None:
+@dataclasses.dataclass(frozen=True)
+class Properties:
+    use_cpu: bool
+    node_id: str
+    dist_url: str
+    local_rank: int
+    global_rank: int
+    world_size: int
+
+
+@dataclasses.dataclass(frozen=True)
+class EnvVars:
+    global_rank: int
+    local_rank: int
+    world_size: int
+
+
+def setup(properties: Properties, seed: int) -> None:
     logging.info(
         "Spawning process for node %s, local rank %s, global rank: %s",
-        args.node_id,
-        args.local_rank,
-        args.global_rank,
+        properties.node_id,
+        properties.local_rank,
+        properties.global_rank,
     )
-    _fix_random_seeds(args.seed)
-    _get_dist_url_and_set_master_env_vars(args)
-    _init_process_group(args)
-    _set_device(args)
+    _fix_random_seeds(seed)
+    _init_process_group(properties)
+    _set_device(properties)
 
 
-def set_required_env_vars(args):
+def get_and_set_required_env_vars() -> EnvVars:
     """
     Initialize the following variables:
-        - world_size
         - rank
+        - local_rank
+        - world_size
     """
-    args.global_rank = _get_and_set_env_var("RANK", default=0)
-    args.local_rank = _get_and_set_env_var("LOCAL_RANK", default=0)
-    args.world_size = _get_and_set_env_var("WORLD_SIZE", default=1)
+    env_vars = EnvVars(
+        global_rank=_get_and_set_env_var("RANK", default=0),
+        local_rank=_get_and_set_env_var("LOCAL_RANK", default=0),
+        world_size=_get_and_set_env_var("WORLD_SIZE", default=1),
+    )
+    logger.info(
+        (
+            "Required env vars for distributed mode set: "
+            "RANK=%s, LOCAL_RANK=%s, WORLD_SIZE=%s"
+        ),
+        env_vars.global_rank,
+        env_vars.local_rank,
+        env_vars.world_size,
+    )
+    return env_vars
 
 
 def _get_and_set_env_var(name: str, default: int | str) -> int | str:
@@ -57,7 +87,7 @@ def _fix_random_seeds(seed=31):
     np.random.seed(seed)
 
 
-def _get_dist_url_and_set_master_env_vars(args) -> str | None:
+def get_dist_url_and_set_master_env_vars() -> str:
     default_port = 29500 if _is_multi_node() else _find_free_tcp_port()
     host = _get_and_set_env_var("MASTER_ADDR", default="127.0.0.1")
     port = _get_and_set_env_var("MASTER_PORT", default=default_port)
@@ -72,9 +102,10 @@ def _get_dist_url_and_set_master_env_vars(args) -> str | None:
     os.environ["MASTER_ADDR"] = host
     os.environ["MASTER_PORT"] = str(port)
 
-    args.dist_url = f"tcp://{host}:{port}"
+    dist_url = f"tcp://{host}:{port}"
 
-    logger.info("Distributed URL is %s", args.dist_url)
+    logger.info("Distributed URL is %s", dist_url)
+    return dist_url
 
 
 def is_multi_gpu() -> bool:
@@ -95,12 +126,12 @@ def _find_free_tcp_port():
     return port
 
 
-def _init_process_group(args) -> None:
+def _init_process_group(properties: Properties) -> None:
     if not torch.distributed.is_initialized():
         logger.warning(
             "Distributed not initialized, initializing process group"
         )
-        if args.use_cpu:
+        if properties.use_cpu:
             logger.warning("Initializing CPU backend")
             torch.distributed.init_process_group(backend="gloo")
         else:
@@ -109,15 +140,15 @@ def _init_process_group(args) -> None:
                     "Initializing GPU backend using init_method=%s, "
                     "world_size=%s, rank=%s"
                 ),
-                args.dist_url,
-                args.world_size,
-                args.global_rank,
+                properties.dist_url,
+                properties.world_size,
+                properties.global_rank,
             )
             torch.distributed.init_process_group(
                 backend="nccl",
-                init_method=args.dist_url,
-                rank=args.global_rank,
-                world_size=args.world_size,
+                init_method=properties.dist_url,
+                rank=properties.global_rank,
+                world_size=properties.world_size,
             )
     else:
         logger.warning(
@@ -126,19 +157,19 @@ def _init_process_group(args) -> None:
         )
 
 
-def _set_device(args) -> None:
-    if not args.use_cpu and torch.cuda.is_available():
-        torch.cuda.set_device(args.local_rank)
+def _set_device(properties: Properties) -> None:
+    if not properties.use_cpu and torch.cuda.is_available():
+        torch.cuda.set_device(properties.local_rank)
         # perform a dummy all-reduce to initialize the NCCL communicator
         torch.distributed.all_reduce(torch.zeros(1).cuda())
 
 
-def get_device(args) -> torch.device:
-    device = "cpu" if args.use_cpu else f"cuda:{args.local_rank}"
+def get_device(properties: Properties) -> torch.device:
+    device = "cpu" if properties.use_cpu else f"cuda:{properties.local_rank}"
     logger.info(
         "Rank %s with local rank %s using device %s",
-        args.global_rank,
-        args.local_rank,
+        properties.global_rank,
+        properties.local_rank,
         device,
     )
     return torch.device(device)

@@ -16,7 +16,7 @@ def plot_embeddings_using_tsne(
     assignments: torch.Tensor,
     centroids: torch.Tensor,
     name: str,
-    output_dir: str,
+    output_dir: pathlib.Path,
 ) -> None:
     """Plot the embeddings of DCv2 using t-SNE.
 
@@ -30,7 +30,7 @@ def plot_embeddings_using_tsne(
             Used for coloring each sample in the plot.
         centroids (torch.Tensor): The indexes of the centroids.
         name (str): Name of the figure
-        output_dir (str): Path where to save the figure.
+        output_dir (pathlib.Path): Path where to save the figure.
 
     """
     start = time.time()
@@ -48,7 +48,7 @@ def plot_embeddings_using_tsne(
     ax.scatter(x, y, c=colors, s=1)
     ax.scatter(x_centroids, y_centroids, c="red", s=20, marker="x")
 
-    plt.savefig(pathlib.Path(output_dir) / f"{name}-crops-{j}.pdf")
+    plt.savefig(output_dir / f"{name}-crops-{j}.pdf")
 
     logging.info("Finished embeddings plot in %s seconds", time.time() - start)
 

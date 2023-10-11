@@ -1,14 +1,21 @@
 import logging
 import os
+import pathlib
 
 import torch.distributed
 
+import a6.dcv2._settings as _settings
 import a6.utils as utils
 
 logger = logging.getLogger(__name__)
 
 
-def restart_from_checkpoint(ckp_paths, args, run_variables=None, **kwargs):
+def restart_from_checkpoint(
+    ckp_paths: pathlib.Path | list[pathlib.Path],
+    settings: _settings.Settings,
+    run_variables=None,
+    **kwargs
+):
     """
     Re-start from checkpoint
     """
@@ -28,7 +35,7 @@ def restart_from_checkpoint(ckp_paths, args, run_variables=None, **kwargs):
     # open checkpoint file
     checkpoint = torch.load(
         ckp_path,
-        map_location=utils.distributed.get_device(args),
+        map_location=utils.distributed.get_device(settings.distributed),
     )
 
     # key is what to look for in the checkpoint file
