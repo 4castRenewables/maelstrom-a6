@@ -54,6 +54,14 @@ def plot_transition_matrix_clustermap(
 
 
 def _calculate_markov_transition_matrix(data: types.TimeSeries) -> np.ndarray:
+    """Calculate Markov transition matrix for integer time series.
+
+    Notes
+    -----
+    The method only works for time series with integer values.
+    E.g. ``[1, 1, 3, 4, 0, 2, ...]``.
+
+    """
     n_states = 1 + int(max(data))
     matrix = np.zeros((n_states, n_states))
 
@@ -62,4 +70,10 @@ def _calculate_markov_transition_matrix(data: types.TimeSeries) -> np.ndarray:
         np.add.at(matrix, (i, j), 1)
 
     # convert to probabilities by dividing each row by the sum of its states
-    return matrix / matrix.sum(axis=1, keepdims=True)
+    as_probabilities = matrix / matrix.sum(axis=1, keepdims=True)
+
+    # If a state never transitions into another (e.g. it never occurs
+    # or is at the end of the time series), it's row gets divided by 0,
+    # resulting in NaN. Hence, replace NaN with 0.
+    nan_to_zero = np.nan_to_num(as_probabilities, copy=True, nan=0.0)
+    return nan_to_zero
