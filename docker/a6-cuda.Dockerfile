@@ -5,17 +5,6 @@ ARG CUDA_VERSION=11.7.1
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as builder
 
-ARG CUDA_VERSION
-ARG PYTHON_VERSION=3.11
-ARG PYTORCH_VERSION=2.1.0
-ARG TORCHVISION_VERSION=0.16.0
-ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
-
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-
 SHELL ["/bin/bash", "-c"]
 
 # See https://github.com/NVIDIA/nvidia-docker/issues/1631
@@ -30,6 +19,7 @@ RUN apt-get update \
       ca-certificates \
       wget \
       curl \
+      git \
       # Installs gcc, required by HDBSCAN
       build-essential \
       # Required by cartopy
@@ -44,9 +34,17 @@ RUN wget \
  && chmod +x miniconda.sh \
  && bash miniconda.sh -b -p /opt/conda
 
-# Install poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python -
-ENV PATH=/opt/poetry/bin:${PATH}
+ARG CUDA_VERSION
+ARG PYTHON_VERSION=3.11
+# torch 2.1.0 requries CUDA 11.8.0 and has no
+# compatible apex version on conda, hence use 2.0.1
+ARG PYTORCH_VERSION=2.0.1
+ARG TORCHVISION_VERSION=0.15.2
+ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
+
+ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Create and activate conda environment
 RUN conda config --add channels conda-forge \
@@ -55,11 +53,8 @@ RUN conda config --add channels conda-forge \
  && conda create --name a6 python=${PYTHON_VERSION}
 
 # Install PyTorch and apex
-RUN conda install -n a6 \
-        -c pytorch -c conda-forge \
-        pytorch=${PYTORCH_VERSION} \
-        torchvision=${TORCHVISION_VERSION} \
-        cudatoolkit=${CUDA_VERSION}
+RUN conda install -n a6 -c pytorch pytorch=${PYTORCH_VERSION} torchvision=${TORCHVISION_VERSION}
+RUN conda install -n a6 -c anaconda cudatoolkit=${CUDA_VERSION}
 RUN conda install -n a6 -c conda-forge nvidia-apex
 
 # Use conda-pack to create a standalone env in /venv and install vissl
@@ -68,6 +63,10 @@ RUN conda-pack -n a6 -o /opt/env.tar.gz \
  && tar -xzf /opt/env.tar.gz -C /venv \
  && . /venv/bin/activate \
  && conda-unpack
+
+# Install poetry
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python -
+ENV PATH=/opt/poetry/bin:${PATH}
 
 COPY README.md/ /opt/a6/
 COPY pyproject.toml /opt/a6/

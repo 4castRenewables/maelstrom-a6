@@ -31,13 +31,23 @@ sudo apt-get install -y \
   python3-opencv
 ```
 
-## Using `torch-cpu` for local development
+### Using `torch-cpu` for local development
 
 For local development, `torch-cpu` can be installed:
 
 ```shell
 poetry run pip install -r requirements-cpu.txt
 ```
+
+### Version conflicts
+
+The versions of pytorch and torchvision _must_ match in all of these files:
+
+- `pyproject.toml`
+- `requirements-cpu.txt`
+- `docker/a6-cuda.Dockerfile`
+
+Otherwise, different versions might get installed, which will lead to conflicts.
 
 ## Running with MLflow
 
