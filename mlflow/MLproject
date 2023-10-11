@@ -175,13 +175,13 @@ entry_points:
         default: apex
     command: >
       torchrun
-        {enable_tracking}
         --nnodes=${{SLURM_NNODES:-1}}
         --nproc-per-node=1
         --rdzv-backend=c10d
         --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
         --rdzv-endpoint=$(hostname --ip-address):29500
         train_dcv2.py
+        {enable_tracking}
         --data-path {data_path}
         --dump-path {dump_path}
         --nmb-crops {nmb_crops}
