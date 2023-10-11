@@ -1,10 +1,16 @@
+import pathlib
+
 import matplotlib.pyplot as plt
 import statsmodels.graphics.tsaplots as tsaplots
 
 import a6.types as types
 
 
-def plot_autocorrelation(data: types.TimeSeries) -> tuple[plt.Figure, plt.Axes]:
+def plot_autocorrelation(
+    data: types.TimeSeries,
+    name: str = "autocorrelation",
+    output_dir: pathlib.Path | None = None,
+) -> tuple[plt.Figure, plt.Axes]:
     lags = _get_lags_for_autocorrelation(data)
 
     fig, ax1 = plt.subplots()
@@ -15,11 +21,16 @@ def plot_autocorrelation(data: types.TimeSeries) -> tuple[plt.Figure, plt.Axes]:
         title=f"Autocorrelation (lags={lags})",
     )
 
+    if output_dir is not None:
+        plt.savefig(output_dir / f"{name}.pdf")
+
     return fig, ax1
 
 
 def plot_partial_autocorrelation(
     data: types.TimeSeries,
+    name: str = "partial-autocorrelation",
+    output_dir: pathlib.Path | None = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     lags = _get_lags_for_partial_autocorrelation(data)
 
@@ -31,20 +42,27 @@ def plot_partial_autocorrelation(
         title=f"Partial autocorrelation (lags={lags})",
     )
 
+    if output_dir is not None:
+        plt.savefig(output_dir / f"{name}.pdf")
+
     return fig, ax1
 
 
-def _get_lags_for_partial_autocorrelation(data: types.TimeSeries) -> int:
+def _get_lags_for_partial_autocorrelation(data: types.TimeSeries) -> int | None:
     lags = _get_lags_for_autocorrelation(data)
     size = len(data)
-    if lags > (half_size := int(0.5 * size)):
+
+    if lags is None:
+        return (size // 2) - 1
+
+    if lags > (half_size := size // 2):
         # Partial correlations can only be computed for lags up to
         # 50% of the sample size.
         return half_size - 1
-    return lags
+    return None
 
 
-def _get_lags_for_autocorrelation(data: types.TimeSeries) -> int:
+def _get_lags_for_autocorrelation(data: types.TimeSeries) -> int | None:
     size = len(data)
     if size > 1e3:
         # If n_samples > 1e3, show every hundredth data sample
@@ -54,4 +72,4 @@ def _get_lags_for_autocorrelation(data: types.TimeSeries) -> int:
         # If 1e3 > n_samples > 1e2, show ever tenth data sample
         # in autocorrelation plot
         return int(size / 10)
-    return size - 1
+    return None
