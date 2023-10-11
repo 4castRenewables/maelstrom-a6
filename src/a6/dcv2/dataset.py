@@ -155,7 +155,6 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             levels=self._levels,
             coordinates=self._coordinates,
         )
-        min_max_values = normalization.get_min_max_values(self.dataset)
 
         self.trans = _create_transformations(
             nmb_crops=nmb_crops,
@@ -164,7 +163,6 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             max_scale_crops=max_scale_crops,
             mean=mean,
             std=std,
-            min_max_values=min_max_values,
             to_tensor=False,
         )
 
