@@ -225,9 +225,14 @@ def cluster_memory(
         epoch_comp = epoch + 1
 
         if (
+            # Plot for the first epoch
             epoch_comp == 1
+            # Below 100 epochs, plot every 25 epochs,
             or (epoch_comp <= 100 and epoch_comp % 25 == 0)
+            # Plot every hundredth epoch
             or epoch_comp % 100 == 0
+            # Plot for the last epoch
+            or epoch_comp == args.epochs
         ):
             logging.info(
                 "Saving clustering data at epoch %s",
@@ -278,6 +283,26 @@ def cluster_memory(
                 plotting.assignments.plot_appearance_per_week(
                     assignments=assignments[-1],
                     name=f"epoch-{epoch}-appearance-per-week",
+                    output_dir=args.dump_plots,
+                )
+                plotting.autocorrelation.plot_autocorrelation(
+                    assignments[-1],
+                    name=f"epoch-{epoch}-autocorrelation",
+                    output_dir=args.dump_plots,
+                )
+                plotting.autocorrelation.plot_partial_autocorrelation(
+                    assignments[-1],
+                    name=f"epoch-{epoch}-partial-autocorrelation",
+                    output_dir=args.dump_plots,
+                )
+                plotting.transitions.plot_transition_matrix_heatmap(
+                    assignments[-1],
+                    name=f"epoch-{epoch}-transition-heatmap",
+                    output_dir=args.dump_plots,
+                )
+                plotting.transitions.plot_transition_matrix_clustermap(
+                    assignments[-1],
+                    name=f"epoch-{epoch}-transition-clustermap",
                     output_dir=args.dump_plots,
                 )
 

@@ -1,3 +1,5 @@
+import pathlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -8,6 +10,8 @@ import a6.types as types
 
 def plot_transition_matrix_heatmap(
     data: types.TimeSeries,
+    name: str = "transition-matrix-heatmap",
+    output_dir: pathlib.Path | None = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     transitions = _calculate_markov_transition_matrix(data)
 
@@ -18,11 +22,16 @@ def plot_transition_matrix_heatmap(
     plt.setp(ax1.get_xticklabels(), rotation=60)
     fig.suptitle("Transition probabilities")
 
+    if output_dir is not None:
+        plt.savefig(output_dir / f"{name}.pdf")
+
     return fig, ax1
 
 
 def plot_transition_matrix_clustermap(
     data: types.TimeSeries,
+    name: str = "transition-matrix-clustermap",
+    output_dir: pathlib.Path | None = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     transitions = _calculate_markov_transition_matrix(data)
 
@@ -37,6 +46,9 @@ def plot_transition_matrix_clustermap(
     ax: plt.Axes = cluster_map.ax_heatmap
     plt.setp(ax.get_xticklabels(), rotation=60)
     fig.suptitle("Transition probabilities")
+
+    if output_dir is not None:
+        plt.savefig(output_dir / f"{name}.pdf")
 
     return fig, ax
 
