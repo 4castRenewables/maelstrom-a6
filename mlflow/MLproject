@@ -123,8 +123,8 @@ entry_points:
         type: int
         default: 2
       size_crops:
-        type: int
-        default: 96
+        type: float
+        default: 0.75
       min_scale_crops:
        type: float
        default: 0.05
