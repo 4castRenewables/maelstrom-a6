@@ -7,10 +7,11 @@
 import logging
 import time
 
-import torch
 import torch.nn as nn
+import torch.utils.data
 
 import a6.dcv2._averaging as _averaging
+import a6.dcv2._settings as _settings
 import a6.dcv2.cluster as cluster
 import a6.utils as utils
 import mlflow
@@ -19,15 +20,15 @@ logger = logging.getLogger(__name__)
 
 
 def train(
-    dataloader,
-    model,
-    optimizer,
-    epoch,
+    dataloader: torch.utils.data.DataLoader,
+    model: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    epoch: int,
     schedule,
-    local_memory_index,
-    local_memory_embeddings,
-    args,
-    device,
+    local_memory_index: torch.Tensor,
+    local_memory_embeddings: torch.Tensor,
+    settings: _settings.Settings,
+    device: torch.device,
 ):
     batch_time = _averaging.AverageMeter()
     data_time = _averaging.AverageMeter()
@@ -41,7 +42,7 @@ def train(
         local_memory_index=local_memory_index,
         local_memory_embeddings=local_memory_embeddings,
         size_dataset=len(dataloader.dataset),
-        args=args,
+        settings=settings,
         device=device,
     )
 
@@ -62,7 +63,7 @@ def train(
 
         # ============ multi-res forward passes ... ============
         # Output here returns the output for each head (prototype)
-        # and hence has size ``len(args.nmb_prototypes)``.
+        # and hence has size ``len(settings.model.nmb_prototypes)``.
         emb, output = model(inputs)
         emb = emb.detach()
         bs = inputs[0].size(0)
@@ -71,21 +72,21 @@ def train(
 
         # ============ deepcluster-v2 loss ... ============
         loss = 0
-        for h in range(len(args.nmb_prototypes)):
-            scores = output[h] / args.temperature
+        for h in range(len(settings.model.nmb_prototypes)):
+            scores = output[h] / settings.model.temperature
             targets = (
                 assignments[h][idx]
-                .repeat(sum(args.nmb_crops))
+                .repeat(sum(settings.preprocessing.nmb_crops))
                 .to(device=device, non_blocking=True)
             )
             loss += cross_entropy(scores, targets)
-        loss /= len(args.nmb_prototypes)
+        loss /= len(settings.model.nmb_prototypes)
 
         # ============ backward and optim step ... ============
         optimizer.zero_grad()
         loss.backward()
         # cancel some gradients
-        if iteration < args.freeze_prototypes_niters:
+        if iteration < settings.model.freeze_prototypes_niters:
             for name, p in model.named_parameters():
                 if "prototypes" in name:
                     p.grad = None
@@ -93,7 +94,7 @@ def train(
 
         # ============ update memory banks ... ============
         local_memory_index[start_idx : start_idx + bs] = idx  # noqa: E203
-        for i, crop_idx in enumerate(args.crops_for_assign):
+        for i, crop_idx in enumerate(settings.preprocessing.crops_for_assign):
             local_memory_embeddings[i][
                 start_idx : start_idx + bs  # noqa: E203
             ] = emb[
@@ -124,7 +125,7 @@ def train(
                 optimizer.state_dict()["param_groups"][0]["lr"],
             )
 
-    if args.enable_tracking and utils.distributed.is_primary_device():
+    if settings.enable_tracking and utils.distributed.is_primary_device():
         metrics = {
             "batch_time": batch_time.val,
             "batch_time_avg": batch_time.avg,

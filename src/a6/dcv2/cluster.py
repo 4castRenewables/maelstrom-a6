@@ -12,8 +12,10 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
+import torch.utils.data
 from scipy.sparse import csr_matrix
 
+import a6.dcv2._settings as _settings
 import a6.plotting as plotting
 import a6.utils as utils
 import a6.utils.mantik as mantik
@@ -24,14 +26,21 @@ logger = logging.getLogger(__name__)
 IGNORE_INDEX = -1
 
 
-def init_memory(dataloader, model, args, device):
-    size_memory_per_process = len(dataloader) * args.batch_size
+def init_memory(
+    dataloader: torch.utils.data.DataLoader,
+    model: nn.Module,
+    settings: _settings.Settings,
+    device,
+):
+    size_memory_per_process = len(dataloader) * settings.model.batch_size
     logger.debug("Processing %s samples", size_memory_per_process)
     local_memory_index = (
         torch.zeros(size_memory_per_process).long().to(device=device)
     )
     local_memory_embeddings = torch.zeros(
-        len(args.crops_for_assign), size_memory_per_process, args.feat_dim
+        len(settings.preprocessing.crops_for_assign),
+        size_memory_per_process,
+        settings.model.feature_dimensions,
     ).to(device=device)
     start_idx = 0
     with torch.no_grad():
@@ -42,7 +51,7 @@ def init_memory(dataloader, model, args, device):
 
             # get embeddings
             outputs = []
-            for crop_idx in args.crops_for_assign:
+            for crop_idx in settings.preprocessing.crops_for_assign:
                 inp = inputs[crop_idx].to(device=device, non_blocking=True)
                 outputs.append(model(inp)[0])
 
@@ -68,7 +77,7 @@ def cluster_memory(
     local_memory_index: torch.Tensor,
     local_memory_embeddings: torch.Tensor,
     size_dataset: int,
-    args,
+    settings: _settings.Settings,
     device: torch.device,
     nmb_kmeans_iters=10,
 ):
@@ -85,7 +94,7 @@ def cluster_memory(
     # 4. K=30, j=1
     j = 0
 
-    n_heads = len(args.nmb_prototypes)
+    n_heads = len(settings.model.nmb_prototypes)
 
     assignments = (IGNORE_INDEX * torch.ones(n_heads, size_dataset).long()).to(
         device
@@ -94,23 +103,23 @@ def cluster_memory(
 
     embeddings = float(IGNORE_INDEX) * torch.ones(
         n_heads,
-        len(args.crops_for_assign),
+        len(settings.preprocessing.crops_for_assign),
         size_dataset,
-        args.feat_dim,
+        settings.model.feature_dimensions,
     ).to(device)
     distances = float(IGNORE_INDEX) * torch.ones(n_heads, size_dataset).to(
         device
     )
 
     with torch.no_grad():
-        for i_K, K in enumerate(args.nmb_prototypes):
+        for i_K, K in enumerate(settings.model.nmb_prototypes):
             # run distributed k-means
 
             # init centroids with elements from memory bank of rank 0
-            centroids = torch.empty(K, args.feat_dim).to(
+            centroids = torch.empty(K, settings.model.feature_dimensions).to(
                 device=device, non_blocking=True
             )
-            if args.global_rank == 0:
+            if settings.distributed.global_rank == 0:
                 # Init centroids with elements from memory bank of rank 0 by
                 # taking K random samples from its local memory embeddings
                 # (i.e. the cropped samples) as centroids
@@ -143,7 +152,7 @@ def cluster_memory(
                 counts = (
                     torch.zeros(K).to(device=device, non_blocking=True).int()
                 )
-                emb_sums = torch.zeros(K, args.feat_dim).to(
+                emb_sums = torch.zeros(K, settings.model.feature_dimensions).to(
                     device=device, non_blocking=True
                 )
                 for k in range(len(where_helper)):
@@ -163,7 +172,9 @@ def cluster_memory(
 
             # Copy centroids to model for forwarding
             getattr(
-                model.prototypes if args.use_cpu else model.module.prototypes,
+                model.prototypes
+                if settings.distributed.use_cpu
+                else model.module.prototypes,
                 "prototypes" + str(i_K),
             ).weight.copy_(centroids)
 
@@ -220,7 +231,7 @@ def cluster_memory(
 
             j_prev = j
             # next memory bank to use
-            j = (j + 1) % len(args.crops_for_assign)
+            j = (j + 1) % len(settings.preprocessing.crops_for_assign)
 
         epoch_comp = epoch + 1
 
@@ -232,7 +243,7 @@ def cluster_memory(
             # Plot every hundredth epoch
             or epoch_comp % 100 == 0
             # Plot for the last epoch
-            or epoch_comp == args.epochs
+            or epoch_comp == settings.model.epochs
         ):
             logging.info(
                 "Saving clustering data at epoch %s",
@@ -249,7 +260,7 @@ def cluster_memory(
                 torch.save(
                     result,
                     _create_path(
-                        path=args.dump_tensors,
+                        path=settings.dump.tensors,
                         file_name=name,
                         epoch=epoch,
                     ),
@@ -260,7 +271,7 @@ def cluster_memory(
                 torch.save(
                     random_idx,
                     _create_path(
-                        path=args.dump_tensors,
+                        path=settings.dump.tensors,
                         file_name="centroid-indexes.pt",
                         epoch=epoch,
                     ),
@@ -273,37 +284,37 @@ def cluster_memory(
                     assignments=assignments[-1],
                     centroids=random_idx,
                     name=f"epoch-{epoch}-embeddings",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
                 plotting.assignments.plot_abundance(
                     assignments=assignments[-1],
                     name=f"epoch-{epoch}-assignments-abundance",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
                 plotting.assignments.plot_appearance_per_week(
                     assignments=assignments[-1],
                     name=f"epoch-{epoch}-appearance-per-week",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
                 plotting.autocorrelation.plot_autocorrelation(
                     assignments[-1],
                     name=f"epoch-{epoch}-autocorrelation",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
                 plotting.autocorrelation.plot_partial_autocorrelation(
                     assignments[-1],
                     name=f"epoch-{epoch}-partial-autocorrelation",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
                 plotting.transitions.plot_transition_matrix_heatmap(
                     assignments[-1],
                     name=f"epoch-{epoch}-transition-heatmap",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
                 plotting.transitions.plot_transition_matrix_clustermap(
                     assignments[-1],
                     name=f"epoch-{epoch}-transition-clustermap",
-                    output_dir=args.dump_plots,
+                    output_dir=settings.dump.plots,
                 )
 
         if utils.distributed.is_primary_device():
@@ -319,7 +330,7 @@ def cluster_memory(
                 round(percent_unassigned_samples, 2),
                 assignments.shape[-1],
             )
-            if args.enable_tracking:
+            if settings.enable_tracking:
                 mantik.call_mlflow_method(
                     mlflow.log_metric,
                     "unassigned_samples",

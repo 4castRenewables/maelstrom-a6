@@ -7,16 +7,19 @@
 import datetime
 import logging
 import os
+import pathlib
 import time
 
 import pandas as pd
 
+import a6.dcv2._settings as _settings
+
 
 class LogFormatter:
-    def __init__(self, args):
+    def __init__(self, settings: _settings.Settings):
         self.start_time = time.time()
-        self.rank = args.global_rank
-        self.local_rank = args.local_rank
+        self.rank = settings.distributed.global_rank
+        self.local_rank = settings.distributed.local_rank
 
     def format(self, record):
         elapsed_seconds = round(record.created - self.start_time)
@@ -33,13 +36,13 @@ class LogFormatter:
         return f"{prefix} - {message}" if message else ""
 
 
-def create_logger(filepath, args):
+def create_logger(filepath: pathlib.Path, settings: _settings.Settings):
     """
     Create a logger.
     Use a different log file for each process.
     """
     # create log formatter
-    log_formatter = LogFormatter(args)
+    log_formatter = LogFormatter(settings)
 
     # create file handler and set level to debug
     if filepath is not None:
@@ -51,7 +54,7 @@ def create_logger(filepath, args):
     # if not ``-v/--verbose`` passed.
     console_handler = logging.StreamHandler()
     console_handler.setLevel(
-        logging.INFO if not args.verbose else logging.DEBUG
+        logging.INFO if not settings.verbose else logging.DEBUG
     )
     console_handler.setFormatter(log_formatter)
 

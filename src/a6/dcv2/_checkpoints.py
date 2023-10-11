@@ -5,6 +5,7 @@ from typing import Any
 
 import torch.distributed
 
+import a6.dcv2._settings as _settings
 import a6.utils as utils
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def restart_from_checkpoint(
     paths: pathlib.Path | list[pathlib.Path],
-    args: list,
+    settings: _settings.Settings,
     variables_to_load_from_checkpoint: dict[str, Any] | None = None,
     **kwargs
 ):
@@ -35,7 +36,7 @@ def restart_from_checkpoint(
     # open checkpoint file
     checkpoint = torch.load(
         path,
-        map_location=utils.distributed.get_device(args),
+        map_location=utils.distributed.get_device(settings.distributed),
     )
 
     # key is what to look for in the checkpoint file
