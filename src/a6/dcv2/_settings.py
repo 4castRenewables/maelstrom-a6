@@ -109,7 +109,7 @@ class Settings:
                 max_scale_crops=args.max_scale_crops,
                 # ``crops_for_assign`` is the indexes of the crops used for
                 # clustering.
-                crops_for_assign=[i for i in range(args.nmb_crops[0])],
+                crops_for_assign=args.nmb_crops,
             ),
             model=Model(
                 architecture=models.Architecture(args.arch),

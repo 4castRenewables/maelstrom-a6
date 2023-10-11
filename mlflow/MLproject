@@ -116,20 +116,35 @@ entry_points:
       data_path:
         type: str
         default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
+      pattern:
+        type: str
+        default: None
+      drop_variables:
+        type: list[str]
+        default: None
+      levels:
+        type: list[int]
+        default: None
+      select_dwd_area:
+        type: str
+        default: --select-dwd-area
+      parallel_loading:
+        type: str
+        default: --parallel-loading
       dump_path:
         type: str
         default: /p/scratch/deepacf/maelstrom/emmerich1/dcv2/dump
       nmb_crops:
-        type: int
+        type: list[int]
         default: 2
       size_crops:
-        type: float
+        type: list[float]
         default: 0.75
       min_scale_crops:
-       type: float
+       type: list[float]
        default: 0.05
       max_scale_crops:
-        type: float
+        type: list[float]
         default: 1.
       temperature:
         type: float
@@ -183,6 +198,7 @@ entry_points:
         train_dcv2.py
         {enable_tracking}
         --data-path {data_path}
+        --pattern {pattern}
         --dump-path {dump_path}
         --nmb-crops {nmb_crops}
         --size-crops {size_crops}
