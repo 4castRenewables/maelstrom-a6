@@ -35,7 +35,7 @@ def test_plot_embedding(tmp_path):
         assignments=assignments,
         centroids=centroids,
         name="test",
-        output_dir=tmp_path.as_posix(),
+        output_dir=tmp_path,
     )
 
     assert expected.exists()

@@ -64,9 +64,10 @@ class Dataset:
             self.paths = utils.list_files(path=path, pattern=pattern)
 
             if not self.paths:
-                raise RuntimeError(
-                    f"No files found in {path.as_posix()} with "
-                    "pattern {pattern}"
+                logger.warning(
+                    "No files found %s in with pattern %s",
+                    path,
+                    pattern,
                 )
 
         self._slice_time_dimension = slice_time_dimension

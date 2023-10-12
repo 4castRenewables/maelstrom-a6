@@ -20,7 +20,7 @@ def test_plot_abundance(tmp_path):
     _assignments.plot_abundance(
         assignments=assignments,
         name="abundance",
-        output_dir=tmp_path.as_posix(),
+        output_dir=tmp_path,
     )
 
     assert all(plot.exists() for plot in expected)
@@ -36,7 +36,7 @@ def test_plot_appearance_per_week(tmp_path):
     _assignments.plot_appearance_per_week(
         assignments=assignments,
         name="appearance-per-week",
-        output_dir=tmp_path.as_posix(),
+        output_dir=tmp_path,
     )
 
     assert expected.exists()
