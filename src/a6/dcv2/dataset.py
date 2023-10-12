@@ -74,6 +74,7 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
                             torchvision.transforms.RandomResizedCrop(
                                 size_crops[i],
                                 scale=(min_scale_crops[i], max_scale_crops[i]),
+                                antialias=True,
                             ),
                             # In original DCv2 paper, the following data
                             # augmentation strategies are implemented
@@ -160,6 +161,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
                             torchvision.transforms.RandomResizedCrop(
                                 size_crops[i],
                                 scale=(min_scale_crops[i], max_scale_crops[i]),
+                                antialias=True,
                             ),
                             # In original DCv2 paper, the following data
                             # augmentation strategies are implemented

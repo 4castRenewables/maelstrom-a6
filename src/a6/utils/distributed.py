@@ -1,10 +1,13 @@
 import dataclasses
 import logging
 import os
+import random
 import socket
 
 import numpy as np
 import torch.distributed
+import torch.multiprocessing
+import torch.utils.data
 
 import a6.utils.slurm as slurm
 
@@ -35,9 +38,29 @@ def setup(properties: Properties, seed: int) -> None:
         properties.local_rank,
         properties.global_rank,
     )
-    _fix_random_seeds(seed)
+    _setup_multiprocessing_method()
+    _fix_random_seeds(seed, properties=properties)
     _init_process_group(properties)
     _set_device(properties)
+
+
+def _setup_multiprocessing_method(name: str = "spawn") -> None:
+    """Set the multiprocessing method of PyTorch.
+
+    PyTorch supports several multiprocessing options
+
+    - forkserver
+    - spawn
+    - fork
+
+    forkserver is recommended.
+
+    """
+    try:
+        torch.multiprocessing.set_start_method(name, force=True)
+        logger.info("Set start method of multiprocessing to %s", name)
+    except RuntimeError:
+        pass
 
 
 def get_and_set_required_env_vars() -> EnvVars:
@@ -78,13 +101,35 @@ def _get_and_set_env_var(name: str, default: int | str) -> int | str:
     return value
 
 
-def _fix_random_seeds(seed=31):
+def _fix_random_seeds(seed: int, properties: Properties) -> None:
     """
     Fix random seeds.
     """
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
+    seed_value = seed + properties.global_rank
+    logger.info("Device seed %s", seed_value)
+
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    torch.manual_seed(seed_value)
+
+    if not properties.use_cpu and torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed_value)
+
+
+def set_dataloader_seeds(_worker_id: int):
+    """
+    See: https://tanelp.github.io/posts/a-bug-that-plagues-thousands-of-open-source-ml-projects/  # noqa: E501
+    When using "Fork" process spawning, the dataloader workers inherit the
+    seeds of the parent process for numpy. While torch seeds are handled
+    correctly across dataloaders and across epochs, numpy seeds are not.
+    Therefore in order to ensure each worker has a different and deterministic
+    seed, we must explicitly set the numpy seed to the torch seed.
+    Also see https://pytorch.org/docs/stable/data.html#randomness-in-multi-process-data-loading  # noqa: E501
+    """
+    # numpy and random seed must be between 0 and 2 ** 32 - 1.
+    torch_seed = torch.utils.data.get_worker_info().seed % (2**32)
+    random.seed(torch_seed)
+    np.random.seed(torch_seed)
 
 
 def get_dist_url_and_set_master_env_vars() -> str:
@@ -185,12 +230,6 @@ def destroy() -> None:
 
 
 def gather_from_all_ranks(tensor: torch.Tensor) -> torch.Tensor:
-    gathered_tensors = _gather_tensors_from_all(tensor)
-    gathered_tensor = torch.cat(gathered_tensors, 0)
-    return gathered_tensor
-
-
-def _gather_tensors_from_all(tensor: torch.Tensor) -> list[torch.Tensor]:
     """
     Wrapper over torch.distributed.all_gather for performing
     'gather' of 'tensor' over all processes in both distributed /
@@ -213,8 +252,8 @@ def _gather_tensors_from_all(tensor: torch.Tensor) -> list[torch.Tensor]:
         ]
     else:
         gathered_tensors = [tensor]
-
-    return gathered_tensors
+    gathered_tensor = torch.cat(gathered_tensors, 0)
+    return gathered_tensor
 
 
 def _is_distributed_training_run() -> bool:

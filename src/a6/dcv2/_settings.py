@@ -41,6 +41,7 @@ class Model:
     nmb_prototypes: list[int]
     nmb_clusters: list[int]
     crops_for_assign: list[int]
+    drop_last: bool
     temperature: float
     epochs: int
     batch_size: int
@@ -126,6 +127,7 @@ class Settings:
                 # ``[0, 1, 2, ..., 5]``, which are the indexes of
                 # ``nmb_crops``.
                 crops_for_assign=[i for i in range(sum(args.nmb_crops))],
+                drop_last=False,
                 temperature=args.temperature,
                 nmb_clusters=args.nmb_clusters,
                 epochs=args.epochs,

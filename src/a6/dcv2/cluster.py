@@ -5,6 +5,7 @@
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
 import logging
+import math
 import pathlib
 
 import numpy as np
@@ -32,8 +33,25 @@ def init_memory(
     settings: _settings.Settings,
     device,
 ):
-    size_memory_per_process = len(dataloader) * settings.model.batch_size
-    logger.debug("Processing %s samples", size_memory_per_process)
+    size_dataset = len(dataloader.dataset)
+    logger.info("Dataset size is %s samples", size_dataset)
+
+    size_memory_per_process = int(
+        math.ceil(size_dataset / settings.distributed.world_size)
+    )
+    logger.info("Size memory per process is %s", size_memory_per_process)
+
+    if settings.model.drop_last:
+        size_memory_per_process -= (
+            size_memory_per_process % settings.model.batch_size
+        )
+        logger.info(
+            "Adjusted size of memory per process due to drop_last=True to %s",
+            size_memory_per_process,
+        )
+
+    logger.info("Processing %s samples", size_memory_per_process)
+
     local_memory_index = (
         torch.zeros(size_memory_per_process).long().to(device=device)
     )
@@ -194,6 +212,27 @@ def cluster_memory(
                 local_distances
             )
 
+            logger.debug(
+                "local_memory_embeddings[j]: %s embeddings_all: %s",
+                local_memory_embeddings[j].size(),
+                embeddings_all.size(),
+            )
+
+            logger.debug(
+                (
+                    "Results after gathering from all ranks: "
+                    "embeddings: %s (size=%s), "
+                    "assigments: %s (size=%s), "
+                    "indexes: %s (size=%s)"
+                ),
+                embeddings_all,
+                embeddings_all.size(),
+                assignments_all,
+                assignments_all.size(),
+                indexes_all,
+                indexes_all.size(),
+            )
+
             for tensor, value in [
                 (assignments_all, IGNORE_INDEX),
                 (indexes_all, IGNORE_INDEX),
@@ -224,10 +263,6 @@ def cluster_memory(
             # For the embeddings, make sure to use j for indexing
             embeddings[i_K][j] = float(IGNORE_INDEX)
             embeddings[i_K][j][indexes_all] = embeddings_all
-
-            logger.debug(
-                "Assigments: %s, Indexes: %s", assignments_all, indexes_all
-            )
 
             j_prev = j
             # next memory bank to use
@@ -301,43 +336,44 @@ def cluster_memory(
                         epoch=epoch,
                     ),
                 )
+                assignments_cpu = assignments[-1].cpu()
                 plotting.embeddings.plot_embeddings_using_tsne(
                     embeddings=embeddings[-1],
                     # Use previous j since this represents which crops
                     # were used for last cluster iteration.
                     j=j_prev,
-                    assignments=assignments[-1],
+                    assignments=assignments_cpu,
                     centroids=random_idx,
                     name=f"epoch-{epoch}-embeddings",
                     output_dir=settings.dump.plots,
                 )
                 plotting.assignments.plot_abundance(
-                    assignments=assignments[-1],
+                    assignments=assignments_cpu,
                     name=f"epoch-{epoch}-assignments-abundance",
                     output_dir=settings.dump.plots,
                 )
                 plotting.assignments.plot_appearance_per_week(
-                    assignments=assignments[-1],
+                    assignments=assignments_cpu,
                     name=f"epoch-{epoch}-appearance-per-week",
                     output_dir=settings.dump.plots,
                 )
                 plotting.autocorrelation.plot_autocorrelation(
-                    assignments[-1],
+                    assignments_cpu,
                     name=f"epoch-{epoch}-autocorrelation",
                     output_dir=settings.dump.plots,
                 )
                 plotting.autocorrelation.plot_partial_autocorrelation(
-                    assignments[-1],
+                    assignments_cpu,
                     name=f"epoch-{epoch}-partial-autocorrelation",
                     output_dir=settings.dump.plots,
                 )
                 plotting.transitions.plot_transition_matrix_heatmap(
-                    assignments[-1],
+                    assignments_cpu,
                     name=f"epoch-{epoch}-transition-heatmap",
                     output_dir=settings.dump.plots,
                 )
                 plotting.transitions.plot_transition_matrix_clustermap(
-                    assignments[-1],
+                    assignments_cpu,
                     name=f"epoch-{epoch}-transition-clustermap",
                     output_dir=settings.dump.plots,
                 )

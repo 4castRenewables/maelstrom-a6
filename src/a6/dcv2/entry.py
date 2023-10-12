@@ -121,12 +121,14 @@ def _train(
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         sampler=sampler,
+        shuffle=False,
         batch_size=settings.model.batch_size,
         num_workers=settings.data.workers,
         pin_memory=True,
         # ``drop_last=True`` gives each device the same amount of samples,
         # but removes some from the clustering.
-        drop_last=False,
+        drop_last=settings.model.drop_last,
+        worker_init_fn=utils.distributed.set_dataloader_seeds,
     )
     logger.info("Building data done with %s images loaded", len(train_dataset))
 
@@ -321,7 +323,7 @@ def _create_dataset(
     if settings.data.pattern is not None:
         # If a data pattern is given, it is assumed that the
         # given data path is a folder with netCDF files.
-        logger.warning("Assuming `xarray.Dataset` from netCDF files")
+        logger.warning("Assuming xarray.Dataset from netCDF files")
         coordinates = datasets.coordinates.Coordinates()
         variables = datasets.variables.Model()
         drop_variables = settings.data.drop_variables or []
@@ -353,6 +355,9 @@ def _create_dataset(
             preprocessing=preprocessing,
             parallel_loading=settings.data.parallel_loading,
         ).to_xarray(levels=settings.data.levels)
+        logger.info(
+            "Reading data from netCDF files and converting to xarray.Dataset"
+        )
         return dataset.MultiCropXarrayDataset(
             data_path=settings.data.path,
             dataset=ds,
@@ -362,6 +367,7 @@ def _create_dataset(
             max_scale_crops=settings.preprocessing.max_scale_crops,
             return_index=True,
         )
+    logger.warning("Assuming image dataset")
     return dataset.MultiCropDataset(
         data_path=settings.data.path,
         nmb_crops=settings.preprocessing.nmb_crops,

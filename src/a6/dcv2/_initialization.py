@@ -55,10 +55,8 @@ def initialize_logging(
     if _is_primary_device(settings):
         logger_.info("============ Initialized logging ============")
         logger_.info(
-            "%s",
-            "\n".join(
-                f"{k}: {str(v)}" for k, v in sorted(settings.to_dict().items())
-            ),
+            "Settings:\n%s",
+            yaml.dump(settings.to_dict(), indent=2, default_flow_style=False),
         )
         logger_.info("The experiment will be stored in %s", settings.dump.path)
 
