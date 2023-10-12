@@ -31,7 +31,6 @@ class Preprocessing:
     size_crops: list[float]
     min_scale_crops: list[float]
     max_scale_crops: list[float]
-    crops_for_assign: list[int]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -40,8 +39,9 @@ class Model:
     hidden_mlp: int
     feature_dimensions: int
     nmb_prototypes: list[int]
-    temperature: float
     nmb_clusters: list[int]
+    crops_for_assign: list[int]
+    temperature: float
     epochs: int
     batch_size: int
     base_lr: float
@@ -107,9 +107,6 @@ class Settings:
                 size_crops=args.size_crops,
                 min_scale_crops=args.min_scale_crops,
                 max_scale_crops=args.max_scale_crops,
-                # ``crops_for_assign`` is the indexes of the crops used for
-                # clustering.
-                crops_for_assign=args.nmb_crops,
             ),
             model=Model(
                 architecture=models.Architecture(args.arch),
@@ -122,6 +119,13 @@ class Settings:
                 nmb_prototypes=[
                     args.nmb_clusters for _ in range(args.nmb_prototypes)
                 ],
+                # ``crops_for_assign`` is the indexes of the crops used for
+                # clustering and depends on ``args.nmb_crops``.
+                # E.g. ``args.nmb_crops = [2, 4]`` produces 6 inputs
+                # to the clustering. Hence, ``crops_for_assign`` must be
+                # ``[0, 1, 2, ..., 5]``, which are the indexes of
+                # ``nmb_crops``.
+                crops_for_assign=[i for i in range(sum(args.nmb_crops))],
                 temperature=args.temperature,
                 nmb_clusters=args.nmb_clusters,
                 epochs=args.epochs,

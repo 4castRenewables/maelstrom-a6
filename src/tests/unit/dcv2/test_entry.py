@@ -64,7 +64,7 @@ def test_train_dcv2(tmp_path):
             entry.train_dcv2(raw_args_2)
 
 
-@pytest.mark.parametrize("levels", [["500"], ["500", "950"]])
+@pytest.mark.parametrize("levels", [["500"], ["500", "950"], ["None"]])
 def test_train_dcv2_with_era5(
     tmp_path, mock_select_dwd_area, era5_path, levels
 ):

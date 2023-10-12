@@ -170,14 +170,6 @@ def create_argparser() -> argparse.ArgumentParser:
 
     # dcv2 specific params
     parser.add_argument(
-        "--crops-for-assign",
-        type=int,
-        nargs="+",
-        default=[0, 1],
-        action=ExtendAction,
-        help="list of crops id used for computing assignments",
-    )
-    parser.add_argument(
         "--temperature",
         default=0.1,
         type=float,
