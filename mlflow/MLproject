@@ -191,7 +191,7 @@ entry_points:
     command: >
       torchrun
         --nnodes=${{SLURM_NNODES:-1}}
-        --nproc-per-node=$(( ${SLURM_STEP_GPUS: -1} + 1 ))
+        --nproc-per-node=$(( ${{SLURM_STEP_GPUS: -1}} + 1 ))
         --rdzv-backend=c10d
         --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
         --rdzv-endpoint=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
