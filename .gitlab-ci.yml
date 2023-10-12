@@ -136,6 +136,7 @@ build-docker:
     - docker:dind
   image: docker:latest
   variables:
+    MLFLOW_TRACKING_TOKEN: test-token
   before_script:
     - !reference [.set-required-docker-environment-variables, script]
     - ls -al .
@@ -146,10 +147,8 @@ build-docker:
     # bash is required by mlflow
     - apk --no-cache add python3 bash
     # Set PATH and PYTHONPATH to include venv
-    - export PYTHONPATH=$PYTHONPATH:${PWD}/venv/lib/python3.10/site-packages
-    - alias mlflow="python3 ${PWD}/venv/bin/mlflow"
-    # MLproject expects MLFLOW_TRACKING_TOKEN env var to be set
-    - export MLFLOW_TRACKING_TOKEN="test-token"
+    - pip install --upgrade pip
+    - pip install mlflow
   rules:
     - !reference [.relevant-mlflow-project-changes, rules]
     - changes:
