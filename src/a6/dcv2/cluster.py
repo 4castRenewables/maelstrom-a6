@@ -38,7 +38,7 @@ def init_memory(
         torch.zeros(size_memory_per_process).long().to(device=device)
     )
     local_memory_embeddings = torch.zeros(
-        len(settings.preprocessing.crops_for_assign),
+        len(settings.model.crops_for_assign),
         size_memory_per_process,
         settings.model.feature_dimensions,
     ).to(device=device)
@@ -51,7 +51,7 @@ def init_memory(
 
             # get embeddings
             outputs = []
-            for crop_idx in settings.preprocessing.crops_for_assign:
+            for crop_idx in settings.model.crops_for_assign:
                 inp = inputs[crop_idx].to(device=device, non_blocking=True)
                 outputs.append(model(inp)[0])
 
@@ -103,7 +103,7 @@ def cluster_memory(
 
     embeddings = float(IGNORE_INDEX) * torch.ones(
         n_heads,
-        len(settings.preprocessing.crops_for_assign),
+        len(settings.model.crops_for_assign),
         size_dataset,
         settings.model.feature_dimensions,
     ).to(device)
@@ -231,7 +231,7 @@ def cluster_memory(
 
             j_prev = j
             # next memory bank to use
-            j = (j + 1) % len(settings.preprocessing.crops_for_assign)
+            j = (j + 1) % len(settings.model.crops_for_assign)
 
         epoch_comp = epoch + 1
 

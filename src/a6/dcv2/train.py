@@ -94,7 +94,7 @@ def train(
 
         # ============ update memory banks ... ============
         local_memory_index[start_idx : start_idx + bs] = idx  # noqa: E203
-        for i, crop_idx in enumerate(settings.preprocessing.crops_for_assign):
+        for i, crop_idx in enumerate(settings.model.crops_for_assign):
             local_memory_embeddings[i][
                 start_idx : start_idx + bs  # noqa: E203
             ] = emb[
