@@ -124,6 +124,7 @@ coverage:
 
 build-docker:
   extends: .build-docker
+  needs: []
   rules:
     - !reference [.relevant-mlflow-project-changes, rules]
 
