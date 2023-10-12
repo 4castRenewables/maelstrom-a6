@@ -24,12 +24,12 @@ class LogFormatter:
     def format(self, record):
         elapsed_seconds = round(record.created - self.start_time)
 
-        prefix = "{} - {} - {} - RANK {} (local {})".format(
+        prefix = "RANK {} (LOCAL {}) - {} - {} - {}".format(
+            self.rank,
+            self.local_rank,
             record.levelname,
             time.strftime("%Y-%m-%d %H:%M:%S"),
             datetime.timedelta(seconds=elapsed_seconds),
-            self.rank,
-            self.local_rank,
         )
         message = record.getMessage()
         message = message.replace("\n", "\n" + " " * (len(prefix) + 3))

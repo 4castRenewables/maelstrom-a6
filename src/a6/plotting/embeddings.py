@@ -63,4 +63,11 @@ def _fit_tsne(
 
     logging.info("Finished fitting t-SNE in %s seconds", time.time() - start)
 
+    logging.info(
+        "embeddings: %s centroids: %s result: %s",
+        embeddings.size(),
+        centroids,
+        result.shape,
+    )
+
     return zip(*result), zip(*result[centroids])

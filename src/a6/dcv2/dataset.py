@@ -263,6 +263,7 @@ def _create_transformations(
                         torchvision.transforms.RandomResizedCrop(
                             size,
                             scale=(min_scale, max_scale),
+                            antialias=True,
                         ),
                         ###
                         # In original DCv2 paper, the following data

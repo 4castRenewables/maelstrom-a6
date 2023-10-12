@@ -63,6 +63,12 @@ class Dataset:
         else:
             self.paths = utils.list_files(path=path, pattern=pattern)
 
+            if not self.paths:
+                raise RuntimeError(
+                    f"No files found in {path.as_posix()} with "
+                    "pattern {pattern}"
+                )
+
         self._slice_time_dimension = slice_time_dimension
         self._slice_time_dimension_after = slice_time_dimension_after
         self._parallel = parallel_loading
