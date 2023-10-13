@@ -1,6 +1,8 @@
 # This image is just for testing the installation.
 # It builds much faster than the Apptainer image due to caching.
 
+# When changing the CUDA version, take care to adjust the
+# it accordingly in the PATH ARG and ENV.
 ARG CUDA_VERSION=11.7.1
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as builder
@@ -36,13 +38,17 @@ RUN wget \
 
 ARG CUDA_VERSION
 ARG PYTHON_VERSION=3.11
+
 # torch 2.1.0 requries CUDA 11.8.0 and has no
 # compatible apex version on conda, hence use 2.0.1
 ARG PYTORCH_VERSION=2.0.1
 ARG TORCHVISION_VERSION=0.15.2
-ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
 
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
+# Name of CUDA dir is shorter than version.
+# E.g. CUDA 11.7.1 is stored in folder 11.7
+ARG PATH=/usr/local/cuda-11.7/bin:/usr/local/bin:/opt/conda/bin:${PATH}
+
+ENV PATH=/usr/local/cuda-11.7/bin:/usr/local/bin:/opt/conda/bin:${PATH}
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
@@ -85,10 +91,8 @@ RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu20.04
 
-ARG CUDA_VERSION
-
-ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/venv/bin:${PATH}
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/venv/bin:${PATH}
+ARG PATH=/usr/local/cuda-11.7/bin:/usr/local/bin:/venv/bin:${PATH}
+ENV PATH=/usr/local/cuda-11.7/bin:/usr/local/bin:/venv/bin:${PATH}
 
 ENV GIT_PYTHON_REFRESH=quiet
 
