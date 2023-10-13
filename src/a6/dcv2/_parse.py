@@ -177,7 +177,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=int,
         nargs="+",
         default=[2],
-        action=ExtendAction,
+        action=ExtendListAction,
         help="list of number of crops (example: [2, 6])",
     )
     parser.add_argument(
