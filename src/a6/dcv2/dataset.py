@@ -156,6 +156,8 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             coordinates=self._coordinates,
         )
 
+        logger.info("Calculated mean %s and standard deviation %s", mean, std)
+
         self.trans = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
