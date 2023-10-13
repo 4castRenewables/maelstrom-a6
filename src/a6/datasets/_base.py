@@ -69,6 +69,7 @@ class Dataset:
                     path,
                     pattern,
                 )
+        logger.info("Reading dataset from files %s", self.paths)
 
         self._slice_time_dimension = slice_time_dimension
         self._slice_time_dimension_after = slice_time_time_dimension_after
@@ -111,7 +112,11 @@ class Dataset:
                 drop_variables,
             )
             return self._data
-        return self._to_xarray(levels=levels, drop_variables=drop_variables)
+        as_xarray = self._to_xarray(
+            levels=levels, drop_variables=drop_variables
+        )
+        logger.info("Converted data to xarray.Dataset %s", as_xarray)
+        return as_xarray
 
     def _was_already_converted(
         self, levels: types.Levels, drop_variables: list[str] | None
