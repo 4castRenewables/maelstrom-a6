@@ -26,7 +26,8 @@ class ExtendAction(argparse.Action):
                 pass
             # If single- or double-quote in string, split by spaces and extend
             elif '"' in value or "'" in value:
-                value = value.replace('"', "").replace("'", "")
+                for char in ["'", '"']:
+                    value = value.replace(char, "")
                 # Split space-separate quoted list
                 result = value.split(" ")
                 items.extend(map(self._type, result))
@@ -42,6 +43,42 @@ def parse_str_or_none(value: str) -> str | None:
     if value.lower() == "none":
         return None
     return value
+
+
+class ExtendListAction(argparse.Action):
+    def __init__(self, type: type, *args, **kwargs):
+        self._type = type
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = getattr(namespace, self.dest) or []
+
+        # If default is a list, use a clean list to not
+        # append to default.
+        if items == self.default:
+            items = []
+
+        for value in values:
+            # If , in values, assume tuple given
+            if "," in value:
+                for char in ["(", ")"]:
+                    value = value.replace(char, "")
+                try:
+                    x, y = map(self._type, value.split(","))
+                except ValueError as e:
+                    raise argparse.ArgumentTypeError(
+                        f"Value for {self.dest} must be of type {self._type} "
+                        f"or ({self._type},{self._type}), but {value} given"
+                    ) from e
+                items.append((x, y))
+            else:
+                items.append(self._type(value))
+        # Only set attribute if items given, else attribute should be ``None``
+        if not items:
+            raise ValueError(
+                f"Unable to extract any values for {self.dest} from {values}"
+            )
+        setattr(namespace, self.dest, items)
 
 
 def create_argparser() -> argparse.ArgumentParser:
@@ -148,7 +185,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=float,
         nargs="+",
         default=[0.75],
-        action=ExtendAction,
+        action=ExtendListAction,
         help="Crops resolutions (example: [0.9, 0.75])",
     )
     parser.add_argument(
@@ -156,7 +193,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=float,
         nargs="+",
         default=[0.14],
-        action=ExtendAction,
+        action=ExtendListAction,
         help="argument in RandomResizedCrop (example: [0.14, 0.05])",
     )
     parser.add_argument(
@@ -164,7 +201,7 @@ def create_argparser() -> argparse.ArgumentParser:
         type=float,
         nargs="+",
         default=[1],
-        action=ExtendAction,
+        action=ExtendListAction,
         help="argument in RandomResizedCrop (example: [1., 0.14])",
     )
 
