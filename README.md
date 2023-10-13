@@ -195,3 +195,17 @@ via `apptainer exec <path to image> python <path to script>`.
    `poetry run jupyter notebook` command. The URL should look as follows:
    `http://localhost:8888/?token=<token>`.
 7. Run the notebook `notebooks/e4/parallel_a6.ipynb`.
+
+
+## Known Issues
+
+### Additional `expvar` dimension in ERA5 data
+
+Recent ERA5 data may contain an additional dimension called `expvar` with levels `1` and `5`.
+Level 1 is typically `NaN` after some point in the `time` dimension, and Level 5 is `NaN` up to that point.
+After that point in time, this is the opposite: level 1 is `NaN` and level 5 has values.
+Thus, the levels have to be reduced by taking the sum, ignoring `NaN`. This can be achieved with `np.nansum`:
+
+```python
+ds_new = ds.reduce(np.nansum, dim="expver", keep_attrs=True)
+```
