@@ -15,6 +15,6 @@ for i, step in enumerate(ds["time"]):
     file = path / f"daily/era5_pl_{date_as_str}.nc"
     if not file.exists():
         print(f"[{round(i / total * 100, 2)}%] Saving {file}")
-        sub = ds.sel(time=step).to_netcdf()
+        sub = ds.sel(time=step).to_netcdf(file)
         # Sleep 0.1 seconds to avoid crashing due to CPU overload
         time.sleep(0.1)
