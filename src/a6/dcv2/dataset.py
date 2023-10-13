@@ -152,6 +152,8 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             coordinates=self._coordinates,
         )
 
+        logger.info("Calculated mean %s and standard deviation %s", mean, std)
+
         trans = []
         for i in range(len(size_crops)):
             trans.extend(
