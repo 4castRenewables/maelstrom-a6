@@ -27,6 +27,11 @@ import a6.dcv2._parse as _parse
         ("levels", ["--levels", "'1 2 3'"], [1, 2, 3]),
         # Test case: parsing of multiple values as double-quoted string
         ("levels", ["--levels", '"1 2 3"'], [1, 2, 3]),
+        # Test case: passing of float or tuple of floats
+        # Default should remain if no args given
+        ("size_crops", [], [0.75]),
+        ("size_crops", ["--size-crops", "0.5"], [0.5]),
+        ("size_crops", ["--size-crops", "(0.5,0.5)"], [(0.5, 0.5)]),
     ],
 )
 def test_create_argparser(attribute, args, expected):
