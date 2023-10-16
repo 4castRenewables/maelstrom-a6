@@ -284,15 +284,6 @@ def create_argparser() -> argparse.ArgumentParser:
         "--sync-bn", type=str, default="pytorch", help="synchronize bn"
     )
     parser.add_argument(
-        "--syncbn-process-group-size",
-        type=int,
-        default=8,
-        help=(
-            "see"
-            "https://github.com/NVIDIA/apex/blob/master/apex/parallel/__init__.py#L58-L67"  # noqa: E501
-        ),
-    )
-    parser.add_argument(
         "--dump-path",
         type=pathlib.Path,
         default=ROOT_DIR / "dcv2_dump",
