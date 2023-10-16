@@ -204,6 +204,7 @@ def _init_process_group(properties: Properties) -> None:
 
 def _set_device(properties: Properties) -> None:
     if not properties.use_cpu and torch.cuda.is_available():
+        logger.info("Setting torch CUDA device to %s", properties.local_rank)
         torch.cuda.set_device(properties.local_rank)
         # perform a dummy all-reduce to initialize the NCCL communicator
         torch.distributed.all_reduce(torch.zeros(1).cuda())
