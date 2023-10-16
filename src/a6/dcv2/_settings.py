@@ -135,6 +135,7 @@ class Settings:
                 base_lr=args.base_lr,
                 final_lr=args.final_lr,
                 sync_bn=SyncBn(args.sync_bn),
+                # See https://github.com/NVIDIA/apex/blob/master/apex/parallel/__init__.py#L58-L67"  # noqa: E501
                 syncbn_process_group_size=(
                     env_vars.world_size // utils.slurm.get_number_of_nodes()
                 ),
