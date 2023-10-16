@@ -7,6 +7,8 @@ import a6.dcv2.entry as entry
 import a6.testing as testing
 import mlflow
 
+BASE_ARGS = ["--use-cpu", "--enable-tracking", "--epoch", "1"]
+
 
 @pytest.fixture
 def mock_select_dwd_area(monkeypatch) -> None:
@@ -32,10 +34,7 @@ def test_train_dcv2(tmp_path):
 
     # Train first epoc
     raw_args_1 = [
-        "--enable-tracking",
-        "--use-cpu",
-        "--epochs",
-        "1",
+        *BASE_ARGS,
         "--dump-path",
         tmp_path.as_posix(),
     ]
@@ -65,10 +64,7 @@ def test_train_dcv2_with_era5(
 
     # Train first epoc without cutting DWD area
     raw_args_1 = [
-        "--enable-tracking",
-        "--use-cpu",
-        "--epochs",
-        "1",
+        *BASE_ARGS,
         "--data-path",
         era5_path.as_posix(),
         "--no-parallel-loading",
