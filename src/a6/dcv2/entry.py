@@ -54,12 +54,11 @@ def train_dcv2(raw_args: list[str] | None = None):
 
 @contextlib.contextmanager
 def setup_distributed(settings: _settings.Settings) -> None:
+    utils.logging.log_env_vars()
     utils.distributed.setup(settings.distributed, seed=settings.data.seed)
 
     if utils.distributed.is_primary_device():
         start = time.time()
-
-        utils.logging.log_env_vars()
 
         stdout = utils.slurm.get_stdout_file()
         stderr = utils.slurm.get_stderr_file()
