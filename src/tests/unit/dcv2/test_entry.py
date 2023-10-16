@@ -1,18 +1,11 @@
 import pathlib
 
 import pytest
-import xarray as xr
 
 import a6.datasets as datasets
 import a6.dcv2.entry as entry
 import a6.testing as testing
-import a6.utils as utils
 import mlflow
-
-
-@utils.functional.make_functional
-def dummy_method(ds: xr.Dataset, *args, **kwargs) -> xr.Dataset:
-    return ds
 
 
 @pytest.fixture
@@ -20,7 +13,7 @@ def mock_select_dwd_area(monkeypatch) -> None:
     monkeypatch.setattr(
         datasets.methods.select,
         "select_dwd_area",
-        dummy_method,
+        datasets.methods.identity.identity,
     )
 
 

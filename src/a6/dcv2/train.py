@@ -7,6 +7,7 @@
 import logging
 import time
 
+import numpy as np
 import torch.nn as nn
 import torch.utils.data
 
@@ -24,7 +25,7 @@ def train(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     epoch: int,
-    schedule,
+    schedule: np.ndarray,
     local_memory_index: torch.Tensor,
     local_memory_embeddings: torch.Tensor,
     settings: _settings.Settings,

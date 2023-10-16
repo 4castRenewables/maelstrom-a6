@@ -329,7 +329,12 @@ def _create_dataset(
         drop_variables = settings.data.drop_variables or []
 
         preprocessing = (
-            features.methods.weighting.weight_by_latitudes(
+            (
+                datasets.methods.select.select_dwd_area(coordinates=coordinates)
+                if settings.data.select_dwd_area
+                else datasets.methods.identity.identity()
+            )
+            >> features.methods.weighting.weight_by_latitudes(
                 latitudes=coordinates.latitude,
                 use_sqrt=True,
             )
@@ -340,14 +345,6 @@ def _create_dataset(
                 names=[variables.z] + drop_variables
             )
         )
-
-        if settings.data.select_dwd_area:
-            preprocessing = (
-                preprocessing
-                >> datasets.methods.select.select_dwd_area(
-                    coordinates=coordinates
-                )
-            )
 
         ds = datasets.Era5(
             path=settings.data.path,
