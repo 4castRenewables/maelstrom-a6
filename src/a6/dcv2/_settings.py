@@ -135,7 +135,8 @@ class Settings:
                 base_lr=args.base_lr,
                 final_lr=args.final_lr,
                 sync_bn=SyncBn(args.sync_bn),
-                syncbn_process_group_size=args.syncbn_process_group_size,
+                syncbn_process_group_size=env_vars.world_size
+                // utils.slurm.get_number_of_nodes(),
                 freeze_prototypes_niters=args.freeze_prototypes_niters,
                 wd=args.wd,
                 warmup_epochs=args.warmup_epochs,
