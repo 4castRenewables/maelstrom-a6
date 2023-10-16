@@ -1,6 +1,3 @@
-# This image is just for testing the installation.
-# It builds much faster than the Apptainer image due to caching.
-
 # When changing the CUDA version, take care to adjust the
 # it accordingly in the PATH ARG and ENV.
 ARG CUDA_VERSION=11.7.1
@@ -61,7 +58,17 @@ RUN conda config --add channels conda-forge \
 # Install PyTorch and apex
 RUN conda install -n a6 -c pytorch pytorch=${PYTORCH_VERSION} torchvision=${TORCHVISION_VERSION}
 RUN conda install -n a6 -c anaconda cudatoolkit=${CUDA_VERSION}
-RUN conda install -n a6 -c conda-forge nvidia-apex
+RUN git clone https://github.com/NVIDIA/apex /opt/apex \
+ && cd /opt/apex \
+ && conda run -n a6 pip install packaging \
+ && conda run -n a6 \
+      pip install -v  \
+      --disable-pip-version-check \
+      --no-cache-dir \
+      --no-build-isolation \
+      --global-option="--cpp_ext" \
+      --global-option="--cuda_ext" \
+      ./
 
 # Use conda-pack to create a standalone env in /venv and install vissl
 RUN conda-pack -n a6 -o /opt/env.tar.gz \
@@ -106,7 +113,6 @@ RUN apt-key del 7fa2af80 \
  && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub \
  && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
 
-# Install opencv via apt to get required libraries
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends  \
@@ -115,6 +121,7 @@ RUN apt-get update \
       # Required by cartopy
       libgeos-3.8.0 \
       libgeos-dev \
+      # Install opencv via apt to get required libraries
       python3-opencv \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*

@@ -11,7 +11,7 @@ From: a6-cuda:latest
     which python
     python --version
     pip list
-    python -c 'import a6, torch, torchvision, apex'
+    python -c 'import a6, apex, torch, torchvision'
 
 %startscript
     exec "$@"
