@@ -1,5 +1,4 @@
-# When changing the CUDA version, take care to adjust the
-# it accordingly in the PATH ARG and ENV.
+# NCCL is not correctly installed when using CUDA >=11.7.1
 ARG CUDA_VERSION=11.7.1
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as builder
@@ -36,8 +35,8 @@ RUN wget \
 ARG CUDA_VERSION
 ARG PYTHON_VERSION=3.11
 
-# torch 2.1.0 requries CUDA 11.8.0 and has no
-# compatible apex version on conda, hence use 2.0.1
+# torch 2.1.0 requries CUDA 11.8.0,
+# which causes NCCL to not be correctly installed
 ARG PYTORCH_VERSION=2.0.1
 ARG TORCHVISION_VERSION=0.15.2
 
@@ -55,9 +54,11 @@ RUN conda config --add channels conda-forge \
  && conda update pip setuptools \
  && conda create --name a6 python=${PYTHON_VERSION}
 
-# Install PyTorch and apex
+# Install torch and torchvision
 RUN conda install -n a6 -c pytorch pytorch=${PYTORCH_VERSION} torchvision=${TORCHVISION_VERSION}
+# Install cudatoolkit for NCCL required by torch.distributed
 RUN conda install -n a6 -c anaconda cudatoolkit=${CUDA_VERSION}
+# Install apex
 RUN git clone https://github.com/NVIDIA/apex /opt/apex \
  && cd /opt/apex \
  && conda run -n a6 pip install packaging \
@@ -80,6 +81,7 @@ RUN conda-pack -n a6 -o /opt/env.tar.gz \
 # Install poetry
 RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python -
 ENV PATH=/opt/poetry/bin:${PATH}
+ENV POETRY_VIRTUALENVS_CREATE=false
 
 COPY README.md/ /opt/a6/
 COPY pyproject.toml /opt/a6/
@@ -90,7 +92,8 @@ COPY src/a6/ /opt/a6/src/a6
 # packages installed in editable mode.
 WORKDIR /opt/a6
 RUN . /venv/bin/activate \
- && POETRY_VIRTUALENVS_CREATE=false poetry install --only=main
+ && poetry add torch==${PYTORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
+ && poetry install --only=main
 
 # Delete Python cache files
 WORKDIR /venv
@@ -130,6 +133,7 @@ RUN which python \
  && python --version \
  && pip list \
  && python -c 'import a6, apex, torch, torchvision' \
+ && python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"' \
  && python -m cfgrib selfcheck
 
 ENTRYPOINT ["python"]
