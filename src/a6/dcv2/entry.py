@@ -54,7 +54,9 @@ def train_dcv2(raw_args: list[str] | None = None):
 
 @contextlib.contextmanager
 def setup_distributed(settings: _settings.Settings) -> None:
-    utils.logging.log_env_vars()
+    if utils.distributed.is_primary_device():
+        utils.logging.log_env_vars()
+
     utils.distributed.setup(settings.distributed, seed=settings.data.seed)
 
     if utils.distributed.is_primary_device():
