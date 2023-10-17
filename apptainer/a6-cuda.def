@@ -12,6 +12,8 @@ From: a6-cuda:latest
     python --version
     pip list
     python -c 'import a6, apex, torch, torchvision'
+    python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
+    python -m cfgrib selfcheck
 
 %startscript
     exec "$@"
