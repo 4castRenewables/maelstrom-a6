@@ -139,6 +139,10 @@ def get_dist_url_and_set_master_env_vars() -> str:
 
     if not _is_multi_node():
         host = "127.0.0.1"
+    # If host is any JUWELS machine, the host requires an `i` suffix.
+    elif host.endswith(".juwels"):
+        node, _ = host.split(".")
+        host = f"{node}i"
     # jwb and jwc are the prefixes for the hostnames of JUWELS
     # Cluster and Booster
     elif any(host.startswith(string) for string in ["jwb", "jwc"]):
