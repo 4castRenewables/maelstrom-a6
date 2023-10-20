@@ -424,3 +424,11 @@ class Architecture(enum.StrEnum):
     ResNet50W2 = "resnet50w2"
     ResNet50W4 = "resnet50w4"
     ResNet50W5 = "resnet50w5"
+
+
+Models: dict[str, Callable] = {
+    "resnet50": resnet50,
+    "resnet50w2": resnet50w2,
+    "resnet50w4": resnet50w4,
+    "resnet50w5": resnet50w5,
+}

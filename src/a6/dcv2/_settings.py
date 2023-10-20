@@ -4,7 +4,7 @@ import pathlib
 from typing import Any
 from typing import Self
 
-import a6.dcv2.models as models
+import a6.models.resnet as models
 import a6.utils as utils
 
 

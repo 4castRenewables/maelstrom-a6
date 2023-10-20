@@ -4,7 +4,7 @@ import pytest
 import torch
 import xarray as xr
 
-import a6.dcv2.dataset as dataset
+import a6.datasets.crop as dataset
 
 
 @pytest.fixture

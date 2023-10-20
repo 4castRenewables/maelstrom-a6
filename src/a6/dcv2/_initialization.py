@@ -2,15 +2,15 @@ import logging
 
 import yaml
 
+import a6.dcv2._logs as _logs
 import a6.dcv2._settings as _settings
-import a6.dcv2.logs as logs
 
 logger = logging.getLogger(__name__)
 
 
 def initialize_logging(
     settings: _settings.Settings, columns: list[str]
-) -> tuple[logging.Logger, logs.Stats]:
+) -> tuple[logging.Logger, _logs.Stats]:
     """Initialize logging.
 
     Notes
@@ -40,14 +40,14 @@ def initialize_logging(
             )
 
     # create a panda object to log loss and acc
-    training_stats = logs.Stats(
+    training_stats = _logs.Stats(
         settings.dump.path
         / f"stats-rank-{settings.distributed.global_rank}.csv",
         columns,
     )
 
     # create a logger
-    logger_ = logs.create_logger(
+    logger_ = _logs.create_logger(
         settings.dump.path / f"train-{settings.distributed.global_rank}.log",
         settings=settings,
     )
