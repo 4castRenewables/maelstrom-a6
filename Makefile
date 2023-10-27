@@ -55,7 +55,7 @@ upload-e4-cuda:
 		mlflow/$(IMAGE_NAME)-cuda.sif \
 		$(E4_SSH):$(E4_PROJECT_DIR)/$(IMAGE_NAME)-cuda.sif
 
-deploy-cuda: build-cuda upload-cuda-cuda
+deploy-cuda: build-cuda upload-cuda
 
 deploy-e4-cuda: build-cuda upload-e4-cuda
 
