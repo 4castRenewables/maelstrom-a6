@@ -6,6 +6,10 @@ From: a6-cuda:latest
     # Silence git warning by MLflow
     export GIT_PYTHON_REFRESH=quiet
 
+%post
+    # Install ipykernel for usage as Jupyter kernel
+    pip install ipykernel
+
 %test
     export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
     which python

@@ -93,7 +93,7 @@ COPY src/a6/ /opt/a6/src/a6
 WORKDIR /opt/a6
 RUN . /venv/bin/activate \
  && poetry add torch==${PYTORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
- && poetry install --only=main
+ && poetry install --only=main,notebooks
 
 # Delete Python cache files
 WORKDIR /venv
@@ -132,7 +132,7 @@ RUN apt-get update \
 RUN which python \
  && python --version \
  && pip list \
- && python -c 'import a6, apex, torch, torchvision' \
+ && python -c 'import a6, apex, torch, torchvision, ipykernel, memory_profiler' \
  && python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"' \
  && python -m cfgrib selfcheck
 

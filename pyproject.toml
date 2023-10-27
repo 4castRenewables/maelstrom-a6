@@ -45,6 +45,10 @@ pytest-cov = "^3.0.0"
 jupyter = "^1.0.0"
 python-dotenv = "^0.20.0"
 opentsne = "^1.0.0"
+# Required to run Apptainer image as Jupyter kernel
+ipykernel = "^6.26.0"
+# Required by IPython (implicit dependency of ipykernel)
+memory-profiler = "^0.61.0"
 
 [tool.poetry.group.mantik.dependencies]
 mantik = "^0.4.2"
