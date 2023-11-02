@@ -143,18 +143,32 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
         self.return_index = return_index
 
-        mean = _get_statistics(
-            self.dataset,
-            method=normalization.calculate_mean,
-            levels=self._levels,
-            coordinates=self._coordinates,
-        )
-        std = _get_statistics(
-            self.dataset,
-            method=normalization.calculate_std,
-            levels=self._levels,
-            coordinates=self._coordinates,
-        )
+        if "mean" in self.dataset.attrs:
+            mean = self.dataset.attrs["mean"]
+            logging.info("Reading mean from dataset attribute 'mean': %s", mean)
+        else:
+            logger.info("Calculating mean from dataset")
+            mean = _get_statistics(
+                self.dataset,
+                method=normalization.calculate_mean,
+                levels=self._levels,
+                coordinates=self._coordinates,
+            )
+
+        if "std" in self.dataset.attrs:
+            std = self.dataset.attrs["std"]
+            logging.info(
+                "Reading standard deviations from dataset attribute 'std': %s",
+                std,
+            )
+        else:
+            logger.info("Calculating std from dataset")
+            std = _get_statistics(
+                self.dataset,
+                method=normalization.calculate_std,
+                levels=self._levels,
+                coordinates=self._coordinates,
+            )
 
         logger.info("Calculated mean %s and standard deviation %s", mean, std)
 
