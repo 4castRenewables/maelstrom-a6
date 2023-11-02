@@ -229,14 +229,8 @@ def _train(
         ]
     )
     lr_schedule = np.concatenate((warmup_lr_schedule, cosine_lr_schedule))
-    logger.info(
-        (
-            "Building optimizer done, learning rate schedule: "
-            "warumup schedule %s, cosine schedule %s"
-        ),
-        warmup_lr_schedule,
-        cosine_lr_schedule,
-    )
+
+    logger.info("Building optimizer done")
 
     # wrap model
     if not settings.distributed.use_cpu:
