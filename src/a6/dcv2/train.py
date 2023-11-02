@@ -78,7 +78,7 @@ def train(
         logger.debug("Batch size for iteration %i is %s (idx)", it, bs)
 
         # ============ deepcluster-v2 loss ... ============
-        loss = torch.tensor(0.0)
+        loss: torch.tensor = torch.tensor(0.0).to(device=device)
         for h in range(len(settings.model.nmb_prototypes)):
             scores = output[h] / settings.model.temperature
             targets = (
