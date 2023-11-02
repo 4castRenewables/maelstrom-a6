@@ -100,7 +100,7 @@ def train(
                     it,
                     h,
                     settings.model.nmb_prototypes,
-                    torch.isnan(inputs).any(),
+                    any(torch.isnan(inp).any() for inp in inputs),
                     idx,
                     assignments[h][idx],
                     output[h],
