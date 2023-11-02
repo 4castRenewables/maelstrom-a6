@@ -69,10 +69,16 @@ def train(
         emb = emb.detach()
         bs = inputs[0].size(0)
 
-        logger.debug("Batch size is %s", bs)
+        if bs == 0:
+            raise RuntimeError(
+                f"Batch size is zero, loss will be NaN: it={it}, idx={idx}, "
+                "inputs[0]={inputs[0]}"
+            )
+
+        logger.debug("Batch size for iteration %i is %s (idx)", it, bs)
 
         # ============ deepcluster-v2 loss ... ============
-        loss = 0
+        loss = torch.tensor(0.0)
         for h in range(len(settings.model.nmb_prototypes)):
             scores = output[h] / settings.model.temperature
             targets = (
@@ -80,7 +86,33 @@ def train(
                 .repeat(sum(settings.preprocessing.nmb_crops))
                 .to(device=device, non_blocking=True)
             )
-            loss += cross_entropy(scores, targets)
+            loss_temp = cross_entropy(scores, targets)
+            loss += loss_temp
+
+            if torch.isnan(loss_temp).any() or torch.isnan(loss).any():
+                logger.warning(
+                    (
+                        "Loss is NaN: it=%i, prototype(h)=%i, "
+                        "nmb_prototypes=%s, "
+                        "idx=%s, assignments=%s, output=%s, targets=%s, "
+                        "scores=%s, sum_nmb_crops=%s, loss_temp=%s, loss=%s, "
+                        "loss.item()=%s"
+                    ),
+                    it,
+                    h,
+                    settings.model.nmb_prototypes,
+                    idx,
+                    assignments[h][idx],
+                    output[h],
+                    targets,
+                    scores,
+                    sum(settings.preprocessing.nmb_crops),
+                    loss_temp,
+                    loss,
+                    loss.item(),
+                )
+                raise RuntimeError("Loss exploded to NaN")
+
         loss /= len(settings.model.nmb_prototypes)
 
         # ============ backward and optim step ... ============
@@ -104,7 +136,7 @@ def train(
         start_idx += bs
 
         # ============ misc ... ============
-        losses.update(loss.item(), inputs[0].size(0))
+        losses.update(loss.item(), bs)
         batch_time.update(time.time() - end)
         end = time.time()
 
@@ -143,7 +175,7 @@ def train(
         )
 
     if utils.distributed.is_primary_device() and (device.type == "cuda"):
-        logging.info(
+        logger.info(
             "========= Memory Summary at epoch %s =======\n%s\n",
             epoch,
             torch.cuda.memory_summary(),
