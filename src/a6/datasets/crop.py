@@ -195,7 +195,23 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             coordinates=self._coordinates,
         )
         image = torch.from_numpy(sample)
+
+        if torch.isnan(image).any():
+            raise ValueError(
+                f"Sample at index {index} ({self.dataset.isel(time=index)}) "
+                f"has NaNs: {image}",
+            )
+
         multi_crops = list(map(lambda trans: trans(image), self.trans))
+
+        for crop_index, crop in enumerate(multi_crops):
+            if torch.isnan(crop).any():
+                raise ValueError(
+                    f"After transforms, crop {crop_index} of sample at index "
+                    f"{index} ({self.dataset.isel(time=index)}) "
+                    f"has NaNs: {crop}",
+                )
+
         if self.return_index:
             return index, multi_crops
         return multi_crops

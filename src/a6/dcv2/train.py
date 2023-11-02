@@ -54,6 +54,20 @@ def train(
     for it, (idx, inputs) in enumerate(dataloader):
         logger.debug("Calculating loss for index %s", idx)
 
+        for crop_index, inp in enumerate(inputs):
+            for index in range(inp.size(0)):
+                sample = inp[index]
+                if torch.isnan(sample).any():
+                    logger.exception(
+                        (
+                            "Input at crop index %i and index %i has NaN "
+                            "values: %s"
+                        ),
+                        crop_index,
+                        idx[index],
+                        sample,
+                    )
+
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -90,7 +104,7 @@ def train(
             loss += loss_temp
 
             if torch.isnan(loss_temp).any() or torch.isnan(loss).any():
-                logger.warning(
+                logger.exception(
                     (
                         "Loss is NaN: it=%i, prototype(h)=%i, "
                         "nmb_prototypes=%s, inputs_is_any_nan=%s"
@@ -110,6 +124,7 @@ def train(
                     loss_temp.item(),
                     loss.item(),
                 )
+
                 raise RuntimeError("Loss exploded to NaN")
 
         loss /= len(settings.model.nmb_prototypes)
