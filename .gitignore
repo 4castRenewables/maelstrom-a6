@@ -4,5 +4,7 @@ kernel.json
 dist/
 .checkpoints/
 ap6-run/
+*.pdf
+*.csv
 
 dcv2_dump/
