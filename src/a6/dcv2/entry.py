@@ -89,7 +89,9 @@ def setup_distributed(settings: _settings.Settings) -> None:
 
             # The following files are saved to disk in `a6.dcv2.cluster.py`
             mantik.call_mlflow_method(
-                mlflow.log_artifacts, settings.dump.results
+                # NOTE: Only log plots due to large size of other files
+                mlflow.log_artifacts,
+                settings.dump.plots,
             )
 
             mantik.call_mlflow_method(mlflow.end_run)
