@@ -37,7 +37,7 @@ def train(
     model.train()
     cross_entropy = nn.CrossEntropyLoss(ignore_index=cluster.IGNORE_INDEX)
 
-    assignments = cluster.cluster_memory(
+    assignments = cluster.cluster_embeddings(
         epoch=epoch,
         model=model,
         local_memory_index=local_memory_index,

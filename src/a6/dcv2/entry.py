@@ -261,7 +261,7 @@ def _train(
         local_memory_index = mb_ckp["local_memory_index"]
         local_memory_embeddings = mb_ckp["local_memory_embeddings"]
     else:
-        local_memory_index, local_memory_embeddings = cluster.init_memory(
+        local_memory_index, local_memory_embeddings = cluster.init_embeddings(
             dataloader=train_loader,
             model=model,
             settings=settings,

@@ -393,14 +393,14 @@ class MultiPrototypes(nn.Module):
         self.nmb_heads = len(nmb_prototypes)
         for i, k in enumerate(nmb_prototypes):
             self.add_module(
-                "prototypes" + str(i), nn.Linear(output_dim, k, bias=False)
+                f"prototypes{i}", nn.Linear(output_dim, k, bias=False)
             )
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
-        out = []
-        for i in range(self.nmb_heads):
-            out.append(getattr(self, "prototypes" + str(i))(x))
-        return out
+        return [
+            getattr(self, "prototypes" + str(i))(x)
+            for i in range(self.nmb_heads)
+        ]
 
 
 def resnet50(**kwargs):

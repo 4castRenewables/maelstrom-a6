@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 IGNORE_INDEX = -1
 
 
-def init_memory(
+def init_embeddings(
     dataloader: torch.utils.data.DataLoader,
     model: nn.Module,
     settings: _settings.Settings,
@@ -89,7 +89,7 @@ def init_memory(
     return local_memory_index, local_memory_embeddings
 
 
-def cluster_memory(
+def cluster_embeddings(
     epoch: int,
     model,
     local_memory_index: torch.Tensor,
