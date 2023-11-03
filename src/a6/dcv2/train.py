@@ -128,7 +128,6 @@ def train(
                 raise RuntimeError("Loss exploded to NaN")
 
         loss /= len(settings.model.nmb_prototypes)
-        logger.info("Loss in it=%i: %s", it, loss.item())
 
         # ============ backward and optim step ... ============
         optimizer.zero_grad()

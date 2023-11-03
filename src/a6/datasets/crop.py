@@ -16,8 +16,7 @@ import torchvision.transforms
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
-import a6.datasets.methods.normalization as normalization
-import a6.datasets.methods.transform as transform
+import a6.datasets.methods as methods
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +149,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             logger.info("Calculating mean from dataset")
             mean = _get_statistics(
                 self.dataset,
-                method=normalization.calculate_mean,
+                method=methods.normalization.calculate_mean,
                 levels=self._levels,
                 coordinates=self._coordinates,
             )
@@ -165,7 +164,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             logger.info("Calculating std from dataset")
             std = _get_statistics(
                 self.dataset,
-                method=normalization.calculate_std,
+                method=methods.normalization.calculate_std,
                 levels=self._levels,
                 coordinates=self._coordinates,
             )
@@ -198,7 +197,8 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
         if torch.isnan(image).any():
             raise ValueError(
-                f"Sample at index {index} ({self.dataset.isel(time=index)}) "
+                f"Sample at index {index} "
+                f"({self.dataset.isel(time=index)[self._coordinates.time]}) "
                 f"has NaNs: {image}",
             )
 
@@ -259,7 +259,7 @@ def convert_relative_to_absolute_crop_size(
 
 def _get_statistics(
     data: xr.Dataset,
-    method: normalization.StatisticsMethod,
+    method: methods.normalization.StatisticsMethod,
     levels: list[int],
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> list[float]:
@@ -279,7 +279,7 @@ def _create_transformations(
     max_scale_crops: list[float],
     mean: list[float],
     std: list[float],
-    min_max_values: list[normalization.VariableMinMax] | None = None,
+    min_max_values: list[methods.normalization.VariableMinMax] | None = None,
     to_tensor: bool = True,
     random_horizontal_flip: bool = False,
     color_distortion: bool = False,
@@ -303,17 +303,17 @@ def _create_transformations(
                         torchvision.transforms.RandomHorizontalFlip(p=0.5)
                         if random_horizontal_flip
                         else None,
-                        transform.color_distortion()
+                        methods.transform.color_distortion()
                         if color_distortion
                         else None,
-                        transform.PILRandomGaussianBlur()
+                        methods.transform.PILRandomGaussianBlur()
                         if gaussian_blur
                         else None,
                         ###
                         torchvision.transforms.ToTensor()
                         if to_tensor
                         else None,
-                        transform.MinMaxScale(min_max=min_max_values)
+                        methods.transform.MinMaxScale(min_max=min_max_values)
                         if min_max_values is not None
                         else None,
                         torchvision.transforms.Normalize(mean=mean, std=std),
@@ -335,22 +335,23 @@ def _concatenate_levels_to_channels(
     levels: list[int],
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> np.ndarray:
+    time_step = data.isel({coordinates.time: time_index})
+    without_nans = methods.mask.set_nans_to_mean(
+        time_step, coordinates=coordinates
+    )
+
     if len(levels) == 1:
         # If only single level given, argument for `level` to `xr.Dataset.sel`
         # must be a single integer, otherwise the data will have an additional
         # dimension.
         return (
-            data.isel({coordinates.time: time_index})
-            .sel({coordinates.level: levels[0]})
+            without_nans.sel({coordinates.level: levels[0]})
             .to_array()
             .to_numpy()
         )
     return np.concatenate(
         [
-            data.isel({coordinates.time: time_index})
-            .sel({coordinates.level: level})
-            .to_array()
-            .to_numpy()
+            without_nans.sel({coordinates.level: level}).to_array().to_numpy()
             for level in levels
         ]
     )
