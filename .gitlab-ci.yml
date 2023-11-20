@@ -1,12 +1,12 @@
 include:
   - project: 4cast1/ci-templates
-    ref: main
+    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
     file: /python/templates.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
     file: /docker/templates.yml
 
 variables:
