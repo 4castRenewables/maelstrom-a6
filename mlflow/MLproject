@@ -108,6 +108,29 @@ entry_points:
         --level {level}
         --turbine-data {turbine_data}
         --config {config}
+  forecast-errors:
+    parameters:
+      pressure_level_data:
+        type: string
+      model_level_data:
+        type: string
+      surface_level_data:
+        type: string
+      turbine_data_dir:
+        type: string
+      results_dir:
+        type: string
+      parallel:
+        type: string
+        default: "--parallel"
+    command: >
+      python forecast_errors.py
+        --pressure-level-data {pressure_level_data}
+        --model-level-data {model_level_data}
+        --surface-level-data {surface_level_data}
+        --turbine-data-dir {turbine_data_dir}
+        --results-dir {results_dir}
+        {parallel}
   dcv2:
     parameters:
       enable_tracking:

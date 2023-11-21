@@ -45,7 +45,11 @@ def preprocess_turbine_data_and_match_with_weather_data(
         coordinates=coordinates,
     ).apply_to(weather)
     return select_intersecting_time_steps(
-        weather=weather, turbine=turbine, coordinates=coordinates
+        weather=weather,
+        turbine=turbine,
+        coordinates=coordinates,
+        return_turbine=True,
+        non_functional=True,
     )
 
 
@@ -143,11 +147,13 @@ def resample_to_hourly_resolution(
 
 
 @utils.log_consumption
+@utils.make_functional
 def select_intersecting_time_steps(
     weather: xr.Dataset,
     turbine: xr.Dataset,
+    return_turbine: bool = False,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
-) -> tuple[xr.Dataset, xr.Dataset]:
+) -> xr.Dataset | tuple[xr.Dataset, xr.Dataset]:
     """Select the overlapping time steps of the datasets."""
     logger.debug("Getting intersecting time steps for weather and turbine data")
     intersection = utils.get_time_step_intersection(
@@ -157,4 +163,6 @@ def select_intersecting_time_steps(
     )
     select = {coordinates.time: intersection}
     logger.debug("Found intersecting time steps %s", select)
-    return weather.sel(select), turbine.sel(select)
+    if return_turbine:
+        return weather.sel(select), turbine.sel(select)
+    return weather.sel(select)

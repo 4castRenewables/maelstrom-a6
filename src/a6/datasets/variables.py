@@ -33,6 +33,7 @@ class Model:
     v: str = "v"
     wind_speed: str = "spd"
     wind_direction: str = "dir"
+    sp: str = "sp"
     t: str = "t"
     r: str = "r"
     q: str = "q"

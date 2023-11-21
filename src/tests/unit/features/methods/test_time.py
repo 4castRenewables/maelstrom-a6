@@ -30,7 +30,7 @@ def test_calculate_fraction_of_year():
         name="fraction_of_year",
     )
 
-    result_ds = time.calculate_fraction_of_year(ds)
+    result_ds = time.calculate_fraction_of_year(ds, non_functional=True)
     result = result_ds["fraction_of_year"]
 
     xr.testing.assert_allclose(result, expected)
@@ -61,7 +61,7 @@ def test_calculate_fraction_of_day():
         name="fraction_of_day",
     )
 
-    result_ds = time.calculate_fraction_of_day(ds)
+    result_ds = time.calculate_fraction_of_day(ds, non_functional=True)
     result = result_ds["fraction_of_day"]
 
     xr.testing.assert_allclose(result, expected)

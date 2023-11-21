@@ -4,8 +4,10 @@ import numpy as np
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
+import a6.utils as utils
 
 
+@utils.make_functional
 def calculate_fraction_of_year(
     ds: xr.Dataset,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
@@ -24,6 +26,7 @@ def calculate_fraction_of_year(
     return ds
 
 
+@utils.make_functional
 def calculate_fraction_of_day(
     ds: xr.Dataset,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),

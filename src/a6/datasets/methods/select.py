@@ -1,9 +1,20 @@
+from collections.abc import Hashable
+
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
 import a6.features.methods as methods
 import a6.types as types
 import a6.utils as utils
+
+
+@utils.make_functional
+def select_variables(
+    dataset: xr.Dataset,
+    variables: list[Hashable],
+) -> xr.Dataset:
+    """Select given variable(s) from the dataset."""
+    return dataset[variables]
 
 
 @utils.make_functional
@@ -14,6 +25,29 @@ def select_levels(
 ) -> xr.Dataset:
     """Select given level(s) from the dataset."""
     return dataset.sel({coordinates.level: levels})
+
+
+@utils.make_functional
+def select_latitude_longitude(
+    dataset: xr.Dataset,
+    latitude: int | float,
+    longitude: int | float,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> xr.Dataset:
+    """Select given latitude and longitude."""
+    values = [latitude, longitude]
+    if not all(isinstance(val, int) for val in values) and not all(
+        isinstance(val, float) for val in values
+    ):
+        raise ValueError(
+            "Given latitude and longitude must be of same type (int or float), "
+            f"{type(latitude)} {type(longitude)} given"
+        )
+
+    area = {coordinates.latitude: latitude, coordinates.longitude: longitude}
+    if isinstance(latitude, int) and isinstance(longitude, int):
+        return dataset.isel(area)
+    return dataset.sel(area)
 
 
 @utils.make_functional
