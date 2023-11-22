@@ -6,6 +6,7 @@ import time
 import xarray as xr
 
 import a6
+import mlflow
 
 logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser()
@@ -19,60 +20,78 @@ parser.add_argument(
 )
 
 if __name__ == "__main__":
-    start = time.time()
+    with mlflow.start_run():
+        start = time.time()
 
-    args = parser.parse_args()
+        args = parser.parse_args()
 
-    path = args.data_path
-    patterns = args.pattern.split(",")
+        a6.utils.mantik.call_mlflow_method(
+            mlflow.log_param,
+            "data_path",
+            args.data_path.as_posix(),
+        )
+        a6.utils.mantik.call_mlflow_method(
+            mlflow.log_param,
+            "patterns",
+            args.pattern,
+        )
 
-    logger.info(
-        "Reading data files from path %s with patterns %s", path, patterns
-    )
-
-    for pattern in patterns:
-        outfile = path / f"../ecmwf_ifs_{pattern}_full.nc"
+        path: pathlib.Path = args.data_path
+        patterns: list[str] = args.pattern.split(",")
 
         logger.info(
-            "Reading files with pattern %s (outfile=%s)", pattern, outfile
+            "Reading data files from path %s with patterns %s", path, patterns
         )
 
-        files = sorted(list(path.rglob(f"{pattern}_*.nc")))
-        logger.info("Reading from %i files", len(files))
+        for pattern in patterns:
+            outfile = path / f"../ecmwf_ifs_{pattern}_full.nc"
 
-        coordinates = a6.datasets.coordinates.Coordinates()
-        preprocessing = a6.datasets.methods.slicing.slice_dataset(
-            dimension=coordinates.time,
-            slice_until=12,
-        )
+            logger.info(
+                "Reading files with pattern %s (outfile=%s)", pattern, outfile
+            )
 
-        logger.info("Reading dataset files")
-        start_reading = time.time()
+            files = sorted(list(path.rglob(f"{pattern}_*.nc")))
+            logger.info("Reading from %i files", len(files))
 
-        ds = xr.open_mfdataset(
-            files,
-            engine="netcdf4",
-            concat_dim="time",
-            combine="nested",
-            coords="minimal",
-            data_vars="minimal",
-            preprocess=preprocessing,
-            compat="override",
-            parallel=False,
-            drop_variables=None,
-        )
+            coordinates = a6.datasets.coordinates.Coordinates()
+            preprocessing = a6.datasets.methods.slicing.slice_dataset(
+                dimension=coordinates.time,
+                slice_until=12,
+            )
 
-        logger.info(
-            "Finished reading in %s seconds", time.time() - start_reading
-        )
+            logger.info("Reading dataset files")
+            start_reading = time.time()
 
-        start_writing = time.time()
-        logger.info("Writing to netCDF")
+            ds = xr.open_mfdataset(
+                files,
+                engine="netcdf4",
+                concat_dim="time",
+                combine="nested",
+                coords="minimal",
+                data_vars="minimal",
+                preprocess=preprocessing,
+                compat="override",
+                parallel=False,
+                drop_variables=None,
+            )
 
-        ds.to_netcdf(outfile)
+            logger.info(
+                "Finished reading in %s seconds", time.time() - start_reading
+            )
 
-        logger.info(
-            "Finished writing in %s seconds", time.time() - start_writing
-        )
+            start_writing = time.time()
+            logger.info("Writing to netCDF")
 
-    logger.info("Finished after %s seconds", time.time() - start)
+            ds.to_netcdf(outfile)
+
+            a6.utils.mantik.call_mlflow_method(
+                mlflow.log_param,
+                f"outfile_{pattern}",
+                outfile.as_posix(),
+            )
+
+            logger.info(
+                "Finished writing in %s seconds", time.time() - start_writing
+            )
+
+        logger.info("Finished after %s seconds", time.time() - start)
