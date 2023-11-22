@@ -108,6 +108,17 @@ entry_points:
         --level {level}
         --turbine-data {turbine_data}
         --config {config}
+  concatenate:
+    parameters:
+      data_path:
+        type: string
+      pattern:
+        type: string
+        default: ml,pl,sfc
+    command: >
+      python concatenate_data_files.py
+        --data-path {data_path}
+        --pattern {pattern}
   forecast-errors:
     parameters:
       pressure_level_data:
