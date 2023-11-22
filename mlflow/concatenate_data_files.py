@@ -6,7 +6,6 @@ import time
 import xarray as xr
 
 import a6
-import mlflow
 
 logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser()
@@ -20,78 +19,60 @@ parser.add_argument(
 )
 
 if __name__ == "__main__":
-    with mlflow.start_run():
-        start = time.time()
+    start = time.time()
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        a6.utils.mantik.call_mlflow_method(
-            mlflow.log_param,
-            "data_path",
-            args.data_path.as_posix(),
-        )
-        a6.utils.mantik.call_mlflow_method(
-            mlflow.log_param,
-            "patterns",
-            args.pattern,
-        )
+    path: pathlib.Path = args.data_path
+    patterns: list[str] = args.pattern.split(",")
 
-        path: pathlib.Path = args.data_path
-        patterns: list[str] = args.pattern.split(",")
+    logger.info(
+        "Reading data files from path %s with patterns %s", path, patterns
+    )
+
+    for pattern in patterns:
+        outfile = path / f"../ecmwf_ifs_{pattern}_full.nc"
 
         logger.info(
-            "Reading data files from path %s with patterns %s", path, patterns
+            "Reading files with pattern %s (outfile=%s)", pattern, outfile
         )
 
-        for pattern in patterns:
-            outfile = path / f"../ecmwf_ifs_{pattern}_full.nc"
+        files = sorted(list(path.rglob(f"{pattern}_*.nc")))
+        logger.info("Reading from %i files", len(files))
 
-            logger.info(
-                "Reading files with pattern %s (outfile=%s)", pattern, outfile
-            )
+        coordinates = a6.datasets.coordinates.Coordinates()
+        preprocessing = a6.datasets.methods.slicing.slice_dataset(
+            dimension=coordinates.time,
+            slice_until=12,
+        )
 
-            files = sorted(list(path.rglob(f"{pattern}_*.nc")))
-            logger.info("Reading from %i files", len(files))
+        logger.info("Reading dataset files")
+        start_reading = time.time()
 
-            coordinates = a6.datasets.coordinates.Coordinates()
-            preprocessing = a6.datasets.methods.slicing.slice_dataset(
-                dimension=coordinates.time,
-                slice_until=12,
-            )
+        ds = xr.open_mfdataset(
+            files,
+            engine="netcdf4",
+            concat_dim="time",
+            combine="nested",
+            coords="minimal",
+            data_vars="minimal",
+            preprocess=preprocessing,
+            compat="override",
+            parallel=False,
+            drop_variables=None,
+        )
 
-            logger.info("Reading dataset files")
-            start_reading = time.time()
+        logger.info(
+            "Finished reading in %s seconds", time.time() - start_reading
+        )
 
-            ds = xr.open_mfdataset(
-                files,
-                engine="netcdf4",
-                concat_dim="time",
-                combine="nested",
-                coords="minimal",
-                data_vars="minimal",
-                preprocess=preprocessing,
-                compat="override",
-                parallel=False,
-                drop_variables=None,
-            )
+        start_writing = time.time()
+        logger.info("Writing to netCDF")
 
-            logger.info(
-                "Finished reading in %s seconds", time.time() - start_reading
-            )
+        ds.to_netcdf(outfile)
 
-            start_writing = time.time()
-            logger.info("Writing to netCDF")
+        logger.info(
+            "Finished writing in %s seconds", time.time() - start_writing
+        )
 
-            ds.to_netcdf(outfile)
-
-            a6.utils.mantik.call_mlflow_method(
-                mlflow.log_param,
-                f"outfile_{pattern}",
-                outfile.as_posix(),
-            )
-
-            logger.info(
-                "Finished writing in %s seconds", time.time() - start_writing
-            )
-
-        logger.info("Finished after %s seconds", time.time() - start)
+    logger.info("Finished after %s seconds", time.time() - start)
