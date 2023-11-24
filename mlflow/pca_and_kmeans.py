@@ -5,10 +5,11 @@ import hdbscan
 
 import a6
 
-logger = logging.getLogger(__name__)
-a6.utils.log_to_stdout()
 
 if __name__ == "__main__":
+    a6.utils.log_to_stdout()
+    logger = logging.getLogger(__name__)
+
     kernel_size = 11
     kernel_mode = "mean"
 

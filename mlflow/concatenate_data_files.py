@@ -7,7 +7,8 @@ import xarray as xr
 
 import a6
 
-logger = logging.getLogger(__name__)
+a6.utils.logging.log_to_stdout()
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--data-path",
@@ -19,6 +20,8 @@ parser.add_argument(
 )
 
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+
     start = time.time()
 
     args = parser.parse_args()
