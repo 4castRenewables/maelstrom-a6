@@ -87,7 +87,7 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
     logger.info(
         (
             "Performing grid search for %s with parameters %s "
-            "and input variables"
+            "and input variables %s"
         ),
         model,
         parameters,
