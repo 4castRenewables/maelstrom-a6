@@ -6,4 +6,5 @@ import a6.features
 import a6.modes
 import a6.plotting
 import a6.studies
+import a6.training
 import a6.utils
