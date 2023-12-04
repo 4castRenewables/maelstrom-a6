@@ -25,6 +25,7 @@ def test_simulate_forecast_errors(tmp_path):
         "--results-dir",
         tmp_path.as_posix(),
         "--no-parallel",
+        "--testing",
     ]
 
     result = forecast.simulate_forecast_errors(raw_args=args)

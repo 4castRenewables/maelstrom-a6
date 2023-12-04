@@ -139,7 +139,10 @@ def test_select_intersecting_time_steps():
     )
 
     result_weather, result_production = turbine.select_intersecting_time_steps(
-        weather=weather, turbine=production
+        weather=weather,
+        turbine=production,
+        return_turbine=True,
+        non_functional=True,
     )
 
     xr.testing.assert_equal(result_weather, expected_weather)
