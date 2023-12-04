@@ -2,7 +2,7 @@ UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
 Environment:
   PreRunCommand:
     Command: |
-      cd $HOME/code/a6
+      cd /p/home/jusers/$USER/juwels/code/a6
       git fetch
       git checkout 29-plot-autocorrelation-and-transition-matrix
       git status
@@ -12,14 +12,14 @@ Environment:
     Path: /p/project/$SLURM_JOB_ACCOUNT/maelstrom/$USER/a6-cuda.sif
     Type: remote
     Options:
-      - -B $HOME/code/a6/src/a6:/opt/a6/src/a6
+      - -B /p/home/jusers/$USER/juwels/code/a6/src/a6:/opt/a6/src/a6
       - --nv
 Resources:
   Runtime: 1h
   Queue: develbooster
   Nodes: 1
-  GPUsPerNode: 1
-  NodeConstraints: largedata
+  GPUsPerNode: 4
+  #NodeConstraints: largedata
 Exclude:
   - "*.sif"
   - "*.sh"
