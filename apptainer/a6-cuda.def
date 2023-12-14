@@ -27,4 +27,4 @@ From: a6-cuda:latest
 
 %labels
     Author Fabian Emmerich
-    Version cu11.7-py3.11
+    Version cu12.1-py3.11
