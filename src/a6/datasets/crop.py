@@ -62,6 +62,9 @@ class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
         return_index: bool = False,
         download: bool = True,
     ):
+        if not data_path.exists():
+            data_path.mkdir(parents=True, exist_ok=True)
+
         super().__init__(
             data_path=data_path,
             nmb_crops=nmb_crops,
