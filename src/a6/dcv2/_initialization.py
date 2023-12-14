@@ -9,7 +9,9 @@ import a6.dcv2.logs as logs
 logger = logging.getLogger(__name__)
 
 
-def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
+def initialize_logging(
+    args, columns: list[str]
+) -> tuple[logging.Logger, logs.Stats]:
     """Initialize logging.
 
     Notes
@@ -63,7 +65,7 @@ def initialize_logging(args, columns) -> tuple[logging.Logger, logs.Stats]:
         )
         logger_.info("The experiment will be stored in %s", args.dump_path)
 
-    return logger, training_stats
+    return logger_, training_stats
 
 
 def _is_primary_device(args) -> bool:

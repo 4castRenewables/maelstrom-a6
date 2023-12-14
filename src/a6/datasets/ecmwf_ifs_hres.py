@@ -11,7 +11,7 @@ class EcmwfIfsHres(_base.Dataset):
         path: pathlib.Path,
         pattern: str | None = "*.nc",
         slice_time_dimension: bool = True,
-        slice_time_time_dimension_after: int | None = 12,
+        slice_time_dimension_after: int | None = 12,
         preprocessing: _base.Processing | None = None,
         postprocessing: _base.Processing | None = None,
         parallel_loading: bool = True,
@@ -30,7 +30,7 @@ class EcmwfIfsHres(_base.Dataset):
             The ECMWF models are usually run e.g. at 00am, 06am, 12pm, 18pm
             for 48 hours. As a consequence, the data of new models overlap
             with data from older models by some hours (6 in this case).
-        slice_time_time_dimension_after : int, default=12
+        slice_time_dimension_after : int, default=12
             The number of time steps after which to slice each data file.
 
             Defaults to 12 since the typical data used in A6 is from
@@ -49,7 +49,7 @@ class EcmwfIfsHres(_base.Dataset):
             path=path,
             pattern=pattern,
             slice_time_dimension=slice_time_dimension,
-            slice_time_time_dimension_after=slice_time_time_dimension_after,
+            slice_time_dimension_after=slice_time_dimension_after,
             preprocessing=preprocessing,
             postprocessing=postprocessing,
             parallel_loading=parallel_loading,

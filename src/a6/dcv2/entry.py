@@ -163,7 +163,7 @@ def _train(
     # synchronize batch norm layers
     if args.sync_bn == "pytorch":
         if args.use_cpu:
-            pass  # model = nn.BatchNorm2d(2)(model)
+            pass
         else:
             model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
     elif args.sync_bn == "apex":

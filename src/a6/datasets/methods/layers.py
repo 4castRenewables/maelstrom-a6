@@ -2,9 +2,9 @@ import xarray as xr
 
 
 def get_number_of_input_channels(ds: xr.Dataset | xr.DataArray) -> int:
-    """Get the number of input channels required for ``torch.nn.Conv2d``.
+    """Get the number of input channels required for `torch.nn.Conv2d`.
 
-    This is given by the number of phyiscal quantities contained in the
+    This is given by the number of physical quantities contained in the
     data.
 
     """

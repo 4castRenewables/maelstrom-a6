@@ -57,7 +57,7 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
         path, _ = self.samples[0]
         image = self.loader(path)
         size_x, size_y = image.size
-        size_crops = _convert_relative_to_specific_crop_size(
+        size_crops = convert_relative_to_absolute_crop_size(
             size_crops, size_x=size_x, size_y=size_y
         )
 
@@ -123,14 +123,15 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
         assert len(min_scale_crops) == len(nmb_crops)
         assert len(max_scale_crops) == len(nmb_crops)
 
-        size_crops = _convert_relative_to_specific_crop_size(
+        size_crops = convert_relative_to_absolute_crop_size(
             size_crops,
             size_x=dataset[coordinates.latitude].size,
             size_y=dataset[coordinates.longitude].size,
         )
 
         self.dataset = dataset
-        # For single-level, levels is 0-D array and has to converted to a list
+        # For single-level, levels is 0-D array and has to
+        # be converted to a list
         levels = self.dataset[coordinates.level].to_numpy().tolist()
         self._levels = levels if isinstance(levels, list) else [levels]
 
@@ -205,7 +206,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
         return multi_crops
 
 
-def _convert_relative_to_specific_crop_size(
+def convert_relative_to_absolute_crop_size(
     size_crops: SizeCropsRelative, size_x: int, size_y: int
 ) -> SizeCropsSpecific:
     for size in size_crops:
@@ -237,7 +238,7 @@ def _convert_relative_to_specific_crop_size(
         max_crop_size = min(size_x, size_y)
         size_crops = [int(scale * max_crop_size) for scale in size_crops_old]
     logger.warning(
-        "Converted relative crop sizes %s to specific crop sizes %s",
+        "Converted relative crop sizes %s to absolute crop sizes %s",
         size_crops_old,
         size_crops,
     )

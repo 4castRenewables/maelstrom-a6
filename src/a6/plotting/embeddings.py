@@ -12,7 +12,7 @@ import a6.plotting._colors as _colors
 
 def plot_embeddings_using_tsne(
     embeddings: torch.Tensor,
-    j: int,
+    crop_index: int,
     assignments: torch.Tensor,
     centroids: torch.Tensor,
     name: str,
@@ -23,7 +23,7 @@ def plot_embeddings_using_tsne(
     Args:
         embeddings (torch.Tensor, shape(n_crops, n_samples, n_embedding_dims)):
             Embeddings as produced by the ResNet.
-        j (int): Crop index.
+        crop_index (int): Crop index.
         assignments (torch.Tensor, shape(n_samples)):
             Assignments by DCv2 for each sample.
 
@@ -38,17 +38,17 @@ def plot_embeddings_using_tsne(
 
     _, ax = plt.subplots()
 
-    ax.set_title(f"Embeddings for crops {j}")
+    ax.set_title(f"Embeddings for crops {crop_index}")
 
     (x, y), (x_centroids, y_centroids) = _fit_tsne(
-        embeddings=embeddings[j], centroids=centroids
+        embeddings=embeddings[crop_index], centroids=centroids
     )
     colors = _colors.create_colors_for_assigments(assignments)
 
     ax.scatter(x, y, c=colors, s=1)
     ax.scatter(x_centroids, y_centroids, c="red", s=20, marker="x")
 
-    plt.savefig(pathlib.Path(output_dir) / f"{name}-crops-{j}.pdf")
+    plt.savefig(pathlib.Path(output_dir) / f"{name}-crops-{crop_index}.pdf")
 
     logging.info("Finished embeddings plot in %s seconds", time.time() - start)
 

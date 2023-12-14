@@ -48,9 +48,11 @@ class PILRandomGaussianBlur:
         )
 
 
-def color_distortion(s=1.0) -> transforms.Compose:
+def color_distortion(strength: float = 1.0) -> transforms.Compose:
     # s is the strength of color distortion.
-    color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
+    color_jitter = transforms.ColorJitter(
+        0.8 * strength, 0.8 * strength, 0.8 * strength, 0.2 * strength
+    )
     rnd_color_jitter = transforms.RandomApply([color_jitter], p=0.8)
     rnd_gray = transforms.RandomGrayscale(p=0.2)
     return transforms.Compose([rnd_color_jitter, rnd_gray])

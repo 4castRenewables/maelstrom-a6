@@ -287,7 +287,7 @@ def cluster_memory(
                     embeddings=embeddings[-1],
                     # Use previous j since this represents which crops
                     # were used for last cluster iteration.
-                    j=j_prev,
+                    crop_index=j_prev,
                     assignments=assignments[-1],
                     centroids=random_idx,
                     name=f"epoch-{epoch}-embeddings",

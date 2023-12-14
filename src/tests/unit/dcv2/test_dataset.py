@@ -110,8 +110,8 @@ class TestMultiCropXarrayDataset:
         ([(0.5, 0.4)], [(2, 4)]),
     ],
 )
-def test_convert_relative_to_specific_crop_size(size_crops, expected):
-    result = dataset._convert_relative_to_specific_crop_size(
+def testconvert_relative_to_absolute_crop_size(size_crops, expected):
+    result = dataset.convert_relative_to_absolute_crop_size(
         size_crops=size_crops, size_x=5, size_y=10
     )
 
@@ -139,10 +139,10 @@ def test_convert_relative_to_specific_crop_size(size_crops, expected):
         ([(0.1, 0.5), (0.1, 1.5)], "(0.1, 1.5)"),
     ],
 )
-def test_convert_relative_to_specific_crop_size_raises(size_crops, expected):
+def testconvert_relative_to_absolute_crop_size_raises(size_crops, expected):
     expected = f"Crop size must be in the range [0; 1], but {expected} given"
     with pytest.raises(ValueError) as e:
-        dataset._convert_relative_to_specific_crop_size(
+        dataset.convert_relative_to_absolute_crop_size(
             size_crops=size_crops, size_x=5, size_y=10
         )
 

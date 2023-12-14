@@ -28,7 +28,7 @@ class Dataset:
         path: pathlib.Path,
         pattern: str | None = "*.nc",
         slice_time_dimension: bool = True,
-        slice_time_time_dimension_after: int | None = None,
+        slice_time_dimension_after: int | None = None,
         preprocessing: Processing | None = None,
         postprocessing: Processing | None = None,
         parallel_loading: bool = True,
@@ -47,7 +47,7 @@ class Dataset:
             The ECMWF models are usually run e.g. at 00am, 06am, 12pm, 18pm
             for 48 hours. As a consequence, the data of new models overlap
             with data from older models by some hours (6 in this case).
-        slice_time_time_dimension_after : int, optional
+        slice_time_dimension_after : int, optional
             The number of time steps after which to slice each data file.
         preprocessing : Callable, optional
             Pre-processing to apply to each data file before appending i
@@ -64,7 +64,7 @@ class Dataset:
             self.paths = utils.list_files(path=path, pattern=pattern)
 
         self._slice_time_dimension = slice_time_dimension
-        self._slice_time_dimension_after = slice_time_time_dimension_after
+        self._slice_time_dimension_after = slice_time_dimension_after
         self._parallel = parallel_loading
         self._preprocessing = preprocessing
         self._postprocessing = postprocessing
@@ -118,7 +118,7 @@ class Dataset:
     def _to_xarray(
         self, levels: types.Levels, drop_variables: list[str] | None
     ) -> xr.Dataset:
-        """Merge a set of files into a single datase"""
+        """Merge a set of files into a single dataset."""
         if len(self.paths) == 1:
             ds = self._open_single_dataset(drop_variables=drop_variables)
         else:

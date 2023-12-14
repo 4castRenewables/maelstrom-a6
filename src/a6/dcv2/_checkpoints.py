@@ -1,5 +1,7 @@
 import logging
 import os
+import pathlib
+from typing import Any
 
 import torch.distributed
 
@@ -8,26 +10,31 @@ import a6.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def restart_from_checkpoint(ckp_paths, args, run_variables=None, **kwargs):
+def restart_from_checkpoint(
+    paths: pathlib.Path | list[pathlib.Path],
+    args: list,
+    variables_to_load_from_checkpoint: dict[str, Any] | None = None,
+    **kwargs
+):
     """
     Re-start from checkpoint
     """
     # look for a checkpoint in exp repository
-    if isinstance(ckp_paths, list):
-        for ckp_path in ckp_paths:
-            if os.path.isfile(ckp_path):
+    if isinstance(paths, list):
+        for path in paths:
+            if os.path.isfile(path):
                 break
     else:
-        ckp_path = ckp_paths
+        [path] = paths
 
-    if not os.path.isfile(ckp_path):
+    if not os.path.isfile(path):
         return
 
-    logger.info("Found checkpoint at %s", ckp_path)
+    logger.info("Found checkpoint at %s", path)
 
     # open checkpoint file
     checkpoint = torch.load(
-        ckp_path,
+        path,
         map_location=utils.distributed.get_device(args),
     )
 
@@ -41,14 +48,14 @@ def restart_from_checkpoint(ckp_paths, args, run_variables=None, **kwargs):
                 print(msg)
             except TypeError:
                 msg = value.load_state_dict(checkpoint[key])
-            logger.info("Loaded %s from checkpoint '%s'", key, ckp_path)
+            logger.info("Loaded %s from checkpoint '%s'", key, path)
         else:
-            logger.warning(
-                "Failed to load %s from checkpoint '%s'", key, ckp_path
-            )
+            logger.warning("Failed to load %s from checkpoint '%s'", key, path)
 
     # re load variable important for the run
-    if run_variables is not None:
-        for var_name in run_variables:
+    if variables_to_load_from_checkpoint is not None:
+        for var_name in variables_to_load_from_checkpoint:
             if var_name in checkpoint:
-                run_variables[var_name] = checkpoint[var_name]
+                variables_to_load_from_checkpoint[var_name] = checkpoint[
+                    var_name
+                ]

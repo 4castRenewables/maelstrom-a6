@@ -31,7 +31,7 @@ def test_plot_embedding(tmp_path):
 
     _embeddings.plot_embeddings_using_tsne(
         embeddings=embeddings,
-        j=0,
+        crop_index=0,
         assignments=assignments,
         centroids=centroids,
         name="test",
