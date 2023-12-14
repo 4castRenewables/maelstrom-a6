@@ -143,8 +143,7 @@ def _train(
         batch_size=args.batch_size,
         num_workers=args.workers,
         pin_memory=True,
-        # ``drop_last=True`` gives each device the same amount of samples,
-        # but removes some from the clustering.
+        # Do not drop last batch to include all samples when clustering.
         drop_last=False,
     )
     logger.info("Building data done with %s images loaded", len(train_dataset))

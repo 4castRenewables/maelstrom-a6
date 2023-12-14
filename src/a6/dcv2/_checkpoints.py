@@ -25,7 +25,7 @@ def restart_from_checkpoint(
             if os.path.isfile(path):
                 break
     else:
-        [path] = paths
+        path = paths
 
     if not os.path.isfile(path):
         return

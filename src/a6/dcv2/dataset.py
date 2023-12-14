@@ -28,6 +28,23 @@ SizeCropsSpecific = list[int | tuple[int, int]]
 class Base(torchvision.datasets.VisionDataset):
     _n_channels: int
 
+    def __init__(
+        self,
+        data_path: pathlib.Path,
+        nmb_crops: list[int],
+        size_crops: SizeCropsRelative,
+        min_scale_crops: list[float],
+        max_scale_crops: list[float],
+        return_index: bool = False,
+    ):
+        super().__init__(data_path.as_posix())
+
+        assert len(size_crops) == len(nmb_crops)
+        assert len(min_scale_crops) == len(nmb_crops)
+        assert len(max_scale_crops) == len(nmb_crops)
+
+        self.return_index = return_index
+
     @property
     def n_channels(self) -> int:
         return self._n_channels
@@ -46,13 +63,17 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
         size_dataset: int = -1,
         return_index: bool = False,
     ):
-        super().__init__(data_path.as_posix())
-        assert len(size_crops) == len(nmb_crops)
-        assert len(min_scale_crops) == len(nmb_crops)
-        assert len(max_scale_crops) == len(nmb_crops)
+        super().__init__(
+            data_path=data_path,
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            return_index=return_index,
+        )
+
         if size_dataset >= 0:
             self.samples = self.samples[:size_dataset]
-        self.return_index = return_index
 
         path, _ = self.samples[0]
         image = self.loader(path)
@@ -66,35 +87,14 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
         mean = [0.485, 0.456, 0.406]
         std = [0.228, 0.224, 0.225]
 
-        trans = []
-        for i in range(len(size_crops)):
-            trans.extend(
-                [
-                    torchvision.transforms.Compose(
-                        [
-                            torchvision.transforms.RandomResizedCrop(
-                                size_crops[i],
-                                scale=(min_scale_crops[i], max_scale_crops[i]),
-                            ),
-                            # In original DCv2 paper, the following data
-                            # augmentation strategies are implemented
-                            # torchvision.transforms.RandomHorizontalFlip(p=0.5),
-                            # transforms.Compose(
-                            #     [
-                            #         transform.color_distortion(),
-                            #         transform.PILRandomGaussianBlur(),
-                            #     ]
-                            # ),
-                            torchvision.transforms.ToTensor(),
-                            torchvision.transforms.Normalize(
-                                mean=mean, std=std
-                            ),
-                        ]
-                    )
-                ]
-                * nmb_crops[i]
-            )
-        self.trans = trans
+        self.trans = _create_transformations(
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            mean=mean,
+            std=std,
+        )
 
     def __getitem__(self, index):
         path, _ = self.samples[index]
@@ -117,11 +117,14 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
         return_index: bool = False,
         coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     ):
-        super().__init__(data_path.as_posix())
-
-        assert len(size_crops) == len(nmb_crops)
-        assert len(min_scale_crops) == len(nmb_crops)
-        assert len(max_scale_crops) == len(nmb_crops)
+        super().__init__(
+            data_path=data_path,
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            return_index=return_index,
+        )
 
         size_crops = convert_relative_to_absolute_crop_size(
             size_crops,
@@ -154,38 +157,16 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
         )
         min_max_values = normalization.get_min_max_values(self.dataset)
 
-        trans = []
-        for i in range(len(size_crops)):
-            trans.extend(
-                [
-                    torchvision.transforms.Compose(
-                        [
-                            torchvision.transforms.RandomResizedCrop(
-                                size_crops[i],
-                                scale=(min_scale_crops[i], max_scale_crops[i]),
-                            ),
-                            # In original DCv2 paper, the following data
-                            # augmentation strategies are implemented
-                            # torchvision.transforms.RandomHorizontalFlip(p=0.5),
-                            # torchvision.transforms.Compose(
-                            #     [
-                            #         transform.color_distortion(),
-                            #         transform.PILRandomGaussianBlur(),
-                            #     ]
-                            # ),
-                            # torchvision.transforms.ToTensor(),
-                            torchvision.transforms.Compose(
-                                [transform.MinMaxScale(min_max=min_max_values)]
-                            ),
-                            torchvision.transforms.Normalize(
-                                mean=mean, std=std
-                            ),
-                        ]
-                    )
-                ]
-                * nmb_crops[i]
-            )
-        self.trans = trans
+        self.trans = _create_transformations(
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            mean=mean,
+            std=std,
+            min_max_values=min_max_values,
+            to_tensor=False,
+        )
 
     def __len__(self) -> int:
         return len(self.dataset[self._coordinates.time])
@@ -258,6 +239,62 @@ def _get_statistics(
         method(data.sel({coordinates.level: level}), variable=variable)
         for level in levels
         for variable in data.data_vars
+    ]
+
+
+def _create_transformations(
+    nmb_crops: list[int],
+    size_crops: list[float, tuple[float, float]],
+    min_scale_crops: list[float],
+    max_scale_crops: list[float],
+    mean: list[float],
+    std: list[float],
+    min_max_values: list[normalization.VariableMinMax] | None = None,
+    to_tensor: bool = True,
+    random_horizontal_flip: bool = False,
+    color_distortion: bool = False,
+    gaussian_blur: bool = False,
+) -> list[torchvision.transforms.Compose]:
+    return [
+        # Define transform pipeline
+        torchvision.transforms.Compose(
+            list(
+                filter(
+                    None,
+                    [
+                        torchvision.transforms.RandomResizedCrop(
+                            size,
+                            scale=(min_scale, max_scale),
+                        ),
+                        ###
+                        # In original DCv2 paper, the following data
+                        # augmentation strategies are implemented
+                        torchvision.transforms.RandomHorizontalFlip(p=0.5)
+                        if random_horizontal_flip
+                        else None,
+                        transform.color_distortion()
+                        if color_distortion
+                        else None,
+                        transform.PILRandomGaussianBlur()
+                        if gaussian_blur
+                        else None,
+                        ###
+                        torchvision.transforms.ToTensor()
+                        if to_tensor
+                        else None,
+                        transform.MinMaxScale(min_max=min_max_values)
+                        if min_max_values is not None
+                        else None,
+                        torchvision.transforms.Normalize(mean=mean, std=std),
+                    ],
+                )
+            )
+        )
+        for n_crops, size, min_scale, max_scale in zip(
+            nmb_crops, size_crops, min_scale_crops, max_scale_crops, strict=True
+        )
+        # Repeat transform for `n_crops` to achieve the given number of crops
+        for _ in range(n_crops)
     ]
 
 
