@@ -234,44 +234,21 @@ def cluster_memory(
                 epoch,
             )
 
-            torch.save(
-                centroids,
-                _create_path(
-                    path=args.dump_tensors,
-                    file_name="centroids.pt",
-                    epoch=epoch,
-                ),
-            )
-            torch.save(
-                assignments,
-                _create_path(
-                    path=args.dump_tensors,
-                    file_name="assignments.pt",
-                    epoch=epoch,
-                ),
-            )
-            torch.save(
-                embeddings,
-                _create_path(
-                    path=args.dump_tensors,
-                    file_name="embeddings.pt",
-                    epoch=epoch,
-                ),
-            )
-            torch.save(
-                indexes,
-                _create_path(
-                    path=args.dump_tensors, file_name="indexes.pt", epoch=epoch
-                ),
-            )
-            torch.save(
-                distances,
-                _create_path(
-                    path=args.dump_tensors,
-                    file_name="distances.pt",
-                    epoch=epoch,
-                ),
-            )
+            for result, name in [
+                (centroids, "centroids.pt"),
+                (assignments, "assignments.pt"),
+                (distances, "distances.pt"),
+                (embeddings, "embeddings.pt"),
+                (indexes, "indexes.pt"),
+            ]:
+                torch.save(
+                    result,
+                    _create_path(
+                        path=args.dump_tensors,
+                        file_name=name,
+                        epoch=epoch,
+                    ),
+                )
 
             if utils.distributed.is_primary_device():
                 # Save which random samples were used as the centroids.
