@@ -47,22 +47,23 @@ WORKDIR /opt/a6
 
 RUN python${PYTHON_VERSION} -m venv /venv \
  && . /venv/bin/activate \
+ && pip install --upgrade pip \
  && poetry add torch==${PYTORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
  && poetry install --only=main,notebooks
 
 # Install apex
-ENV export TORCH_CUDA_ARCH_LIST="8.0"
-RUN git clone https://github.com/NVIDIA/apex /opt/apex \
- && cd /opt/apex \
- && . /venv/bin/activate \
- && pip install packaging \
- && pip install -v  \
-      --disable-pip-version-check \
-      --no-cache-dir \
-      --no-build-isolation \
-      --config-settings "--build-option=--cpp_ext" \
-      --config-settings "--build-option=--cuda_ext" \
-      ./
+#ENV export TORCH_CUDA_ARCH_LIST="8.0"
+#RUN git clone https://github.com/NVIDIA/apex /opt/apex \
+# && cd /opt/apex \
+# && . /venv/bin/activate \
+# && pip install packaging \
+# && pip install -v  \
+#      --disable-pip-version-check \
+#      --no-cache-dir \
+#      --no-build-isolation \
+#      --config-settings "--build-option=--cpp_ext" \
+#      --config-settings "--build-option=--cuda_ext" \
+#      ./
 
 # Delete Python cache files
 WORKDIR /venv
@@ -102,7 +103,7 @@ RUN python --version
 RUN pip list
 RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
 RUN python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
-RUN python -c 'import apex'
+#RUN python -c 'import apex'
 RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
 RUN python -m cfgrib selfcheck
 
