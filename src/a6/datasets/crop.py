@@ -49,6 +49,62 @@ class Base(torchvision.datasets.VisionDataset):
         return self._n_channels
 
 
+class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
+    _n_channels = 1
+
+    def __init__(
+        self,
+        data_path: pathlib.Path,
+        size_crops: SizeCropsRelative,
+        nmb_crops: list[int],
+        min_scale_crops: list[float],
+        max_scale_crops: list[float],
+        return_index: bool = False,
+        download: bool = True,
+    ):
+        super().__init__(
+            data_path=data_path,
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            return_index=return_index,
+        )
+
+        self.dataset = torchvision.datasets.MNIST(
+            root=data_path.as_posix(),
+            train=True,
+            download=download,
+        )
+
+        image, _ = self.dataset[0]
+        size_x, size_y = image.size
+        size_crops = convert_relative_to_absolute_crop_size(
+            size_crops, size_x=size_x, size_y=size_y
+        )
+
+        self.trans = _create_transformations(
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            mean=[0.1306],
+            std=[0.3081],
+        )
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(
+        self, index: int
+    ) -> list[torch.Tensor] | tuple[int, list[torch.Tensor]]:
+        image, _ = self.dataset[index]
+        multi_crops = list(map(lambda trans: trans(image), self.trans))
+        if self.return_index:
+            return index, multi_crops
+        return multi_crops
+
+
 class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
     _n_channels = 3
 
@@ -95,7 +151,9 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
             std=std,
         )
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: int
+    ) -> list[torch.Tensor] | tuple[int, list[torch.Tensor]]:
         path, _ = self.samples[index]
         image = self.loader(path)
         multi_crops = list(map(lambda trans: trans(image), self.trans))

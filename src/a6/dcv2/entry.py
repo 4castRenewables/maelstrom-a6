@@ -322,6 +322,14 @@ def _train(
 def _create_dataset(
     settings: _settings.Settings, logger: logging.Logger
 ) -> datasets.crop.Base:
+    return datasets.crop.MultiCropMnistDataset(
+        data_path=settings.data.path,
+        nmb_crops=settings.preprocessing.nmb_crops,
+        size_crops=settings.preprocessing.size_crops,
+        min_scale_crops=settings.preprocessing.min_scale_crops,
+        max_scale_crops=settings.preprocessing.max_scale_crops,
+        return_index=True,
+    )
     if settings.data.pattern is not None:
         # If a data pattern is given, it is assumed that the
         # given data path is a folder with netCDF files.
