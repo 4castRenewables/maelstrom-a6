@@ -1,10 +1,11 @@
 # NCCL is not correctly installed when using CUDA >=11.7.1
 ARG CUDA_VERSION=12.1.0
+ARG PYTHON_VERSION=3.11
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04 as builder
 
 ARG CUDA_VERSION
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION
 
 RUN apt-get update \
  && apt-get install -y software-properties-common \
@@ -32,7 +33,7 @@ RUN python${PYTHON_VERSION} -m ensurepip --upgrade
 RUN pip${PYTHON_VERSION} --help
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3.11 -
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python${PYTHON_VERSION} -
 ENV PATH=/opt/poetry/bin:${PATH}
 ENV POETRY_VIRTUALENVS_CREATE=false
 
@@ -41,21 +42,16 @@ COPY pyproject.toml /opt/a6/
 COPY poetry.lock /opt/a6/
 COPY src/a6/ /opt/a6/src/a6
 
-# Must install a6 after unpacking since conda doesn't allow to pack
-# packages installed in editable mode.
-RUN python3.11 -m venv /venv
+
 WORKDIR /opt/a6
-RUN . /venv/bin/activate \
+
+RUN python${PYTHON_VERSION} -m venv /venv \
+ && . /venv/bin/activate \
  && poetry add torch==${PYTORCH_VERSION} torchvision==${TORCHVISION_VERSION} \
  && poetry install --only=main,notebooks
 
-RUN . /venv/bin/activate \
- && python -c 'import a6, torch, torchvision, ipykernel, memory_profiler' \
- && python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
-
-
-ENV export TORCH_CUDA_ARCH_LIST="8.0"
 # Install apex
+ENV export TORCH_CUDA_ARCH_LIST="8.0"
 RUN git clone https://github.com/NVIDIA/apex /opt/apex \
  && cd /opt/apex \
  && . /venv/bin/activate \
@@ -74,16 +70,16 @@ RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu22.04
 
+ARG PYTHON_VERSION
+
 ARG PATH=/venv/bin:${PATH}
 ENV PATH=/venv/bin:${PATH}
 
 ENV GIT_PYTHON_REFRESH=quiet
 
-# VISSL conda env and repo
+# Copy venv and repo
 COPY --from=builder /venv /venv
 COPY --from=builder /opt/a6 /opt/a6
-
-ARG PYTHON_VERSION=3.11
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
@@ -100,7 +96,7 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-
+# Check if all packages successfully installed by importing
 RUN which python
 RUN python --version
 RUN pip list
