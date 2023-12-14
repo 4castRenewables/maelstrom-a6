@@ -184,7 +184,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--size-crops",
         type=float,
         nargs="+",
-        default=[0.75],
+        default=[0.85],
         action=ExtendListAction,
         help="Crops resolutions (example: [0.9, 0.75])",
     )
@@ -192,7 +192,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--min-scale-crops",
         type=float,
         nargs="+",
-        default=[0.14],
+        default=[1.0],
         action=ExtendListAction,
         help="argument in RandomResizedCrop (example: [0.14, 0.05])",
     )
@@ -200,7 +200,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--max-scale-crops",
         type=float,
         nargs="+",
-        default=[1],
+        default=[1.0],
         action=ExtendListAction,
         help="argument in RandomResizedCrop (example: [1., 0.14])",
     )
