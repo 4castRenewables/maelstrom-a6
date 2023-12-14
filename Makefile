@@ -16,11 +16,13 @@ SSH_COPY_COMMAND = rsync -Pvra --progress
 
 install:
 	poetry install
+	poetry run pip install -r requirements-cpu.txt
+	poetry run python -m cfgrib selfcheck
 
 build-docker:
 	sudo docker build -t $(IMAGE_NAME):latest -f docker/a6.Dockerfile .
 
-build-apptainer: build-python
+build-apptainer: build-docker
 	sudo apptainer build --force mlflow/$(IMAGE_NAME).sif apptainer/a6.def
 
 build: build-docker build-apptainer
@@ -35,16 +37,34 @@ upload-e4:
 		mlflow/$(IMAGE_NAME).sif \
 		$(E4_SSH):$(E4_PROJECT_DIR)/$(IMAGE_NAME).sif
 
-deploy: build upload
+build-docker-cuda:
+	sudo docker build -t $(IMAGE_NAME)-cuda:latest -f docker/a6-cuda.Dockerfile .
 
-deploy-e4: build upload-e4
+build-apptainer-cuda: build-docker-cuda
+	sudo apptainer build --force mlflow/$(IMAGE_NAME)-cuda.sif apptainer/a6-cuda.def
 
-build-jsc-kernel: build-python
+build-cuda: build-docker-cuda build-apptainer-cuda
+
+upload-cuda:
+	$(SSH_COPY_COMMAND) $(JSC_SSH_OPTIONS) \
+		mlflow/$(IMAGE_NAME)-cuda.sif \
+		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(IMAGE_NAME)-cuda.sif
+
+upload-e4-cuda:
+	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
+		mlflow/$(IMAGE_NAME)-cuda.sif \
+		$(E4_SSH):$(E4_PROJECT_DIR)/$(IMAGE_NAME)-cuda.sif
+
+deploy-cuda: build-cuda upload-cuda-cuda
+
+deploy-e4-cuda: build-cuda upload-e4-cuda
+
+build-jsc-kernel:
 	sudo apptainer build --force \
 		$(JSC_DIR)/jupyter-kernel.sif \
 		$(JSC_DIR)/jupyter_kernel_recipe.def
 
-build-e4-kernel: build-python
+build-e4-kernel:
 	sudo apptainer build --force \
 		$(E4_DIR)/jupyter-kernel.sif \
 		$(E4_DIR)/jupyter_kernel_recipe.def

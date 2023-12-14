@@ -1,0 +1,26 @@
+UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
+Environment:
+  PreRunCommand:
+    Command: >
+      cd $HOME/code/a6;
+      git checkout 30-use-era5-data-with-dcv2;
+      git status;
+      git pull;
+      cd $UC_WORKING_DIRECTORY;
+      module load CUDA/11.7
+  Apptainer:
+    Path: /p/project/$SLURM_JOB_ACCOUNT/maelstrom/$USER/a6-cuda.sif
+    Type: remote
+    Options:
+      - -B $HOME/code/a6/src/a6:/opt/a6/src/a6
+      - --nv
+Resources:
+  Runtime: 1h
+  Queue: develbooster
+  Nodes: 1
+  GPUsPerNode: 1
+  #NodeConstraints: largedata
+Exclude:
+  - "*.sif"
+  - "*.sh"
+  - "*.sbatch"

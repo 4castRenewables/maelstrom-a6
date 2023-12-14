@@ -1,6 +1,6 @@
 fail_fast: false
 default_language_version:
-  python: python3.10
+  python: python3.11
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -28,7 +28,7 @@ repos:
       - id: reorder-python-imports
         args: [
           "--application-directories=.:src",
-          "--py310-plus",
+          "--py311-plus",
         ]
         exclude: (mlflow/deepclusterv2/modified/.*.py)
 
@@ -43,6 +43,7 @@ repos:
             "--py38-plus",
             "--py39-plus",
             "--py310-plus",
+            "--py311-plus",
         ]
         exclude: (mlflow/deepclusterv2/modified/.*.py)
 

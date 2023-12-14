@@ -9,6 +9,7 @@ import numpy as np
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
+import a6.datasets.methods.normalization as normalization
 import a6.utils as utils
 
 Variables = Sequence[str]
@@ -97,10 +98,16 @@ def convert_fields_to_grayscale_images(
             f"given data has {levels.shape[0]} levels"
         )
 
-    min_max_values = _get_min_max_values(data, variables=variables)
+    min_max_values = normalization.get_min_max_values(data, variables=variables)
 
     with open(path / "min_max_values.json", "w") as f:
-        f.write(json.dumps(min_max_values, sort_keys=True, indent=2))
+        f.write(
+            json.dumps(
+                [min_max.to_dict() for min_max in min_max_values],
+                sort_keys=True,
+                indent=2,
+            )
+        )
 
     logger.info("Starting conversion of images to .tif")
     filename_creator = _FileNameCreator(
@@ -126,7 +133,7 @@ def convert_fields_to_grayscale_images(
 def _convert_time_step_and_save_to_file(
     time_step: xr.DataArray,
     data: xr.Dataset,
-    min_max_values: MinMaxValues,
+    min_max_values: list[normalization.VariableMinMax],
     filename_creator: _FileNameCreator,
 ) -> None:
     logger.debug("Converting time step %s", time_step.values)
@@ -142,24 +149,12 @@ def _convert_time_step_and_save_to_file(
 
 
 @utils.log_consumption
-def _get_min_max_values(data: xr.Dataset, variables: Variables) -> MinMaxValues:
-    logger.debug("Getting min and max values for data variables %s", variables)
-    return {
-        var: (
-            data[var].min().compute().item(),
-            data[var].max().compute().item(),
-        )
-        for var in variables
-    }
-
-
-@utils.log_consumption
 def _convert_fields_to_channels(
-    data: xr.Dataset, min_max_values: MinMaxValues
+    data: xr.Dataset, min_max_values: list[normalization.VariableMinMax]
 ) -> np.ndarray:
     channels = [
-        _convert_to_grayscale(data[var], min_=min_, max_=max_)
-        for var, (min_, max_) in min_max_values.items()
+        _convert_to_grayscale(data, min_max=min_max)
+        for min_max in min_max_values
     ]
     return np.array(channels, dtype=np.uint8).reshape(
         (*channels[0].shape, 3), order="F"
@@ -167,8 +162,12 @@ def _convert_fields_to_channels(
 
 
 @utils.log_consumption
-def _convert_to_grayscale(d, min_, max_):
-    return np.rint((d - min_) / max_ * 255)
+def _convert_to_grayscale(
+    data: xr.Dataset, min_max: normalization.VariableMinMax
+) -> xr.DataArray:
+    return np.rint(
+        normalization.min_max_scale_variable(data, min_max=min_max) * 255
+    )
 
 
 @utils.log_consumption

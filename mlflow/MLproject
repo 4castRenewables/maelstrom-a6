@@ -33,14 +33,14 @@ entry_points:
         type: bool
         default: True
     command: >
-      a6 \
-        --log-to-mantik {log_to_mantik} \
-        train cluster \
-        --weather-data {weather_data} \
-        --filename-pattern {filename_pattern} \
-        --slice-weather-data-files {slice_weather_data_files} \
-        --level {level} \
-        --config {config} \
+      a6
+        --log-to-mantik {log_to_mantik}
+        train cluster
+        --weather-data {weather_data}
+        --filename-pattern {filename_pattern}
+        --slice-weather-data-files {slice_weather_data_files}
+        --level {level}
+        --config {config}
         --use-varimax {use_varimax}
   temporal:
     parameters:
@@ -68,15 +68,15 @@ entry_points:
         type: bool
         default: True
     command: >
-      a6 \
-        --log-to-mantik {log_to_mantik} \
-        train temporal-study \
-        --weather-data {weather_data} \
-        --filename-pattern {filename_pattern} \
-        --slice-weather-data-files {slice_weather_data_files} \
-        --level {level} \
-        --n-components {n_components} \
-        --min-cluster-size {min_cluster_size} \
+      a6
+        --log-to-mantik {log_to_mantik}
+        train temporal-study
+        --weather-data {weather_data}
+        --filename-pattern {filename_pattern}
+        --slice-weather-data-files {slice_weather_data_files}
+        --level {level}
+        --n-components {n_components}
+        --min-cluster-size {min_cluster_size}
         --use-varimax {use_varimax}
   grid-search:
     parameters:
@@ -99,12 +99,106 @@ entry_points:
         type: bool
         default: True
     command: >
-      a6 \
-        --log-to-mantik {log_to_mantik} \
-        train grid-search \
-        --weather-data {weather_data} \
-        --filename-pattern {filename_pattern} \
-        --slice-weather-data-files {slice_weather_data_files} \
-        --level {level} \
-        --turbine-data {turbine_data} \
+      a6
+        --log-to-mantik {log_to_mantik}
+        train grid-search
+        --weather-data {weather_data}
+        --filename-pattern {filename_pattern}
+        --slice-weather-data-files {slice_weather_data_files}
+        --level {level}
+        --turbine-data {turbine_data}
         --config {config}
+  dcv2:
+    parameters:
+      enable_tracking:
+        type: str
+        default: --enable-tracking
+      data_path:
+        type: str
+        default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
+      dump_path:
+        type: str
+        default: /p/scratch/deepacf/maelstrom/emmerich1/dcv2/dump
+      nmb_crops:
+        type: int
+        default: 2
+      size_crops:
+        type: int
+        default: 96
+      min_scale_crops:
+       type: float
+       default: 0.05
+      max_scale_crops:
+        type: float
+        default: 1.
+      temperature:
+        type: float
+        default: 0.1
+      feat_dim:
+        type: int
+        default: 128
+      nmb_prototypes:
+        type: int
+        default: 3
+      nmb_clusters:
+        type: int
+        default: 40
+      epochs:
+        type: int
+        default: 1
+      batch_size:
+        type: int
+        default: 64
+      base_lr:
+        type: float
+        default: 0.3
+      final_lr:
+        type: float
+        default: 0.05
+      freeze_prototypes_niters:
+        type: int
+        default: 300000
+      wd:
+        type: float
+        default: 0.000001
+      warmup_epochs:
+        type: int
+        default: 10
+      start_warmup:
+        type: float
+        default: 0.3
+      arch:
+        type: str
+        default: resnet50
+      sync_bn:
+        type: str
+        default: apex
+    command: >
+      torchrun
+        {enable_tracking}
+        --nnodes=${{SLURM_NNODES:-1}}
+        --nproc-per-node=1
+        --rdzv-backend=c10d
+        --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
+        --rdzv-endpoint=$(hostname --ip-address):29500
+        train_dcv2.py
+        --data-path {data_path}
+        --dump-path {dump_path}
+        --nmb-crops {nmb_crops}
+        --size-crops {size_crops}
+        --min-scale-crops {min_scale_crops}
+        --max-scale-crops {max_scale_crops}
+        --temperature {temperature}
+        --feat-dim {feat_dim}
+        --nmb-prototypes {nmb_prototypes}
+        --nmb-clusters {nmb_clusters}
+        --epochs {epochs}
+        --batch-size {batch_size}
+        --base-lr {base_lr}
+        --final-lr {final_lr}
+        --freeze-prototypes-niters {freeze_prototypes_niters}
+        --wd {wd}
+        --warmup-epochs {warmup_epochs}
+        --start-warmup {start_warmup}
+        --arch {arch}
+        --sync-bn {sync_bn}

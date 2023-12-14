@@ -1,16 +1,16 @@
 include:
   - project: 4cast1/ci-templates
-    ref: main
+    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
     file: /python/templates.yml
   - project: 4cast1/ci-templates
-    ref: main
+    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
     file: /docker/templates.yml
 
 variables:
-  POETRY_IMAGE_VERSION: 3.10-1.5.1-bullseye
+  POETRY_IMAGE_VERSION: 3.11-1.5.1-bullseye
   PY_SRC: src/a6
   PY_LINT_DIRS: src/a6 src/tests scripts mlflow
   PY_PYUPGRADE_ARGS: |
@@ -20,9 +20,10 @@ variables:
     --py38-plus
     --py39-plus
     --py310-plus
+    --py311-plus
   PY_REORDER_PYTHON_IMPORTS_ARGS: |
     --application-directories=.:src
-    --py310-plus
+    --py311-plus
   DOCKER_FILE: docker/a6.Dockerfile
   DOCKER_IMAGE_NAME: a6
   DOCKER_ZIPPED_IMAGE_FILE: a6
@@ -60,21 +61,49 @@ pylint:
   extends: .test
   needs: []
   variables:
-    PY_PYTEST_NO_INSTALL_DEV_DEPENDENCIES: "true"
+    PY_POETRY_INSTALL_ARGS: --only=main
   before_script:
     - export PYTHONPATH=$PYTHONPATH:src
     - !reference [.install-dependencies, script]
+  script:
+    - !reference [.include-functions-change-dir-set-py-root-env-var-upgrade-pip, script]
+    - poetry run pip install pytest pytest-custom_exit_code pytest-cov
+    - >
+      export PY_PYTEST_ARGS="
+        ${PY_PYTEST_ARGS}
+        ${PY_PYTEST_DIR:-tests}
+        --suppress-no-test-exit-code
+        --junitxml=./report/pytest.xml
+        --cov=$PY_SRC
+        --cov-report term
+        --cov-report html"
+    - echo PY_PYTEST_ARGS=${PY_PYTEST_ARGS}
+    - echo PY_POETRY_INSTALL_ARGS=${PY_POETRY_INSTALL_ARGS}
+    - poetry install ${PY_POETRY_INSTALL_ARGS}
+    - poetry run pip install -r requirements-cpu.txt
+    - poetry run pytest ${PY_PYTEST_ARGS}
+      # If coverage report should not be created, don't attempt
+      # to move the coverage report file.
+    - >
+      if [ -z "${PY_PYTEST_NO_COVERAGE}" ]; then
+        ls -al
+        echo "Moving coverage report"
+        mv .coverage .coverage.${CI_JOB_ID}
+        ls -al;
+      else
+        echo "Omitting move of coverage report"
+      fi
 
 test-doc:
   extends: .test-base
   variables:
     PY_PYTEST_DIR: src/a6
-    PY_PYTEST_RUN_DOCTESTS: "true"
+    PY_PYTEST_ARGS: --doctest-modules
 
 test-unit:
   extends: .test-base
   variables:
-    PY_PYTEST_DIR: src/tests
+    PY_PYTEST_DIR: src/tests/unit
 
 coverage:
   extends: .coverage
@@ -83,102 +112,3 @@ coverage:
       artifacts: true
     - job: test-unit
       artifacts: true
-
-build-python:
-  needs: []
-  extends: .build-python
-  script:
-    - !reference [.install-dependencies, script]
-    - !reference [.build-python, script]
-    - python -m venv venv
-    - source venv/bin/activate
-    - pip install --upgrade pip
-    - pip install dist/*.whl
-  artifacts:
-    when: always
-    paths:
-      - .cache/pip
-      - dist/
-      - venv/
-
-.relevant-mlflow-project-changes:
-  rules:
-    - changes:
-      - docker/a6.Dockerfile
-      - gitlab-ci.yml
-      - 'src/a6/**/*.py'
-      - pyproject.toml
-      - poetry.lock
-
-build-docker:
-  extends: .build-docker
-  needs:
-    - job: build-python
-      artifacts: true
-  rules:
-    - !reference [.relevant-mlflow-project-changes, rules]
-
-.test-integration:
-  stage: integration
-  needs:
-    - job: build-python
-      artifacts: true
-    - job: build-docker
-      artifacts: true
-  services:
-    - docker:dind
-  image: docker:latest
-  variables:
-  before_script:
-    - !reference [.set-required-docker-environment-variables, script]
-    - ls -al .
-    - docker load -i ${DOCKER_ZIPPED_IMAGE_FILE}.tar.gz
-    - docker tag ${IMAGE_NAME}:latest ${DOCKER_IMAGE_NAME}:latest
-    # Install Python 3
-    - apk update
-    # bash is required by mlflow
-    - apk --no-cache add python3 bash
-    # Set PATH and PYTHONPATH to include venv
-    - export PYTHONPATH=$PYTHONPATH:${PWD}/venv/lib/python3.10/site-packages
-    - alias mlflow="python3 ${PWD}/venv/bin/mlflow"
-    # MLproject expects MLFLOW_TRACKING_TOKEN env var to be set
-    - export MLFLOW_TRACKING_TOKEN="test-token"
-  rules:
-    - !reference [.relevant-mlflow-project-changes, rules]
-    - changes:
-      - mlflow/**/*
-
-test-cluster:
-  extends: .test-integration
-  script:
-    - >
-      mlflow
-      run mlflow/
-      -e cluster
-      -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
-      -P config=/mlproject/cluster.yaml
-      -P use_varimax=false
-      -P log_to_mantik=false
-
-test-temporal:
-  extends: .test-integration
-  script:
-    - >
-      mlflow
-      run mlflow/
-      -e temporal
-      -P weather_data=/data/temperature_level_128_daily_averages_2020.nc
-      -P use_varimax=false
-      -P log_to_mantik=false
-
-test-grid-search:
-  extends: .test-integration
-  script:
-    - >
-      mlflow
-      run mlflow/
-      -e grid-search
-      -P weather_data=/data/model_level_133_jan_2020.nc
-      -P turbine_data=/data/turbine.nc
-      -P config=/mlproject/grid-search.yaml
-      -P log_to_mantik=false

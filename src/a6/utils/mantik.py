@@ -4,8 +4,14 @@ import pathlib
 import shutil
 import sys
 import tempfile
+from collections.abc import Callable
 
 import mlflow
+
+
+_TRACKING_ENV_VAR = "TRACK_TO_MANTIK"
+_CURRENT_EPOCH_ENV_VAR = "CURRENT_EPOCH"
+_CPU_USAGE_ENV_VAR = "CPU_USAGE_ENABLED"
 
 
 @contextlib.contextmanager
@@ -70,3 +76,19 @@ def _log_file_to_mantik_and_remove_from_local_disk(path: pathlib.Path) -> None:
 
     mlflow.log_artifact(path.as_posix())
     shutil.rmtree(path.parent.as_posix(), ignore_errors=True)
+
+
+def call_mlflow_method(func: Callable, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except mlflow.exceptions.MlflowException as e:
+        logging.exception(  # noqa: G200
+            (
+                "Calling MLflow method %s with args %s and kwargs %s "
+                "has failed: %s"
+            ),
+            func,
+            args,
+            kwargs,
+            str(e),
+        )
