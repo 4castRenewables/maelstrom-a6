@@ -1,11 +1,6 @@
 Bootstrap: docker-daemon
 From: a6-cuda:latest
 
-%environment
-    export PATH=/venv/bin:$PATH
-    # Silence git warning by MLflow
-    export GIT_PYTHON_REFRESH=quiet
-
 %post
     # Install ipykernel for usage as Jupyter kernel
     pip install ipykernel
@@ -15,8 +10,10 @@ From: a6-cuda:latest
     which python
     python --version
     pip list
-    python -c 'import a6, apex, torch, torchvision'
+    python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
+    # python -c 'import apex'
     python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
+    python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
     python -m cfgrib selfcheck
 
 %startscript

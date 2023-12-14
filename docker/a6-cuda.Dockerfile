@@ -101,10 +101,10 @@ RUN apt-get update \
 RUN which python
 RUN python --version
 RUN pip list
-RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
 RUN python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
 #RUN python -c 'import apex'
 RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
+RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
 RUN python -m cfgrib selfcheck
 
 ENTRYPOINT ["python"]
