@@ -118,6 +118,18 @@ def create_argparser() -> argparse.ArgumentParser:
         help="Path to dataset repository",
     )
     parser.add_argument(
+        "--use-mnist",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Whether to use the MNIST dataset for testing purposes."
+            ""
+            "WARNING: If the dataset is not present in `data-path`, "
+            "it will be downloaded! This may fail on the compute nodes of JSC."
+        ),
+    )
+    parser.add_argument(
         "--pattern",
         type=parse_str_or_none,
         default=None,

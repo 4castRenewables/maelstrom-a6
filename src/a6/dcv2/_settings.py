@@ -16,6 +16,7 @@ class SyncBn(enum.StrEnum):
 @dataclasses.dataclass(frozen=True)
 class Data:
     path: pathlib.Path
+    use_mnist: bool
     pattern: str | None
     drop_variables: bool
     levels: list[int] | None
@@ -95,6 +96,7 @@ class Settings:
             ),
             data=Data(
                 path=args.data_path,
+                use_mnist=args.use_mnist,
                 pattern=args.pattern,
                 drop_variables=args.drop_variables,
                 levels=args.levels,

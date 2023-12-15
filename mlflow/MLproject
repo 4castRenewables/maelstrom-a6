@@ -150,6 +150,9 @@ entry_points:
       data_path:
         type: str
         default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
+      use_mnist:
+        type: str
+        default: --no-use-mnist
       pattern:
         type: str
         default: None
@@ -232,6 +235,7 @@ entry_points:
         train_dcv2.py
         {enable_tracking}
         --data-path {data_path}
+        {use_mnist}
         --pattern {pattern}
         --drop-variables {drop_variables}
         --levels {levels}
