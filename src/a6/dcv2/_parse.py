@@ -14,6 +14,19 @@ logger = logging.getLogger(__name__)
 
 
 class ExtendAction(argparse.Action):
+    """Allows to pass multiple values for an argument as quoted strings.
+
+    This is required to allow passing multiple arguments with MLflow,
+    since MLflow puts given arguments into single-quoted strings.
+
+    Examples
+    --------
+    1. `--option 1 2 3` yields `[1, 2, 3]`.
+    2. `--option '1 2 3'` yields `[1, 2, 3]`.
+    2. `--option "1 2 3"` yields `[1, 2, 3]`.
+
+    """
+
     def __init__(self, type: type, *args, **kwargs):
         self._type = type
         super().__init__(*args, **kwargs)
@@ -46,6 +59,16 @@ def parse_str_or_none(value: str) -> str | None:
 
 
 class ExtendListAction(argparse.Action):
+    """Allows to pass multiple tuple arguments.
+
+    Examples
+    --------
+    1. `--option 1` yields `[1]`.
+    2. `--option (1,2)` yields `[(1, 2)]`.
+    3. `--option 1 --option (2,3)` yields `[1, (1, 2)]`.
+
+    """
+
     def __init__(self, type: type, *args, **kwargs):
         self._type = type
         super().__init__(*args, **kwargs)
