@@ -7,24 +7,24 @@ import xarray as xr
 
 import a6
 
-a6.utils.logging.log_to_stdout()
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--data-path",
-    type=pathlib.Path,
-)
-parser.add_argument(
-    "--pattern",
-    type=str,
-)
 
 if __name__ == "__main__":
+    a6.utils.logging.log_to_stdout()
     logger = logging.getLogger(__name__)
 
-    start = time.time()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--data-path",
+        type=pathlib.Path,
+    )
+    parser.add_argument(
+        "--pattern",
+        type=str,
+    )
 
     args = parser.parse_args()
+
+    start = time.time()
 
     path: pathlib.Path = args.data_path
     patterns: list[str] = args.pattern.split(",")
