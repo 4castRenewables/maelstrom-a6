@@ -58,6 +58,16 @@ ForecastErrors = dict[pathlib.Path, xr.Dataset]
 def simulate_forecast_errors(
     raw_args: list[str] | None = None,
 ) -> ForecastErrors:
+    """For a set of turbines, simulate forecasts and calculate the errors.
+
+    The turbines are considered to be located in a certain directory
+    as `.nc` files, where each file contains the production data
+    of the respective turbine.
+
+    TODO: Preprocess weather features prior.
+    Currently, the features are calculated on-the-fly, which very inefficient.
+
+    """
     args = parser.parse_args(raw_args)
 
     turbine_files = sorted(list(args.turbine_data_dir.rglob("**/*.nc")))
