@@ -207,5 +207,5 @@ After that point in time, this is the opposite: level 1 is `NaN` and level 5 has
 Thus, the levels have to be reduced by taking the sum, ignoring `NaN`. This can be achieved with `np.nansum`:
 
 ```python
-ds_new = ds.reduce(np.nansum, dim="expver", keep_attrs=True)
+ds_new = ds.reduce(np.nansum, dim="expvar", keep_attrs=True)
 ```

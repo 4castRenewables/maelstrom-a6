@@ -1,5 +1,5 @@
 Bootstrap: docker-daemon
-From: a6-cuda:latest
+From: a6-rocm:latest
 
 %post
     # Install ipykernel for usage as Jupyter kernel
@@ -10,7 +10,6 @@ From: a6-cuda:latest
     python --version
     pip list
     python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
-    # python -c 'import apex'
     python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
     python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
     python -m cfgrib selfcheck
@@ -26,4 +25,4 @@ From: a6-cuda:latest
 
 %labels
     Author Fabian Emmerich
-    Version cu12.1-py3.11
+    Version rocm5.6-py3.11

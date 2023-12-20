@@ -1,9 +1,10 @@
-ARG CUDA_VERSION=12.1.0
 ARG PYTHON_VERSION=3.11
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04 as builder
+# NOTE: When updating ROCM version, make sure to change it
+# for both layers as well ass the `poetry add source` command.
+FROM rocm/dev-ubuntu-22.04:5.6-complete as builder
 
-ARG CUDA_VERSION
+ARG ROCM_VERSION
 ARG PYTHON_VERSION
 
 RUN apt-get update \
@@ -14,7 +15,6 @@ RUN apt-get update \
     apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
-      git \
       # Installs gcc, required by HDBSCAN
       build-essential \
       # Required by cartopy
@@ -44,27 +44,19 @@ WORKDIR /opt/a6
 RUN python${PYTHON_VERSION} -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip \
+ && poetry source add --priority=supplemental pytorch-rocm https://download.pytorch.org/whl/rocm5.6 \
+ && poetry add \
+    -vvv \
+    --source pytorch-rocm \
+    torch==$(poetry show torch | awk '/version/ { print $3 }') \
+    torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
  && poetry install --only=main,notebooks
-
-# Install apex
-#ENV export TORCH_CUDA_ARCH_LIST="8.0"
-#RUN git clone https://github.com/NVIDIA/apex /opt/apex \
-# && cd /opt/apex \
-# && . /venv/bin/activate \
-# && pip install packaging \
-# && pip install -v  \
-#      --disable-pip-version-check \
-#      --no-cache-dir \
-#      --no-build-isolation \
-#      --config-settings "--build-option=--cpp_ext" \
-#      --config-settings "--build-option=--cuda_ext" \
-#      ./
 
 # Delete Python cache files
 WORKDIR /venv
 RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu22.04
+FROM rocm/dev-ubuntu-22.04:5.6-complete
 
 ARG PYTHON_VERSION
 
@@ -97,7 +89,6 @@ RUN which python
 RUN python --version
 RUN pip list
 RUN python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
-#RUN python -c 'import apex'
 RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
 RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
 RUN python -m cfgrib selfcheck

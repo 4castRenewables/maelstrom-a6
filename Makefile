@@ -59,6 +59,28 @@ deploy-cuda: build-cuda upload-cuda
 
 deploy-e4-cuda: build-cuda upload-e4-cuda
 
+build-docker-rocm:
+	sudo docker build -t $(IMAGE_NAME)-rocm:latest -f docker/a6-rocm.Dockerfile .
+
+build-apptainer-rocm: build-docker-rocm
+	sudo apptainer build --force mlflow/$(IMAGE_NAME)-rocm.sif apptainer/a6-rocm.def
+
+build-rocm: build-docker-rocm build-apptainer-rocm
+
+upload-rocm:
+	$(SSH_COPY_COMMAND) $(JSC_SSH_OPTIONS) \
+		mlflow/$(IMAGE_NAME)-rocm.sif \
+		$(JSC_SSH):$(JSC_PROJECT_DIR)/$(IMAGE_NAME)-rocm.sif
+
+upload-e4-rocm:
+	$(SSH_COPY_COMMAND) $(E4_SSH_OPTIONS) \
+		mlflow/$(IMAGE_NAME)-rocm.sif \
+		$(E4_SSH):$(E4_PROJECT_DIR)/$(IMAGE_NAME)-rocm.sif
+
+deploy-rocm: build-rocm upload-rocm
+
+deploy-e4-cuda: build-rocm upload-e4-rocm
+
 build-jsc-kernel:
 	sudo apptainer build --force \
 		$(JSC_DIR)/jupyter-kernel.sif \
