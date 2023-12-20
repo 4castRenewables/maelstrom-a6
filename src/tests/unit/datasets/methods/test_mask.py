@@ -58,7 +58,7 @@ def create_data_array(levels: int, time_steps: int) -> xr.DataArray:
 @pytest.mark.parametrize(
     ("levels", "time_steps"), [(1, 1), (2, 1), (1, 2), (2, 2)]
 )
-def test_get_min_max_values_for_multiple_levels(levels, time_steps):
+def test_set_nans_to_mean(levels, time_steps):
     da_1 = create_data_array(levels=levels, time_steps=time_steps)
     da_2 = create_data_array(levels=levels, time_steps=time_steps)
 

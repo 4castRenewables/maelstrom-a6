@@ -23,10 +23,10 @@ def set_nans_to_mean(
 
 
     """
-    if not _contains_any_nans(data):
+    if (n_nans := count_nans(data)) == 0:
         return data
 
-    logger.info("Masking all NaNs in data set %s to mean", data)
+    logger.info("Masking %s NaNs in data set %s to mean", n_nans, data)
 
     time_steps = data[coordinates.time]
 
@@ -40,7 +40,7 @@ def set_nans_to_mean(
             data, coordinates=coordinates
         )
 
-    if _contains_any_nans(data):
+    if count_nans(data) != 0:
         raise RuntimeError(
             f"Failed to mask all NaNs with mean for data set {data}"
         )
@@ -48,8 +48,8 @@ def set_nans_to_mean(
     return data
 
 
-def _contains_any_nans(data: xr.Dataset) -> bool:
-    return any(np.isnan(data[var]).any() for var in data.data_vars)
+def count_nans(data: xr.Dataset) -> int:
+    return sum(np.isnan(data[var]).sum() for var in data.data_vars)
 
 
 def _set_nans_to_mean_for_all_levels_and_variables(
