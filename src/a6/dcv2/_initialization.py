@@ -4,6 +4,7 @@ import yaml
 
 import a6.dcv2._logs as _logs
 import a6.dcv2._settings as _settings
+import a6.utils as utils
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,12 @@ def initialize_logging(
     )
 
     # create a logger
-    logger_ = _logs.create_logger(
-        settings.dump.path / f"train-{settings.distributed.global_rank}.log",
-        settings=settings,
+    logger_ = utils.logging.create_logger(
+        filepath=settings.dump.path
+        / f"train-{settings.distributed.global_rank}.log",
+        global_rank=settings.distributed.global_rank,
+        local_rank=settings.distributed.local_rank,
+        verbose=settings.verbose,
     )
 
     if _is_primary_device(settings):

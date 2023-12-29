@@ -225,6 +225,17 @@ def get_device(properties: Properties) -> torch.device:
     return torch.device(device)
 
 
+def get_single_device() -> torch.device:
+    if torch.cuda.is_available():
+        name = torch.cuda.get_device_name(0)
+        logger.info("GPU available, using %s", name)
+        # Declare device to be able to copy model and tensors to GPU
+        return torch.device("cuda:0")
+    logger.info("No GPU available, using CPU instead")
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    return torch.device("cpu")
+
+
 def is_primary_device() -> bool:
     return int(os.getenv("RANK")) == 0
 

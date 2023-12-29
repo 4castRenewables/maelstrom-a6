@@ -85,8 +85,11 @@ def test_train_dcv2_with_era5(
         run = mlflow.start_run()
         mlflow.end_run()
         with testing.env.env_vars_set({"MLFLOW_RUN_ID": run.info.run_id}):
-            entry.train_dcv2(raw_args_1)
+            try:
+                entry.train_dcv2(raw_args_1)
 
-            # Train second epoch to restore from dump path and cut DWD area
-            raw_args_2 = raw_args_1 + ["--epochs", "2", "--select-dwd-area"]
-            entry.train_dcv2(raw_args_2)
+                # Train second epoch to restore from dump path and cut DWD area
+                raw_args_2 = raw_args_1 + ["--epochs", "2", "--select-dwd-area"]
+                entry.train_dcv2(raw_args_2)
+            finally:
+                mlflow.end_run()

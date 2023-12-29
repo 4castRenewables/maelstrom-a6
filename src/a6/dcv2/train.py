@@ -51,14 +51,14 @@ def train(
 
     end = time.time()
     start_idx = 0
-    for it, (idx, inputs) in enumerate(dataloader):
+    for it, (inputs, idx) in enumerate(dataloader):
         logger.debug("Calculating loss for index %s", idx)
 
         for crop_index, inp in enumerate(inputs):
             for index in range(inp.size(0)):
                 sample = inp[index]
                 if torch.isnan(sample).any():
-                    logger.exception(
+                    logger.warning(
                         (
                             "Input at crop index %i and index %i has NaN "
                             "values: %s"

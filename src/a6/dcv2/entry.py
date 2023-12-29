@@ -27,7 +27,6 @@ import a6.dcv2._parse as _parse
 import a6.dcv2._settings as _settings
 import a6.dcv2.cluster as cluster
 import a6.dcv2.train as train
-import a6.features as features
 import a6.models as models
 import a6.utils as utils
 import a6.utils.mantik as mantik
@@ -336,36 +335,12 @@ def _create_dataset(
         # If a data pattern is given, it is assumed that the
         # given data path is a folder with netCDF files.
         logger.warning("Assuming xarray.Dataset from netCDF files")
-        coordinates = datasets.coordinates.Coordinates()
-        variables = datasets.variables.Model()
-        drop_variables = settings.data.drop_variables or []
-
-        preprocessing = (
-            (
-                datasets.methods.select.select_dwd_area(coordinates=coordinates)
-                if settings.data.select_dwd_area
-                else datasets.methods.identity.identity()
-            )
-            >> features.methods.weighting.weight_by_latitudes(
-                latitudes=coordinates.latitude,
-                use_sqrt=True,
-            )
-            >> features.methods.geopotential.calculate_geopotential_height(
-                variables=variables,
-            )
-            >> features.methods.variables.drop_variables(
-                names=[variables.z] + drop_variables
-            )
-        )
-
-        ds = datasets.Era5(
+        ds = datasets.dwd.get_dwd_era5_data(
             path=settings.data.path,
             pattern=settings.data.pattern,
-            preprocessing=preprocessing,
+            levels=settings.data.levels,
             parallel_loading=settings.data.parallel_loading,
-        ).to_xarray(levels=settings.data.levels)
-        logger.info(
-            "Reading data from netCDF files and converting to xarray.Dataset"
+            select_dwd_area=settings.data.select_dwd_area,
         )
         return datasets.crop.MultiCropXarrayDataset(
             data_path=settings.data.path,

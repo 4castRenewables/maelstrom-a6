@@ -9,7 +9,6 @@ import logging
 import pathlib
 from collections.abc import Iterable
 
-import numpy as np
 import torch
 import torchvision.datasets
 import torchvision.transforms
@@ -17,6 +16,7 @@ import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods as methods
+import a6.datasets.transforms as transforms
 
 logger = logging.getLogger(__name__)
 
@@ -100,11 +100,11 @@ class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
 
     def __getitem__(
         self, index: int
-    ) -> list[torch.Tensor] | tuple[int, list[torch.Tensor]]:
+    ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
         image, _ = self.dataset[index]
         multi_crops = list(map(lambda trans: trans(image), self.trans))
         if self.return_index:
-            return index, multi_crops
+            return multi_crops, index
         return multi_crops
 
 
@@ -156,12 +156,12 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
 
     def __getitem__(
         self, index: int
-    ) -> list[torch.Tensor] | tuple[int, list[torch.Tensor]]:
+    ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
         path, _ = self.samples[index]
         image = self.loader(path)
         multi_crops = list(map(lambda trans: trans(image), self.trans))
         if self.return_index:
-            return index, multi_crops
+            return multi_crops, index
         return multi_crops
 
 
@@ -205,10 +205,10 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
         if "mean" in self.dataset.attrs:
             mean = self.dataset.attrs["mean"]
-            logging.info("Reading mean from dataset attribute 'mean': %s", mean)
+            logger.info("Reading mean from dataset attribute 'mean': %s", mean)
         else:
             logger.info("Calculating mean from dataset")
-            mean = _get_statistics(
+            mean = methods.statistics.get_statistics(
                 self.dataset,
                 method=methods.normalization.calculate_mean,
                 levels=self._levels,
@@ -217,13 +217,13 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
         if "std" in self.dataset.attrs:
             std = self.dataset.attrs["std"]
-            logging.info(
+            logger.info(
                 "Reading standard deviations from dataset attribute 'std': %s",
                 std,
             )
         else:
             logger.info("Calculating std from dataset")
-            std = _get_statistics(
+            std = methods.statistics.get_statistics(
                 self.dataset,
                 method=methods.normalization.calculate_std,
                 levels=self._levels,
@@ -232,7 +232,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
         logger.info("Calculated mean %s and standard deviation %s", mean, std)
 
-        self.trans = _create_transformations(
+        self.transforms = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
             min_scale_crops=min_scale_crops,
@@ -247,34 +247,19 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
     def __getitem__(
         self, index: int
-    ) -> list[torch.Tensor] | tuple[int, list[torch.Tensor]]:
-        sample = _concatenate_levels_to_channels(
+    ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
+        sample = transforms.xarray.concatenate_levels_to_channels(
             self.dataset,
             time_index=index,
             levels=self._levels,
             coordinates=self._coordinates,
         )
-        image = torch.from_numpy(sample)
-
-        if torch.isnan(image).any():
-            raise ValueError(
-                f"Sample at index {index} "
-                f"({self.dataset.isel(time=index)[self._coordinates.time]}) "
-                f"has NaNs: {image}",
-            )
-
-        multi_crops = list(map(lambda trans: trans(image), self.trans))
-
-        for crop_index, crop in enumerate(multi_crops):
-            if torch.isnan(crop).any():
-                raise ValueError(
-                    f"After transforms, crop {crop_index} of sample at index "
-                    f"{index} ({self.dataset.isel(time=index)}) "
-                    f"has NaNs: {crop}",
-                )
+        multi_crops = list(
+            map(lambda transform: transform(sample), self.transforms)
+        )
 
         if self.return_index:
-            return index, multi_crops
+            return multi_crops, index
         return multi_crops
 
 
@@ -316,21 +301,6 @@ def convert_relative_to_absolute_crop_size(
     )
 
     return size_crops
-
-
-def _get_statistics(
-    data: xr.Dataset,
-    method: methods.normalization.StatisticsMethod,
-    levels: list[int],
-    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
-) -> list[float]:
-    if len(levels) == 1:
-        return [method(data, variable=variable) for variable in data.data_vars]
-    return [
-        method(data.sel({coordinates.level: level}), variable=variable)
-        for level in levels
-        for variable in data.data_vars
-    ]
 
 
 def _create_transformations(
@@ -388,31 +358,3 @@ def _create_transformations(
         # Repeat transform for `n_crops` to achieve the given number of crops
         for _ in range(n_crops)
     ]
-
-
-def _concatenate_levels_to_channels(
-    data: xr.Dataset,
-    time_index: int,
-    levels: list[int],
-    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
-) -> np.ndarray:
-    time_step = data.isel({coordinates.time: time_index})
-    without_nans = methods.mask.set_nans_to_mean(
-        time_step, coordinates=coordinates
-    )
-
-    if len(levels) == 1:
-        # If only single level given, argument for `level` to `xr.Dataset.sel`
-        # must be a single integer, otherwise the data will have an additional
-        # dimension.
-        return (
-            without_nans.sel({coordinates.level: levels[0]})
-            .to_array()
-            .to_numpy()
-        )
-    return np.concatenate(
-        [
-            without_nans.sel({coordinates.level: level}).to_array().to_numpy()
-            for level in levels
-        ]
-    )
