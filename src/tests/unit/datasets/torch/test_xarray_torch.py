@@ -6,11 +6,13 @@ import a6.datasets as datasets
 
 
 @pytest.fixture()
-def dataset(era5, era5_path, gwl_path) -> datasets.torch.xarray.WithGWLTarget:
+def dataset(
+    era5_ds, era5_path, gwl_path
+) -> datasets.torch.xarray.WithGWLTarget:
     gwl = xr.open_dataset(gwl_path)
     return datasets.torch.xarray.WithGWLTarget(
         data_path=era5_path,
-        weather_dataset=era5.to_xarray(),
+        weather_dataset=era5_ds,
         gwl_dataset=gwl,
     )
 

@@ -117,7 +117,7 @@ class WithGWLTarget(Default):
             {self._coordinates.time: index}
         )
         # `method="ffill"` selects closest backwards timestep
-        gwl = self.gwl_dataset.sel(
-            {self._coordinates.time: time_index}, method="ffill"
+        gwl = methods.select.select_closest_time_step(
+            self.gwl_dataset, index=time_index, non_functional=True
         )[self._variables.gwl]
         return sample, int(gwl)

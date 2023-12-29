@@ -1,5 +1,7 @@
+import datetime
 from collections.abc import Hashable
 
+import numpy as np
 import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
@@ -11,6 +13,7 @@ import a6.utils as utils
 @utils.make_functional
 def select_variables(
     dataset: xr.Dataset,
+    *,
     variables: list[Hashable],
 ) -> xr.Dataset:
     """Select given variable(s) from the dataset."""
@@ -18,8 +21,21 @@ def select_variables(
 
 
 @utils.make_functional
+def select_closest_time_step(
+    dataset: xr.Dataset,
+    *,
+    index: datetime.datetime | np.datetime64 | str,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> xr.Dataset:
+    """Select the closest time step."""
+    # `method="ffill"` selects closest backwards timestep
+    return dataset.sel({coordinates.time: index}, method="ffill")
+
+
+@utils.make_functional
 def select_levels(
     dataset: xr.Dataset,
+    *,
     levels: types.Levels,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
@@ -30,6 +46,7 @@ def select_levels(
 @utils.make_functional
 def select_latitude_longitude(
     dataset: xr.Dataset,
+    *,
     latitude: int | float,
     longitude: int | float,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
@@ -53,6 +70,7 @@ def select_latitude_longitude(
 @utils.make_functional
 def select_levels_and_calculate_daily_mean(
     dataset: xr.Dataset,
+    *,
     levels: types.Levels,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
@@ -66,6 +84,7 @@ def select_levels_and_calculate_daily_mean(
 @utils.make_functional
 def select_dwd_area(
     dataset: xr.Dataset,
+    *,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
 ) -> xr.Dataset:
     """Return the dataset, but only the DWD area for GWL.
