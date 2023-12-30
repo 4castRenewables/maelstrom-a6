@@ -8,6 +8,7 @@ import logging
 import math
 import pathlib
 
+import mantik.mlflow
 import numpy as np
 import torch.distributed as dist
 import torch.nn as nn
@@ -16,11 +17,9 @@ import torch.optim
 import torch.utils.data
 from scipy.sparse import csr_matrix
 
-import a6.dcv2._settings as _settings
+import a6.dcv2.settings as _settings
 import a6.plotting as plotting
 import a6.utils as utils
-import a6.utils.mantik as mantik
-import mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -367,14 +366,12 @@ def cluster_embeddings(
                 assignments.shape[-1],
             )
             if settings.enable_tracking:
-                mantik.call_mlflow_method(
-                    mlflow.log_metric,
+                mantik.mlflow.log_metric(
                     "unassigned_samples",
                     n_unassigned_samples,
                     step=epoch,
                 )
-                mantik.call_mlflow_method(
-                    mlflow.log_metric,
+                mantik.mlflow.log_metric(
                     "unassigned_samples_percent",
                     percent_unassigned_samples,
                 )

@@ -1,6 +1,6 @@
 import pytest
 
-import a6.dcv2._parse as _parse
+import a6.dcv2.parse as _parse
 
 
 @pytest.mark.parametrize(

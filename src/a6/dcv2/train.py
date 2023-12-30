@@ -7,15 +7,15 @@
 import logging
 import time
 
+import mantik.mlflow
 import numpy as np
 import torch.nn as nn
 import torch.utils.data
 
-import a6.dcv2._averaging as _averaging
-import a6.dcv2._settings as _settings
+import a6.dcv2.averaging as _averaging
 import a6.dcv2.cluster as cluster
+import a6.dcv2.settings as _settings
 import a6.utils as utils
-import mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -182,8 +182,7 @@ def train(
             "loss_avg": losses.avg,
         }
 
-        utils.mantik.call_mlflow_method(
-            mlflow.log_metrics,
+        mantik.mlflow.log_metrics(
             metrics,
             step=epoch,
         )
