@@ -7,10 +7,10 @@
 import contextlib
 import logging
 import math
-import shutil
 import socket
 import time
 
+import mantik.mlflow
 import numpy as np
 import torch.backends.cudnn as cudnn
 import torch.distributed.elastic.multiprocessing.errors as errors
@@ -20,17 +20,14 @@ import torch.optim
 import torch.utils.data
 
 import a6.datasets as datasets
-import a6.dcv2._checkpoints as _checkpoints
-import a6.dcv2._initialization as _initialization
-import a6.dcv2._logs as _logs
-import a6.dcv2._parse as _parse
-import a6.dcv2._settings as _settings
 import a6.dcv2.cluster as cluster
+import a6.dcv2.initialization as _initialization
+import a6.dcv2.parse as _parse
+import a6.dcv2.settings as _settings
+import a6.dcv2.stats as stats
 import a6.dcv2.train as train
 import a6.models as models
 import a6.utils as utils
-import a6.utils.mantik as mantik
-import mlflow
 
 
 @errors.record
@@ -39,7 +36,7 @@ def train_dcv2(raw_args: list[str] | None = None):
     settings = _settings.Settings.from_args_and_env(args)
 
     logger, training_stats = _initialization.initialize_logging(
-        settings, columns=("epoch", "loss")
+        settings, columns=["epoch", "loss"]
     )
 
     with setup_distributed(settings):
@@ -64,13 +61,10 @@ def setup_distributed(settings: _settings.Settings) -> None:
         stderr = utils.slurm.get_stderr_file()
 
         if settings.enable_tracking:
-            mantik.call_mlflow_method(mlflow.start_run)
+            mantik.mlflow.start_run()
 
             if utils.slurm.is_slurm_job():
-                mantik.call_mlflow_method(
-                    mlflow.log_params,
-                    utils.slurm.get_slurm_env_vars(),
-                )
+                mantik.mlflow.log_params(utils.slurm.get_slurm_env_vars())
 
     yield
 
@@ -80,20 +74,15 @@ def setup_distributed(settings: _settings.Settings) -> None:
         logging.info("Total runtime (s): %s", runtime)
 
         if settings.enable_tracking:
-            mantik.call_mlflow_method(
-                mlflow.log_metric, "total_runtime_s", runtime
-            )
+            mantik.mlflow.log_metric("total_runtime_s", runtime)
 
             _log_stdout_stderr(stdout=stdout, stderr=stderr)
 
             # The following files are saved to disk in `a6.dcv2.cluster.py`
-            mantik.call_mlflow_method(
-                # NOTE: Only log plots due to large size of other files
-                mlflow.log_artifacts,
-                settings.dump.plots,
-            )
+            # NOTE: Only log plots due to large size of other files
+            mantik.mlflow.log_artifacts(settings.dump.plots)
 
-            mantik.call_mlflow_method(mlflow.end_run)
+            mantik.mlflow.end_run()
 
     utils.distributed.destroy()
 
@@ -101,7 +90,7 @@ def setup_distributed(settings: _settings.Settings) -> None:
 def _train(
     settings: _settings.Settings,
     logger: logging.Logger,
-    training_stats: _logs.Stats,
+    training_stats: stats.Stats,
 ):
     logger.info(
         (
@@ -241,16 +230,13 @@ def _train(
             find_unused_parameters=True,
         )
 
-    # optionally resume from a checkpoint
-    to_restore = {"epoch": 0}
-    _checkpoints.restart_from_checkpoint(
-        settings.dump.path / "checkpoint.pth.tar",
-        settings=settings,
-        run_variables=to_restore,
-        state_dict=model,
+    restored_variables = models.checkpoints.restart_from_checkpoint(
+        path=settings.dump.checkpoints,
+        model=model,
         optimizer=optimizer,
+        properties=settings.distributed,
     )
-    start_epoch = to_restore["epoch"]
+    start_epoch = restored_variables["epoch"]
 
     # build the memory bank
     mb_path = settings.dump.path / f"mb-{settings.distributed.global_rank}.pth"
@@ -292,23 +278,14 @@ def _train(
 
         # save checkpoints
         if utils.distributed.is_primary_device():
-            save_dict = {
-                "epoch": epoch + 1,
-                "state_dict": model.state_dict(),
-                "optimizer": optimizer.state_dict(),
-            }
-            torch.save(
-                save_dict,
-                settings.dump.path / "checkpoint.pth.tar",
+            models.checkpoints.save_checkpoint(
+                model=model,
+                optimizer=optimizer,
+                epoch=epoch,
+                path=settings.dump.checkpoints,
+                checkpoint_freq=settings.dump.checkpoint_freq,
+                target_epochs=settings.model.epochs,
             )
-            if (
-                epoch % settings.dump.checkpoint_freq == 0
-                or epoch == settings.model.epochs - 1
-            ):
-                shutil.copyfile(
-                    settings.dump.path / "checkpoint.pth.tar",
-                    settings.dump.checkpoints / f"checkpoint-epoch-{epoch}.pth",
-                )
         torch.save(
             {
                 "local_memory_embeddings": local_memory_embeddings,
@@ -364,6 +341,6 @@ def _create_dataset(
 
 def _log_stdout_stderr(stdout: str | None, stderr: str | None) -> None:
     if stdout is not None:
-        mantik.call_mlflow_method(mlflow.log_artifact, stdout)
+        mantik.mlflow.log_artifact(stdout)
     if stderr is not None:
-        mantik.call_mlflow_method(mlflow.log_artifact, stderr)
+        mantik.mlflow.log_artifact(stderr)
