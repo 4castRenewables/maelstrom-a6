@@ -120,4 +120,7 @@ class WithGWLTarget(Default):
         gwl = methods.select.select_closest_time_step(
             self.gwl_dataset, index=time_index, non_functional=True
         )[self._variables.gwl]
-        return sample, int(gwl)
+        # GWL indexes start at 1-40, but torch losses expect
+        # 0-n_classes. Hence, substract 1.
+        gwl_label = int(gwl) - 1
+        return sample, gwl_label

@@ -3,7 +3,7 @@ import pathlib
 import pytest
 
 import a6.datasets as datasets
-import a6.dcv2.entry as entry
+import a6.entry.dcv2 as entry
 import a6.testing as testing
 import mlflow
 

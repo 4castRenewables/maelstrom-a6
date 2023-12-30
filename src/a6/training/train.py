@@ -1,5 +1,6 @@
 import logging
 
+import mantik.mlflow as mlflow
 import sklearn.base
 import torch.nn as nn
 import torch.optim as optim
@@ -10,7 +11,6 @@ import a6.evaluation.evaluate as evaluate
 import a6.evaluation.metrics as metrics
 import a6.types as types
 import a6.utils as utils
-import mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def train(
             optimizer.step()
 
             # Print every 200 batches
-            if i == 0 or i % 200 == 199:
+            if i == 0 or i % 50 == 49:
                 accuracy = metrics.accuracy_score(
                     y_true=targets, y_pred=outputs
                 )
@@ -89,8 +89,7 @@ def train(
         )
 
         if log_to_mlflow:
-            utils.mantik.call_mlflow_method(
-                mlflow.log_metrics,
+            mlflow.log_metrics(
                 {
                     "train_loss": running_loss,
                     "train_accuracy": accuracy,

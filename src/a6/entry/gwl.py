@@ -15,6 +15,7 @@ def main(
     gwl_path: pathlib.Path,
     select_dwd_area: bool = True,
     testing: bool = True,
+    log_to_mlflow: bool = True,
 ) -> None:
     device = utils.distributed.get_single_device()
     logger = utils.logging.create_logger(
@@ -33,6 +34,12 @@ def main(
         parallel_loading=False,
         select_dwd_area=select_dwd_area,
     )
+    gwl = xr.open_dataset(gwl_path)
+
+    start, end = gwl[coordinates.time][0], gwl[coordinates.time][-1]
+
+    ds = ds.sel({coordinates.time: slice(start, end)})
+
     size = len(ds[coordinates.time])
     random_indexes = torch.randperm(size)
     train_size = int(0.8 * size)
@@ -40,7 +47,6 @@ def main(
     test_indexes = random_indexes[train_size:]
 
     variables = datasets.variables.GWL()
-    gwl = xr.open_dataset(gwl_path)
     n_classes = int(gwl[variables.gwl].max())
 
     train_set = datasets.torch.xarray.WithGWLTarget(
@@ -105,4 +111,5 @@ def main(
         train_loader=train_loader,
         test_loader=test_loader,
         device=device,
+        log_to_mlflow=log_to_mlflow,
     )

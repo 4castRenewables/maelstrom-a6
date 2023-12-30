@@ -69,7 +69,6 @@ class Model(nn.Module):
             nn.ELU(),
             nn.MaxPool2d(kernel_size=2),
         )
-
         self.conv2 = nn.Sequential(
             nn.Conv2d(
                 in_channels=out_channels_1st_layer,
@@ -79,7 +78,7 @@ class Model(nn.Module):
             nn.ELU(),
             nn.MaxPool2d(2),
         )
-        in_features_mlp = self.conv2(self.conv1(example)).flatten(1, -1).size(0)
+        in_features_mlp = self.conv2(self.conv1(example)).flatten().size(0)
         self.mlp = nn.Sequential(
             nn.Flatten(),
             nn.Linear(in_features=in_features_mlp, out_features=output_dim),
