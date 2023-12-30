@@ -2,7 +2,7 @@ import pathlib
 
 import xarray as xr
 
-import a6.evaluation.forecast as forecast
+import a6.entry.forecast as forecast
 
 FILE_PATH = pathlib.Path(__file__).parent
 DATA_DIR = FILE_PATH / "../../data"
