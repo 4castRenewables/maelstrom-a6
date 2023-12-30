@@ -99,3 +99,23 @@ def select_dwd_area(
         coordinates.longitude: slice(0.0, 19.66),
     }
     return dataset.sel(area)
+
+
+@utils.log_consumption
+@utils.make_functional
+def select_intersecting_time_steps(
+    left: xr.Dataset,
+    right: xr.Dataset,
+    return_only_left: bool = True,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> xr.Dataset | tuple[xr.Dataset, xr.Dataset]:
+    """Select the overlapping time steps of the datasets."""
+    intersection = utils.get_time_step_intersection(
+        left=left,
+        right=right,
+        coordinates=coordinates,
+    )
+    select = {coordinates.time: intersection}
+    if return_only_left:
+        return left.sel(select)
+    return left.sel(select), right.sel(select)

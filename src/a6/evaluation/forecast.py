@@ -128,7 +128,7 @@ def simulate_forecast_errors(
                 turbine=turbine,
                 coordinates=coordinates,
             )
-            >> a6.datasets.methods.turbine.select_intersecting_time_steps(
+            >> a6.datasets.methods.select.select_intersecting_time_steps(
                 turbine=turbine, coordinates=coordinates
             )
             >> a6.datasets.methods.select.select_variables(
@@ -142,8 +142,8 @@ def simulate_forecast_errors(
                 turbine=turbine,
                 coordinates=coordinates,
             )
-            >> a6.datasets.methods.turbine.select_intersecting_time_steps(
-                turbine=turbine, coordinates=coordinates
+            >> a6.datasets.methods.select.select_intersecting_time_steps(
+                right=turbine, coordinates=coordinates
             )
             >> a6.datasets.methods.select.select_variables(
                 variables=model_variables.t
@@ -156,7 +156,7 @@ def simulate_forecast_errors(
                 turbine=turbine,
                 coordinates=coordinates,
             )
-            >> a6.datasets.methods.turbine.select_intersecting_time_steps(
+            >> a6.datasets.methods.select.select_intersecting_time_steps(
                 turbine=turbine, coordinates=coordinates
             )
             >> a6.features.methods.wind.calculate_wind_speed(
@@ -182,11 +182,10 @@ def simulate_forecast_errors(
             )
         ).apply_to(ds_pl)
 
-        _, turbine = a6.datasets.methods.turbine.select_intersecting_time_steps(
-            weather=ml,
-            turbine=turbine,
+        turbine = a6.datasets.methods.select.select_intersecting_time_steps(
+            left=turbine,
+            right=ml,
             coordinates=coordinates,
-            return_turbine=True,
             non_functional=True,
         )
 

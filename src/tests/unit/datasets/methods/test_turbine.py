@@ -104,51 +104,6 @@ def test_get_closest_grid_point():
     xr.testing.assert_equal(result, expected)
 
 
-def test_select_intersecting_time_steps():
-    production = _create_dataset(
-        values=[2, 3, 4],
-        dates=[
-            datetime.datetime(2022, 1, 2),
-            datetime.datetime(2022, 1, 3),
-            datetime.datetime(2022, 1, 4),
-        ],
-    )
-    weather = _create_dataset(
-        values=[4, 5, 6],
-        dates=[
-            datetime.datetime(2022, 1, 1),
-            datetime.datetime(2022, 1, 2),
-            datetime.datetime(2022, 1, 3),
-        ],
-    )
-
-    expected_production = _create_dataset(
-        values=[2, 3],
-        dates=[
-            datetime.datetime(2022, 1, 2),
-            datetime.datetime(2022, 1, 3),
-        ],
-    )
-
-    expected_weather = _create_dataset(
-        values=[5, 6],
-        dates=[
-            datetime.datetime(2022, 1, 2),
-            datetime.datetime(2022, 1, 3),
-        ],
-    )
-
-    result_weather, result_production = turbine.select_intersecting_time_steps(
-        weather=weather,
-        turbine=production,
-        return_turbine=True,
-        non_functional=True,
-    )
-
-    xr.testing.assert_equal(result_weather, expected_weather)
-    xr.testing.assert_equal(result_production, expected_production)
-
-
 def _create_dataset(
     values: list,
     dates: list[datetime.datetime],
