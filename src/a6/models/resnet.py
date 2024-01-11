@@ -160,7 +160,7 @@ class ResNet(nn.Module):
         self,
         block,
         layers,
-        device: torch.device,
+        n_classes: int,
         in_channels: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -168,18 +168,12 @@ class ResNet(nn.Module):
         width_per_group: int = 64,
         replace_stride_with_dilation: list[bool] | None = None,
         norm_layer: BatchNormalization | None = None,
-        normalize: bool = False,
-        output_dim: int = 0,
-        hidden_mlp: int = 0,
-        nmb_prototypes: int = 0,
-        eval_mode: bool = False,
     ):
         super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
 
-        self.eval_mode = eval_mode
         self.padding = nn.ConstantPad2d(1, 0.0)
 
         self.inplanes = width_per_group * widen
@@ -195,7 +189,6 @@ class ResNet(nn.Module):
                     replace_stride_with_dilation
                 )
             )
-        self.device = device
         self.groups = groups
         self.base_width = width_per_group
 
@@ -239,32 +232,16 @@ class ResNet(nn.Module):
             dilate=replace_stride_with_dilation[2],
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Sequential(
+            nn.Linear(512 * block.expansion * widen, n_classes),
+            nn.LogSoftmax(dim=1),
+        )
 
-        # normalize output features
-        self.l2norm = normalize
+        self.num_final_output_filters = num_out_filters
 
-        # projection head
-        if output_dim == 0:
-            self.projection_head = None
-        elif hidden_mlp == 0:
-            self.projection_head = nn.Linear(
-                num_out_filters * block.expansion, output_dim
-            )
-        else:
-            self.projection_head = nn.Sequential(
-                nn.Linear(num_out_filters * block.expansion, hidden_mlp),
-                nn.BatchNorm1d(hidden_mlp),
-                nn.ReLU(inplace=True),
-                nn.Linear(hidden_mlp, output_dim),
-            )
+        self._prepare(zero_init_residual=zero_init_residual)
 
-        # prototype layer
-        self.prototypes = None
-        if isinstance(nmb_prototypes, list):
-            self.prototypes = MultiPrototypes(output_dim, nmb_prototypes)
-        elif nmb_prototypes > 0:
-            self.prototypes = nn.Linear(output_dim, nmb_prototypes, bias=False)
-
+    def _prepare(self, zero_init_residual: bool):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(
@@ -301,8 +278,7 @@ class ResNet(nn.Module):
                 norm_layer(planes * block.expansion),
             )
 
-        layers = []
-        layers.append(
+        layers = [
             block(
                 self.inplanes,
                 planes,
@@ -313,7 +289,7 @@ class ResNet(nn.Module):
                 previous_dilation,
                 norm_layer,
             )
-        )
+        ]
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(
@@ -329,78 +305,24 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward_backbone(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.padding(x)
 
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
+
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
 
-        if self.eval_mode:
-            return x
-
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
+        x = self.fc(x)
 
         return x
-
-    def forward_head(
-        self, x: torch.Tensor
-    ) -> torch.Tensor | tuple[torch.Tensor, list[torch.Tensor]]:
-        if self.projection_head is not None:
-            x = self.projection_head(x)
-
-        if self.l2norm:
-            x = nn.functional.normalize(x, dim=1, p=2)
-
-        if self.prototypes is not None:
-            return x, self.prototypes(x)
-        return x
-
-    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        if not isinstance(inputs, list):
-            inputs = [inputs]
-        idx_crops = torch.cumsum(
-            torch.unique_consecutive(
-                torch.tensor([inp.shape[-1] for inp in inputs]),
-                return_counts=True,
-            )[1],
-            0,
-        )
-        start_idx = 0
-        for end_idx in idx_crops:
-            _out = self.forward_backbone(
-                torch.cat(inputs[start_idx:end_idx]).to(
-                    device=self.device, non_blocking=True
-                )
-            )
-            if start_idx == 0:
-                output = _out
-            else:
-                output = torch.cat((output, _out))
-            start_idx = end_idx
-        return self.forward_head(output)
-
-
-class MultiPrototypes(nn.Module):
-    def __init__(self, output_dim: int, nmb_prototypes: list[int]):
-        super().__init__()
-        self.nmb_heads = len(nmb_prototypes)
-        for i, k in enumerate(nmb_prototypes):
-            self.add_module(
-                f"prototypes{i}", nn.Linear(output_dim, k, bias=False)
-            )
-
-    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
-        return [
-            getattr(self, "prototypes" + str(i))(x)
-            for i in range(self.nmb_heads)
-        ]
 
 
 def resnet50(**kwargs):

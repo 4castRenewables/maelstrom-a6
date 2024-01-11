@@ -58,7 +58,7 @@ def train(
             # Use the gradients to adjust/optimize the parameters
             optimizer.step()
 
-            # Print every 200 batches
+            # Print every 50 batches
             if i == 0 or i % 50 == 49:
                 accuracy = metrics.accuracy_score(
                     y_true=targets, y_pred=outputs

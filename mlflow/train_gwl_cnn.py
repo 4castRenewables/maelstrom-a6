@@ -8,7 +8,7 @@ if __name__ == "__main__":
         "/home/fabian/work/maelstrom/a6/src/tests/data/gwl.nc"
     )
     a6.entry.gwl.main(
-        epochs=1,
+        epochs=20,
         data_path=path,
         gwl_path=gwl_path,
         select_dwd_area=True,

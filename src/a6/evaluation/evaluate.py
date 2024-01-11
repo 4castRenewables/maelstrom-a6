@@ -19,20 +19,44 @@ def evaluate(
     model.eval()
 
     with torch.no_grad():
-        for images, targets in test_loader:
+        running_loss = 0.0
+        running_accuracy = 0.0
+
+        for i, (images, targets) in enumerate(test_loader):
             images, targets = images.to(device), targets.to(device)
 
             outputs = model(images)
 
             loss = loss_fn(outputs, targets).item()
+            running_loss += loss
 
             accuracy = metrics.accuracy_score(y_true=targets, y_pred=outputs)
+            running_accuracy += accuracy
 
-            logger.info(
-                "[EPOCH %i] test_loss=%.4f, test_accuracy: %.4f",
-                epoch,
-                loss,
-                accuracy,
-            )
+            # Print every 50 batches
+            if i == 0 or i % 50 == 49:
+                accuracy = metrics.accuracy_score(
+                    y_true=targets, y_pred=outputs
+                )
+                logger.info(
+                    (
+                        "[EPOCH %i, ITERATION %i] "
+                        "test_loss=%.4f, test_accuracy: %.4f"
+                    ),
+                    epoch,
+                    i,
+                    loss,
+                    accuracy,
+                )
 
-    return loss, float(accuracy)
+        running_loss /= len(test_loader)
+        running_accuracy /= len(test_loader)
+
+        logger.info(
+            "[EPOCH %i] test_loss_avg=%.4f, test_accuracy_avg=%.4f",
+            epoch,
+            running_loss,
+            running_accuracy,
+        )
+
+    return running_loss, running_accuracy

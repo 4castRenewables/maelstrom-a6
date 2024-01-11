@@ -123,7 +123,7 @@ def _train(
     device = utils.distributed.get_device(settings.distributed)
 
     # build model
-    model = models.resnet.Models[settings.model.architecture](
+    model = models.resnet_dcv2.Models[settings.model.architecture](
         normalize=True,
         in_channels=train_dataset.n_channels,
         hidden_mlp=settings.model.hidden_mlp,

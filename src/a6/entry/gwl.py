@@ -33,7 +33,7 @@ def main(
         pattern="*.nc",
         parallel_loading=False,
         select_dwd_area=select_dwd_area,
-    )
+    ).sel(level=[500, 950])
     gwl = xr.open_dataset(gwl_path)
 
     start, end = gwl[coordinates.time][0], gwl[coordinates.time][-1]
@@ -72,7 +72,7 @@ def main(
     test_loader = torch.utils.data.DataLoader(
         test_set,
         shuffle=False,
-        batch_size=len(test_set),
+        batch_size=64 if not testing else 1,
         num_workers=0,
         pin_memory=True,
     )
@@ -86,18 +86,22 @@ def main(
         len(train_loader),
     )
 
-    model = (
-        models.cnn.Model(
-            in_channels=train_set.n_channels,
-            n_classes=n_classes,
-            example=train_set[0][0],
-        )
-        if not testing
-        else models.cnn.TestingModel(
-            in_channels=train_set.n_channels,
-            n_classes=n_classes,
-            example=train_set[0][0],
-        )
+    # model = (
+    #    models.cnn.Model(
+    #        in_channels=train_set.n_channels,
+    #        n_classes=n_classes,
+    #        example=train_set[0][0],
+    #    )
+    #    if not testing
+    #    else models.cnn.TestingModel(
+    #        in_channels=train_set.n_channels,
+    #        n_classes=n_classes,
+    #        example=train_set[0][0],
+    #    )
+    # )
+    model = models.resnet.resnet50w4(
+        in_channels=train_set.n_channels,
+        n_classes=n_classes,
     )
 
     logger.info("%s", model)
