@@ -161,10 +161,10 @@ def train(
         if utils.distributed.is_primary_device() and log_metrics:
             logger.info(
                 "[EPOCH %i, ITERATION %i] "
-                "batch time: %s "
-                "batch time avg: %s "
-                "data load time: %s "
-                "data load time avg: %s "
+                "batch time (s): %s "
+                "batch time avg (s): %s "
+                "data load time (s): %s "
+                "data load time avg (s): %s "
                 "loss: %s "
                 "loss avg: %s "
                 "lr: %s",
@@ -181,10 +181,10 @@ def train(
 
     if settings.enable_tracking and utils.distributed.is_primary_device():
         metrics = {
-            "batch_time": batch_time.val,
-            "batch_time_avg": batch_time.avg,
-            "data_load_time": data_time.val,
-            "data_load_time_avg": data_time.avg,
+            "batch_time_s": batch_time.val,
+            "batch_time_avg_s": batch_time.avg,
+            "data_load_time_s": data_time.val,
+            "data_load_time_avg_s": data_time.avg,
             "loss": losses.val,
             "loss_avg": losses.avg,
         }
