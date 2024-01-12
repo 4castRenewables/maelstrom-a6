@@ -34,9 +34,11 @@ def train(
     batch_time = _averaging.AverageMeter()
     data_time = _averaging.AverageMeter()
     losses = _averaging.AverageMeter()
+
     model.train()
     cross_entropy = nn.CrossEntropyLoss(ignore_index=cluster.IGNORE_INDEX)
 
+    start = time.time()
     assignments = cluster.cluster_embeddings(
         epoch=epoch,
         model=model,
@@ -48,6 +50,7 @@ def train(
     )
 
     logger.info("Clustering for epoch %i done", epoch)
+    logger.info("Cluster step time (s): %s", time.time() - start)
 
     end = time.time()
     start_idx = 0
@@ -154,12 +157,16 @@ def train(
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if utils.distributed.is_primary_device() and it % 50 == 0:
+        log_metrics = True if settings.verbose else it % 50 == 0
+        if utils.distributed.is_primary_device() and log_metrics:
             logger.info(
                 "[EPOCH %i, ITERATION %i] "
-                "batch time: %s (%s) "
-                "data load time: %s (%s) "
-                "loss: %s (%s) "
+                "batch time: %s "
+                "batch time avg: %s "
+                "data load time: %s "
+                "data load time avg: %s "
+                "loss: %s "
+                "loss avg: %s "
                 "lr: %s",
                 epoch,
                 it,
@@ -188,11 +195,15 @@ def train(
             step=epoch,
         )
 
-    if utils.distributed.is_primary_device() and (device.type == "cuda"):
-        logger.info(
-            "========= Memory Summary at epoch %s =======\n%s\n",
-            epoch,
-            torch.cuda.memory_summary(),
-        )
+    if utils.distributed.is_primary_device():
+        utils.usage.log_cpu_memory_usage()
+
+        if not torch.distributed.use_cpu:
+            utils.usage.log_gpu_memory_usage(device)
+            logger.info(
+                "========= Memory Summary at epoch %s =======\n%s\n",
+                epoch,
+                torch.cuda.memory_summary(),
+            )
 
     return (epoch, losses.avg), local_memory_index, local_memory_embeddings

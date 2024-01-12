@@ -9,6 +9,8 @@ import torch
 
 import a6.plotting._colors as _colors
 
+logger = logging.getLogger(__name__)
+
 
 def plot_embeddings_using_tsne(
     embeddings: torch.Tensor,
@@ -34,7 +36,7 @@ def plot_embeddings_using_tsne(
 
     """
     start = time.time()
-    logging.info("Creating plot for embeddings")
+    logger.info("Creating plot for embeddings")
 
     _, ax = plt.subplots()
 
@@ -51,20 +53,20 @@ def plot_embeddings_using_tsne(
     if output_dir is not None:
         plt.savefig(output_dir / f"{name}-crops-{crop_index}.pdf")
 
-    logging.info("Finished embeddings plot in %s seconds", time.time() - start)
+    logger.info("Finished embeddings plot in %s seconds", time.time() - start)
 
 
 def _fit_tsne(
     embeddings: torch.Tensor, centroids: torch.Tensor
 ) -> Iterator[tuple[tuple[float, float], tuple[float, float]]]:
     start = time.time()
-    logging.info("Fitting t-SNE")
+    logger.info("Fitting t-SNE")
 
     result = openTSNE.TSNE().fit(embeddings.cpu())
 
-    logging.info("Finished fitting t-SNE in %s seconds", time.time() - start)
+    logger.info("Finished fitting t-SNE in %s seconds", time.time() - start)
 
-    logging.info(
+    logger.info(
         "embeddings: %s centroids: %s result: %s",
         embeddings.size(),
         centroids,

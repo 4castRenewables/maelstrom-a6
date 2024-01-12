@@ -203,7 +203,7 @@ entry_points:
         default: 64
       base_lr:
         type: float
-        default: 0.3
+        default: 4.8
       final_lr:
         type: float
         default: 0.05

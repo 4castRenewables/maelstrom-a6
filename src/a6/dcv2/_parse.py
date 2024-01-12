@@ -219,7 +219,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--size-crops",
         type=float,
         nargs="+",
-        default=[0.85],
+        default=[0.65],
         action=ExtendListAction,
         help="Crops resolutions (example: [0.9, 0.75])",
     )
@@ -227,7 +227,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--min-scale-crops",
         type=float,
         nargs="+",
-        default=[1.0],
+        default=[0.08],
         action=ExtendListAction,
         help="argument in RandomResizedCrop (example: [0.14, 0.05])",
     )
@@ -277,11 +277,11 @@ def create_argparser() -> argparse.ArgumentParser:
         "--base-lr", default=4.8, type=float, help="base learning rate"
     )
     parser.add_argument(
-        "--final-lr", type=float, default=0, help="final learning rate"
+        "--final-lr", type=float, default=0.05, help="final learning rate"
     )
     parser.add_argument(
         "--freeze-prototypes-niters",
-        default=1e10,
+        default=3e6,
         type=int,
         help="freeze the prototypes during this many iterations from the start",
     )
@@ -291,7 +291,7 @@ def create_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--start-warmup",
-        default=0,
+        default=0.3,
         type=float,
         help="initial warmup learning rate",
     )

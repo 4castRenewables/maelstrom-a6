@@ -7,6 +7,7 @@
 import contextlib
 import logging
 import math
+import os
 import shutil
 import socket
 import time
@@ -35,6 +36,77 @@ import mlflow
 
 
 @errors.record
+def run_benchmark(raw_args: list[str] | None = None):
+    args = _parse.create_argparser().parse_args(raw_args)
+    settings = _settings.Settings.from_args_and_env(args)
+
+    logger, training_stats = _initialization.initialize_logging(
+        settings, columns=("epoch", "loss")
+    )
+
+    hardware = "nvidia" if "CUDA_VERSION" in os.environ else "amd"
+    logger.info("Assuming %s GPU hardware", hardware)
+
+    energy_profiler = utils.energy.get_energy_profiler(hardware)
+
+    with setup_distributed(
+        settings=settings, logger=logger
+    ), energy_profiler() as measured_scope:
+        _train(
+            settings=settings,
+            logger=logger,
+            training_stats=training_stats,
+        )
+
+        with open("Energy-integrated.txt", "a") as f:
+            measured_scope.df.to_csv("Energy.csv")
+
+            logger.info("Energy-per-GPU-list:")
+            max_power = (
+                measured_scope.df.loc[
+                    :, (measured_scope.df.columns != "timestamps")
+                ]
+                .max()
+                .max()
+            )
+            logger.info("Max Power: %.2f W", max_power)
+
+            max_agg_power = (
+                measured_scope.df.loc[
+                    :, (measured_scope.df.columns != "timestamps")
+                ]
+                .sum(axis=1)
+                .max()
+            )
+            logger.info("Max Aggregate Power: %.2f W", max_agg_power)
+
+            mean_agg_power = (
+                measured_scope.df.loc[
+                    :, (measured_scope.df.columns != "timestamps")
+                ]
+                .sum(axis=1)
+                .mean()
+            )
+            logger.info("Mean Aggregate Power: %.2f W", mean_agg_power)
+
+            if args.hardware_name == "amd":
+                energy_int, energy_cnt = measured_scope.energy()
+                logger.info(
+                    "Integrated Total Energy: %.2f Wh", np.sum(energy_int)
+                )
+                logger.info("Counter Total Energy: %.2f Wh", np.sum(energy_cnt))
+
+                f.write(f"integrated: {energy_int}")
+                f.write(f"from counter: {energy_cnt}")
+            else:
+                energy_int = measured_scope.energy()
+                logger.info(
+                    "Integrated Total Energy: %.2f Wh", np.sum(energy_int)
+                )
+                f.write(f"integrated: {energy_int}")
+
+
+@errors.record
 def train_dcv2(raw_args: list[str] | None = None):
     args = _parse.create_argparser().parse_args(raw_args)
     settings = _settings.Settings.from_args_and_env(args)
@@ -43,7 +115,7 @@ def train_dcv2(raw_args: list[str] | None = None):
         settings, columns=("epoch", "loss")
     )
 
-    with setup_distributed(settings):
+    with setup_distributed(settings=settings, logger=logger):
         _train(
             settings=settings,
             logger=logger,
@@ -52,7 +124,9 @@ def train_dcv2(raw_args: list[str] | None = None):
 
 
 @contextlib.contextmanager
-def setup_distributed(settings: _settings.Settings) -> None:
+def setup_distributed(
+    settings: _settings.Settings, logger: logging.Logger
+) -> None:
     if utils.distributed.is_primary_device():
         utils.logging.log_env_vars()
 
@@ -61,10 +135,9 @@ def setup_distributed(settings: _settings.Settings) -> None:
     if utils.distributed.is_primary_device():
         start = time.time()
 
-        stdout = utils.slurm.get_stdout_file()
-        stderr = utils.slurm.get_stderr_file()
-
         if settings.enable_tracking:
+            stdout = utils.slurm.get_stdout_file()
+            stderr = utils.slurm.get_stderr_file()
             mantik.call_mlflow_method(mlflow.start_run)
 
             if utils.slurm.is_slurm_job():
@@ -76,9 +149,9 @@ def setup_distributed(settings: _settings.Settings) -> None:
     yield
 
     if utils.distributed.is_primary_device():
-        logging.info("All done!")
+        logger.info("All done!")
         runtime = time.time() - start
-        logging.info("Total runtime (s): %s", runtime)
+        logger.info("Total runtime (s): %s", runtime)
 
         if settings.enable_tracking:
             mantik.call_mlflow_method(
@@ -178,6 +251,14 @@ def _train(
 
     if utils.distributed.is_primary_device():
         logger.info(model)
+        logger.info(
+            "Number of trainable parameters: %s",
+            utils.models.get_number_of_trainable_parameters(model),
+        )
+        logger.info(
+            "Number of non-Trainable parameters: %s",
+            utils.models.get_number_of_non_trainable_parameters(model),
+        )
 
     logger.info("Building model done")
 
@@ -270,6 +351,8 @@ def _train(
 
     cudnn.benchmark = True
     for epoch in range(start_epoch, settings.model.epochs):
+        start = time.time()
+
         # train the network for one epoch
         if utils.distributed.is_primary_device():
             logger.info("============ Starting epoch %i ============", epoch)
@@ -293,6 +376,16 @@ def _train(
 
         # save checkpoints
         if utils.distributed.is_primary_device():
+            epoch_time = time.time() - start
+            logger.info("Epoch time (s): %s", epoch_time)
+
+            if settings.enable_tracking:
+                utils.mantik.call_mlflow_method(
+                    mlflow.log_metrics,
+                    {"epoch_time_s": epoch_time},
+                    step=epoch,
+                )
+
             save_dict = {
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),

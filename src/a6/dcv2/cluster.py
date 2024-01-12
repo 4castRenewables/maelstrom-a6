@@ -243,7 +243,7 @@ def cluster_embeddings(
                     indexes = _tensor_contains_value_at(
                         tensor=tensor, value=value
                     )
-                    logging.warning(
+                    logger.warning(
                         (
                             "After gathering from all ranks, "
                             "tensor %s contains value %s at indexes %s"
@@ -280,7 +280,7 @@ def cluster_embeddings(
             # Plot for the last epoch
             or epoch_comp == settings.model.epochs
         ):
-            logging.info(
+            logger.info(
                 "Saving clustering data at epoch %s",
                 epoch,
             )

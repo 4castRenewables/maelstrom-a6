@@ -32,7 +32,7 @@ class EnvVars:
 
 
 def setup(properties: Properties, seed: int) -> None:
-    logging.info(
+    logger.info(
         "Spawning process for node %s, local rank %s, global rank: %s",
         properties.node_id,
         properties.local_rank,
