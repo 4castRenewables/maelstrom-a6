@@ -198,7 +198,7 @@ def train(
     if utils.distributed.is_primary_device():
         utils.usage.log_cpu_memory_usage()
 
-        if not torch.distributed.use_cpu:
+        if not settings.distributed.use_cpu:
             utils.usage.log_gpu_memory_usage(device)
             logger.info(
                 "========= Memory Summary at epoch %s =======\n%s\n",
