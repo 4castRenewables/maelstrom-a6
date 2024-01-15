@@ -74,16 +74,6 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
         "fraction_of_year",
     }
 
-    logger.debug(
-        (
-            "Performing grid search for %s with parameters %s "
-            "and CV %s with groups %"
-        ),
-        model,
-        parameters,
-        cv,
-        groups,
-    )
     logger.info(
         (
             "Performing grid search for %s with parameters %s "
@@ -93,6 +83,8 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
         parameters,
         train_variables,
     )
+    logger.debug("Grid search groups: %s", groups)
+
     gs = training.grid_search.perform_grid_search(
         model=model(),
         parameters=parameters,
