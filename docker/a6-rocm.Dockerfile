@@ -84,10 +84,14 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+# Inlcude ROCm SMI libraries for python
+ENV PYTHONPATH=/opt/rocm/libexec/rocm_smi/:$PYTHONPATH
+
 # Check if all packages successfully installed by importing
 RUN which python
 RUN python --version
 RUN pip list
+RUN python -c 'import rsmiBindings'
 RUN python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
 RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
 RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'

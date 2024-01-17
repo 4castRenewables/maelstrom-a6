@@ -9,6 +9,7 @@ From: a6-rocm:latest
     which python
     python --version
     pip list
+    python -c 'import rsmiBindings'
     python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
     python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
     python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
