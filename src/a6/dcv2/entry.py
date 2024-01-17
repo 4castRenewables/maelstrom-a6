@@ -58,52 +58,54 @@ def run_benchmark(raw_args: list[str] | None = None):
             training_stats=training_stats,
         )
 
-        with open("Energy-integrated.txt", "a") as f:
+    with open("Energy-integrated.txt", "a") as f:
+        try:
             measured_scope.df.to_csv("Energy.csv")
+        except AttributeError as e:
+            raise RuntimeError(
+                "Results DataFrame of energy profiler is only available "
+                "after exiting the context"
+            ) from e
 
-            logger.info("Energy-per-GPU-list:")
-            max_power = (
-                measured_scope.df.loc[
-                    :, (measured_scope.df.columns != "timestamps")
-                ]
-                .max()
-                .max()
-            )
-            logger.info("Max Power: %.2f W", max_power)
+        logger.info("Energy-per-GPU-list:")
+        max_power = (
+            measured_scope.df.loc[
+                :, (measured_scope.df.columns != "timestamps")
+            ]
+            .max()
+            .max()
+        )
+        logger.info("Max Power: %.2f W", max_power)
 
-            max_agg_power = (
-                measured_scope.df.loc[
-                    :, (measured_scope.df.columns != "timestamps")
-                ]
-                .sum(axis=1)
-                .max()
-            )
-            logger.info("Max Aggregate Power: %.2f W", max_agg_power)
+        max_agg_power = (
+            measured_scope.df.loc[
+                :, (measured_scope.df.columns != "timestamps")
+            ]
+            .sum(axis=1)
+            .max()
+        )
+        logger.info("Max Aggregate Power: %.2f W", max_agg_power)
 
-            mean_agg_power = (
-                measured_scope.df.loc[
-                    :, (measured_scope.df.columns != "timestamps")
-                ]
-                .sum(axis=1)
-                .mean()
-            )
-            logger.info("Mean Aggregate Power: %.2f W", mean_agg_power)
+        mean_agg_power = (
+            measured_scope.df.loc[
+                :, (measured_scope.df.columns != "timestamps")
+            ]
+            .sum(axis=1)
+            .mean()
+        )
+        logger.info("Mean Aggregate Power: %.2f W", mean_agg_power)
 
-            if args.hardware_name == "amd":
-                energy_int, energy_cnt = measured_scope.energy()
-                logger.info(
-                    "Integrated Total Energy: %.2f Wh", np.sum(energy_int)
-                )
-                logger.info("Counter Total Energy: %.2f Wh", np.sum(energy_cnt))
+        if isinstance(measured_scope, utils.energy.GetAMDPower):
+            energy_int, energy_cnt = measured_scope.energy()
+            logger.info("Integrated Total Energy: %.2f Wh", np.sum(energy_int))
+            logger.info("Counter Total Energy: %.2f Wh", np.sum(energy_cnt))
 
-                f.write(f"integrated: {energy_int}")
-                f.write(f"from counter: {energy_cnt}")
-            else:
-                energy_int = measured_scope.energy()
-                logger.info(
-                    "Integrated Total Energy: %.2f Wh", np.sum(energy_int)
-                )
-                f.write(f"integrated: {energy_int}")
+            f.write(f"integrated: {energy_int}")
+            f.write(f"from counter: {energy_cnt}")
+        else:
+            energy_int = measured_scope.energy()
+            logger.info("Integrated Total Energy: %.2f Wh", np.sum(energy_int))
+            f.write(f"integrated: {energy_int}")
 
 
 @errors.record
@@ -151,7 +153,7 @@ def setup_distributed(
     if utils.distributed.is_primary_device():
         logger.info("All done!")
         runtime = time.time() - start
-        logger.info("Total runtime (s): %s", runtime)
+        logger.info("Total runtime: %s s", runtime)
 
         if settings.enable_tracking:
             mantik.call_mlflow_method(
@@ -203,7 +205,11 @@ def _train(
         drop_last=settings.model.drop_last,
         worker_init_fn=utils.distributed.set_dataloader_seeds,
     )
-    logger.info("Building data done with %s images loaded", len(train_dataset))
+
+    logger.info(
+        "Building data done, dataset size: %s samples", len(train_dataset)
+    )
+    logger.info("Batches per epoch: %s", len(train_loader))
 
     device = utils.distributed.get_device(settings.distributed)
 
@@ -256,7 +262,7 @@ def _train(
             utils.models.get_number_of_trainable_parameters(model),
         )
         logger.info(
-            "Number of non-Trainable parameters: %s",
+            "Number of non-trainable parameters: %s",
             utils.models.get_number_of_non_trainable_parameters(model),
         )
 
@@ -350,6 +356,9 @@ def _train(
         )
 
     cudnn.benchmark = True
+
+    train_time_start = time.time()
+
     for epoch in range(start_epoch, settings.model.epochs):
         start = time.time()
 
@@ -377,7 +386,7 @@ def _train(
         # save checkpoints
         if utils.distributed.is_primary_device():
             epoch_time = time.time() - start
-            logger.info("Epoch time (s): %s", epoch_time)
+            logger.info("Epoch time: %s s", epoch_time)
 
             if settings.enable_tracking:
                 utils.mantik.call_mlflow_method(
@@ -410,6 +419,8 @@ def _train(
             },
             mb_path,
         )
+
+    logger.info("Total training time: %s s", time.time() - train_time_start)
 
 
 def _create_dataset(
