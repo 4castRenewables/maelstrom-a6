@@ -33,12 +33,15 @@ def train(
 ):
     batch_time = _averaging.AverageMeter()
     data_time = _averaging.AverageMeter()
+    forward_time = _averaging.AverageMeter()
+    loss_time = _averaging.AverageMeter()
+    backward_time = _averaging.AverageMeter()
+    embeddings_time = _averaging.AverageMeter()
     losses = _averaging.AverageMeter()
 
     model.train()
     cross_entropy = nn.CrossEntropyLoss(ignore_index=cluster.IGNORE_INDEX)
 
-    start = time.time()
     assignments = cluster.cluster_embeddings(
         epoch=epoch,
         model=model,
@@ -48,9 +51,6 @@ def train(
         settings=settings,
         device=device,
     )
-
-    logger.info("Clustering for epoch %i done", epoch)
-    logger.info("Cluster step time (s): %s", time.time() - start)
 
     end = time.time()
     start_idx = 0
@@ -82,9 +82,13 @@ def train(
         # ============ multi-res forward passes ... ============
         # Output here returns the output for each head (prototype)
         # and hence has size ``len(settings.model.nmb_prototypes)``.
+        start_forward = time.time()
+
         emb, output = model(inputs)
         emb = emb.detach()
         bs = inputs[0].size(0)
+
+        forward_time.update(time.time() - start_forward)
 
         if bs == 0:
             raise RuntimeError(
@@ -95,6 +99,8 @@ def train(
         logger.debug("Batch size for iteration %i is %s (idx)", it, bs)
 
         # ============ deepcluster-v2 loss ... ============
+        start_loss = time.time()
+
         loss = torch.tensor(0.0).to(device=device)
         for h in range(len(settings.model.nmb_prototypes)):
             scores = output[h] / settings.model.temperature
@@ -132,7 +138,11 @@ def train(
 
         loss /= len(settings.model.nmb_prototypes)
 
+        loss_time.update(time.time() - start_loss)
+
         # ============ backward and optim step ... ============
+        start_backward = time.time()
+
         optimizer.zero_grad()
         loss.backward()
         # cancel some gradients
@@ -142,7 +152,11 @@ def train(
                     p.grad = None
         optimizer.step()
 
+        backward_time.update(time.time() - start_backward)
+
         # ============ update memory banks ... ============
+        start_embeddings = time.time()
+
         local_memory_index[start_idx : start_idx + bs] = idx  # noqa: E203
         for i, crop_idx in enumerate(settings.model.crops_for_assign):
             local_memory_embeddings[i][
@@ -151,6 +165,8 @@ def train(
                 crop_idx * bs : (crop_idx + 1) * bs  # noqa: E203
             ]
         start_idx += bs
+
+        embeddings_time.update(time.time() - start_embeddings)
 
         # ============ misc ... ============
         losses.update(loss.item(), bs)
@@ -161,12 +177,20 @@ def train(
         if utils.distributed.is_primary_device() and log_metrics:
             logger.info(
                 "[EPOCH %i, ITERATION %i] "
-                "batch time (s): %s "
-                "batch time avg (s): %s "
-                "data load time (s): %s "
-                "data load time avg (s): %s "
-                "loss: %s "
-                "loss avg: %s "
+                "batch time: %s s, "
+                "batch time avg: %s s, "
+                "data load time: %s s, "
+                "data load time avg: %s s, "
+                "forward time: %s s, "
+                "forward time avg: %s s, "
+                "loss time: %s s, "
+                "loss time avg: %s s, "
+                "backward time: %s s, "
+                "backward time avg: %s s, "
+                "embeddings time: %s s, "
+                "embeddings time avg: %s s, "
+                "loss: %s, "
+                "loss avg: %s, "
                 "lr: %s",
                 epoch,
                 it,
@@ -174,6 +198,14 @@ def train(
                 batch_time.avg,
                 data_time.val,
                 data_time.avg,
+                forward_time.val,
+                forward_time.avg,
+                loss_time.val,
+                loss_time.avg,
+                backward_time.val,
+                backward_time.avg,
+                embeddings_time.val,
+                embeddings_time.avg,
                 losses.val,
                 losses.avg,
                 optimizer.state_dict()["param_groups"][0]["lr"],
@@ -181,11 +213,12 @@ def train(
 
     if settings.enable_tracking and utils.distributed.is_primary_device():
         metrics = {
-            "batch_time_s": batch_time.val,
             "batch_time_avg_s": batch_time.avg,
-            "data_load_time_s": data_time.val,
             "data_load_time_avg_s": data_time.avg,
-            "loss": losses.val,
+            "forward_time_avg_s": forward_time.avg,
+            "loss_time_avg_s": loss_time.avg,
+            "backward_time_avg_s": backward_time.avg,
+            "embeddings_time_avg_s": embeddings_time.avg,
             "loss_avg": losses.avg,
         }
 
