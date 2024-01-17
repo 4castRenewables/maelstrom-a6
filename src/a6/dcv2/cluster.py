@@ -7,6 +7,7 @@
 import logging
 import math
 import pathlib
+import time
 
 import numpy as np
 import torch.distributed as dist
@@ -33,8 +34,9 @@ def init_embeddings(
     settings: _settings.Settings,
     device,
 ):
+    start = time.time()
+
     size_dataset = len(dataloader.dataset)
-    logger.info("Dataset size is %s samples", size_dataset)
 
     size_memory_per_process = int(
         math.ceil(size_dataset / settings.distributed.world_size)
@@ -61,8 +63,9 @@ def init_embeddings(
         settings.model.feature_dimensions,
     ).to(device=device)
     start_idx = 0
+
     with torch.no_grad():
-        logger.info("Start initializing the memory banks")
+        logger.info("Start embeddings initialization")
         for index, inputs in dataloader:
             nmb_unique_idx = inputs[0].size(0)
             index = index.to(device=device, non_blocking=True)
@@ -83,9 +86,10 @@ def init_embeddings(
                 ] = embeddings
             start_idx += nmb_unique_idx
     logger.debug(
-        "Initialization of the memory banks done with %s local memory indexes",
+        "Embeddings initialization done with %s local memory indexes",
         local_memory_index.size(),
     )
+    logger.info("Embeddings initialization time: %s s", time.time() - start)
     return local_memory_index, local_memory_embeddings
 
 
@@ -99,7 +103,9 @@ def cluster_embeddings(
     device: torch.device,
     nmb_kmeans_iters=10,
 ):
-    logger.debug("Clustering %s samples", size_dataset)
+    logger.info("Clustering %s samples", size_dataset)
+
+    start = time.time()
 
     # j defines which crops are used for the K-means run.
     # E.g. if the number of crops (``self.nmb_mbs``) is 2, and
@@ -268,6 +274,9 @@ def cluster_embeddings(
             # next memory bank to use
             j = (j + 1) % len(settings.model.crops_for_assign)
 
+        logger.info("Clustering for epoch %i done", epoch)
+        logger.info("Cluster step time: %s s", time.time() - start)
+
         epoch_comp = epoch + 1
 
         if (
@@ -280,29 +289,29 @@ def cluster_embeddings(
             # Plot for the last epoch
             or epoch_comp == settings.model.epochs
         ):
-            logger.info(
-                "Saving clustering data at epoch %s",
-                epoch,
-            )
-
-            for result, name in [
-                (centroids, "centroids.pt"),
-                (assignments, "assignments.pt"),
-                (distances, "distances.pt"),
-                (embeddings, "embeddings.pt"),
-                (indexes, "indexes.pt"),
-            ]:
-                torch.save(
-                    result,
-                    _create_path(
-                        path=settings.dump.tensors,
-                        file_name=name,
-                        epoch=epoch,
-                    ),
+            if settings.save_results:
+                save_start = time.time()
+                logger.info(
+                    "Saving clustering data at epoch %i",
+                    epoch,
                 )
 
-            if utils.distributed.is_primary_device():
-                # Save which random samples were used as the centroids.
+                for result, name in [
+                    (centroids, "centroids.pt"),
+                    (assignments, "assignments.pt"),
+                    (distances, "distances.pt"),
+                    (embeddings, "embeddings.pt"),
+                    (indexes, "indexes.pt"),
+                ]:
+                    torch.save(
+                        result,
+                        _create_path(
+                            path=settings.dump.tensors,
+                            file_name=name,
+                            epoch=epoch,
+                        ),
+                    )
+
                 torch.save(
                     random_idx,
                     _create_path(
@@ -311,6 +320,14 @@ def cluster_embeddings(
                         epoch=epoch,
                     ),
                 )
+
+                logger.info("Save time: %s s", time.time() - save_start)
+
+            if settings.plot_results and utils.distributed.is_primary_device():
+                plot_start = time.time()
+                logger.info("Creating plots at epoch %i", epoch)
+
+                # Save which random samples were used as the centroids.
                 assignments_cpu = assignments[-1].cpu()
                 plotting.embeddings.plot_embeddings_using_tsne(
                     embeddings=embeddings[-1],
@@ -352,6 +369,7 @@ def cluster_embeddings(
                     name=f"epoch-{epoch}-transition-clustermap",
                     output_dir=settings.dump.plots,
                 )
+                logger.info("Plot time: %s s", time.time() - plot_start)
 
         if utils.distributed.is_primary_device():
             n_unassigned_samples = _calculate_number_of_unassigned_samples(

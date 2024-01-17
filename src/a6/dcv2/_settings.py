@@ -70,6 +70,8 @@ class Dump:
 class Settings:
     verbose: bool
     enable_tracking: bool
+    save_results: bool
+    plot_results: bool
     distributed: utils.distributed.Properties
     data: Data
     preprocessing: Preprocessing
@@ -86,6 +88,8 @@ class Settings:
         return cls(
             verbose=args.verbose,
             enable_tracking=args.enable_tracking,
+            save_results=args.save_results,
+            plot_results=args.plot_results,
             distributed=utils.distributed.Properties(
                 use_cpu=args.use_cpu,
                 node_id=utils.slurm.get_node_id(),

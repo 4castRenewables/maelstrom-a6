@@ -132,6 +132,26 @@ def create_argparser() -> argparse.ArgumentParser:
         default=False,
         help="Enable tracking to Mantik",
     )
+    parser.add_argument(
+        "--save-results",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Save results as tensors every 20 epochs until epoch 100, "
+            "then every 100 epochs, and last epoch"
+        ),
+    )
+    parser.add_argument(
+        "--plot-results",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Plot results every 20 epochs until epoch 100, "
+            "then every 100 epochs, and last epoch"
+        ),
+    )
 
     # data parameters
     parser.add_argument(
