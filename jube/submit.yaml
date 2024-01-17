@@ -10,10 +10,6 @@ parameterset:
         type: int
         _: 20
       - name: epochs
-        tag: e4+!test
-        type: int
-        _: 20
-      - name: epochs
         tag: test
         type: int
         _: 1
@@ -22,6 +18,9 @@ parameterset:
       - name: data_file
         tag: test
         _: era5_pl_2000_2023_12.nc
+      - name: data_file
+        tag: e4+test
+        _: era5_pl_1988_1999_12.nc
       - name: data_path
         _: /p/scratch/deepacf/maelstrom/$USER/data/ecmwf_era5
       - name: data_path
@@ -29,7 +28,7 @@ parameterset:
         _: /p/cscratch/fs/cexalab/maelstrom/$USER/data/ecmwf_era5
       - name: data_path
         tag: e4
-        _: /data/maelstrom/$USER/ecmwf_era5
+        _: /data/maelstrom/a6
   - name: globalParameters
     parameter:
       - name: modules
@@ -47,7 +46,7 @@ parameterset:
         tag: dc-gpu|dc-h100|dc-mi200
         _: jureca
       - name: systemname
-        tag: e4
+        tag: e4-a2|e4-grace-hopper
         _: e4
   - name: executeset
     init_with: platform.xml
@@ -67,22 +66,19 @@ parameterset:
         tag: (jwc|jwb|dc-gpu)+!test
         _: "1,2,4,8,16"
       - name: nodes
-        tag: e4+!test
+        tag: (e4-a2|e4-grace-hopper)+!test
         _: "1,2"
       - name: gpus
         _: 1
       - name: gpus
         tag: jwc|jwb|dc-gpu|dc-h100
         _: 4
-      - name: gpus
-        tag: e4+(t-gpu-a100|t-gpu-v100|a-gpu-mi100)+!test
-        _: "1,2"
       - name: gres
         tag: "!dc-mi200"
         _: gpu:$gpus
       - name: srun_options
-        tag: e4
-        _: --mem=128Gb --exclusive
+        tag: (e4-a2|e4-grace-hopper)+!test
+        _: --exclusive
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -92,7 +88,7 @@ parameterset:
       - name: account
         _: exalab
       - name: account
-        tag: e4
+        tag: e4-a2|e4-grace-hopper
         _: maelstrom
       - name: queue
         tag: jwb+!test
@@ -122,20 +118,11 @@ parameterset:
         tag: dc-mi200
         _: dc-mi200
       - name: queue
-        tag: e4+test
-        _: i-gpu-a100
+        tag: e4-a2
+        _: i-gpu-a2
       - name: queue
-        tag: e4+intel
-        _: i-gpu-a100
-      - name: queue
-        tag: e4+amd
-        _: a-gpu-mi100
-      - name: queue
-        tag: e4+arm
-        _: t-gpu-a100
-      - name: queue
-        tag: e4+arm+v100
-        _: t-gpu-v100
+        tag: e4-grace-hopper
+        _: t-grace-hopper
       - name: rdzv_id
         _: $${SLURM_JOB_ID:-$RANDOM}
       - name: rdzv_endpoint
@@ -146,13 +133,6 @@ parameterset:
         tag: e4
         _: /scratch/$USER/jube-benchmarks/$job_name
       - name: preprocess
-        # Set separator to | to avoid parameterset
-        separator: |
-        _: |
-           $modules
-           mkdir -p ${tmp_data_dir}
-      - name: preprocess
-        tag: e4
         # Set separator to | to avoid parameterset
         separator: |
         _: |
@@ -169,35 +149,32 @@ parameterset:
         tag: e4
         _: /home/$USER/code/a6
       - name: image_path
-        _: /p/project/deepacf/maelstrom/$USER/a6-cuda-12.sif
+        _: /p/project/deepacf/maelstrom/$USER/a6-cuda.sif
       - name: image_path
         tag: dc-mi200
         _: /p/project/deepacf/maelstrom/$USER/a6-rocm.sif
       - name: image_path
-        tag: e4
-        _: /scratch/$USER/a6-cuda-12.sif
-      - name: image_path
-        tag: e4+amd
-        _: /scratch/$USER/a6-rocm.sif
+        tag: e4-a2|e4-grace-hopper
+        _: /scratch/$USER/a6-cuda.sif
       - name: gpu_bind
         _: --nv
       - name: gpu_bind
-        tag: amd|dc-mi200
+        tag: dc-mi200
         _: --rocm
-      - name: additional_args
-        _: ""
-      - name: additional_args
-        tag: e4
-        _: >
-           -B /data:/data
-           -B /scratch:/scratch
-           --contain
-      - name: additional_args
-        tag: e4+amd
-        _: >
-           -B /data:/data
-           -B /scratch:/scratch
-           -B /usr/bin/hipconfig.pl:/usr/bin/hipconfig.pl
+        #- name: additional_args
+        #  _: ""
+        #- name: additional_args
+        #  tag: e4
+        #  _: >
+        #     -B /data:/data
+        #     -B /scratch:/scratch
+        #     --contain
+        #- name: additional_args
+        #  tag: e4+amd
+        #  _: >
+        #     -B /data:/data
+        #     -B /scratch:/scratch
+        #     -B /usr/bin/hipconfig.pl:/usr/bin/hipconfig.pl
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |

@@ -22,14 +22,11 @@ Available tags:
 
 * jwc (JUWELS Cluster)
 * jwb (JUWELS Booster)
-* dc-gpu (JURECA A100)
-* dc-h100 (JURECA H100)
-* dc-mi200 (JURECA MI200)
-* e4 (E4 systems)
-  * intel (Intel CPU + NVIDIA A100 GPU nodes)
-  * amd (AMD CPU + AMD MI100 GPU nodes)
-  * arm (ARM CPU + NVIDIA A100 GPU nodes)
-    * v100 (ARM CPU + NVIDIA V100 GPU nodes)
+* dc-gpu (JURECA NVIDIA A100)
+* dc-h100 (JURECA NVIDIA H100)
+* dc-mi200 (JURECA AMD MI250x)
+* e4-a2 (E4 NVIDIA A2)
+* e4-grace-hopper (E4 NVIDIA Grace Hopper)
 
 ### Other tags
 
