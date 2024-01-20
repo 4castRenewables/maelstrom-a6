@@ -19,7 +19,7 @@ parameterset:
         tag: test
         _: era5_pl_2000_2023_12.nc
       - name: data_file
-        tag: e4+test
+        tag: (e4-a2|e4-h100|e4-grace-hopper)+test
         _: era5_pl_1988_1999_12.nc
       - name: data_path
         _: /p/scratch/deepacf/maelstrom/$USER/data/ecmwf_era5
@@ -27,14 +27,14 @@ parameterset:
         tag: cscratch
         _: /p/cscratch/fs/cexalab/maelstrom/$USER/data/ecmwf_era5
       - name: data_path
-        tag: e4
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: /data/maelstrom/a6
   - name: globalParameters
     parameter:
       - name: modules
         _: ""
       - name: modules
-        tag: e4
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: module load go-1.19/singularity-3.10.2
       - name: systemname
         tag: jwc
@@ -46,7 +46,7 @@ parameterset:
         tag: dc-gpu|dc-h100|dc-mi200
         _: jureca
       - name: systemname
-        tag: e4-a2|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: e4
   - name: executeset
     init_with: platform.xml
@@ -66,18 +66,21 @@ parameterset:
         tag: (jwc|jwb|dc-gpu)+!test
         _: "1,2,4,8,16"
       - name: nodes
-        tag: (e4-a2|e4-grace-hopper)+!test
+        tag: (e4-a2|e4-h100|e4-grace-hopper)+!test
         _: "1,2"
       - name: gpus
         _: 1
       - name: gpus
         tag: jwc|jwb|dc-gpu|dc-h100
         _: 4
+      - name: gpus
+        tag: (e4-a2|e4-grace-hopper)+!test
+        _: "1,2"
       - name: gres
         tag: "!dc-mi200"
         _: gpu:$gpus
       - name: srun_options
-        tag: (e4-a2|e4-grace-hopper)+!test
+        tag: (e4-a2|e4-h100|e4-grace-hopper)+!test
         _: --exclusive
       - name: timelimit
         tag: "!test"
@@ -88,7 +91,7 @@ parameterset:
       - name: account
         _: exalab
       - name: account
-        tag: e4-a2|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: maelstrom
       - name: queue
         tag: jwb+!test
@@ -121,6 +124,9 @@ parameterset:
         tag: e4-a2
         _: i-gpu-a2
       - name: queue
+        tag: e4-h100
+        _: a-gpu-h100
+      - name: queue
         tag: e4-grace-hopper
         _: t-grace-hopper
       - name: rdzv_id
@@ -130,7 +136,7 @@ parameterset:
       - name: tmp_data_dir
         _: /p/scratch/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
       - name: tmp_data_dir
-        tag: e4
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: /scratch/$USER/jube-benchmarks/$job_name
       - name: preprocess
         # Set separator to | to avoid parameterset
@@ -141,12 +147,12 @@ parameterset:
       - name: executable
         _: apptainer
       - name: executable
-        tag: e4
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: singularity
       - name: repo_dir
         _: /p/home/jusers/$USER/juwels/code/a6
       - name: repo_dir
-        tag: e4
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: /home/$USER/code/a6
       - name: image_path
         _: /p/project/deepacf/maelstrom/$USER/a6-cuda.sif
@@ -154,7 +160,7 @@ parameterset:
         tag: dc-mi200
         _: /p/project/deepacf/maelstrom/$USER/a6-rocm.sif
       - name: image_path
-        tag: e4-a2|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-grace-hopper
         _: /scratch/$USER/a6-cuda.sif
       - name: gpu_bind
         _: --nv
@@ -258,6 +264,9 @@ patternset:
       - name: loss
         type: float
         _: "loss avg: ($jube_pat_nfp)"
+      - name: total_train_time
+        type: float
+        _: "Total training time: ($jube_pat_nfp)"
       - name: total_runtime
         type: float
         _: "Total runtime: ($jube_pat_nfp)"
@@ -308,7 +317,6 @@ result:
         - {title: "file_system", _: file_system}
         - {title: "data_path", _: data_path}
         - {title: "data_file", _: data_file}
-        - {title: "total runtime [s]", _: total_runtime_first}
         - {title: "# epochs", _: epochs}
         - {title: "# nodes", _: nodes}
         - {title: "node IDs", _: node_ids}
@@ -318,6 +326,8 @@ result:
         - {title: "# non-trainable params", _: non_trainable_params_first}
         - {title: "batch size", _: batches_size_first}
         - {title: "# batches per epoch", _: batches_per_epoch_first}
+        - {title: "total runtime [s]", _: total_runtime_first}
+        - {title: "total training time [s]", _: total_train_time_first}
         - {title: "first epoch time [s]", _: epoch_time_first}
         - {title: "last epoch time [s]", _: epoch_time_last}
         - {title: "best epoch time [s]", _: epoch_time_min}
