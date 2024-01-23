@@ -28,7 +28,7 @@ parameterset:
         _: /p/cscratch/fs/cexalab/maelstrom/$USER/data/ecmwf_era5
       - name: data_path
         tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /data/maelstrom/a6
+        _: /home/$USER
   - name: globalParameters
     parameter:
       - name: modules
@@ -60,22 +60,11 @@ parameterset:
       - name: file_system
         tag: cscratch
         _: cscratch
+      # Apparently, running on multiple nodes and GPUs slows down the app
       - name: nodes
         _: 1
-      - name: nodes
-        tag: (jwc|jwb|dc-gpu)+!test
-        _: "1,2,4,8,16"
-      - name: nodes
-        tag: (e4-a2|e4-h100|e4-grace-hopper)+!test
-        _: "1,2"
       - name: gpus
         _: 1
-      - name: gpus
-        tag: jwc|jwb|dc-gpu|dc-h100
-        _: 4
-      - name: gpus
-        tag: (e4-a2|e4-grace-hopper)+!test
-        _: "1,2"
       - name: gres
         tag: "!dc-mi200"
         _: gpu:$gpus
@@ -161,189 +150,20 @@ parameterset:
         _: /p/project/deepacf/maelstrom/$USER/a6-rocm.sif
       - name: image_path
         tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /scratch/$USER/a6-cuda.sif
+        _: /home/$USER/a6-cuda.sif
       - name: gpu_bind
         _: --nv
       - name: gpu_bind
         tag: dc-mi200
         _: --rocm
-name:    ap6
-outpath: ap6-run
-comment: MAELSTROM AP6 benchmark jube script
-
-parameterset:
-  - name: trainingParameters
-    parameter:
-      - name: epochs
-        tag: "!test"
-        type: int
-        _: 20
-      - name: epochs
-        tag: test
-        type: int
-        _: 1
-      - name: data_file
-        _: era5_pl_1964_2023_12.nc
-      - name: data_file
-        tag: test
-        _: era5_pl_2000_2023_12.nc
-      - name: data_file
-        tag: (e4-a2|e4-h100|e4-grace-hopper)+test
-        _: era5_pl_1988_1999_12.nc
-      - name: data_path
-        _: /p/scratch/deepacf/maelstrom/$USER/data/ecmwf_era5
-      - name: data_path
-        tag: cscratch
-        _: /p/cscratch/fs/cexalab/maelstrom/$USER/data/ecmwf_era5
-      - name: data_path
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /data/maelstrom/a6
-  - name: globalParameters
-    parameter:
-      - name: modules
-        _: ""
-      - name: modules
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: module load go-1.19/singularity-3.10.2
-      - name: systemname
-        tag: jwc
-        _: juwels-cluster
-      - name: systemname
-        tag: jwb
-        _: juwels-booster
-      - name: systemname
-        tag: dc-gpu|dc-h100|dc-mi200
-        _: jureca
-      - name: systemname
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: e4
-  - name: executeset
-    init_with: platform.xml
-  - name: systemParameter
-    init_with: platform.xml
-    parameter:
-      - name: job_name
-        _: $jube_benchmark_name-$jube_benchmark_padid-$jube_wp_padid-$jube_step_name
-      - name: file_system
-        _: scratch
-      - name: file_system
-        tag: cscratch
-        _: cscratch
-      - name: nodes
-        _: 1
-      - name: nodes
-        tag: (jwc|jwb|dc-gpu)+!test
-        _: 1
-      - name: nodes
-        tag: (e4-a2|e4-h100|e4-grace-hopper)+!test
-        _: "1,2"
-      - name: gpus
-        _: 1
-      - name: gpus
-        tag: jwc|jwb|dc-gpu|dc-h100
-        _: 4
-      - name: gpus
-        tag: (e4-a2|e4-grace-hopper)+!test
-        _: "1,2"
-      - name: gres
-        tag: "!dc-mi200"
-        _: gpu:$gpus
-      - name: srun_options
-        tag: (e4-a2|e4-h100|e4-grace-hopper)+!test
-        _: --exclusive
-      - name: timelimit
-        tag: "!test"
-        _: "06:00:00"
-      - name: timelimit
-        tag: test
-        _: "02:00:00"
-      - name: account
-        _: exalab
-      - name: account
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: maelstrom
-      - name: queue
-        tag: jwb+!test
-        _: booster
-      - name: queue
-        tag: jwb+test
-        _: develbooster
-      - name: queue
-        tag: jwc+!test
-        _: gpus
-      - name: queue
-        tag: jwc+test
-        _: develgpus
-      - name: queue
-        tag: single-gpu
-        _: "dc-gpu,dc-h100"
-      - name: queue
-        tag: dc-gpu+!test
-        _: dc-gpu
-      - name: queue
-        tag: dc-gpu+test
-        _: dc-gpu-devel
-      - name: queue
-        tag: dc-h100
-        _: dc-h100
-      - name: queue
-        tag: dc-mi200
-        _: dc-mi200
-      - name: queue
-        tag: e4-a2
-        _: i-gpu-a2
-      - name: queue
-        tag: e4-h100
-        _: a-gpu-h100
-      - name: queue
-        tag: e4-grace-hopper
-        _: t-grace-hopper
-      - name: rdzv_id
-        _: $${SLURM_JOB_ID:-$RANDOM}
-      - name: rdzv_endpoint
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
-      - name: tmp_data_dir
-        _: /p/scratch/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
-      - name: tmp_data_dir
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /scratch/$USER/jube-benchmarks/$job_name
-      - name: preprocess
-        # Set separator to | to avoid parameterset
-        separator: |
-        _: |
-           $modules
-           mkdir -p ${tmp_data_dir}
-      - name: executable
-        _: apptainer
-      - name: executable
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: singularity
-      - name: repo_dir
-        _: /p/home/jusers/$USER/juwels/code/a6
-      - name: repo_dir
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /home/$USER/code/a6
-      - name: image_path
-        _: /p/project/deepacf/maelstrom/$USER/a6-cuda.sif
-      - name: image_path
-        tag: dc-mi200
-        _: /p/project/deepacf/maelstrom/$USER/a6-rocm.sif
-      - name: image_path
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /scratch/$USER/a6-cuda.sif
-      - name: gpu_bind
-        _: --nv
-      - name: gpu_bind
-        tag: dc-mi200
-        _: --rocm
-      - name: additional_args
-        _: ""
-      - name: additional_args
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: >
-           -B /data:/data
-           -B /scratch:/scratch
-           --contain
+        #- name: additional_args
+        #  _: ""
+        #- name: additional_args
+        #  tag: e4-a2|e4-h100|e4-grace-hopper
+        #  _: >
+        #     -B /data:/data
+        #     -B /scratch:/scratch
+        #     --contain
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |
