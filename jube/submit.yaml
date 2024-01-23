@@ -161,7 +161,7 @@ parameterset:
         _: /p/project/deepacf/maelstrom/$USER/a6-rocm.sif
       - name: image_path
         tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /data/maelstrom/a6/a6-cuda.sif
+        _: /scratch/$USER/a6-cuda.sif
       - name: gpu_bind
         _: --nv
       - name: gpu_bind
