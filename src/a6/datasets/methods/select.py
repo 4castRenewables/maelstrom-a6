@@ -1,4 +1,5 @@
 import datetime
+import logging
 from collections.abc import Hashable
 
 import numpy as np
@@ -8,6 +9,8 @@ import a6.datasets.coordinates as _coordinates
 import a6.features.methods as methods
 import a6.types as types
 import a6.utils as utils
+
+logger = logging.getLogger(__name__)
 
 
 @utils.make_functional
@@ -115,6 +118,15 @@ def select_intersecting_time_steps(
         right=right,
         coordinates=coordinates,
     )
+
+    if not intersection:
+        logger.warning(
+            "No intersecting time steps found for left=%s and right=%s",
+            left,
+            right,
+        )
+        raise ValueError("No intersection found")
+
     select = {coordinates.time: intersection}
     if return_only_left:
         return left.sel(select)

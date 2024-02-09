@@ -68,6 +68,15 @@ def create_turbine_model_features(
         outfile_turbine: pathlib.Path = (
             args.output_dir / f"{turbine_name}/turbine.nc"
         )
+
+        if not outfile_turbine.parent.exists():
+            logger.info(
+                "Creating directory for outfiles of turbine %s at %s",
+                turbine_name,
+                outfile_turbine.parent,
+            )
+            outfile_turbine.parent.mkdir(exist_ok=True, parents=True)
+
         outfile_pl: pathlib.Path = args.output_dir / f"{turbine_name}/pl.nc"
         outfile_ml: pathlib.Path = args.output_dir / f"{turbine_name}/ml.nc"
         outfile_sfc: pathlib.Path = args.output_dir / f"{turbine_name}/sfc.nc"
@@ -78,25 +87,34 @@ def create_turbine_model_features(
         logger.info("Extracted power rating %i", power_rating)
 
         logger.info("Preprocessing turbine data")
-        turbine = (
-            a6.datasets.methods.turbine.clean_production_data(
-                power_rating=power_rating,
-                variables=turbine_variables,
+        try:
+            turbine = (
+                a6.datasets.methods.turbine.clean_production_data(
+                    power_rating=power_rating,
+                    variables=turbine_variables,
+                )
+                >> a6.datasets.methods.turbine.resample_to_hourly_resolution(
+                    variables=turbine_variables,
+                    coordinates=coordinates,
+                )
+                >> a6.datasets.methods.select.select_latitude_longitude(
+                    latitude=0, longitude=0
+                )
+                >> a6.datasets.methods.select.select_intersecting_time_steps(
+                    right=ds_ml,
+                    coordinates=coordinates,
+                )
+                >> a6.datasets.methods.save.to_netcdf(path=outfile_turbine)
+            ).apply_to(turbine)
+        except ValueError:
+            logger.exception(
+                (
+                    "Skipping: No intersecting time steps for "
+                    "turbine %s and given data"
+                ),
+                turbine_name,
             )
-            >> a6.datasets.methods.turbine.resample_to_hourly_resolution(
-                variables=turbine_variables,
-                coordinates=coordinates,
-            )
-            >> a6.datasets.methods.select.select_latitude_longitude(
-                latitude=0, longitude=0
-            )
-            >> a6.datasets.methods.select.select_intersecting_time_steps(
-                left=turbine,
-                right=ds_ml,
-                coordinates=coordinates,
-            )
-            >> a6.datasets.methods.save.to_netcdf(outfile_turbine)
-        ).apply_to(turbine)
+            continue
 
         logger.info("Preprocessing surface level data")
         (
@@ -105,12 +123,12 @@ def create_turbine_model_features(
                 coordinates=coordinates,
             )
             >> a6.datasets.methods.select.select_intersecting_time_steps(
-                turbine=turbine, coordinates=coordinates
+                right=turbine, coordinates=coordinates
             )
             >> a6.datasets.methods.select.select_variables(
                 variables=model_variables.sp
             )
-            >> a6.datasets.methods.save.to_netcdf(outfile_sfc)
+            >> a6.datasets.methods.save.to_netcdf(path=outfile_sfc)
         ).apply_to(ds_sfc)
 
         logger.info("Preprocessing model level data")
@@ -125,7 +143,7 @@ def create_turbine_model_features(
             >> a6.datasets.methods.select.select_variables(
                 variables=model_variables.t
             )
-            >> a6.datasets.methods.save.to_netcdf(outfile_ml)
+            >> a6.datasets.methods.save.to_netcdf(path=outfile_ml)
         ).apply_to(ds_ml)
 
         logger.info("Preprocessing pressure level data")
@@ -135,7 +153,7 @@ def create_turbine_model_features(
                 coordinates=coordinates,
             )
             >> a6.datasets.methods.select.select_intersecting_time_steps(
-                turbine=turbine, coordinates=coordinates
+                right=turbine, coordinates=coordinates
             )
             >> a6.features.methods.wind.calculate_wind_speed(
                 variables=model_variables
@@ -158,5 +176,5 @@ def create_turbine_model_features(
                     "fraction_of_day",
                 ]
             )
-            >> a6.datasets.methods.save.to_netcdf(outfile_pl)
+            >> a6.datasets.methods.save.to_netcdf(path=outfile_pl)
         ).apply_to(ds_pl)
