@@ -41,5 +41,5 @@ For debugging consider the `--debug`, `--devel`, and/or `-v` options.
 Once all runs are finnished, analysis can be performed via
 
 ```bash
-jube result jube/ap6-run/ --id <benchmark IDs> --analyse --update jube/jube.yaml > benchmark-results.md
+jube result jube/ap6-run/ --id <benchmark IDs> --analyse --update jube/submit.yaml > benchmark-results.md
 ```

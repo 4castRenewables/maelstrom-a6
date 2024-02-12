@@ -6,7 +6,6 @@ parameterset:
   - name: trainingParameters
     parameter:
       - name: epochs
-        tag: "!test"
         type: int
         _: 20
       - name: epochs
@@ -18,9 +17,6 @@ parameterset:
       - name: data_file
         tag: test
         _: era5_pl_2000_2023_12.nc
-      - name: data_file
-        tag: (e4-a2|e4-h100|e4-grace-hopper)+test
-        _: era5_pl_1988_1999_12.nc
       - name: data_path
         _: /p/scratch/deepacf/maelstrom/$USER/data/ecmwf_era5
       - name: data_path
@@ -63,14 +59,20 @@ parameterset:
       # Apparently, running on multiple nodes and GPUs slows down the app
       - name: nodes
         _: 1
+      - name: nodes
+        tag: (e4-a2|e4-grace-hopper)+!test
+        _: "1,2"
       - name: gpus
         _: 1
+      - name: gpus
+        tag: e4-a2+!test
+        _: "1,2"
       - name: gres
         tag: "!dc-mi200"
         _: gpu:$gpus
       - name: srun_options
-        tag: (e4-a2|e4-h100|e4-grace-hopper)+!test
-        _: --exclusive
+        tag: e4-a2|e4-h100|e4-grace-hopper
+        _: --exclusive --mem=256G
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -117,22 +119,42 @@ parameterset:
         _: a-gpu-h100
       - name: queue
         tag: e4-grace-hopper
-        _: t-grace-hopper
+        _: t-gpu-gh200
       - name: rdzv_id
         _: $${SLURM_JOB_ID:-$RANDOM}
       - name: rdzv_endpoint
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
+      - name: rdzv_endpoint
+        tag: e4-a2|e4-h100|e4-grace-hopper
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red:29500
       - name: tmp_data_dir
         _: /p/scratch/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
       - name: tmp_data_dir
         tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /scratch/$USER/jube-benchmarks/$job_name
+        _: /home/$USER/jube-benchmarks/$job_name
       - name: preprocess
         # Set separator to | to avoid parameterset
         separator: |
         _: |
-           $modules
-           mkdir -p ${tmp_data_dir}
+          $modules
+          mkdir -p ${tmp_data_dir}
+      - name: preprocess
+        mode: text
+        tag: e4-a2|e4-h100|e4-grace-hopper
+        separator: |
+        _: |
+          $modules
+          mkdir -p ${tmp_data_dir}
+          label=$$(/opt/share/scripts/powerdiscovery/getlabel.sh)
+          echo "POWERMEASUREMENT: Label = $$label"
+          /opt/share/scripts/powerdiscovery/getpower_bg.sh 1000 &
+      - name: postprocess
+        mode: text
+        tag: e4-a2|e4-h100|e4-grace-hopper
+        separator: |
+        _: |
+          kill -9 $$(cat ~/powerout.$$label.pid)
+          awk '{print "POWERMEASUREMENT: " $0}' ~/powerout.$$label.csv
       - name: executable
         _: apptainer
       - name: executable
@@ -149,8 +171,14 @@ parameterset:
         tag: dc-mi200
         _: /p/project/deepacf/maelstrom/$USER/a6-rocm.sif
       - name: image_path
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2
+        _: /home/$USER/a6-cuda-11.sif
+      - name: image_path
+        tag: e4-h100
         _: /home/$USER/a6-cuda.sif
+      - name: image_path
+        tag: e4-grace-hopper
+        _: /home/$USER/a6-cuda-arm.sif
       - name: gpu_bind
         _: --nv
       - name: gpu_bind
@@ -274,6 +302,10 @@ patternset:
       - name: mean_agg_power
         type: float
         _: "Mean Aggregate Power: ($jube_pat_fp) W"
+      - {name: label_pat, type: string, _: "POWERMEASUREMENT: Label = $jube_pat_wrd"}
+      - {name: time_pat, type: int, _: "POWERMEASUREMENT: $jube_pat_int,$jube_pat_nint,$jube_pat_nint"}
+      - {name: watt_pat, type: int, _: "POWERMEASUREMENT: $jube_pat_nint,$jube_pat_int,$jube_pat_nint"}
+      - {name: va_pat, type: int, _: "POWERMEASUREMENT: $jube_pat_nint,$jube_pat_nint,$jube_pat_int"}
 
 analyser:
     name: analyse
@@ -283,6 +315,7 @@ analyser:
         step: submit
         file:
           - job.err
+          - job.out
 
 result:
     use: analyse
@@ -351,6 +384,15 @@ result:
         - {title: "Max power (per GPU) [W]", _: max_power_max}
         - {title: "Max agg power (per GPU) [W]", _: max_agg_power_max}
         - {title: "Mean agg power (per GPU) [W]", _: mean_agg_power}
+        - {title: "Node(s)",         _: label_pat}
+        - {title: "Timestamp start", _: time_pat_first}
+        - {title: "Timestamp end",   _: time_pat_last}
+        - {title: "Avg. Watts",      _: watt_pat_avg}
+        - {title: "Min. Watts",      _: watt_pat_min}
+        - {title: "Max. Watts",      _: watt_pat_max}
+        - {title: "Avg. VA",         _: va_pat_avg}
+        - {title: "Min. VA",         _: va_pat_min}
+        - {title: "Max. VA",         _: va_pat_max}
 
 step:
   - name: submit
