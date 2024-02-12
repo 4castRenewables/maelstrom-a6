@@ -4,7 +4,6 @@ import time
 from collections.abc import Iterator
 
 import matplotlib.pyplot as plt
-import openTSNE
 import torch
 
 import a6.plotting._colors as _colors
@@ -35,6 +34,8 @@ def plot_embeddings_using_tsne(
         output_dir (pathlib.Path): Path where to save the figure.
 
     """
+    import openTSNE
+
     start = time.time()
     logger.info("Creating plot for embeddings")
 
