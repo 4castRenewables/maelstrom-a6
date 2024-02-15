@@ -1,10 +1,9 @@
-# CUDA version for Nvidia A2
-#ARG CUDA_VERSION=11.8.0
-# Default CUDA version
+# CUDA version for Nvidia Grace Hopper
 ARG CUDA_VERSION=12.1.0
 ARG PYTHON_VERSION=3.11
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04 as builder
+# CUDA 12.3.1 doesn't provide a cudnn8 image
+FROM --platform="linux/arm64" nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04 as builder
 
 ARG CUDA_VERSION
 ARG PYTHON_VERSION
@@ -41,19 +40,14 @@ COPY README.md/ /opt/a6/
 COPY pyproject.toml /opt/a6/
 COPY poetry.lock /opt/a6/
 COPY src/a6/ /opt/a6/src/a6
+COPY docker/ecmwflibs-0.6.1-cp311-cp311-linux_aarch64.whl /opt/
 
 WORKDIR /opt/a6
 
 RUN python${PYTHON_VERSION} -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip \
- # Below code for updating torch is only required for CUDA 11.7
- #&& poetry source add --priority=supplemental pytorch-cuda118 https://download.pytorch.org/whl/cu118 \
- #&& poetry add \
- #   -vvv \
- #   --source pytorch-cuda118 \
- #   torch==$(poetry show torch | awk '/version/ { print $3 }') \
- #   torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
+ && poetry add /opt/ecmwflibs-0.6.1-cp311-cp311-linux_aarch64.whl \
  && poetry install --only=main,notebooks
 
 
@@ -61,7 +55,7 @@ RUN python${PYTHON_VERSION} -m venv /venv \
 WORKDIR /venv
 RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu22.04
+FROM --platform="linux/arm64/v8" nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu22.04
 
 ARG PYTHON_VERSION
 
@@ -74,6 +68,14 @@ ENV GIT_PYTHON_REFRESH=quiet
 COPY --from=builder /venv /venv
 COPY --from=builder /opt/a6 /opt/a6
 
+ARG NCCL_VERSION=2.18.3-1+cuda12.1
+# Extract ubuntu distribution version and download the corresponding key.
+# This is to fix CI failures caused by the new rotating key mechanism rolled out by Nvidia.
+# Refer to https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212771 for more details.
+RUN DIST=$(echo ${CUDA_DOCKER_VERSION#*ubuntu} | sed 's/\.//'); \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${DIST}/x86_64/3bf863cc.pub && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu${DIST}/x86_64/7fa2af80.pub \
+
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends  \
@@ -82,10 +84,13 @@ RUN apt-get update \
       # Required by cartopy
       libgeos3.10.2 \
       libgeos-dev \
+      libeccodes-tools \
       # Install opencv via apt to get required libraries
       python3-opencv \
       python${PYTHON_VERSION} \
       python${PYTHON_VERSION}-dev \
+      libnccl2=${NCCL_VERSION} \
+       libnccl-dev=${NCCL_VERSION} \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 

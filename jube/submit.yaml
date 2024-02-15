@@ -184,14 +184,6 @@ parameterset:
       - name: gpu_bind
         tag: dc-mi200
         _: --rocm
-        #- name: additional_args
-        #  _: ""
-        #- name: additional_args
-        #  tag: e4-a2|e4-h100|e4-grace-hopper
-        #  _: >
-        #     -B /data:/data
-        #     -B /scratch:/scratch
-        #     --contain
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |
@@ -411,4 +403,3 @@ step:
       _: |
         $modules
         $submit $srun_options $submit_script
-

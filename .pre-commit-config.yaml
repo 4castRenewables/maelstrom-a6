@@ -6,8 +6,8 @@ repos:
     rev: v4.4.0
     hooks:
       - id: check-added-large-files
-        args: [ "--maxkb=3000" ]
-        exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy)
+        args: [ "--maxkb=30000" ]
+        exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy, *.whl)
       - id: check-ast
       - id: check-builtin-literals
       - id: check-case-conflict
