@@ -126,6 +126,13 @@ def create_argparser() -> argparse.ArgumentParser:
         help="Use CPU for training",
     )
     parser.add_argument(
+        "--use-nccl",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use NVIDIA NCCL backend for distributed computing",
+    )
+    parser.add_argument(
         "--enable-tracking",
         type=bool,
         action=argparse.BooleanOptionalAction,

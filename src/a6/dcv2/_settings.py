@@ -92,6 +92,7 @@ class Settings:
             plot_results=args.plot_results,
             distributed=utils.distributed.Properties(
                 use_cpu=args.use_cpu,
+                use_nccl=args.use_nccl,
                 node_id=utils.slurm.get_node_id(),
                 dist_url=utils.distributed.get_dist_url_and_set_master_env_vars(),  # noqa: E501
                 global_rank=env_vars.global_rank,

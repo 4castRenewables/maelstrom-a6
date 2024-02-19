@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass(frozen=True)
 class Properties:
     use_cpu: bool
+    use_nccl: bool
     node_id: str
     dist_url: str
     local_rank: int
@@ -183,7 +184,7 @@ def _init_process_group(properties: Properties) -> None:
         if properties.use_cpu:
             logger.warning("Initializing CPU backend")
             torch.distributed.init_process_group(backend="gloo")
-        else:
+        elif properties.use_nccl:
             logger.warning(
                 (
                     "Initializing GPU backend using init_method=%s, "
@@ -199,6 +200,10 @@ def _init_process_group(properties: Properties) -> None:
                 rank=properties.global_rank,
                 world_size=properties.world_size,
             )
+        else:
+            logger.warning(
+                "NCCL usage disabled, skipping distributed initialization"
+            )
     else:
         logger.warning(
             "Torch distributed has already been initialized, "
@@ -211,7 +216,8 @@ def _set_device(properties: Properties) -> None:
         logger.info("Setting torch CUDA device to %s", properties.local_rank)
         torch.cuda.set_device(properties.local_rank)
         # perform a dummy all-reduce to initialize the NCCL communicator
-        torch.distributed.all_reduce(torch.zeros(1).cuda())
+        if properties.use_nccl:
+            torch.distributed.all_reduce(torch.zeros(1).cuda())
 
 
 def get_device(properties: Properties) -> torch.device:
