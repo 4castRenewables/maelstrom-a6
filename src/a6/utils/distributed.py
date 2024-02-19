@@ -117,6 +117,12 @@ def _fix_random_seeds(seed: int, properties: Properties) -> None:
         torch.cuda.manual_seed_all(seed_value)
 
 
+def get_rank(properties: Properties) -> int:
+    if properties.use_nccl:
+        return torch.distributed.get_rank()
+    return 0
+
+
 def set_dataloader_seeds(_worker_id: int):
     """
     See: https://tanelp.github.io/posts/a-bug-that-plagues-thousands-of-open-source-ml-projects/  # noqa: E501

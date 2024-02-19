@@ -188,7 +188,7 @@ def _train(
         settings.distributed.node_id,
         settings.distributed.global_rank,
         settings.distributed.local_rank,
-        torch.distributed.get_rank(),
+        utils.distributed.get_rank(settings.distributed),
     )
 
     # build data
