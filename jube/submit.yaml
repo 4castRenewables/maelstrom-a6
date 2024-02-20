@@ -30,8 +30,11 @@ parameterset:
       - name: modules
         _: ""
       - name: modules
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100
         _: module load go-1.19/singularity-3.10.2
+      - name: modules
+        tag: e4-grace-hopper
+        _: module load go-1.21.5/singularity-3.10.2
       - name: systemname
         tag: jwc
         _: juwels-cluster
@@ -56,11 +59,12 @@ parameterset:
       - name: file_system
         tag: cscratch
         _: cscratch
-      # Apparently, running on multiple nodes and GPUs slows down the app
+      # Apparently, running on multiple nodes and GPUs slows down the app on JSC
       - name: nodes
         _: 1
+      # NCCL not supported by ARM, so cannot run on multiple E4 Grace Hopper nodes
       - name: nodes
-        tag: (e4-a2|e4-grace-hopper)+!test
+        tag: e4-a2+!test
         _: "1,2"
       - name: gpus
         _: 1
@@ -72,7 +76,7 @@ parameterset:
         _: gpu:$gpus
       - name: srun_options
         tag: e4-a2|e4-h100|e4-grace-hopper
-        _: --exclusive --mem=256G
+        _: --exclusive --mem=480G --nodelist=ngnode01
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -184,6 +188,14 @@ parameterset:
       - name: gpu_bind
         tag: dc-mi200
         _: --rocm
+      - name: additional_args
+        _: --use-nccl
+      - name: additional_args
+        tag: e4-grace-hopper
+        _: --no-use-nccl
+      - name: gpu_bind
+        tag: dc-mi200
+        _: --rocm
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |
@@ -191,7 +203,6 @@ parameterset:
            run
            -B ${repo_dir}:/opt/a6
            ${gpu_bind}
-           ${additional_args}
            ${image_path}
            torchrun
            --nnodes=${nodes}
@@ -200,6 +211,7 @@ parameterset:
            --rdzv-id=${rdzv_id}
            --rdzv-endpoint=${rdzv_endpoint}
            /opt/a6/jube/run.py
+           ${additional_args}
            --no-enable-tracking
            --no-save-results
            --no-plot-results
@@ -371,8 +383,8 @@ result:
         - {title: "max loss", _: loss_max}
         - {title: "Max CPU memory usage [GB]", _: cpu_mem_max}
         - {title: "Max GPU memory usage [GB]", _: gpu_mem_max}
-        - {title: "Integrated total energy (all GPUs) [Wh]", _: total_integrated_energy_sum}
-        - {title: "Counter total energy (all GPUs) [Wh]", _: total_counter_energy_sum}
+        - {title: "Integrated total energy (all GPUs) [Wh]", _: total_integrated_energy}
+        - {title: "Counter total energy (all GPUs) [Wh]", _: total_counter_energy}
         - {title: "Max power (per GPU) [W]", _: max_power_max}
         - {title: "Max agg power (per GPU) [W]", _: max_agg_power_max}
         - {title: "Mean agg power (per GPU) [W]", _: mean_agg_power}
