@@ -26,7 +26,7 @@ Available tags:
 * dc-h100 (JURECA NVIDIA H100)
 * dc-mi200 (JURECA AMD MI250x)
 * e4-a2 (E4 NVIDIA A2)
-* e4-grace-hopper (E4 NVIDIA Grace Hopper)
+* e4-gh (E4 NVIDIA Grace Hopper)
 
 ### Other tags
 
