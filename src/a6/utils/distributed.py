@@ -146,14 +146,16 @@ def get_dist_url_and_set_master_env_vars() -> str:
 
     if not _is_multi_node():
         host = "127.0.0.1"
-    # If host is any JUWELS machine, the host requires an `i` suffix.
-    elif host.endswith(".juwels"):
+        logger.info("Assmuning single node environment, setting host to %s", host)
+    # jwb, jwc, and jrc are the prefixes for the hostnames of JSC.
+    # JSC requires <node>i as address. 
+    elif host.endswith("i"):
+        logger.info("JSC host %s has i already appended", host)
+    elif any(host.startswith(string) for string in ["jwb", "jwc", "jrc"]):
+        # host consists of <node>.<cluster>
         node, _ = host.split(".")
         host = f"{node}i"
-    # jwb and jwc are the prefixes for the hostnames of JUWELS
-    # Cluster and Booster
-    elif any(host.startswith(string) for string in ["jwb", "jwc"]):
-        host = f"{host}i"
+        logger.info("Assmuning multi node environment on JSC machine, setting host to %s", host)
 
     os.environ["MASTER_ADDR"] = host
     os.environ["MASTER_PORT"] = str(port)
