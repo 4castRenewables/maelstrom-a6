@@ -60,7 +60,7 @@ parameterset:
       - name: nodes
         _: 1
       - name: nodes
-        tag: dc-gpu
+        tag: dc-gpu+!test
         _: "1,2,4"
       # NCCL not supported by ARM, so cannot run on multiple E4 Grace Hopper nodes
       - name: nodes
@@ -69,13 +69,13 @@ parameterset:
       - name: gpus
         _: 1
       - name: gpus
-        tag: dc-gpu
+        tag: dc-gpu+!test
         _: 4
       - name: gpus
-        tag: dc-h100
+        tag: dc-h100+!test
         _: "1,2,3,4"
       - name: gpus
-        tag: dc-mi200
+        tag: dc-mi200+!test
         _: "1,2,4,8"
       - name: gpus
         tag: e4-a2+!test
@@ -136,8 +136,11 @@ parameterset:
       - name: rdzv_id
         _: $${SLURM_JOB_ID:-$RANDOM}
       - name: rdzv_endpoint
-        # Juwels requires `i` to be appended to the host.
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i:29500
+        tag: jwc|jwb
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).juwels:29500
+      - name: rdzv_endpoint
+        tag: dc-gpu|dc-h100|dc-mi200
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).jureca:29500
       - name: rdzv_endpoint
         tag: e4-a2|e4-h100|e4-gh
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red:29500
