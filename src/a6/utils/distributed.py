@@ -149,13 +149,8 @@ def get_dist_url_and_set_master_env_vars() -> str:
         logger.info("Assmuning single node environment, setting host to %s", host)
     # jwb, jwc, and jrc are the prefixes for the hostnames of JSC.
     # JSC requires <node>i as address. 
-    elif host.endswith("i"):
-        logger.info("JSC host %s has i already appended", host)
-    elif any(host.startswith(string) for string in ["jwb", "jwc", "jrc"]):
-        # host consists of <node>.<cluster>
-        node, _ = host.split(".")
-        host = f"{node}i"
-        logger.info("Assmuning multi node environment on JSC machine, setting host to %s", host)
+    else:
+        logger.info("Assuming multi-node environment, host is %s", host)
 
     os.environ["MASTER_ADDR"] = host
     os.environ["MASTER_PORT"] = str(port)
