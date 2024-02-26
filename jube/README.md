@@ -32,8 +32,6 @@ Available tags:
 
 * test (single node, devel queues, 1 epoch)
 * cscratch (use `$CSCRATCH` for reading data)
-* single-gpu: use single node only and submits to dc-gpu and dc-h100
-
 
 *Note:*
 For debugging consider the `--debug`, `--devel`, and/or `-v` options.

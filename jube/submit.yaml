@@ -110,9 +110,6 @@ parameterset:
         tag: jwc+test
         _: develgpus
       - name: queue
-        tag: single-gpu
-        _: "dc-gpu,dc-h100"
-      - name: queue
         tag: dc-gpu+!test
         _: dc-gpu
       - name: queue
