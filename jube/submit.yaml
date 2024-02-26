@@ -62,12 +62,24 @@ parameterset:
       # Apparently, running on multiple nodes and GPUs slows down the app on JSC
       - name: nodes
         _: 1
+      - name: nodes
+        tag: dc-gpu
+        _: "1,2,4"
       # NCCL not supported by ARM, so cannot run on multiple E4 Grace Hopper nodes
       - name: nodes
         tag: e4-a2+!test
         _: "1,2"
       - name: gpus
         _: 1
+      - name: gpus
+        tag: dc-gpu
+        _: 4
+      - name: gpus
+        tag: dc-h100
+        _: "1,2,3,4"
+      - name: gpus
+        tag: dc-mi200
+        _: "1,2,4,8"
       - name: gpus
         tag: e4-a2+!test
         _: "1,2"
@@ -127,7 +139,8 @@ parameterset:
       - name: rdzv_id
         _: $${SLURM_JOB_ID:-$RANDOM}
       - name: rdzv_endpoint
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
+        # Juwels requires `i` to be appended to the host.
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i:29500
       - name: rdzv_endpoint
         tag: e4-a2|e4-h100|e4-grace-hopper
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red:29500
@@ -328,19 +341,19 @@ result:
       style: pretty
       sort: iter_pat
       column:
-        - {title: "Job ID", _: job_id}
         - {title: "JUBE ID", _: jube_benchmark_id}
         - {title: "JUBE workpackage", _: jube_wp_id}
+        - {title: "Job ID", _: job_id}
         - {title: "system", _: systemname}
         - {title: "queue", _: queue}
+        - {title: "nodes", _: nodes}
+        - {title: "node IDs", _: node_ids}
+        - {title: "gpus", _: gpus}
         - {title: "walltime [HH:MM:SS]", _: timelimit}
         - {title: "file_system", _: file_system}
         - {title: "data_path", _: data_path}
         - {title: "data_file", _: data_file}
         - {title: "epochs", _: epochs}
-        - {title: "nodes", _: nodes}
-        - {title: "node IDs", _: node_ids}
-        - {title: "gpus", _: gpus}
         - {title: "last epoch ", _: epoch_last}
         - {title: "trainable params", _: trainable_params_first}
         - {title: "non-trainable params", _: non_trainable_params_first}
