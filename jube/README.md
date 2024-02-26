@@ -8,6 +8,8 @@ The app runs in Apptainer containers and binds the local git repo into the conta
 - JSC: `/p/home/jusers/$USER/juwels/code/a6`
 - E4: `/home/$USER/code/a6`
 
+So make sure to put the code repo into that path, or adjust that path in the `submit.yaml`.
+
 ## Loading JUBE on JSC
 
 ```bash
@@ -15,8 +17,6 @@ module load JUBE/2.5.1
 ```
 
 ## Running the Benchmarks
-
-So make sure to put the code repo into that path, or adjust that path in the `submit.yaml`.
 
 To then run the benchmarks, use
 
