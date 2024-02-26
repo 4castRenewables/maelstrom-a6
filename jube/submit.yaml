@@ -23,7 +23,7 @@ parameterset:
         tag: cscratch
         _: /p/cscratch/fs/cexalab/maelstrom/$USER/data/ecmwf_era5
       - name: data_path
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         _: /home/$USER
   - name: globalParameters
     parameter:
@@ -32,9 +32,6 @@ parameterset:
       - name: modules
         tag: e4-a2|e4-h100
         _: module load go-1.19/singularity-3.10.2
-      - name: modules
-        tag: e4-grace-hopper
-        _: module load go-1.21.5/singularity-3.10.2
       - name: systemname
         tag: jwc
         _: juwels-cluster
@@ -45,7 +42,7 @@ parameterset:
         tag: dc-gpu|dc-h100|dc-mi200
         _: jureca
       - name: systemname
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         _: e4
   - name: executeset
     init_with: platform.xml
@@ -67,8 +64,8 @@ parameterset:
         _: "1,2,4"
       # NCCL not supported by ARM, so cannot run on multiple E4 Grace Hopper nodes
       - name: nodes
-        tag: e4-a2+!test
-        _: "1,2"
+        tag: (e4-a2|e4-h100|e4-gh)+!test
+        _: 2
       - name: gpus
         _: 1
       - name: gpus
@@ -87,8 +84,8 @@ parameterset:
         tag: "!dc-mi200"
         _: gpu:$gpus
       - name: srun_options
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: --exclusive --mem=480G --nodelist=ngnode01
+        tag: e4-a2|e4-h100|e4-gh
+        _: --exclusive --mem=480G
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -98,7 +95,7 @@ parameterset:
       - name: account
         _: exalab
       - name: account
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         _: maelstrom
       - name: queue
         tag: jwb+!test
@@ -134,7 +131,7 @@ parameterset:
         tag: e4-h100
         _: a-gpu-h100
       - name: queue
-        tag: e4-grace-hopper
+        tag: e4-gh
         _: t-gpu-gh200
       - name: rdzv_id
         _: $${SLURM_JOB_ID:-$RANDOM}
@@ -142,12 +139,12 @@ parameterset:
         # Juwels requires `i` to be appended to the host.
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i:29500
       - name: rdzv_endpoint
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red:29500
       - name: tmp_data_dir
         _: /p/scratch/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
       - name: tmp_data_dir
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         _: /home/$USER/jube-benchmarks/$job_name
       - name: preprocess
         # Set separator to | to avoid parameterset
@@ -157,7 +154,7 @@ parameterset:
           mkdir -p ${tmp_data_dir}
       - name: preprocess
         mode: text
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         separator: |
         _: |
           $modules
@@ -165,9 +162,10 @@ parameterset:
           label=$$(/opt/share/scripts/powerdiscovery/getlabel.sh)
           echo "POWERMEASUREMENT: Label = $$label"
           /opt/share/scripts/powerdiscovery/getpower_bg.sh 1000 &
+          printenv | grep SLURM > .env
       - name: postprocess
         mode: text
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         separator: |
         _: |
           kill -9 $$(cat ~/powerout.$$label.pid)
@@ -175,13 +173,23 @@ parameterset:
       - name: executable
         _: apptainer
       - name: executable
-        tag: e4-a2|e4-h100|e4-grace-hopper
+        tag: e4-a2|e4-h100|e4-gh
         _: singularity
-      - name: repo_dir
-        _: /p/home/jusers/$USER/juwels/code/a6
-      - name: repo_dir
-        tag: e4-a2|e4-h100|e4-grace-hopper
-        _: /home/$USER/code/a6
+      - name: executable
+        tag: e4-gh
+        _: docker
+      - name: dir_bind
+        _: -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6
+      - name: dir_bind
+        tag: e4-a2|e4-h100
+        _: -B /home/$USER/code/a6:/opt/a6
+      - name: dir_bind
+        tag: e4-gh
+        _: >
+           -v /home/$USER/code/a6:/opt/a6
+           -v /data:/data
+           -v /scratch:/scratch
+           -v /home/$USER:/home/$USER
       - name: image_path
         _: /p/project/deepacf/maelstrom/$USER/a6-cuda.sif
       - name: image_path
@@ -194,28 +202,32 @@ parameterset:
         tag: e4-h100
         _: /home/$USER/a6-cuda.sif
       - name: image_path
-        tag: e4-grace-hopper
-        _: /home/$USER/a6-cuda-arm.sif
-      - name: gpu_bind
+        tag: e4-gh
+        _: maelstrom-a6:latest
+      - name: executable_options
         _: --nv
-      - name: gpu_bind
+      - name: executable_options
         tag: dc-mi200
         _: --rocm
-      - name: additional_args
-        _: --use-nccl
-      - name: additional_args
-        tag: e4-grace-hopper
-        _: --no-use-nccl
-      - name: gpu_bind
-        tag: dc-mi200
-        _: --rocm
+      - name: executable_options
+        tag: e4-gh
+        _: >
+           --gpus all 
+           --privileged
+           --shm-size=1g 
+           --ulimit memlock=-1 
+           --name maelstrom-a6 
+           --entrypoint ""
+           --network host
+           --env-file .env
+           --rm
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |
         _: >
            run
-           -B ${repo_dir}:/opt/a6
-           ${gpu_bind}
+           ${dir_bind}
+           ${executable_options}
            ${image_path}
            torchrun
            --nnodes=${nodes}
@@ -224,7 +236,6 @@ parameterset:
            --rdzv-id=${rdzv_id}
            --rdzv-endpoint=${rdzv_endpoint}
            /opt/a6/jube/run.py
-           ${additional_args}
            --no-enable-tracking
            --no-save-results
            --no-plot-results

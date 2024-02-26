@@ -1,10 +1,6 @@
 Bootstrap: docker-daemon
 From: a6-rocm:latest
 
-%post
-    # Install ipykernel for usage as Jupyter kernel
-    pip install ipykernel
-
 %test
     which python
     python --version

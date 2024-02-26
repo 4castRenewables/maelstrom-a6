@@ -2,13 +2,12 @@ import dataclasses
 import enum
 import pathlib
 from typing import Any
-from typing import Self
 
 import a6.models.resnet as models
 import a6.utils as utils
 
 
-class SyncBn(enum.StrEnum):
+class SyncBn(enum.Enum):
     PYTORCH = "pytorch"
     APEX = "apex"
 
@@ -79,7 +78,7 @@ class Settings:
     dump: Dump
 
     @classmethod
-    def from_args_and_env(cls, args) -> Self:
+    def from_args_and_env(cls, args) -> "Settings":
         env_vars = utils.distributed.get_and_set_required_env_vars()
         dump_checkpoints = args.dump_path / "checkpoints"
         dump_results = args.dump_path / "results"

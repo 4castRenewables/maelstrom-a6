@@ -194,7 +194,11 @@ def _train(
     # build data
     train_dataset = _create_dataset(settings, logger=logger)
 
-    sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    sampler = (
+        torch.utils.data.distributed.DistributedSampler(train_dataset)
+        if settings.distributed.use_nccl
+        else None
+    )
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         sampler=sampler,
