@@ -89,9 +89,25 @@ parameterset:
       - name: gres
         tag: "!dc-mi200"
         _: gpu:$gpus
-      - name: srun_options
+      - name: tasks_per_node
+        _: --ntasks-per-node=1
+      - name: cpus_per_task
+        tag: jwb|jwc
+        _: --cpus-per-task=96
+      - name: cpus_per_task
+        tag: dc-gpu
+        _: --cpus-per-task=256
+      - name: cpus_per_task
         tag: e4-a2|e4-h100|e4-gh
-        _: --exclusive --mem=480G
+        _: --cpus-per-task=128
+      - name: memory
+        tag: e4-a2|e4-h100|e4-gh
+        _: --mem=480G
+      - name: exclusive
+        tag: e4-a2|e4-h100|e4-gh
+        _: --exclusive
+      - name: srun_options
+        _: $tasks_per_node $cpus_per_task $memory $exclusive
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -138,14 +154,19 @@ parameterset:
         _: t-gpu-gh200
       - name: rdzv_id
         _: $${SLURM_JOB_ID:-$RANDOM}
+      - name: postfix
+        tag: "!test"
+        _: i
       - name: rdzv_endpoint
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
       - name: rdzv_endpoint
         tag: jwc|jwb
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).juwels:29500
+        # The production queues require the i postfix for networking across racks.
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)$postfix.juwels:29500
       - name: rdzv_endpoint
         tag: dc-gpu|dc-h100|dc-mi200
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).jureca:29500
+        # The production queues require the i postfix for networking across racks.
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)$postfix.jureca:29500
       - name: rdzv_endpoint
         tag: e4-a2|e4-h100|e4-gh
         _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red:29500
@@ -229,6 +250,11 @@ parameterset:
            --network host
            --env-file .env
            --rm
+      - name: torchrun
+        _: torchrun
+      - name: torchrun
+        tag: jwc|jwb|dc-gpu|dc-h100|dc-mi200
+        _: python /opt/a6/jube/torchrun_jsc.py
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |
@@ -237,7 +263,7 @@ parameterset:
            ${dir_bind}
            ${executable_options}
            ${image_path}
-           torchrun
+           ${torchrun}
            --nnodes=${nodes}
            --nproc-per-node=${gpus}
            --rdzv-backend=c10d
