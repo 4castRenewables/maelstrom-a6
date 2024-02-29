@@ -1,7 +1,6 @@
 UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
 Environment:
-  PreRunCommand:
-    Command: |
+  PreRunCommandOnLoginNode: |
       cd /p/home/jusers/$USER/juwels/code/a6
       git fetch
       git checkout 29-plot-autocorrelation-and-transition-matrix
@@ -18,7 +17,7 @@ Resources:
   Runtime: 1h
   Queue: develbooster
   Nodes: 1
-  GPUsPerNode: 4
+  GPUsPerNode: 1
   #NodeConstraints: largedata
 Exclude:
   - "*.sif"
