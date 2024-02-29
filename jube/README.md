@@ -37,6 +37,7 @@ Available tags:
 
 ### Other tags
 
+* multi-node (only in combination with dc-gpu: 1, 2, 4 nodes a 4 GPUs)
 * test (single node, devel queues, 1 epoch)
 * cscratch (use `$CSCRATCH` for reading data)
 

@@ -62,6 +62,9 @@ parameterset:
       - name: nodes
         tag: dc-gpu
         _: 1
+      - name: nodes
+        tag: dc-gpu+multi-node
+        _: "1,2,4"
       # NCCL not supported by ARM, so cannot run on multiple E4 Grace Hopper nodes
       - name: nodes
         tag: (e4-a2|e4-h100|e4-gh)+!test
@@ -71,6 +74,9 @@ parameterset:
       - name: gpus
         tag: dc-gpu
         _: "1,2,3,4"
+      - name: gpus
+        tag: dc-gpu+multi-node
+        _: 4
       - name: gpus
         tag: dc-h100+!test
         _: "1,2,3,4"
