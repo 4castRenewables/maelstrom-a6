@@ -36,6 +36,10 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python
 ENV PATH=/opt/poetry/bin:${PATH}
 ENV POETRY_VIRTUALENVS_CREATE=false
 
+RUN python${PYTHON_VERSION} -m venv /venv \
+ && . /venv/bin/activate \
+ && pip install --upgrade pip
+
 COPY README.md/ /opt/a6/
 COPY pyproject.toml /opt/a6/
 COPY poetry.lock /opt/a6/
@@ -43,9 +47,9 @@ COPY src/a6/ /opt/a6/src/a6
 
 WORKDIR /opt/a6
 
-RUN python${PYTHON_VERSION} -m venv /venv \
- && . /venv/bin/activate \
- && pip install --upgrade pip \
+RUN . /venv/bin/activate \
+ && poetry export -f requirements.txt --output requirements.txt \
+ && pip install -r requirements.txt \
  # Below code for updating torch is only required for CUDA 11.7
  #&& poetry source add --priority=supplemental pytorch-cuda118 https://download.pytorch.org/whl/cu118 \
  #&& poetry add \
@@ -53,7 +57,7 @@ RUN python${PYTHON_VERSION} -m venv /venv \
  #   --source pytorch-cuda118 \
  #   torch==$(poetry show torch | awk '/version/ { print $3 }') \
  #   torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
- && poetry install --only=main,notebooks
+ && poetry install -vvv --only=main,notebooks
 
 
 # Delete Python cache files
@@ -96,5 +100,6 @@ RUN python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
 RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
 RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
 RUN python -m cfgrib selfcheck
+RUN python -m eccodes selfcheck
 
 ENTRYPOINT ["python"]

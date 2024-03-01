@@ -33,6 +33,9 @@ cfgrib = "^0.9.10.4"
 dask = "^2023.9.3"
 statsmodels = "^0.14.0"
 pynvml = "^11.5.0"
+opentsne = "^1.0.1"
+torch = "^2.2.1"
+torchvision = "^0.17.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
@@ -49,10 +52,6 @@ memory-profiler = "^0.61.0"
 
 [tool.poetry.group.mantik.dependencies]
 mantik = "^0.4.2"
-
-
-[tool.poetry.group.tsne.dependencies]
-opentsne = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
