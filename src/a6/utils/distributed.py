@@ -146,9 +146,11 @@ def get_dist_url_and_set_master_env_vars() -> str:
 
     if not _is_multi_node():
         host = "127.0.0.1"
-        logger.info("Assmuning single node environment, setting host to %s", host)
+        logger.info(
+            "Assmuning single node environment, setting host to %s", host
+        )
     # jwb, jwc, and jrc are the prefixes for the hostnames of JSC.
-    # JSC requires <node>i as address. 
+    # JSC requires <node>i as address.
     else:
         logger.info("Assuming multi-node environment, host is %s", host)
 
@@ -232,6 +234,17 @@ def get_device(properties: Properties) -> torch.device:
         device,
     )
     return torch.device(device)
+
+
+def get_single_device() -> torch.device:
+    if torch.cuda.is_available():
+        name = torch.cuda.get_device_name(0)
+        logger.info("GPU available, using %s", name)
+        # Declare device to be able to copy model and tensors to GPU
+        return torch.device("cuda:0")
+    logger.info("No GPU available, using CPU instead")
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    return torch.device("cpu")
 
 
 def is_primary_device() -> bool:

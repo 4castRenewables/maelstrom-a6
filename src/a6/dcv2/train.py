@@ -7,15 +7,15 @@
 import logging
 import time
 
+import mantik.mlflow
 import numpy as np
 import torch.nn as nn
 import torch.utils.data
 
-import a6.dcv2._averaging as _averaging
-import a6.dcv2._settings as _settings
+import a6.dcv2.averaging as _averaging
 import a6.dcv2.cluster as cluster
+import a6.dcv2.settings as _settings
 import a6.utils as utils
-import mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +54,14 @@ def train(
 
     end = time.time()
     start_idx = 0
-    for it, (idx, inputs) in enumerate(dataloader):
+    for it, (inputs, idx) in enumerate(dataloader):
         logger.debug("Calculating loss for index %s", idx)
 
         for crop_index, inp in enumerate(inputs):
             for index in range(inp.size(0)):
                 sample = inp[index]
                 if torch.isnan(sample).any():
-                    logger.exception(
+                    logger.warning(
                         (
                             "Input at crop index %i and index %i has NaN "
                             "values: %s"
@@ -222,8 +222,7 @@ def train(
             "loss_avg": losses.avg,
         }
 
-        utils.mantik.call_mlflow_method(
-            mlflow.log_metrics,
+        mantik.mlflow.log_metrics(
             metrics,
             step=epoch,
         )

@@ -39,3 +39,10 @@ class Model:
     q: str = "q"
     z: str = "z"
     geopotential_height: str = "z_h"
+
+
+@dataclasses.dataclass(frozen=True)
+class GWL:
+    """Variables of a GWL dataset."""
+
+    gwl: str = "GWL"

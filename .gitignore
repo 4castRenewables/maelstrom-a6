@@ -8,3 +8,4 @@ ap6-run/
 *.csv
 
 dcv2_dump/
+MNIST/

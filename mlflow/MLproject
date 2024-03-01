@@ -119,7 +119,7 @@ entry_points:
       python concatenate_data_files.py
         --data-path {data_path}
         --pattern {pattern}
-  forecast-errors:
+  preprocess-turbine:
     parameters:
       pressure_level_data:
         type: string
@@ -129,6 +129,21 @@ entry_points:
         type: string
       turbine_data_dir:
         type: string
+      output_dir:
+        type: string
+    command: >
+      python preprocess_turbine.py
+        --pressure-level-data {pressure_level_data}
+        --model-level-data {model_level_data}
+        --surface-level-data {surface_level_data}
+        --turbine-data-dir {turbine_data_dir}
+        --output-dir {output_dir}
+  forecast-errors:
+    parameters:
+      turbine_data_dir:
+        type: string
+      preprocessed_data_dir:
+        type: string
       results_dir:
         type: string
       parallel:
@@ -136,10 +151,8 @@ entry_points:
         default: "--parallel"
     command: >
       python forecast_errors.py
-        --pressure-level-data {pressure_level_data}
-        --model-level-data {model_level_data}
-        --surface-level-data {surface_level_data}
         --turbine-data-dir {turbine_data_dir}
+        --preprocessed-data-dir {preprocessed_data_dir}
         --results-dir {results_dir}
         {parallel}
   dcv2:

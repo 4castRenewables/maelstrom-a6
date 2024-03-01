@@ -16,23 +16,16 @@ import a6
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
 
+a6.utils.logging.log_to_stdout(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--pressure-level-data",
-    type=pathlib.Path,
-)
-parser.add_argument(
-    "--model-level-data",
-    type=pathlib.Path,
-)
-parser.add_argument(
-    "--surface-level-data",
-    type=pathlib.Path,
-)
-parser.add_argument(
     "--turbine-data-dir",
+    type=pathlib.Path,
+)
+parser.add_argument(
+    "--preprocessed-data-dir",
     type=pathlib.Path,
 )
 parser.add_argument(
@@ -55,7 +48,7 @@ parser.add_argument(
 ForecastErrors = dict[pathlib.Path, xr.Dataset]
 
 
-def simulate_forecast_errors(
+def simulate_errors(
     raw_args: list[str] | None = None,
 ) -> ForecastErrors:
     """For a set of turbines, simulate forecasts and calculate the errors.
@@ -64,23 +57,15 @@ def simulate_forecast_errors(
     as `.nc` files, where each file contains the production data
     of the respective turbine.
 
-    TODO: Preprocess weather features prior.
-    Currently, the features are calculated on-the-fly, which very inefficient.
-
     """
     args = parser.parse_args(raw_args)
 
-    turbine_files = sorted(list(args.turbine_data_dir.rglob("**/*.nc")))
+    turbine_files = a6.utils.paths.list_files(
+        args.turbine_data_dir, pattern="**/*.nc", recursive=True
+    )
 
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates()
-    model_variables: _variables.Model = _variables.Model()
     turbine_variables: _variables.Turbine = a6.datasets.variables.Turbine()
-
-    ds_sfc = xr.open_dataset(args.surface_level_data)
-    ds_ml = xr.open_dataset(args.model_level_data).sel({coordinates.level: 137})
-    ds_pl = xr.open_dataset(args.pressure_level_data).sel(
-        {coordinates.level: 1000}
-    )
 
     result: ForecastErrors = {}
 
@@ -92,8 +77,10 @@ def simulate_forecast_errors(
             turbine_path,
         )
 
-        file_name = turbine_path.name.replace(".nc", "_forecast_errors.nc")
-        outfile: pathlib.Path = args.results_dir / file_name
+        turbine_name = turbine_path.name.replace(".nc", "")
+        outfile: pathlib.Path = (
+            args.results_dir / f"{turbine_name}_forecast_errors.nc"
+        )
 
         if outfile.exists():
             logger.warning(
@@ -102,93 +89,27 @@ def simulate_forecast_errors(
                 outfile,
             )
 
+        turbine_path: pathlib.Path = (
+            args.preprocessed_data_dir / f"{turbine_name}/turbine.nc"
+        )
+        pl_path: pathlib.Path = (
+            args.preprocessed_data_dir / f"{turbine_name}/pl.nc"
+        )
+        ml_path: pathlib.Path = (
+            args.preprocessed_data_dir / f"{turbine_name}/ml.nc"
+        )
+        sfc_path: pathlib.Path = (
+            args.preprocessed_data_dir / f"{turbine_name}/sfc.nc"
+        )
+
+        logger.info("Reading preprocessed data")
         turbine = xr.open_dataset(turbine_path)
+        pl = xr.open_dataset(pl_path)
+        ml = xr.open_dataset(ml_path)
+        sfc = xr.open_dataset(sfc_path)
 
         power_rating = turbine_variables.read_power_rating(turbine)
         logger.info("Extracted power rating %i", power_rating)
-
-        logger.info("Preprocessing turbine data")
-        turbine = (
-            a6.datasets.methods.turbine.clean_production_data(
-                power_rating=power_rating,
-                variables=turbine_variables,
-            )
-            >> a6.datasets.methods.turbine.resample_to_hourly_resolution(
-                variables=turbine_variables,
-                coordinates=coordinates,
-            )
-            >> a6.datasets.methods.select.select_latitude_longitude(
-                latitude=0, longitude=0
-            )
-        ).apply_to(turbine)
-
-        logger.info("Preprocessing surface level data")
-        sfc = (
-            a6.datasets.methods.turbine.get_closest_grid_point(
-                turbine=turbine,
-                coordinates=coordinates,
-            )
-            >> a6.datasets.methods.turbine.select_intersecting_time_steps(
-                turbine=turbine, coordinates=coordinates
-            )
-            >> a6.datasets.methods.select.select_variables(
-                variables=model_variables.sp
-            )
-        ).apply_to(ds_sfc)
-
-        logger.info("Preprocessing model level data")
-        ml = (
-            a6.datasets.methods.turbine.get_closest_grid_point(
-                turbine=turbine,
-                coordinates=coordinates,
-            )
-            >> a6.datasets.methods.turbine.select_intersecting_time_steps(
-                turbine=turbine, coordinates=coordinates
-            )
-            >> a6.datasets.methods.select.select_variables(
-                variables=model_variables.t
-            )
-        ).apply_to(ds_ml)
-
-        logger.info("Preprocessing pressure level data")
-        pl = (
-            a6.datasets.methods.turbine.get_closest_grid_point(
-                turbine=turbine,
-                coordinates=coordinates,
-            )
-            >> a6.datasets.methods.turbine.select_intersecting_time_steps(
-                turbine=turbine, coordinates=coordinates
-            )
-            >> a6.features.methods.wind.calculate_wind_speed(
-                variables=model_variables
-            )
-            >> a6.features.methods.wind.calculate_wind_direction_angle(
-                variables=model_variables
-            )
-            >> a6.features.methods.time.calculate_fraction_of_day(
-                coordinates=coordinates
-            )
-            >> a6.features.methods.time.calculate_fraction_of_year(
-                coordinates=coordinates
-            )
-            >> a6.datasets.methods.select.select_variables(
-                variables=[
-                    model_variables.wind_speed,
-                    model_variables.wind_direction,
-                    model_variables.r,
-                    "fraction_of_year",
-                    "fraction_of_day",
-                ]
-            )
-        ).apply_to(ds_pl)
-
-        _, turbine = a6.datasets.methods.turbine.select_intersecting_time_steps(
-            weather=ml,
-            turbine=turbine,
-            coordinates=coordinates,
-            return_turbine=True,
-            non_functional=True,
-        )
 
         data = [sfc, ml] + [pl[var] for var in pl.data_vars]
 
@@ -206,7 +127,7 @@ def simulate_forecast_errors(
             _,
             y_train,
             _,
-        ) = sklearn.model_selection.train_test_split(X, y, train_size=2 / 3)
+        ) = sklearn.model_selection.train_test_split(X, y, train_size=0.8)
 
         logger.info(
             "Train dataset size is %i hours (~%i days)",
@@ -334,7 +255,3 @@ def _calculate_nmae_and_nrmse(
         y_true=y_true, y_pred=y_pred, power_rating=power_rating
     )
     return Errors(nmae=nmae, nrmse=nrmse)
-
-
-def evaluate_lswr_effect():
-    """Evaluate whether LSWRs have an effect on the forecast error."""

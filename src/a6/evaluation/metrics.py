@@ -19,3 +19,9 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+
+def accuracy_score(y_true: int, y_pred: torch.Tensor) -> float:
+    """Calculate accuracy score between true label and prediction tensor."""
+    with torch.no_grad():
+        return float((y_true == y_pred.argmax(1)).sum() / y_pred.shape[0])

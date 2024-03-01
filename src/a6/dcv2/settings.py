@@ -3,7 +3,7 @@ import enum
 import pathlib
 from typing import Any
 
-import a6.models.resnet as models
+import a6.models.resnet_dcv2 as resnet_dcv2
 import a6.utils as utils
 
 
@@ -35,7 +35,7 @@ class Preprocessing:
 
 @dataclasses.dataclass(frozen=True)
 class Model:
-    architecture: models.Architecture
+    architecture: resnet_dcv2.Architecture
     hidden_mlp: int
     feature_dimensions: int
     nmb_prototypes: list[int]
@@ -116,7 +116,7 @@ class Settings:
                 max_scale_crops=args.max_scale_crops,
             ),
             model=Model(
-                architecture=models.Architecture(args.arch),
+                architecture=resnet_dcv2.Architecture(args.arch),
                 hidden_mlp=args.hidden_mlp,
                 feature_dimensions=args.feat_dim,
                 # ``nmb_prototypes`` is a list with the number of clusters

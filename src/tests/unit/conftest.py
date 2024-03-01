@@ -42,6 +42,11 @@ def era5_path() -> pathlib.Path:
 
 
 @pytest.fixture(scope="session")
+def gwl_path() -> pathlib.Path:
+    return DATA_DIR / "gwl.nc"
+
+
+@pytest.fixture(scope="session")
 def era5(era5_path) -> datasets.Era5:
     return datasets.Era5(
         path=era5_path,
