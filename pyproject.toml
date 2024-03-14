@@ -37,6 +37,7 @@ opentsne = "^1.0.1"
 torch = "^2.2.1"
 torchvision = "^0.17.1"
 mantik = "^0.4.6"
+deep500 = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
