@@ -110,6 +110,14 @@ def create_argparser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--testing",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether current run is a testing run",
+    )
+
+    parser.add_argument(
         "-v",
         "--verbose",
         type=bool,

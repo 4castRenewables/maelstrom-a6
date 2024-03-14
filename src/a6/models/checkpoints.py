@@ -21,8 +21,8 @@ def save_checkpoint(
     target_epochs: int,
 ) -> None:
     """Checkpoint the model and optimizer state."""
-    path = path / "checkpoint.pth.tar"
-    logger.info("Saving checkpoint to %s", path)
+    file = path / "checkpoint.pth.tar"
+    logger.info("Saving checkpoint to %s", file)
 
     save_dict = {
         "epoch": epoch + 1,
@@ -31,11 +31,11 @@ def save_checkpoint(
     }
     torch.save(
         save_dict,
-        path / "checkpoint.pth.tar",
+        file,
     )
     if epoch % checkpoint_freq == 0 or epoch == target_epochs - 1:
         shutil.copyfile(
-            path / "checkpoint.pth.tar",
+            file,
             path / f"checkpoint-epoch-{epoch}.pth",
         )
 
@@ -55,7 +55,7 @@ def restart_from_checkpoint(
 
     Returns
     -------
-    variables_to_load_from_checkpoint : dict
+    variables_to_load_from_checkpoint : dict, optional
         Contains all given variables that should've been loaded from the
         checkpoint. Per default, this is the last epoch where the model and
         optimizer were checkpointed.
@@ -64,6 +64,7 @@ def restart_from_checkpoint(
 
     kwargs = kwargs | {"state_dict": model, "optimizer": optimizer}
 
+    variables_to_load_from_checkpoint = variables_to_load_from_checkpoint or {}
     variables_to_load_from_checkpoint = variables_to_load_from_checkpoint | {
         "epoch": 0
     }

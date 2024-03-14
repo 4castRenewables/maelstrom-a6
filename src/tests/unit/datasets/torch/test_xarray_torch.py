@@ -27,4 +27,6 @@ class TestTorchWithGWL:
         data, target = dataset[0]
 
         assert not torch.isnan(data).any()
-        assert target == 10
+        # First matching data point has GWL label 10,
+        # but torch expexts labels to start at 0, and GWL labels start at 1.
+        assert target == 9

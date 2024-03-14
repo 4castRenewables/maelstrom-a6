@@ -65,7 +65,7 @@ def init_embeddings(
 
     with torch.no_grad():
         logger.info("Start embeddings initialization")
-        for index, inputs in dataloader:
+        for inputs, index in dataloader:
             nmb_unique_idx = inputs[0].size(0)
             index = index.to(device=device, non_blocking=True)
 

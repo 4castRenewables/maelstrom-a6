@@ -38,7 +38,7 @@ parser.add_argument(
 
 def create_turbine_model_features(
     raw_args: list[str] | None = None,
-) -> None:
+) -> dict[pathlib.Path, xr.Dataset]:
     """Create the input data for simulation of the forecasts."""
     args = parser.parse_args(raw_args)
 
@@ -55,6 +55,8 @@ def create_turbine_model_features(
     ds_pl = xr.open_dataset(args.pressure_level_data).sel(
         {coordinates.level: 1000}
     )
+
+    outfiles = {}
 
     for i, turbine_path in enumerate(turbine_files):
         logger.info(
@@ -117,7 +119,7 @@ def create_turbine_model_features(
             continue
 
         logger.info("Preprocessing surface level data")
-        (
+        result_sfc = (
             a6.datasets.methods.turbine.get_closest_grid_point(
                 turbine=turbine,
                 coordinates=coordinates,
@@ -132,7 +134,7 @@ def create_turbine_model_features(
         ).apply_to(ds_sfc)
 
         logger.info("Preprocessing model level data")
-        (
+        result_ml = (
             a6.datasets.methods.turbine.get_closest_grid_point(
                 turbine=turbine,
                 coordinates=coordinates,
@@ -147,7 +149,7 @@ def create_turbine_model_features(
         ).apply_to(ds_ml)
 
         logger.info("Preprocessing pressure level data")
-        (
+        result_pl = (
             a6.datasets.methods.turbine.get_closest_grid_point(
                 turbine=turbine,
                 coordinates=coordinates,
@@ -178,3 +180,12 @@ def create_turbine_model_features(
             )
             >> a6.datasets.methods.save.to_netcdf(path=outfile_pl)
         ).apply_to(ds_pl)
+
+        outfiles = outfiles | {
+            outfile_turbine: turbine,
+            outfile_ml: result_ml,
+            outfile_pl: result_pl,
+            outfile_sfc: result_sfc,
+        }
+
+    return outfiles

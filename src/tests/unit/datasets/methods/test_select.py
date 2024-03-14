@@ -100,6 +100,7 @@ def test_select_intersecting_time_steps():
     result_weather, result_production = select.select_intersecting_time_steps(
         left=weather,
         right=production,
+        return_only_left=False,
         non_functional=True,
     )
 

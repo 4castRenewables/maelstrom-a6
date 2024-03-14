@@ -7,7 +7,7 @@ import a6.entry.dcv2 as entry
 import a6.testing as testing
 import mlflow
 
-BASE_ARGS = ["--use-cpu", "--enable-tracking", "--epoch", "1"]
+BASE_ARGS = ["--use-cpu", "--enable-tracking", "--epoch", "1", "--testing"]
 
 
 @pytest.fixture

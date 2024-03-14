@@ -86,22 +86,22 @@ def main(
         len(train_loader),
     )
 
-    # model = (
-    #    models.cnn.Model(
-    #        in_channels=train_set.n_channels,
-    #        n_classes=n_classes,
-    #        example=train_set[0][0],
-    #    )
-    #    if not testing
-    #    else models.cnn.TestingModel(
-    #        in_channels=train_set.n_channels,
-    #        n_classes=n_classes,
-    #        example=train_set[0][0],
-    #    )
-    # )
-    model = models.resnet.resnet50w4(
-        in_channels=train_set.n_channels,
-        n_classes=n_classes,
+    model = (
+        # models.cnn.Model(
+        #     in_channels=train_set.n_channels,
+        #     n_classes=n_classes,
+        #     example=train_set[0][0],
+        # )
+        models.resnet.resnet50w4(
+            in_channels=train_set.n_channels,
+            n_classes=n_classes,
+        )
+        if not testing
+        else models.cnn.TestingModel(
+            in_channels=train_set.n_channels,
+            n_classes=n_classes,
+            example=train_set[0][0],
+        )
     )
 
     logger.info("%s", model)

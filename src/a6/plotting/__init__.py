@@ -1,7 +1,7 @@
-import a6.plotting.assignments
-import a6.plotting.autocorrelation
-import a6.plotting.embeddings
-import a6.plotting.transitions
+import a6.plotting.assignments as assignments
+import a6.plotting.autocorrelation as autocorrelation
+import a6.plotting.embeddings as embeddings
+import a6.plotting.transitions as transitions
 from a6.plotting import coastlines
 from a6.plotting.animation import animate_timeseries
 from a6.plotting.clustering import plot_condensed_tree

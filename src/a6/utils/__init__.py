@@ -1,9 +1,10 @@
-import a6.utils.distributed
-import a6.utils.energy
-import a6.utils.mantik
-import a6.utils.models
-import a6.utils.slurm
-import a6.utils.usage
+import a6.utils.distributed as distributed
+import a6.utils.energy as energy
+import a6.utils.logging as logging
+import a6.utils.mantik as mantik
+import a6.utils.models as models
+import a6.utils.slurm as slurm
+import a6.utils.usage as usage
 from a6.utils.cpus import get_cpu_count
 from a6.utils.functional import Functional
 from a6.utils.functional import make_functional

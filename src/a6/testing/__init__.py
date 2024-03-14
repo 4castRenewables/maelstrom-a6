@@ -1,5 +1,5 @@
-import a6.testing.env
-import a6.testing.methods
+import a6.testing.env as env
+import a6.testing.methods as methods
 from a6.testing.contexts import expect_raise_if_exception
 from a6.testing.create import create_dummy_ecmwf_ifs_hres_dataset
 from a6.testing.data_factories import EllipticalDataFactory

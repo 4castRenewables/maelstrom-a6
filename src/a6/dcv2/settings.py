@@ -67,6 +67,7 @@ class Dump:
 
 @dataclasses.dataclass(frozen=True)
 class Settings:
+    testing: bool
     verbose: bool
     enable_tracking: bool
     save_results: bool
@@ -85,6 +86,7 @@ class Settings:
         dump_plots = dump_results / "plots"
         dump_tensors = dump_results / "tensors"
         return cls(
+            testing=args.testing,
             verbose=args.verbose,
             enable_tracking=args.enable_tracking,
             save_results=args.save_results,

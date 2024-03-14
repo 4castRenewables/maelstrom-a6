@@ -112,7 +112,9 @@ def train(
             loss_temp = cross_entropy(scores, targets)
             loss += loss_temp
 
-            if torch.isnan(loss_temp).any() or torch.isnan(loss).any():
+            if not settings.testing and (
+                torch.isnan(loss_temp).any() or torch.isnan(loss).any()
+            ):
                 logger.exception(
                     (
                         "Loss is NaN: it=%i, prototype(h)=%i, "
