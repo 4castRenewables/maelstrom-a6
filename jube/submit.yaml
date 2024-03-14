@@ -241,11 +241,11 @@ parameterset:
       - name: executable_options
         tag: e4-gh
         _: >
-           --gpus all 
+           --gpus all
            --privileged
-           --shm-size=1g 
-           --ulimit memlock=-1 
-           --name maelstrom-a6 
+           --shm-size=1g
+           --ulimit memlock=-1
+           --name maelstrom-a6
            --entrypoint ""
            --network host
            --env-file .env

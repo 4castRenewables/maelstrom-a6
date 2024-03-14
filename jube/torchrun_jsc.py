@@ -18,11 +18,10 @@ python /path/to/fixed_torch_run.py [...]
 python -m fixed_torch_run [...]
 ```
 """
-
-from argparse import ArgumentParser
 import os
 import runpy
 import sys
+from argparse import ArgumentParser
 
 
 def _as_bool(key, value):
@@ -34,36 +33,32 @@ def _as_bool(key, value):
         if value == 0:
             return False
     elif isinstance(value, str):
-        if value.lower() in ['1', 'true', 't', 'yes', 'y']:
+        if value.lower() in ["1", "true", "t", "yes", "y"]:
             return True
-        if value.lower() in ['0', 'false', 'f', 'no', 'n']:
+        if value.lower() in ["0", "false", "f", "no", "n"]:
             return False
     raise ValueError(
-        f'The rendezvous configuration option {key} does not represent a '
-        f'valid boolean value.'
+        f"The rendezvous configuration option {key} does not represent a "
+        f"valid boolean value."
     )
 
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument('--rdzv_endpoint', '--rdzv-endpoint')
-    parser.add_argument('--rdzv_conf', '--rdzv-conf')
-    parser.add_argument('--local_addr', '--local-addr')
+    parser.add_argument("--rdzv_endpoint", "--rdzv-endpoint")
+    parser.add_argument("--rdzv_conf", "--rdzv-conf")
+    parser.add_argument("--local_addr", "--local-addr")
     args = parser.parse_known_args()[0]
 
     endpoint = args.rdzv_endpoint
-    host = (
-        endpoint.rsplit(':', 1)[0]
-        if endpoint
-        else None
-    )
+    host = endpoint.rsplit(":", 1)[0] if endpoint else None
 
     conf = args.rdzv_conf
     is_host = None
     if conf is not None:
-        confs = conf.split(',')
-        for (key, value) in map(lambda kv: kv.split('=', 1), confs):
-            if key == 'is_host':
+        confs = conf.split(",")
+        for key, value in map(lambda kv: kv.split("=", 1), confs):
+            if key == "is_host":
                 is_host = _as_bool(key, value)
                 break
 
@@ -75,46 +70,45 @@ def parse_args():
 def fix_get_hostname(host, local_addr):
     if host and not local_addr:
         insertion_index = min(len(sys.argv), 1)
-        sys.argv.insert(insertion_index, f'--local_addr={host}')
+        sys.argv.insert(insertion_index, f"--local_addr={host}")
 
 
 def fix_is_host(is_host, conf):
     if is_host is None:
-        slurm_is_host = int(os.getenv('SLURM_PROCID') == '0')
+        slurm_is_host = int(os.getenv("SLURM_PROCID") == "0")
 
         if not conf:
             insertion_index = min(len(sys.argv), 1)
             sys.argv.insert(
                 insertion_index,
-                f'--rdzv_conf=is_host={slurm_is_host}',
+                f"--rdzv_conf=is_host={slurm_is_host}",
             )
         else:
             # Since `torchrun` only uses standard `argparse` for
             # parsing, we do not need to worry about discerning multiple
             # `--rdzv_conf` arguments (one for `torchrun`, one for the
             # script).
-            for (i, arg) in enumerate(sys.argv):
-                if (
-                        arg.startswith('--rdzv_conf')
-                        or arg.startswith('--rdzv-conf')
+            for i, arg in enumerate(sys.argv):
+                if arg.startswith("--rdzv_conf") or arg.startswith(
+                    "--rdzv-conf"
                 ):
                     # Handle specification as two arguments vs. as one
                     # argument.
-                    if arg in ['--rdzv_conf', '--rdzv-conf']:
+                    if arg in ["--rdzv_conf", "--rdzv-conf"]:
                         modification_index = i + 1
                         old_conf = sys.argv[modification_index]
                     else:
                         modification_index = i
-                        old_conf = (
-                            sys.argv[modification_index].split('=', 1)[1])
+                        old_conf = sys.argv[modification_index].split("=", 1)[1]
 
                     # Handle empty conf specification.
                     if old_conf:
-                        sys.argv[modification_index] = (
-                            f'{sys.argv[modification_index]},')
+                        sys.argv[
+                            modification_index
+                        ] = f"{sys.argv[modification_index]},"
                     sys.argv[modification_index] = (
-                        f'{sys.argv[modification_index]}'
-                        f'is_host={slurm_is_host}'
+                        f"{sys.argv[modification_index]}"
+                        f"is_host={slurm_is_host}"
                     )
                     break
 
@@ -123,8 +117,8 @@ def main():
     host, conf, is_host, local_addr = parse_args()
     fix_get_hostname(host, local_addr)
     fix_is_host(is_host, conf)
-    runpy.run_module('torch.distributed.run', run_name='__main__')
+    runpy.run_module("torch.distributed.run", run_name="__main__")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
