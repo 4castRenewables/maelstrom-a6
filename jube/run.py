@@ -1,4 +1,4 @@
-import a6.dcv2 as dcv2
+import a6
 
 if __name__ == "__main__":
-    dcv2.run_benchmark()
+    a6.entry.dcv2.run_benchmark()
