@@ -1,12 +1,12 @@
 UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
 Environment:
   PreRunCommandOnLoginNode: |
-      cd /p/home/jusers/$USER/juwels/code/a6
-      git fetch
-      git checkout 29-plot-autocorrelation-and-transition-matrix
-      git status
-      git pull
-      cd $UC_WORKING_DIRECTORY
+    cd /p/home/jusers/$USER/juwels/code/a6
+    git fetch
+    git checkout 29-plot-autocorrelation-and-transition-matrix
+    git status
+    git pull
+    cd $UC_WORKING_DIRECTORY
   Apptainer:
     Path: /p/project/$SLURM_JOB_ACCOUNT/maelstrom/$USER/a6-cuda.sif
     Type: remote
