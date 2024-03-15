@@ -16,6 +16,7 @@ class SyncBn(enum.Enum):
 class Data:
     path: pathlib.Path
     use_mnist: bool
+    use_imagenet: bool
     pattern: str | None
     drop_variables: bool
     levels: list[int] | None
@@ -78,6 +79,13 @@ class Settings:
     model: Model
     dump: Dump
 
+    def __post_init__(self):
+        if self.data.use_mnist and self.data.use_imagenet:
+            raise ValueError(
+                "Both MNIST and ImageNet dataset usage enabled, "
+                "please choose one"
+            )
+
     @classmethod
     def from_args_and_env(cls, args) -> "Settings":
         env_vars = utils.distributed.get_and_set_required_env_vars()
@@ -103,6 +111,7 @@ class Settings:
             data=Data(
                 path=args.data_path,
                 use_mnist=args.use_mnist,
+                use_imagenet=args.use_imagenet,
                 pattern=args.pattern,
                 drop_variables=args.drop_variables,
                 levels=args.levels,

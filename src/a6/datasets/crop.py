@@ -5,14 +5,17 @@
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
 import copy
+import json
 import logging
 import pathlib
 from collections.abc import Iterable
+from typing import TypeAlias
 
 import torch
 import torchvision.datasets
 import torchvision.transforms
 import xarray as xr
+from PIL import Image
 
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods as methods
@@ -20,8 +23,8 @@ import a6.datasets.transforms as transforms
 
 logger = logging.getLogger(__name__)
 
-SizeCropsRelative = list[float | tuple[float, float]]
-SizeCropsSpecific = list[int | tuple[int, int]]
+SizeCropsRelative: TypeAlias = list[float | tuple[float, float]]
+SizeCropsSpecific: TypeAlias = list[int | tuple[int, int]]
 
 
 class Base(torchvision.datasets.VisionDataset):
@@ -86,7 +89,7 @@ class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
             size_crops, size_x=size_x, size_y=size_y
         )
 
-        self.trans = _create_transformations(
+        self.transform = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
             min_scale_crops=min_scale_crops,
@@ -102,6 +105,84 @@ class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
         self, index: int
     ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
         image, _ = self.dataset[index]
+        multi_crops = list(map(lambda trans: trans(image), self.transform))
+        if self.return_index:
+            return multi_crops, index
+        return multi_crops
+
+
+class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
+    def __init__(
+        self,
+        data_path: pathlib.Path,
+        size_crops: SizeCropsRelative,
+        nmb_crops: list[int],
+        min_scale_crops: list[float],
+        max_scale_crops: list[float],
+        split: str = "train",
+        return_index: bool = False,
+    ):
+        if not data_path.exists():
+            data_path.mkdir(parents=True, exist_ok=True)
+
+        super().__init__(
+            data_path=data_path,
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            return_index=return_index,
+        )
+
+        self.samples = []
+        self.targets = []
+        self.syn_to_class = {}
+
+        self.transform = _create_transformations(
+            nmb_crops=nmb_crops,
+            size_crops=size_crops,
+            min_scale_crops=min_scale_crops,
+            max_scale_crops=max_scale_crops,
+            # These are the mean and std for the RGB channels
+            # of the ImageNet dataset.
+            mean=[0.485, 0.456, 0.406],
+            std=[0.228, 0.224, 0.225],
+        )
+
+        with open(data_path / "imagenet_class_index.json", "rb") as f:
+            json_file = json.load(f)
+            for class_id, v in json_file.items():
+                self.syn_to_class[v[0]] = int(class_id)
+
+        with open(data_path / "ILSVRC2012_val_labels.json", "rb") as f:
+            self.val_to_syn = json.load(f)
+
+        samples_dir = data_path / "ILSVRC/Data/CLS-LOC" / split
+
+        for entry in samples_dir.glob("*"):
+            if split == "train":
+                syn_id = entry
+                target = self.syn_to_class[syn_id]
+                syn_folder = samples_dir / syn_id
+
+                for sample in syn_folder.glob("*"):
+                    sample_path = syn_folder / sample
+                    self.samples.append(sample_path)
+                    self.targets.append(target)
+            elif split == "val":
+                syn_id = self.val_to_syn[entry]
+                target = self.syn_to_class[syn_id]
+                sample_path = samples_dir / entry
+                self.samples.append(sample_path)
+                self.targets.append(target)
+
+    def __len__(self) -> int:
+        return len(self.samples)
+
+    def __getitem__(
+        self, index: int
+    ) -> list[torch.tensor] | tuple[list[torch.tensor], int]:
+        image = Image.open(self.samples[index]).convert("rgb")
         multi_crops = list(map(lambda trans: trans(image), self.trans))
         if self.return_index:
             return multi_crops, index
@@ -145,13 +226,16 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
         mean = [0.485, 0.456, 0.406]
         std = [0.228, 0.224, 0.225]
 
-        self.trans = _create_transformations(
+        self.transform = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
             min_scale_crops=min_scale_crops,
             max_scale_crops=max_scale_crops,
             mean=mean,
             std=std,
+            random_horizontal_flip=True,
+            color_distortion=True,
+            gaussian_blur=True,
         )
 
     def __getitem__(
@@ -159,7 +243,7 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
     ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
         path, _ = self.samples[index]
         image = self.loader(path)
-        multi_crops = list(map(lambda trans: trans(image), self.trans))
+        multi_crops = list(map(lambda trans: trans(image), self.transform))
         if self.return_index:
             return multi_crops, index
         return multi_crops
@@ -305,7 +389,7 @@ def convert_relative_to_absolute_crop_size(
 
 def _create_transformations(
     nmb_crops: list[int],
-    size_crops: list[float, tuple[float, float]],
+    size_crops: list[float | tuple[float, float]],
     min_scale_crops: list[float],
     max_scale_crops: list[float],
     mean: list[float],

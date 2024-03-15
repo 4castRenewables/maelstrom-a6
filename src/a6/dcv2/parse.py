@@ -188,6 +188,13 @@ def create_argparser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--use-imagenet",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to use the ImageNet dataset.",
+    )
+    parser.add_argument(
         "--pattern",
         type=parse_str_or_none,
         default=None,
