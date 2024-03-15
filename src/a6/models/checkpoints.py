@@ -11,6 +11,8 @@ import a6.utils as utils
 
 logger = logging.getLogger(__name__)
 
+CHECKPOINT_FILE = "checkpoint.pth.tar"
+
 
 def save_checkpoint(
     model: nn.Module,
@@ -21,7 +23,7 @@ def save_checkpoint(
     target_epochs: int,
 ) -> None:
     """Checkpoint the model and optimizer state."""
-    file = path / "checkpoint.pth.tar"
+    file = path / CHECKPOINT_FILE
     logger.info("Saving checkpoint to %s", file)
 
     save_dict = {
@@ -61,6 +63,7 @@ def restart_from_checkpoint(
         optimizer were checkpointed.
 
     """
+    file = path / CHECKPOINT_FILE
 
     kwargs = kwargs | {"state_dict": model, "optimizer": optimizer}
 
@@ -69,14 +72,15 @@ def restart_from_checkpoint(
         "epoch": 0
     }
 
-    if not path.is_file():
+    if not file.is_file():
+        logger.info("No checkpoint file found at %s, starting et epoch 0", file)
         return variables_to_load_from_checkpoint
 
-    logger.info("Found checkpoint at %s", path)
+    logger.info("Found checkpoint at %s", file)
 
     # open checkpoint file
     checkpoint = torch.load(
-        path,
+        file,
         map_location=utils.distributed.get_device(properties),
     )
 
@@ -90,9 +94,9 @@ def restart_from_checkpoint(
                 print(msg)
             except TypeError:
                 msg = value.load_state_dict(checkpoint[key])
-            logger.info("Loaded %s from checkpoint '%s'", key, path)
+            logger.info("Loaded %s from checkpoint '%s'", key, file)
         else:
-            logger.warning("Failed to load %s from checkpoint '%s'", key, path)
+            logger.warning("Failed to load %s from checkpoint '%s'", key, file)
 
     # re load variable important for the run
     if variables_to_load_from_checkpoint is not None:
