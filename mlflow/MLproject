@@ -251,7 +251,7 @@ entry_points:
         --rdzv-backend=c10d
         --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
         --rdzv-endpoint=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
-        train_dcv2.py
+        /opt/a6/mlflow/train_dcv2.py
         {enable_tracking}
         {save_results}
         {plot_results}
