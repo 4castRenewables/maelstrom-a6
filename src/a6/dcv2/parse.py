@@ -7,6 +7,7 @@
 import argparse
 import logging
 import pathlib
+from collections.abc import Iterator
 
 ROOT_DIR = pathlib.Path(__file__).parent / "../../../"
 
@@ -35,15 +36,12 @@ class ExtendAction(argparse.Action):
         items = getattr(namespace, self.dest) or []
         for value in values:
             # If `None` is given, don't append
-            if parse_str_or_none(value) is None:
+            if _parse_str_or_none(value) is None:
                 pass
             # If single- or double-quote in string, split by spaces and extend
             elif '"' in value or "'" in value:
-                for char in ["'", '"']:
-                    value = value.replace(char, "")
-                # Split space-separate quoted list
-                result = value.split(" ")
-                items.extend(map(self._type, result))
+                split = _split_multiple_quoted_arguments(value)
+                items.extend(map(self._type, split))
             # If value is single value without quotes, append
             else:
                 items.append(self._type(value))
@@ -52,10 +50,19 @@ class ExtendAction(argparse.Action):
             setattr(namespace, self.dest, items)
 
 
-def parse_str_or_none(value: str) -> str | None:
+def _parse_str_or_none(value: str) -> str | None:
     if value.lower() == "none":
         return None
     return value
+
+
+def _split_multiple_quoted_arguments(value: str) -> Iterator:
+    for char in ["'", '"']:
+        value = value.replace(char, "")
+    # Split space- or comma-separated quoted list
+    if " " in value:
+        return value.split(" ")
+    return iter([value])
 
 
 class ExtendListAction(argparse.Action):
@@ -66,6 +73,8 @@ class ExtendListAction(argparse.Action):
     1. `--option 1` yields `[1]`.
     2. `--option (1,2)` yields `[(1, 2)]`.
     3. `--option 1 --option (2,3)` yields `[1, (1, 2)]`.
+    3. `--option '1 2'` yields `[1, 2]`.
+    3. `--option '1 (2,3)'` yields `[1, (2, 3)]`.
 
     """
 
@@ -82,20 +91,23 @@ class ExtendListAction(argparse.Action):
             items = []
 
         for value in values:
-            # If , in values, assume tuple given
-            if "," in value:
-                for char in ["(", ")"]:
-                    value = value.replace(char, "")
-                try:
-                    x, y = map(self._type, value.split(","))
-                except ValueError as e:
-                    raise argparse.ArgumentTypeError(
-                        f"Value for {self.dest} must be of type {self._type} "
-                        f"or ({self._type},{self._type}), but {value} given"
-                    ) from e
-                items.append((x, y))
-            else:
-                items.append(self._type(value))
+            split = _split_multiple_quoted_arguments(value)
+            for element in split:
+                # If , in values, assume tuple given
+                if "," in element:
+                    for char in ["(", ")"]:
+                        element = element.replace(char, "")
+                    try:
+                        x, y = map(self._type, element.split(","))
+                    except ValueError as e:
+                        raise argparse.ArgumentTypeError(
+                            f"Value for {self.dest} must be of type "
+                            f"{self._type} or ({self._type},{self._type}), "
+                            f"but {element} given"
+                        ) from e
+                    items.append((x, y))
+                else:
+                    items.append(self._type(element))
         # Only set attribute if items given, else attribute should be ``None``
         if not items:
             raise ValueError(
@@ -196,7 +208,7 @@ def create_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--pattern",
-        type=parse_str_or_none,
+        type=_parse_str_or_none,
         default=None,
         help=(
             "Pattern of the data files within the given data path."
@@ -255,7 +267,18 @@ def create_argparser() -> argparse.ArgumentParser:
         nargs="+",
         default=[2],
         action=ExtendListAction,
-        help="list of number of crops (example: [2, 6])",
+        help="list of number of crops (example: 2 6)",
+    )
+    parser.add_argument(
+        "--crops-for-assign",
+        type=int,
+        nargs="+",
+        default=None,
+        action=ExtendListAction,
+        help=(
+            "crop indices used for computing assignments (example for "
+            "`--nmb-crops 2`: 0 1)"
+        ),
     )
     parser.add_argument(
         "--size-crops",
@@ -263,7 +286,7 @@ def create_argparser() -> argparse.ArgumentParser:
         nargs="+",
         default=[0.65],
         action=ExtendListAction,
-        help="Crops resolutions (example: [0.9, 0.75])",
+        help="Crops resolutions (example: 0.9 0.75)",
     )
     parser.add_argument(
         "--min-scale-crops",
@@ -271,7 +294,7 @@ def create_argparser() -> argparse.ArgumentParser:
         nargs="+",
         default=[0.08],
         action=ExtendListAction,
-        help="argument in RandomResizedCrop (example: [0.14, 0.05])",
+        help="argument in RandomResizedCrop (example: 0.14 0.05)",
     )
     parser.add_argument(
         "--max-scale-crops",
@@ -279,7 +302,7 @@ def create_argparser() -> argparse.ArgumentParser:
         nargs="+",
         default=[1.0],
         action=ExtendListAction,
-        help="argument in RandomResizedCrop (example: [1., 0.14])",
+        help="argument in RandomResizedCrop (example: 1. 0.14)",
     )
 
     # dcv2 specific params

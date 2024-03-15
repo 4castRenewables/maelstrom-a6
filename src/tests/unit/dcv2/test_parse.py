@@ -32,6 +32,8 @@ import a6.dcv2.parse as _parse
         ("nmb_crops", [], [2]),
         ("nmb_crops", ["--nmb-crops", "3"], [3]),
         ("nmb_crops", ["--nmb-crops", "4", "5"], [4, 5]),
+        ("nmb_crops", ["--nmb-crops", "'4 5'"], [4, 5]),
+        ("nmb_crops", ["--nmb-crops", "'4 (5,6)'"], [4, (5, 6)]),
     ],
 )
 def test_create_argparser(attribute, args, expected):

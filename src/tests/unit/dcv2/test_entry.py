@@ -35,6 +35,16 @@ def test_train_dcv2(tmp_path):
     # Train first epoc
     raw_args_1 = [
         *BASE_ARGS,
+        "--nmb-crops",
+        "'1 2'",
+        "--size-crops",
+        "'0.5 0.6'",
+        "--min-scale-crops",
+        "'0.5 0.6'",
+        "--max-scale-crops",
+        "'1. 1.'",
+        "--crops-for-assign",
+        "'0 1 3'",
         "--dump-path",
         tmp_path.as_posix(),
     ]

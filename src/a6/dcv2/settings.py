@@ -143,7 +143,8 @@ class Settings:
                 # to the clustering. Hence, ``crops_for_assign`` must be
                 # ``[0, 1, 2, ..., 5]``, which are the indexes of
                 # ``nmb_crops``.
-                crops_for_assign=[i for i in range(sum(args.nmb_crops))],
+                crops_for_assign=args.crops_for_assign
+                or [i for i in range(sum(args.nmb_crops))],
                 # Do not drop last batch to include all samples when clustering.
                 drop_last=False,
                 temperature=args.temperature,
