@@ -160,6 +160,12 @@ entry_points:
       enable_tracking:
         type: str
         default: --enable-tracking
+      save_results:
+        type: str
+        default: --save-results
+      plot_results:
+        type: str
+        default: --plot-results
       data_path:
         type: str
         default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
@@ -247,6 +253,8 @@ entry_points:
         --rdzv-endpoint=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
         train_dcv2.py
         {enable_tracking}
+        {save_results}
+        {plot_results}
         --data-path {data_path}
         {use_mnist}
         --pattern {pattern}
