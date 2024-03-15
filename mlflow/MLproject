@@ -157,9 +157,6 @@ entry_points:
         {parallel}
   dcv2:
     parameters:
-      additional_options:
-        type: str
-        default: ""
       enable_tracking:
         type: str
         default: --enable-tracking
@@ -199,6 +196,9 @@ entry_points:
       nmb_crops:
         type: list[int]
         default: 2
+      crops_for_assign:
+        type: list[int]
+        default: '0 1'
       size_crops:
         type: list[float]
         default: 0.75
@@ -258,7 +258,6 @@ entry_points:
         --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
         --rdzv-endpoint=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
         /opt/a6/mlflow/train_dcv2.py
-        {additional_options}
         {enable_tracking}
         {save_results}
         {plot_results}
@@ -272,6 +271,7 @@ entry_points:
         {parallel_loading}
         --dump-path {dump_path}
         --nmb-crops {nmb_crops}
+        --crops-for-assign {crops_for_assign}
         --size-crops {size_crops}
         --min-scale-crops {min_scale_crops}
         --max-scale-crops {max_scale_crops}
