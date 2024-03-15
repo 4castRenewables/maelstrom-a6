@@ -23,17 +23,17 @@ repos:
         exclude: (__pycache__, *.pyc, *.pyo, *.iml, *.xml, *.cpy)
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
+    rev: v3.12.0
     hooks:
       - id: reorder-python-imports
         args: [
           "--application-directories=.:src",
-          "--py311-plus",
+          "--py311-plus"
         ]
         exclude: (mlflow/deepclusterv2/modified/.*.py)
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.15.1
     hooks:
       - id: pyupgrade
         args: [
@@ -48,7 +48,7 @@ repos:
         exclude: (mlflow/deepclusterv2/modified/.*.py)
 
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.7.0
     hooks:
       - id: black
         args: ["--config", "pyproject.toml"]
@@ -60,7 +60,7 @@ repos:
           - ".[jupyter]"
 
   - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 7.0.0
     hooks:
       - id: flake8
         additional_dependencies:

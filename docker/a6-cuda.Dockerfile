@@ -40,10 +40,11 @@ RUN python${PYTHON_VERSION} -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip
 
-COPY README.md/ /opt/a6/
+COPY README.md /opt/a6/
 COPY pyproject.toml /opt/a6/
 COPY poetry.lock /opt/a6/
 COPY src/a6/ /opt/a6/src/a6
+COPY Deep500-for-MAELSTROM/ /opt/a6/Deep500-for-MAELSTROM
 
 WORKDIR /opt/a6
 
@@ -57,7 +58,7 @@ RUN . /venv/bin/activate \
  #   --source pytorch-cuda118 \
  #   torch==$(poetry show torch | awk '/version/ { print $3 }') \
  #   torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
- && poetry install -vvv --only=main,notebooks
+ && poetry install -vvv --only=main,notebooks,deep500
 
 
 # Delete Python cache files
@@ -97,6 +98,7 @@ RUN which python
 RUN python --version
 RUN pip list
 RUN python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
+RUN python -c 'import deep500'
 RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
 RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
 RUN python -m cfgrib selfcheck

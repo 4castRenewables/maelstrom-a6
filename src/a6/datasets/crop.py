@@ -331,22 +331,34 @@ def _create_transformations(
                         ###
                         # In original DCv2 paper, the following data
                         # augmentation strategies are implemented
-                        torchvision.transforms.RandomHorizontalFlip(p=0.5)
-                        if random_horizontal_flip
-                        else None,
-                        methods.transform.color_distortion()
-                        if color_distortion
-                        else None,
-                        methods.transform.PILRandomGaussianBlur()
-                        if gaussian_blur
-                        else None,
+                        (
+                            torchvision.transforms.RandomHorizontalFlip(p=0.5)
+                            if random_horizontal_flip
+                            else None
+                        ),
+                        (
+                            methods.transform.color_distortion()
+                            if color_distortion
+                            else None
+                        ),
+                        (
+                            methods.transform.PILRandomGaussianBlur()
+                            if gaussian_blur
+                            else None
+                        ),
                         ###
-                        torchvision.transforms.ToTensor()
-                        if to_tensor
-                        else None,
-                        methods.transform.MinMaxScale(min_max=min_max_values)
-                        if min_max_values is not None
-                        else None,
+                        (
+                            torchvision.transforms.ToTensor()
+                            if to_tensor
+                            else None
+                        ),
+                        (
+                            methods.transform.MinMaxScale(
+                                min_max=min_max_values
+                            )
+                            if min_max_values is not None
+                            else None
+                        ),
                         torchvision.transforms.Normalize(mean=mean, std=std),
                     ],
                 )

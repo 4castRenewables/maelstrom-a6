@@ -20,9 +20,11 @@ def default(
                 None,
                 [
                     torchvision.transforms.ToTensor() if to_tensor else None,
-                    methods.transform.MinMaxScale(min_max=min_max_values)
-                    if min_max_values is not None
-                    else None,
+                    (
+                        methods.transform.MinMaxScale(min_max=min_max_values)
+                        if min_max_values is not None
+                        else None
+                    ),
                     torchvision.transforms.Normalize(mean=mean, std=std),
                 ],
             )

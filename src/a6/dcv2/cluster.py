@@ -195,9 +195,11 @@ def cluster_embeddings(
 
             # Copy centroids to model for forwarding
             getattr(
-                model.prototypes
-                if settings.distributed.use_cpu
-                else model.module.prototypes,
+                (
+                    model.prototypes
+                    if settings.distributed.use_cpu
+                    else model.module.prototypes
+                ),
                 "prototypes" + str(i_K),
             ).weight.copy_(centroids)
 

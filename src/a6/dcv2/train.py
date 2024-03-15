@@ -7,6 +7,7 @@
 import logging
 import time
 
+import deep500.utils.timer_torch as _timer
 import mantik.mlflow
 import numpy as np
 import torch.nn as nn
@@ -30,6 +31,7 @@ def train(
     local_memory_embeddings: torch.Tensor,
     settings: _settings.Settings,
     device: torch.device,
+    timer: _timer.CPUGPUTimer,
 ):
     batch_time = _averaging.AverageMeter()
     data_time = _averaging.AverageMeter()
@@ -54,7 +56,15 @@ def train(
 
     end = time.time()
     start_idx = 0
+
+    timer.start(_timer.TimeType.BATCH, gpu=True)
+    timer.start(_timer.TimeType.IO)
+
     for it, (inputs, idx) in enumerate(dataloader):
+        # measure data loading time
+        data_time.update(time.time() - end)
+        timer.end(_timer.TimeType.IO)
+
         logger.debug("Calculating loss for index %s", idx)
 
         for crop_index, inp in enumerate(inputs):
@@ -71,9 +81,6 @@ def train(
                         sample,
                     )
 
-        # measure data loading time
-        data_time.update(time.time() - end)
-
         # update learning rate
         iteration = epoch * len(dataloader) + it
         for param_group in optimizer.param_groups:
@@ -83,12 +90,14 @@ def train(
         # Output here returns the output for each head (prototype)
         # and hence has size ``len(settings.model.nmb_prototypes)``.
         start_forward = time.time()
+        timer.start(_timer.TimeType.FORWARD, gpu=True)
 
         emb, output = model(inputs)
         emb = emb.detach()
         bs = inputs[0].size(0)
 
         forward_time.update(time.time() - start_forward)
+        timer.end(_timer.TimeType.FORWARD, gpu=True)
 
         if bs == 0:
             raise RuntimeError(
@@ -100,6 +109,7 @@ def train(
 
         # ============ deepcluster-v2 loss ... ============
         start_loss = time.time()
+        timer.start(_timer.TimeType.OTHER, gpu=True)
 
         loss = torch.tensor(0.0).to(device=device)
         for h in range(len(settings.model.nmb_prototypes)):
@@ -141,9 +151,11 @@ def train(
         loss /= len(settings.model.nmb_prototypes)
 
         loss_time.update(time.time() - start_loss)
+        timer.end(_timer.TimeType.OTHER, gpu=True)
 
         # ============ backward and optim step ... ============
         start_backward = time.time()
+        timer.start(_timer.TimeType.BACKWARD, gpu=True)
 
         optimizer.zero_grad()
         loss.backward()
@@ -155,6 +167,7 @@ def train(
         optimizer.step()
 
         backward_time.update(time.time() - start_backward)
+        timer.end(_timer.TimeType.BACKWARD, gpu=True)
 
         # ============ update memory banks ... ============
         start_embeddings = time.time()
@@ -173,7 +186,16 @@ def train(
         # ============ misc ... ============
         losses.update(loss.item(), bs)
         batch_time.update(time.time() - end)
+        timer.end(_timer.TimeType.BATCH, gpu=True)
         end = time.time()
+
+        if it % 10 == 0:
+            # Prevent CUDA event exhaustion.
+            timer.complete_all()
+
+        if it != len(dataloader) - 1:
+            timer.start(_timer.TimeType.BATCH, gpu=True)
+            timer.start(_timer.TimeType.IO)
 
         log_metrics = True if settings.verbose else it % 50 == 0
         if utils.distributed.is_primary_device() and log_metrics:

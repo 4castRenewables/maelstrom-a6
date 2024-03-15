@@ -11,6 +11,7 @@ import os
 import socket
 import time
 
+import deep500.utils.timer_torch as _timer
 import mantik.mlflow
 import numpy as np
 import torch.backends.cudnn as cudnn
@@ -45,9 +46,10 @@ def run_benchmark(raw_args: list[str] | None = None):
 
     energy_profiler = utils.energy.get_energy_profiler(hardware)
 
-    with setup_distributed(
-        settings=settings, logger=logger
-    ), energy_profiler() as measured_scope:
+    with (
+        setup_distributed(settings=settings, logger=logger),
+        energy_profiler() as measured_scope,
+    ):
         _train(
             settings=settings,
             logger=logger,
@@ -347,9 +349,11 @@ def _train(
     cudnn.benchmark = True
 
     train_time_start = time.time()
+    timer = _timer.CPUGPUTimer()
 
     for epoch in range(start_epoch, settings.model.epochs):
-        start = time.time()
+        epoch_start_time = time.time()
+        timer.start(_timer.TimeType.EPOCH)
 
         # train the network for one epoch
         if utils.distributed.is_primary_device():
@@ -369,12 +373,13 @@ def _train(
             local_memory_embeddings=local_memory_embeddings,
             settings=settings,
             device=device,
+            timer=timer,
         )
         training_stats.update(scores)
 
         # save checkpoints
         if utils.distributed.is_primary_device():
-            epoch_time = time.time() - start
+            epoch_time = time.time() - epoch_start_time
             logger.info("Epoch time: %s s", epoch_time)
 
             if settings.enable_tracking:
@@ -398,8 +403,24 @@ def _train(
             },
             mb_path,
         )
+        if utils.distributed.is_primary_device():
+            epoch_time = time.time() - epoch_start_time
+            logger.info("Epoch time: %s s", epoch_time)
 
-    logger.info("Total training time: %s s", time.time() - train_time_start)
+            if settings.enable_tracking:
+                mantik.mlflow.log_metrics(
+                    {"epoch_time_s": epoch_time},
+                    step=epoch,
+                )
+        timer.end(_timer.TimeType.EPOCH)
+
+    train_time = time.time() - train_time_start
+
+    if utils.distributed.is_primary_device() and settings.enable_tracking:
+        mantik.mlflow.log_metric("train_time_s", train_time)
+        timer.log_mlflow_all("deep500")
+
+    logger.info("Total training time: %s s", train_time)
 
 
 def _create_dataset(

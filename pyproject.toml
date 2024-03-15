@@ -37,7 +37,6 @@ opentsne = "^1.0.1"
 torch = "^2.2.1"
 torchvision = "^0.17.1"
 mantik = "^0.4.6"
-deep500 = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
@@ -51,6 +50,10 @@ python-dotenv = "^0.20.0"
 ipykernel = "^6.26.0"
 # Required by IPython (implicit dependency of ipykernel)
 memory-profiler = "^0.61.0"
+
+[tool.poetry.group.deep500.dependencies]
+deep500 = {path = "./Deep500-for-MAELSTROM"}
+cupy-cuda12x = "^13.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

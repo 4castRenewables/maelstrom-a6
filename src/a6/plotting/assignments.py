@@ -26,9 +26,9 @@ def plot_abundance(
         labels=labels,
         x_lims=x_lims,
         density=False,
-        outfile=output_dir / f"{name}-total.pdf"
-        if output_dir is not None
-        else None,
+        outfile=(
+            output_dir / f"{name}-total.pdf" if output_dir is not None else None
+        ),
     )
     _plot_histogram(
         assignments=assignments,
@@ -37,9 +37,11 @@ def plot_abundance(
         labels=labels,
         x_lims=x_lims,
         density=True,
-        outfile=output_dir / f"{name}-relative.pdf"
-        if output_dir is not None
-        else None,
+        outfile=(
+            output_dir / f"{name}-relative.pdf"
+            if output_dir is not None
+            else None
+        ),
     )
 
 
