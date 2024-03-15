@@ -172,6 +172,9 @@ entry_points:
       use_mnist:
         type: str
         default: --no-use-mnist
+      use_imagenet:
+        type: str
+        default: --no-use-imagenet
       pattern:
         type: str
         default: None
@@ -186,7 +189,7 @@ entry_points:
         default: --select-dwd-area
       parallel_loading:
         type: str
-        default: --parallel-loading
+        default: --no-parallel-loading
       dump_path:
         type: str
         default: /p/scratch/deepacf/maelstrom/emmerich1/dcv2/dump
@@ -257,6 +260,7 @@ entry_points:
         {plot_results}
         --data-path {data_path}
         {use_mnist}
+        {use_imagenet}
         --pattern {pattern}
         --drop-variables {drop_variables}
         --levels {levels}
