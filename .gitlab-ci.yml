@@ -1,17 +1,19 @@
 include:
   - project: 4cast1/ci-templates
-    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
+    ref: f6678c6ec14f8a1657bbe478247db62967704e9f
     file: /python/default-lint.yml
   - project: 4cast1/ci-templates
-    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
+    ref: f6678c6ec14f8a1657bbe478247db62967704e9f
     file: /python/templates.yml
   - project: 4cast1/ci-templates
-    ref: df5028d4d129973e4251c1bd96d8b49d01bb7f8f
+    ref: f6678c6ec14f8a1657bbe478247db62967704e9f
     file: /docker/templates.yml
 
 variables:
   POETRY_IMAGE_VERSION: 3.11-1.5.1-bullseye
   PY_SRC: src/a6
+  # Pin black version due to conflict with reorder-python-imports
+  PY_BLACK_VERSION: 23.7.0
   PY_LINT_DIRS: src/a6 src/tests scripts mlflow
   PY_PYUPGRADE_ARGS: |
     --py3-plus
