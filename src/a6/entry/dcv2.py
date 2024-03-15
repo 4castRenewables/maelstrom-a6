@@ -5,6 +5,7 @@
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
 import contextlib
+import io
 import logging
 import math
 import os
@@ -418,7 +419,12 @@ def _train(
 
     if utils.distributed.is_primary_device() and settings.enable_tracking:
         mantik.mlflow.log_metric("train_time_s", train_time)
+
         timer.log_mlflow_all("deep500")
+        stream = io.StringIO()
+        timer.print_all_time_stats(stream)
+        stream.seek(0)
+        mantik.mlflow.log_text(stream.read(), "deep500-results.txt")
 
     logger.info("Total training time: %s s", train_time)
 
