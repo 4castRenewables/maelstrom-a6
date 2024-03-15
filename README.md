@@ -196,7 +196,6 @@ via `apptainer exec <path to image> python <path to script>`.
    `http://localhost:8888/?token=<token>`.
 7. Run the notebook `notebooks/e4/parallel_a6.ipynb`.
 
-
 ## Known Issues
 
 ### Additional `expvar` dimension in ERA5 data
