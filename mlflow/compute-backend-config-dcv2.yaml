@@ -11,8 +11,10 @@ Environment:
     Path: /p/project/$SLURM_JOB_ACCOUNT/maelstrom/$USER/a6-cuda.sif
     Type: remote
     Options:
-      - -B /p/home/jusers/$USER/juwels/code/a6/src/a6:/opt/a6/src/a6
+      - -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6
       - --nv
+  Variables:
+    OMP_NUM_THREADS: 1
 Resources:
   Runtime: 1h
   Queue: develbooster
@@ -22,3 +24,7 @@ Resources:
 Exclude:
   - "*.sif"
   - "*.sh"
+  # Below files are available since the entire folder is mounted.
+  - "*.py"
+  - "cluster.yaml"
+  - "grid-search.yaml"
