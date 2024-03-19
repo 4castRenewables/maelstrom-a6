@@ -39,29 +39,9 @@ def setup(properties: Properties, seed: int) -> None:
         properties.local_rank,
         properties.global_rank,
     )
-    _setup_multiprocessing_method()
     _fix_random_seeds(seed, properties=properties)
     _init_process_group(properties)
     _set_device(properties)
-
-
-def _setup_multiprocessing_method(name: str = "spawn") -> None:
-    """Set the multiprocessing method of PyTorch.
-
-    PyTorch supports several multiprocessing options
-
-    - forkserver
-    - spawn
-    - fork
-
-    forkserver is recommended.
-
-    """
-    try:
-        torch.multiprocessing.set_start_method(name, force=True)
-        logger.info("Set start method of multiprocessing to %s", name)
-    except RuntimeError:
-        pass
 
 
 def get_and_set_required_env_vars() -> EnvVars:
@@ -91,12 +71,18 @@ def get_and_set_required_env_vars() -> EnvVars:
 def _get_and_set_env_var(name: str, default: int | str) -> int | str:
     value = os.getenv(name)
     if value is None:
-        print(
-            f"WARNING: Environment variable {name!r} unset, "
-            f"using default value {default}"
+        logger.warning(
+            "Environment variable %s unset, using default value %s",
+            name,
+            default
         )
         value = default
     else:
+        logger.info(
+            "Environment variable %s already set to %s",
+            name,
+            value
+        )
         value = type(default)(value)
     os.environ[name] = str(value)
     return value
@@ -171,23 +157,13 @@ def _is_multi_node() -> bool:
     return slurm.is_slurm_job() and slurm.get_number_of_nodes() > 1
 
 
-def _find_free_tcp_port():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Binding to port 0 will cause the OS to find an available port for us
-    sock.bind(("", 0))
-    port = sock.getsockname()[1]
-    sock.close()
-    # NOTE: there is still a chance the port could be taken by other processes.
-    return port
-
-
 def _init_process_group(properties: Properties) -> None:
     if not torch.distributed.is_initialized():
         logger.warning(
             "Distributed not initialized, initializing process group"
         )
         if properties.use_cpu:
-            logger.warning("Initializing CPU backend")
+            logger.info("Initializing CPU backend (gloo)")
             torch.distributed.init_process_group(backend="gloo")
         elif properties.use_nccl:
             logger.warning(

@@ -7,7 +7,6 @@
 import logging
 import time
 
-import deep500.utils.timer_torch as _timer
 import mantik.mlflow
 import numpy as np
 import torch.nn as nn
@@ -17,6 +16,8 @@ import a6.dcv2.averaging as _averaging
 import a6.dcv2.cluster as cluster
 import a6.dcv2.settings as _settings
 import a6.utils as utils
+
+_timer = utils.benchmark.import_deep500()
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def train(
     local_memory_embeddings: torch.Tensor,
     settings: _settings.Settings,
     device: torch.device,
-    timer: _timer.CPUGPUTimer,
+    timer,
 ):
     batch_time = _averaging.AverageMeter()
     data_time = _averaging.AverageMeter()

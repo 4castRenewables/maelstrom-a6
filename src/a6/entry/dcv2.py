@@ -12,7 +12,6 @@ import os
 import socket
 import time
 
-import deep500.utils.timer_torch as _timer
 import mantik.mlflow
 import numpy as np
 import torch.backends.cudnn as cudnn
@@ -32,6 +31,7 @@ import a6.dcv2.train as train
 import a6.models as models
 import a6.utils as utils
 
+_timer = utils.benchmark.import_deep500()
 
 @errors.record
 def run_benchmark(raw_args: list[str] | None = None):
@@ -322,6 +322,7 @@ def _train(
             model,
             device_ids=[settings.distributed.local_rank],
             find_unused_parameters=True,
+            output_device=settings.distributed.local_rank,
         )
 
     restored_variables = models.checkpoints.restart_from_checkpoint(

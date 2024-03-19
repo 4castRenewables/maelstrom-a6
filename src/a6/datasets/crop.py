@@ -89,7 +89,7 @@ class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
             size_crops, size_x=size_x, size_y=size_y
         )
 
-        self.transform = _create_transformations(
+        self.transforms = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
             min_scale_crops=min_scale_crops,
@@ -105,13 +105,15 @@ class MultiCropMnistDataset(Base, torchvision.datasets.VisionDataset):
         self, index: int
     ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
         image, _ = self.dataset[index]
-        multi_crops = list(map(lambda trans: trans(image), self.transform))
+        multi_crops = list(map(lambda trans: trans(image), self.transforms))
         if self.return_index:
             return multi_crops, index
         return multi_crops
 
 
 class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
+    _n_channels = 3
+
     def __init__(
         self,
         data_path: pathlib.Path,
@@ -138,7 +140,7 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
         self.targets = []
         self.syn_to_class = {}
 
-        self.transform = _create_transformations(
+        self.transforms = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
             min_scale_crops=min_scale_crops,
@@ -149,31 +151,53 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
             std=[0.228, 0.224, 0.225],
         )
 
+        # Class index file is structured as follows:
+        # 
+        # {
+        #   "0": ["n01440764", "tench"],
+        #   "1": ["n01443537", "goldfish"],
+        #   ...
+        # }
+        #
+        # Where the key is the class index, and the arrays contain the class name
+        # and the respective object name depicted in the image.
+        #
         with open(data_path / "imagenet_class_index.json", "rb") as f:
             json_file = json.load(f)
             for class_id, v in json_file.items():
                 self.syn_to_class[v[0]] = int(class_id)
 
+        logger.info("Loaded ImageNet class indexes: %s", self.syn_to_class)
+
+        # Validation labels file is strucuted as follows:
+        #
+        # {
+        #   "ILSVRC2012_val_00049927.JPEG": "n04532106",
+        #   "ILSVRC2012_val_00028335.JPEG": "n03841143", 
+        #   ...
+        # }
+        #
+        # where the key is the image file name, and the value is the class name.
+        #
         with open(data_path / "ILSVRC2012_val_labels.json", "rb") as f:
             self.val_to_syn = json.load(f)
 
+        logger.info("Loaded ImageNet validation labels: %s", self.val_to_syn)
+
         samples_dir = data_path / "ILSVRC/Data/CLS-LOC" / split
 
-        for entry in samples_dir.glob("*"):
+        for folder in samples_dir.glob("*"):
             if split == "train":
-                syn_id = entry
+                syn_id = folder.name
                 target = self.syn_to_class[syn_id]
-                syn_folder = samples_dir / syn_id
 
-                for sample in syn_folder.glob("*"):
-                    sample_path = syn_folder / sample
-                    self.samples.append(sample_path)
+                for sample in folder.glob("*"):
+                    self.samples.append(sample)
                     self.targets.append(target)
             elif split == "val":
-                syn_id = self.val_to_syn[entry]
+                syn_id = self.val_to_syn[folder.name]
                 target = self.syn_to_class[syn_id]
-                sample_path = samples_dir / entry
-                self.samples.append(sample_path)
+                self.samples.append(folder)
                 self.targets.append(target)
 
     def __len__(self) -> int:
@@ -182,8 +206,8 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
     def __getitem__(
         self, index: int
     ) -> list[torch.tensor] | tuple[list[torch.tensor], int]:
-        image = Image.open(self.samples[index]).convert("rgb")
-        multi_crops = list(map(lambda trans: trans(image), self.trans))
+        image = Image.open(self.samples[index]).convert("RGB")
+        multi_crops = list(map(lambda trans: trans(image), self.transforms))
         if self.return_index:
             return multi_crops, index
         return multi_crops
@@ -226,7 +250,7 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
         mean = [0.485, 0.456, 0.406]
         std = [0.228, 0.224, 0.225]
 
-        self.transform = _create_transformations(
+        self.transforms = _create_transformations(
             nmb_crops=nmb_crops,
             size_crops=size_crops,
             min_scale_crops=min_scale_crops,
@@ -243,7 +267,7 @@ class MultiCropDataset(Base, torchvision.datasets.ImageFolder):
     ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
         path, _ = self.samples[index]
         image = self.loader(path)
-        multi_crops = list(map(lambda trans: trans(image), self.transform))
+        multi_crops = list(map(lambda trans: trans(image), self.transforms))
         if self.return_index:
             return multi_crops, index
         return multi_crops

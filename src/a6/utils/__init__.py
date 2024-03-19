@@ -1,3 +1,4 @@
+import a6.utils.benchmark as benchmark
 import a6.utils.distributed as distributed
 import a6.utils.energy as energy
 import a6.utils.logging as logging
