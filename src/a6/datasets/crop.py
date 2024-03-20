@@ -167,8 +167,6 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
             for class_id, v in json_file.items():
                 self.syn_to_class[v[0]] = int(class_id)
 
-        logger.info("Loaded ImageNet class indexes: %s", self.syn_to_class)
-
         # Validation labels file is strucuted as follows:
         #
         # {
@@ -181,8 +179,6 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
         #
         with open(data_path / "ILSVRC2012_val_labels.json", "rb") as f:
             self.val_to_syn = json.load(f)
-
-        logger.info("Loaded ImageNet validation labels: %s", self.val_to_syn)
 
         samples_dir = data_path / "ILSVRC/Data/CLS-LOC" / split
 
