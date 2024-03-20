@@ -251,7 +251,7 @@ entry_points:
         type: str
         default: pytorch
     command: >
-      /opt/a6/mlflow/train_dcv2.py
+      python /opt/a6/mlflow/train_dcv2.py
         {enable_tracking}
         {save_results}
         {plot_results}
