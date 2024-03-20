@@ -44,7 +44,7 @@ def test_train_dcv2(tmp_path):
         "--max-scale-crops",
         "'1. 1.'",
         "--crops-for-assign",
-        "'0 1 3'",
+        "'0 1 2'",
         "--dump-path",
         tmp_path.as_posix(),
     ]
