@@ -27,11 +27,6 @@ parameterset:
         _: /home/$USER
   - name: globalParameters
     parameter:
-      - name: modules
-        _: ""
-      - name: modules
-        tag: e4-a2|e4-h100
-        _: module load go-1.19/singularity-3.10.2
       - name: systemname
         tag: jwc
         _: juwels-cluster
@@ -56,30 +51,27 @@ parameterset:
       - name: file_system
         tag: cscratch
         _: cscratch
-      # Apparently, running on multiple nodes and GPUs slows down the app on JSC
       - name: nodes
         _: 1
       - name: nodes
-        tag: dc-gpu
-        _: 1
-      - name: nodes
-        tag: dc-gpu+multi-node
+        tag: multi-node
         _: "1,2,4"
-      # NCCL not supported by ARM, so cannot run on multiple E4 Grace Hopper nodes
+      - name: nodes
+        tag: multi-node+jwc+test
+        _: "1,2"
       - name: nodes
         tag: (e4-a2|e4-h100|e4-gh)+!test
         _: 2
       - name: gpus
+        _: "1,2,3"
+      # The App requires ~150GB per task, and jwc only provides 192G, jwb 512GB.
+      # Hence, we can only use 1 and 3 GPUs per node, respectively.
+      - name: gpus
+        tag: jwc
         _: 1
       - name: gpus
-        tag: dc-gpu
-        _: "1,2,3,4"
-      - name: gpus
-        tag: dc-gpu+multi-node
-        _: 4
-      - name: gpus
-        tag: dc-h100+!test
-        _: "1,2,3,4"
+        tag: multi-node
+        _: 3
       - name: gpus
         tag: dc-mi200+!test
         _: "1,2,4,8"
@@ -88,18 +80,15 @@ parameterset:
         _: "1,2"
       - name: gres
         tag: "!dc-mi200"
-        _: gpu:$gpus
-      - name: tasks_per_node
-        _: --ntasks-per-node=1
-      - name: cpus_per_task
-        tag: jwb|jwc
-        _: --cpus-per-task=96
-      - name: cpus_per_task
-        tag: dc-gpu
-        _: --cpus-per-task=256
-      - name: cpus_per_task
-        tag: e4-a2|e4-h100|e4-gh
-        _: --cpus-per-task=128
+        _: gpu:${gpus}
+      - name: tasks
+        mode: python
+        type: int
+        _: ${gpus}*${nodes}
+      - name: taskspernode
+        _: ${gpus}
+      - name: threadspertask
+        _: 1
       - name: memory
         tag: e4-a2|e4-h100|e4-gh
         _: --mem=480G
@@ -107,7 +96,7 @@ parameterset:
         tag: e4-a2|e4-h100|e4-gh
         _: --exclusive
       - name: srun_options
-        _: $tasks_per_node $cpus_per_task $memory $exclusive
+        _: --ntasks-per-node=${taskspernode} $memory $exclusive
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -115,6 +104,9 @@ parameterset:
         tag: test
         _: "02:00:00"
       - name: account
+        _: deepacf
+      - name: account
+        tag: dc-gpu|dc-h100|dc-mi200
         _: exalab
       - name: account
         tag: e4-a2|e4-h100|e4-gh
@@ -152,46 +144,59 @@ parameterset:
       - name: queue
         tag: e4-gh
         _: t-gpu-gh200
-      - name: rdzv_id
-        _: $${SLURM_JOB_ID:-$RANDOM}
-      - name: postfix
-        tag: "!test"
-        _: i
-      - name: rdzv_endpoint
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1):29500
-      - name: rdzv_endpoint
-        tag: jwc|jwb
-        # The production queues require the i postfix for networking across racks.
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)$postfix.juwels:29500
-      - name: rdzv_endpoint
-        tag: dc-gpu|dc-h100|dc-mi200
-        # The production queues require the i postfix for networking across racks.
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)$postfix.jureca:29500
-      - name: rdzv_endpoint
-        tag: e4-a2|e4-h100|e4-gh
-        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red:29500
       - name: tmp_data_dir
         _: /p/scratch/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
       - name: tmp_data_dir
         tag: e4-a2|e4-h100|e4-gh
         _: /home/$USER/jube-benchmarks/$job_name
+      - name: master_port
+        _: "29500"
+      - name: master_addr
+        _: "127.0.0.1"
+      - name: master_addr
+        tag: (jwb|jwc)+multi-node
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i.juwels
+      - name: master_addr
+        tag: (dc-gpu|dc-h100|dc-mi200)+multi-node
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i.jureca
+      - name: master_addr
+        tag: (e4-a2|e4-h100|e4-gh)+multi-node
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red
+      - name: env_vars
+        # Notes:
+        #
+        # - srun doesn't inherit cpus-per-task from sbatch, 
+        #   hence set `SRUN_CPUS_PER_TASK`.
+        #
+        # - We need to override `CUDA_VISIBLE_DEVICES` due to some weird issue
+        #   where srun sets it to `0,1` even if 4 GPUs are allocated.
+        _: |
+          export NCCL_DEBUG=INFO
+          export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+          export MASTER_ADDR="${master_addr}"
+          export MASTER_PORT="${master_port}"
+          export SRUN_CPUS_PER_TASK=$${SLURM_CPUS_PER_TASK}
+          export APPTAINERENV_CUDA_VISIBLE_DEVICES="$${CUDA_VISIBLE_DEVICES}"
+      - name: modules
+        tag: e4-a2|e4-h100
+        _: module load go-1.19/singularity-3.10.2
       - name: preprocess
         # Set separator to | to avoid parameterset
         separator: |
         _: |
-          $modules
+          ${env_vars}
           mkdir -p ${tmp_data_dir}
       - name: preprocess
         mode: text
         tag: e4-a2|e4-h100|e4-gh
         separator: |
         _: |
-          $modules
+          ${env_vars}
+          ${modules}
           mkdir -p ${tmp_data_dir}
           label=$$(/opt/share/scripts/powerdiscovery/getlabel.sh)
           echo "POWERMEASUREMENT: Label = $$label"
           /opt/share/scripts/powerdiscovery/getpower_bg.sh 1000 &
-          printenv | grep SLURM > .env
       - name: postprocess
         mode: text
         tag: e4-a2|e4-h100|e4-gh
@@ -250,11 +255,6 @@ parameterset:
            --network host
            --env-file .env
            --rm
-      - name: torchrun
-        _: torchrun
-      - name: torchrun
-        tag: jwc|jwb|dc-gpu|dc-h100|dc-mi200
-        _: python /opt/a6/jube/torchrun_jsc.py
       - name: args_exec
         # Set separator to | to avoid parameterset
         separator: |
@@ -263,13 +263,7 @@ parameterset:
            ${dir_bind}
            ${executable_options}
            ${image_path}
-           ${torchrun}
-           --nnodes=${nodes}
-           --nproc-per-node=${gpus}
-           --rdzv-backend=c10d
-           --rdzv-id=${rdzv_id}
-           --rdzv-endpoint=${rdzv_endpoint}
-           /opt/a6/jube/run.py
+           python /opt/a6/jube/run.py
            --no-enable-tracking
            --no-save-results
            --no-plot-results

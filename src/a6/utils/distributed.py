@@ -51,11 +51,38 @@ def get_and_set_required_env_vars() -> EnvVars:
         - local_rank
         - world_size
     """
-    env_vars = EnvVars(
-        global_rank=_get_and_set_env_var("RANK", default=0),
-        local_rank=_get_and_set_env_var("LOCAL_RANK", default=0),
-        world_size=_get_and_set_env_var("WORLD_SIZE", default=1),
-    )
+    logger.info("Visible GPU devices: %i", torch.cuda.device_count())
+
+    if slurm.is_slurm_job():
+        logger.info(
+            (
+                "CUDA_VISIBLE_DEVICES=%s, "
+                "SLURM_PROCID=%s, "
+                "SLURM_LOCALID=%s, "
+                "SLURM_NTASKS=%s"
+            ),
+            os.environ["CUDA_VISIBLE_DEVICES"],
+            os.environ["SLURM_PROCID"],
+            os.environ["SLURM_LOCALID"],
+            os.environ["SLURM_NTASKS"],
+        )
+
+        env_vars = EnvVars(
+            global_rank=int(os.environ["SLURM_PROCID"]),
+            local_rank=int(os.environ["SLURM_LOCALID"]),
+            world_size=int(os.environ['SLURM_NTASKS']),
+        )
+
+        os.environ["RANK"] = str(env_vars.global_rank)
+        os.environ["LOCAL_RANK"] = str(env_vars.local_rank)
+        os.environ["WORLD_SIZE"] = str(env_vars.world_size)
+
+    else: 
+        env_vars = EnvVars(
+            global_rank=_get_and_set_env_var("RANK", default=0),
+            local_rank=_get_and_set_env_var("LOCAL_RANK", default=0),
+            world_size=_get_and_set_env_var("WORLD_SIZE", default=1),
+        )
     logger.info(
         (
             "Required env vars for distributed mode set: "
@@ -126,27 +153,31 @@ def set_dataloader_seeds(_worker_id: int):
 
 
 def get_dist_url_and_set_master_env_vars() -> str:
-    default_port = 29500 if _is_multi_node() else _find_free_tcp_port()
     host = _get_and_set_env_var("MASTER_ADDR", default="127.0.0.1")
-    port = _get_and_set_env_var("MASTER_PORT", default=default_port)
+    port = _get_and_set_env_var("MASTER_PORT", default=_find_free_tcp_port())
 
     if not _is_multi_node():
         host = "127.0.0.1"
         logger.info(
-            "Assmuning single node environment, setting host to %s", host
+            "Assmuning single node environment, setting host to %s:%s", host, port
         )
-    # jwb, jwc, and jrc are the prefixes for the hostnames of JSC.
-    # JSC requires <node>i as address.
+        os.environ["MASTER_ADDR"] = host
     else:
-        logger.info("Assuming multi-node environment, host is %s", host)
-
-    os.environ["MASTER_ADDR"] = host
-    os.environ["MASTER_PORT"] = str(port)
+        logger.info("Assuming multi-node environment, host is %s:%s", host, port)
 
     dist_url = f"tcp://{host}:{port}"
 
     logger.info("Distributed URL is %s", dist_url)
     return dist_url
+
+def _find_free_tcp_port():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # Binding to port 0 will cause the OS to find an available port for us
+    sock.bind(("", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    # NOTE: there is still a chance the port could be taken by other processes.
+    return port
 
 
 def is_multi_gpu() -> bool:

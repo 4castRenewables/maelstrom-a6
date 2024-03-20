@@ -13,6 +13,7 @@ import socket
 import time
 
 import mantik.mlflow
+import mlflow
 import numpy as np
 import torch.backends.cudnn as cudnn
 import torch.distributed.elastic.multiprocessing.errors as errors
@@ -252,14 +253,15 @@ def _train(
 
     if utils.distributed.is_primary_device():
         logger.info(model)
-        logger.info(
-            "Number of trainable parameters: %s",
-            utils.models.get_number_of_trainable_parameters(model),
-        )
-        logger.info(
-            "Number of non-trainable parameters: %s",
-            utils.models.get_number_of_non_trainable_parameters(model),
-        )
+
+    logger.info(
+        "Number of trainable parameters: %s",
+        utils.models.get_number_of_trainable_parameters(model),
+    )
+    logger.info(
+        "Number of non-trainable parameters: %s",
+        utils.models.get_number_of_non_trainable_parameters(model),
+    )
 
     logger.info("Building model done")
 
@@ -322,7 +324,6 @@ def _train(
             model,
             device_ids=[settings.distributed.local_rank],
             find_unused_parameters=True,
-            output_device=settings.distributed.local_rank,
         )
 
     restored_variables = models.checkpoints.restart_from_checkpoint(
@@ -421,7 +422,11 @@ def _train(
     if utils.distributed.is_primary_device() and settings.enable_tracking:
         mantik.mlflow.log_metric("train_time_s", train_time)
 
-        timer.log_mlflow_all("deep500")
+        try:
+            timer.log_mlflow_all("deep500")
+        except mlflow.exceptions.MlflowException:
+            logger.exception("Failed to log deep500 metrics")
+
         stream = io.StringIO()
         timer.print_all_time_stats(stream)
         stream.seek(0)
