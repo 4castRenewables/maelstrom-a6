@@ -17,6 +17,7 @@ sudo apt-get install -y \
   build-essential \
   libgeos-3.9.0 \
   libgeos-dev \
+  libopenmpi-dev \
   python3-opencv
 ```
 
@@ -27,6 +28,7 @@ sudo apt-get install -y \
   build-essential \
   libgeos3.10.2 \
   libgeos-dev \
+  libopenmpi-dev \
   python3-dev \
   python3-opencv
 ```

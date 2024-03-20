@@ -22,6 +22,7 @@ RUN apt-get update \
       # Required by cartopy
       libgeos3.10.2 \
       libgeos-dev \
+      libopenmpi-dev \
       # Install opencv via apt to get required libraries
       python3-opencv \
       python${PYTHON_VERSION} \
@@ -58,7 +59,7 @@ RUN . /venv/bin/activate \
  #   --source pytorch-cuda118 \
  #   torch==$(poetry show torch | awk '/version/ { print $3 }') \
  #   torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
- && poetry install -vvv --only=main,notebooks,deep500
+ && poetry install -vvv --only=main,notebooks,deep500,mpi
 
 
 # Delete Python cache files
@@ -86,6 +87,7 @@ RUN apt-get update \
       # Required by cartopy
       libgeos3.10.2 \
       libgeos-dev \
+      libopenmpi-dev \
       # Install opencv via apt to get required libraries
       python3-opencv \
       python${PYTHON_VERSION} \
