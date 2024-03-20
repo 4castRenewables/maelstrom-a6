@@ -12,6 +12,7 @@ include:
 variables:
   POETRY_IMAGE_VERSION: 3.11-1.5.1-bullseye
   PY_SRC: src/a6
+  PY_SKIP_NBSTRIPOUT: yes
   # Pin black version due to conflict with reorder-python-imports
   PY_BLACK_VERSION: 23.7.0
   PY_LINT_DIRS: src/a6 src/tests scripts mlflow
