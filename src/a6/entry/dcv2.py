@@ -13,7 +13,6 @@ import socket
 import time
 
 import mantik.mlflow
-import mlflow
 import numpy as np
 import torch.backends.cudnn as cudnn
 import torch.distributed.elastic.multiprocessing.errors as errors
@@ -31,8 +30,10 @@ import a6.dcv2.stats as stats
 import a6.dcv2.train as train
 import a6.models as models
 import a6.utils as utils
+import mlflow
 
 _timer = utils.benchmark.import_deep500()
+
 
 @errors.record
 def run_benchmark(raw_args: list[str] | None = None):

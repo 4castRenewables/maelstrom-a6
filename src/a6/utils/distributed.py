@@ -70,14 +70,14 @@ def get_and_set_required_env_vars() -> EnvVars:
         env_vars = EnvVars(
             global_rank=int(os.environ["SLURM_PROCID"]),
             local_rank=int(os.environ["SLURM_LOCALID"]),
-            world_size=int(os.environ['SLURM_NTASKS']),
+            world_size=int(os.environ["SLURM_NTASKS"]),
         )
 
         os.environ["RANK"] = str(env_vars.global_rank)
         os.environ["LOCAL_RANK"] = str(env_vars.local_rank)
         os.environ["WORLD_SIZE"] = str(env_vars.world_size)
 
-    else: 
+    else:
         env_vars = EnvVars(
             global_rank=_get_and_set_env_var("RANK", default=0),
             local_rank=_get_and_set_env_var("LOCAL_RANK", default=0),
@@ -101,15 +101,11 @@ def _get_and_set_env_var(name: str, default: int | str) -> int | str:
         logger.warning(
             "Environment variable %s unset, using default value %s",
             name,
-            default
+            default,
         )
         value = default
     else:
-        logger.info(
-            "Environment variable %s already set to %s",
-            name,
-            value
-        )
+        logger.info("Environment variable %s already set to %s", name, value)
         value = type(default)(value)
     os.environ[name] = str(value)
     return value
@@ -159,16 +155,21 @@ def get_dist_url_and_set_master_env_vars() -> str:
     if not _is_multi_node():
         host = "127.0.0.1"
         logger.info(
-            "Assmuning single node environment, setting host to %s:%s", host, port
+            "Assmuning single node environment, setting host to %s:%s",
+            host,
+            port,
         )
         os.environ["MASTER_ADDR"] = host
     else:
-        logger.info("Assuming multi-node environment, host is %s:%s", host, port)
+        logger.info(
+            "Assuming multi-node environment, host is %s:%s", host, port
+        )
 
     dist_url = f"tcp://{host}:{port}"
 
     logger.info("Distributed URL is %s", dist_url)
     return dist_url
+
 
 def _find_free_tcp_port():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

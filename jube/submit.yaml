@@ -165,7 +165,7 @@ parameterset:
       - name: env_vars
         # Notes:
         #
-        # - srun doesn't inherit cpus-per-task from sbatch, 
+        # - srun doesn't inherit cpus-per-task from sbatch,
         #   hence set `SRUN_CPUS_PER_TASK`.
         #
         # - We need to override `CUDA_VISIBLE_DEVICES` due to some weird issue

@@ -152,15 +152,15 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
         )
 
         # Class index file is structured as follows:
-        # 
+        #
         # {
         #   "0": ["n01440764", "tench"],
         #   "1": ["n01443537", "goldfish"],
         #   ...
         # }
         #
-        # Where the key is the class index, and the arrays contain the class name
-        # and the respective object name depicted in the image.
+        # Where the key is the class index, and the arrays contain the class
+        # name and the respective object name depicted in the image.
         #
         with open(data_path / "imagenet_class_index.json", "rb") as f:
             json_file = json.load(f)
@@ -173,7 +173,7 @@ class MultiCropImageNet(Base, torchvision.datasets.VisionDataset):
         #
         # {
         #   "ILSVRC2012_val_00049927.JPEG": "n04532106",
-        #   "ILSVRC2012_val_00028335.JPEG": "n03841143", 
+        #   "ILSVRC2012_val_00028335.JPEG": "n03841143",
         #   ...
         # }
         #
