@@ -290,7 +290,7 @@ def cluster_embeddings(
             # Plot for the last epoch
             or epoch_comp == settings.model.epochs
         ):
-            if settings.save_results:
+            if settings.plot_results and utils.distributed.is_primary_device():
                 save_start = time.time()
                 logger.info(
                     "Saving clustering data at epoch %i",
