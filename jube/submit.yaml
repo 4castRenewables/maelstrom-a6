@@ -55,10 +55,10 @@ parameterset:
         _: 1
       - name: nodes
         tag: multi-node
-        _: "1,2,4"
+        _: "2,4,8"
       - name: nodes
         tag: multi-node+jwc+test
-        _: "1,2"
+        _: "2"
       - name: nodes
         tag: (e4-a2|e4-h100|e4-gh)+!test
         _: 2
@@ -67,11 +67,11 @@ parameterset:
       # The App requires ~150GB per task, and jwc only provides 192G, jwb 512GB.
       # Hence, we can only use 1 and 3 GPUs per node, respectively.
       - name: gpus
-        tag: jwc
-        _: 1
-      - name: gpus
         tag: multi-node
         _: 3
+      - name: gpus
+        tag: multi-node+jwc
+        _: 1
       - name: gpus
         tag: dc-mi200+!test
         _: "1,2,4,8"
