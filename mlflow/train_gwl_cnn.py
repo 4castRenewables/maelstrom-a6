@@ -21,7 +21,7 @@ if __name__ == "__main__":
         "--architecture",
         type=str,
         help="The CNN model architecture to use for training",
-        choices=list(a6.models.resnet.Architecture),
+        choices=[choice.value for choice in a6.models.resnet.Architecture],
     )
     parser.add_argument(
         "--epochs",
