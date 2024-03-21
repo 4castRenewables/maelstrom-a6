@@ -10,7 +10,7 @@ docker_env:
 entry_points:
   test:
     command:
-      python pca_and_kmeans.py
+      python /opt/a6/mlflow/pca_and_kmeans.py
   cluster:
     parameters:
       weather_data:
@@ -116,7 +116,7 @@ entry_points:
         type: string
         default: ml,pl,sfc
     command: >
-      python concatenate_data_files.py
+      python /opt/a6/mlflow/concatenate_data_files.py
         --data-path {data_path}
         --pattern {pattern}
   preprocess-turbine:
@@ -132,7 +132,7 @@ entry_points:
       output_dir:
         type: string
     command: >
-      python preprocess_turbine.py
+      python /opt/a6/mlflow/preprocess_turbine.py
         --pressure-level-data {pressure_level_data}
         --model-level-data {model_level_data}
         --surface-level-data {surface_level_data}
@@ -150,11 +150,39 @@ entry_points:
         type: string
         default: "--parallel"
     command: >
-      python forecast_errors.py
+      python /opt/a6/mlflow/forecast_errors.py
         --turbine-data-dir {turbine_data_dir}
         --preprocessed-data-dir {preprocessed_data_dir}
         --results-dir {results_dir}
         {parallel}
+  gwl-classifier:
+    parameters:
+      weather_data:
+        type: string
+        default: /p/project/deepacf/maelstrom/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc
+      gwl_data:
+        type: string
+        default: /opt/a6/src/tests/data/gwl.nc
+      architecture:
+        type: str
+        default: cnn
+      epochs:
+        type: int
+        default: 20
+      select_dwd_area:
+        type: string
+        default: "--select-dwd-area"
+      enable_tracking:
+        type: string
+        default: "--enable_tracking"
+    command: >
+      python /opt/a6/mlflow/train_gwl_cnn.py
+        --weather-data {weather_data}
+        --gwl-data {gwl_data}
+        --epochs {epochs}
+        --architecture {architecture}
+        {select_dwd_area}
+        {enable_tracking}
   dcv2:
     parameters:
       enable_tracking:

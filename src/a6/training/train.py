@@ -1,6 +1,6 @@
 import logging
 
-import mantik.mlflow as mlflow
+import mantik.mlflow
 import sklearn.base
 import torch.nn as nn
 import torch.optim as optim
@@ -89,7 +89,7 @@ def train(
         )
 
         if log_to_mlflow:
-            mlflow.log_metrics(
+            mantik.mlflow.log_metrics(
                 {
                     "train_loss": running_loss,
                     "train_accuracy": accuracy,

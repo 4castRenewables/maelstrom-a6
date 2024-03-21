@@ -1,13 +1,31 @@
 UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
 Environment:
+  PreRunCommandOnLoginNode: |
+    cd /p/home/jusers/$USER/juwels/code/a6
+    git fetch
+    git checkout 29-plot-autocorrelation-and-transition-matrix
+    git status
+    git pull
+    cd $UC_WORKING_DIRECTORY
   Apptainer:
-    Path: /p/project/deepacf/maelstrom/emmerich1/a6-cuda.sif
+    Path: /p/project/deepacf/maelstrom/$USER/a6-cuda.sif
     Type: remote
+    Options:
+      - -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6
+      - --nv
   Variables:
-    OMP_NUM_THREADS: 1
+    OMP_NUM_THREADS: '1'
 Resources:
   Runtime: 6h
   Queue: booster
   Nodes: 1
+  GPUsPerNode: 1
   #NodeConstraints: largedata
-Exclude: ["*.sif"]
+Exclude:
+  - "*.sif"
+  - "*.sh"
+  # Below files are available since the entire folder is mounted.
+  - "*.py"
+  - "cluster.yaml"
+  - "grid-search.yaml"
+

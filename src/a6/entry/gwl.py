@@ -13,6 +13,7 @@ def main(
     epochs: int,
     data_path: pathlib.Path,
     gwl_path: pathlib.Path,
+    architecture: str,
     select_dwd_area: bool = True,
     testing: bool = True,
     log_to_mlflow: bool = True,
@@ -86,23 +87,23 @@ def main(
         len(train_loader),
     )
 
-    model = (
-        # models.cnn.Model(
-        #     in_channels=train_set.n_channels,
-        #     n_classes=n_classes,
-        #     example=train_set[0][0],
-        # )
-        models.resnet.resnet50w4(
-            in_channels=train_set.n_channels,
-            n_classes=n_classes,
-        )
-        if not testing
-        else models.cnn.TestingModel(
+    if testing:
+        model = models.cnn.TestingModel(
             in_channels=train_set.n_channels,
             n_classes=n_classes,
             example=train_set[0][0],
         )
-    )
+    elif architecture == "cnn":
+        model = models.cnn.Model(
+            in_channels=train_set.n_channels,
+            n_classes=n_classes,
+            example=train_set[0][0],
+        )
+    else:
+        model = models.resnet.Models[models.resnet.Architecture(architecture)](
+            in_channels=train_dataset.n_channels,
+            n_classes=n_classes,
+        )
 
     logger.info("%s", model)
 
