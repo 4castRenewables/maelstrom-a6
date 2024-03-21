@@ -104,7 +104,7 @@ class Settings:
                 use_nccl=args.use_nccl,
                 verbose_logging=args.verbose,
                 enable_tracking=args.enable_tracking,
-                logs_filepath=args.dump_path / f"train.log",
+                logs_filepath=args.dump_path / "train.log",
             ),
             data=Data(
                 path=args.data_path,

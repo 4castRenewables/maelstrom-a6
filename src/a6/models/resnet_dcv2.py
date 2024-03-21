@@ -83,7 +83,7 @@ class ResNet(_resnet.ResNet):
             self.prototypes = None
 
         self._prepare(zero_init_residual=zero_init_residual)
-    
+
     def set_device(self, device: torch.device) -> None:
         self.device = device
 
