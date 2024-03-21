@@ -148,7 +148,7 @@ entry_points:
         type: string
       parallel:
         type: string
-        default: "--parallel"
+        default: --parallel
     command: >
       python /opt/a6/mlflow/forecast_errors.py
         --turbine-data-dir {turbine_data_dir}
@@ -171,10 +171,10 @@ entry_points:
         default: 20
       select_dwd_area:
         type: string
-        default: "--select-dwd-area"
+        default: --select-dwd-area
       enable_tracking:
         type: string
-        default: "--enable_tracking"
+        default: --enable-tracking
     command: >
       python /opt/a6/mlflow/train_gwl_cnn.py
         --weather-data {weather_data}
