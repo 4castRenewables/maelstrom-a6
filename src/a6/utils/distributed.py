@@ -3,26 +3,57 @@ import logging
 import os
 import random
 import socket
+import pathlib
+from typing import Callable
 
 import numpy as np
+import torch.nn as nn
 import torch.distributed
 import torch.multiprocessing
 import torch.utils.data
+import torchvision.datasets
 
 import a6.utils.slurm as slurm
+import a6.utils.logging as utils_logging
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
 class Properties:
-    use_cpu: bool
-    use_nccl: bool
     node_id: str
     dist_url: str
     local_rank: int
     global_rank: int
     world_size: int
+    use_cpu: bool = False
+    use_nccl: bool = True
+    enable_tracking: bool = True
+    verbose_logging: bool = False
+    logs_filepath: pathlib.Path | None = None
+
+    @classmethod
+    def from_env(
+        cls,
+        use_cpu: bool = False,
+        use_nccl: bool = True,
+        enable_tracking: bool = True,
+        verbose_logging: bool = False,
+        logs_filepath: pathlib.Path | None = None,
+    ) -> "Properties":
+        env_vars = get_and_set_required_env_vars()
+        return cls(
+            node_id=slurm.get_node_id(),
+            dist_url=get_dist_url_and_set_master_env_vars(),
+            local_rank=env_vars.local_rank,
+            global_rank=env_vars.global_rank,
+            world_size=env_vars.world_size,
+            use_cpu=use_cpu,
+            use_nccl=use_nccl,
+            enable_tracking=enable_tracking,
+            verbose_logging=verbose_logging,
+            logs_filepath=logs_filepath,
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -32,17 +63,150 @@ class EnvVars:
     world_size: int
 
 
-def setup(properties: Properties, seed: int) -> None:
+@contextlib.contextmanager
+def setup(
+    seed: int = 42,
+    properties: Properties | None = None,
+    logs_filepath: pathlib.Path | None = None,
+    post_fn: Callable | None = None,
+    model: nn.Module | None = None,
+    model_has_batchnorm: bool = False,
+    dataset: torchvision.datasets.VisionDataset | None = None,
+    batch_size: int = 64,
+    num_workers: int = 0,
+    drop_last: bool = False,
+    worker_init_fn: Callable | None = None,
+) -> Properties:
+    start = time.time()
+
+    if properties is None:
+        properties = Properties.from_env()
+
+    logger.info(
+        (
+            "Setting up distributed training on host %s (node %s), "
+            "global rank %s, local rank %s (torch.distributed.get_rank()=%s)"
+        ),
+        socket.gethostname(),
+        settings.distributed.node_id,
+        settings.distributed.global_rank,
+        settings.distributed.local_rank,
+        get_rank(settings.distributed),
+    )
+
+    utils_logging.create_logger(
+        global_rank=properties.global_rank,
+        local_rank=properties.local_rank,
+        verbose=properties.verbose_logging,
+        filepath=properties.logs_filepath,
+    )
+
+    if is_primary_device():
+        utils_logging.log_env_vars()
+
+        stdout = utils.slurm.get_stdout_file()
+        stderr = utils.slurm.get_stderr_file()
+        mantik.mlflow.start_run()
+
     logger.info(
         "Spawning process for node %s, local rank %s, global rank: %s",
         properties.node_id,
         properties.local_rank,
         properties.global_rank,
     )
+
     _fix_random_seeds(seed, properties=properties)
     _init_process_group(properties)
     _set_device(properties)
 
+    yield properties
+
+    if is_primary_device():
+        logger.info("All done!")
+        runtime = time.time() - start
+        logger.info("Total runtime: %s s", runtime)
+
+        if enable_tracking:
+            mantik.mlflow.log_metric("total_runtime_s", runtime)
+
+            _log_stdout_stderr(stdout=stdout, stderr=stderr)
+    
+    post_fn()
+
+    if is_primary_device():
+        mantik.mlflow.end_run()
+
+    destroy()
+
+def _log_stdout_stderr(stdout: str | None, stderr: str | None) -> None:
+    if stdout is not None:
+        mantik.mlflow.log_artifact(stdout)
+    if stderr is not None:
+        mantik.mlflow.log_artifact(stderr)
+
+def prepare_model(
+    model: nn.Module,
+    has_batchnorm: bool,
+    properties: Properties,
+) -> nn.Module:
+    if not properties.use_cpu and has_batchnorm:
+        model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
+
+    device = get_device(properties)
+    # Copy model to GPU
+    model = model.to(device)
+
+    if is_primary_device():
+        logger.info(model)
+
+    logger.info(
+        "Number of trainable parameters: %s",
+        utils.models.get_number_of_trainable_parameters(model),
+    )
+    logger.info(
+        "Number of non-trainable parameters: %s",
+        utils.models.get_number_of_non_trainable_parameters(model),
+    )
+
+    if not properties.use_cpu:
+        model = nn.parallel.DistributedDataParallel(
+            model,
+            device_ids=[properties.local_rank],
+            find_unused_parameters=True,
+        )
+
+    logger.info("Building model done")
+
+    return model, dataloader
+
+def prepare_dataloader(
+    dataset: torchvision.datasets.VisionDataset,
+    batch_size: int,
+    drop_last: bool,
+    properties: Properties,
+    num_workers: int = 0,
+    worker_init_fn: Callable | None = None,
+) -> torchvision.datasets.VisionDataset:
+    sampler = (
+        torch.utils.data.distributed.DistributedSampler(dataset)
+        if properties.use_nccl
+        else None
+    )
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        sampler=sampler,
+        shuffle=False if properties.world_size > 1 else True,
+        batch_size=batch_size,
+        num_workers=workers,
+        pin_memory=True,
+        drop_last=drop_last,
+        worker_init_fn=worker_init_fn or set_dataloader_seeds,
+    )
+    logger.info(
+        "Building data done, dataset size: %s samples", len(dataset)
+    )
+    logger.info("Batches per epoch: %s", len(dataloader))
+    return dataloader
 
 def get_and_set_required_env_vars() -> EnvVars:
     """

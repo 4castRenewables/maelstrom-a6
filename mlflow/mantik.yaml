@@ -13,8 +13,6 @@ Environment:
     Options:
       - -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6
       - --nv
-  Variables:
-    OMP_NUM_THREADS: '1'
 Resources:
   Runtime: 6h
   Queue: booster

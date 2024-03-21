@@ -9,17 +9,16 @@ import a6.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def initialize_logging(
+def initialize(
     settings: _settings.Settings, columns: list[str]
-) -> tuple[logging.Logger, stats.Stats]:
-    """Initialize logging.
+) -> stats.Stats:
+    """Initialize dump paths, and dump and log settings.
 
     Notes
     -----
 
     - dump parameters
     - create checkpoint repo
-    - create a logger
     - create a panda object to keep track of the training statistics
 
     """
@@ -47,25 +46,13 @@ def initialize_logging(
         columns,
     )
 
-    # create a logger
-    logger_ = utils.logging.create_logger(
-        filepath=settings.dump.path
-        / f"train-{settings.distributed.global_rank}.log",
-        global_rank=settings.distributed.global_rank,
-        local_rank=settings.distributed.local_rank,
-        verbose=settings.verbose,
-    )
-
-    if _is_primary_device(settings):
-        logger_.info("============ Initialized logging ============")
-        logger_.info(
+    if utils.distributed.is_primary_device():
+        logger.info("============ Initialized ============")
+        logger.info(
             "Settings:\n%s",
             yaml.dump(settings.to_dict(), indent=2, default_flow_style=False),
         )
-        logger_.info("The experiment will be stored in %s", settings.dump.path)
+        logger.info("The experiment will be stored in %s", settings.dump.path)
 
-    return logger_, training_stats
+    return training_stats
 
-
-def _is_primary_device(settings: _settings.Settings) -> bool:
-    return settings.distributed.global_rank == 0

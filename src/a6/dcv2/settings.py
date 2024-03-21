@@ -99,14 +99,12 @@ class Settings:
             enable_tracking=args.enable_tracking,
             save_results=args.save_results,
             plot_results=args.plot_results,
-            distributed=utils.distributed.Properties(
+            distributed=utils.distributed.Properties.from_env(
                 use_cpu=args.use_cpu,
                 use_nccl=args.use_nccl,
-                node_id=utils.slurm.get_node_id(),
-                dist_url=utils.distributed.get_dist_url_and_set_master_env_vars(),  # noqa: E501
-                global_rank=env_vars.global_rank,
-                local_rank=env_vars.local_rank,
-                world_size=env_vars.world_size,
+                verbose_logging=args.verbose,
+                enable_tracking=args.enable_tracking,
+                logs_filepath=args.dump_path / f"train.log",
             ),
             data=Data(
                 path=args.data_path,

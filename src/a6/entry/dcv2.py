@@ -33,15 +33,13 @@ import a6.utils as utils
 import mlflow
 
 _timer = utils.benchmark.import_deep500()
+logger = loggin.getLogger(__name__)
 
 
 @errors.record
 def run_benchmark(raw_args: list[str] | None = None):
-    args = _parse.create_argparser().parse_args(raw_args)
-    settings = _settings.Settings.from_args_and_env(args)
-
-    logger, training_stats = _initialization.initialize_logging(
-        settings, columns=("epoch", "loss")
+    settings, training_stats = _parse_args_and_create_training_stats(
+        raw_args
     )
 
     hardware = "nvidia" if "CUDA_VERSION" in os.environ else "amd"
@@ -50,12 +48,15 @@ def run_benchmark(raw_args: list[str] | None = None):
     energy_profiler = utils.energy.get_energy_profiler(hardware)
 
     with (
-        setup_distributed(settings=settings, logger=logger),
+        utils.distributed.setup(
+            properties=settings.distributed,
+            seed=settings.data.seed,
+            post_fn=_log_artifacts_if_successful,
+        ),
         energy_profiler() as measured_scope,
     ):
         _train(
             settings=settings,
-            logger=logger,
             training_stats=training_stats,
         )
 
@@ -108,70 +109,42 @@ def run_benchmark(raw_args: list[str] | None = None):
             logger.info("Integrated Total Energy: %.2f Wh", np.sum(energy_int))
             f.write(f"integrated: {energy_int}")
 
-
-@errors.record
-def train_dcv2(raw_args: list[str] | None = None):
+def _parse_args_and_create_training_stats(raw_args: list[str] | None = None) -> tuple[_settings.Settings, stats.Stats]:
     args = _parse.create_argparser().parse_args(raw_args)
     settings = _settings.Settings.from_args_and_env(args)
 
-    logger, training_stats = _initialization.initialize_logging(
-        settings, columns=["epoch", "loss"]
+    training_stats = _initialization.initialize(
+        settings, columns=("epoch", "loss")
+    )
+    return settings, training_stats
+
+@errors.record
+def train_dcv2(raw_args: list[str] | None = None):
+    settings, training_stats = _parse_args_and_create_training_stats(
+        raw_args
     )
 
-    with setup_distributed(settings=settings, logger=logger):
+    with utils.distributed.setup(
+        properties=settings.distributed,
+        seed=settings.data.seed,
+        post_fn=_log_artifacts_if_successful,
+    ):
         _train(
             settings=settings,
-            logger=logger,
             training_stats=training_stats,
         )
 
-
-@contextlib.contextmanager
-def setup_distributed(
-    settings: _settings.Settings, logger: logging.Logger
-) -> None:
+def _log_artifacts_if_successful() -> None:
     if utils.distributed.is_primary_device():
-        utils.logging.log_env_vars()
-
-    utils.distributed.setup(settings.distributed, seed=settings.data.seed)
-
-    if utils.distributed.is_primary_device():
-        start = time.time()
-
-        if settings.enable_tracking:
-            stdout = utils.slurm.get_stdout_file()
-            stderr = utils.slurm.get_stderr_file()
-            mantik.mlflow.start_run()
-
-            if utils.slurm.is_slurm_job():
-                mantik.mlflow.log_params(utils.slurm.get_slurm_env_vars())
-
-    yield
-
-    if utils.distributed.is_primary_device():
-        logger.info("All done!")
-        runtime = time.time() - start
-        logger.info("Total runtime: %s s", runtime)
-
-        if settings.enable_tracking:
-            mantik.mlflow.log_metric("total_runtime_s", runtime)
-
-            _log_stdout_stderr(stdout=stdout, stderr=stderr)
-
-            # The following files are saved to disk in `a6.dcv2.cluster.py`
-            # NOTE: Only log plots due to large size of other files
-            mantik.mlflow.log_artifacts(settings.dump.plots)
-
-            mantik.mlflow.end_run()
-
-    utils.distributed.destroy()
+        # The following files are saved to disk in `a6.dcv2.cluster.py`
+        # NOTE: Only log plots due to large size of other files
+        mantik.mlflow.log_artifacts(settings.dump.plots)
 
 
 def _train(
     settings: _settings.Settings,
-    logger: logging.Logger,
     training_stats: stats.Stats,
-):
+) -> None:
     logger.info(
         (
             "Starting training on host %s (node %s), global rank %s, "
@@ -185,28 +158,14 @@ def _train(
     )
 
     # build data
-    train_dataset = _create_dataset(settings, logger=logger)
-
-    sampler = (
-        torch.utils.data.distributed.DistributedSampler(train_dataset)
-        if settings.distributed.use_nccl
-        else None
-    )
-    train_loader = torch.utils.data.DataLoader(
+    train_dataset = _create_dataset(settings)
+    train_loader = utils.distributed.prepare_dataloader(
         train_dataset,
-        sampler=sampler,
-        shuffle=False,
         batch_size=settings.model.batch_size,
         num_workers=settings.data.workers,
-        pin_memory=True,
         drop_last=settings.model.drop_last,
-        worker_init_fn=utils.distributed.set_dataloader_seeds,
+        properties=settings.distributed,
     )
-
-    logger.info(
-        "Building data done, dataset size: %s samples", len(train_dataset)
-    )
-    logger.info("Batches per epoch: %s", len(train_loader))
 
     device = utils.distributed.get_device(settings.distributed)
 
@@ -219,52 +178,11 @@ def _train(
         nmb_prototypes=settings.model.nmb_prototypes,
         device=device,
     )
-    # synchronize batch norm layers
-    match settings.model.sync_bn:
-        case _settings.SyncBn.PYTORCH:
-            if settings.distributed.use_cpu:
-                pass
-            else:
-                model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        case _settings.SyncBn.APEX:
-            if utils.distributed.is_multi_gpu():
-                import apex
-                from apex.parallel.LARC import LARC
-
-                # with apex syncbn we sync bn per group because it speeds up
-                # computation compared to global syncbn
-                process_group = apex.parallel.create_syncbn_process_group(
-                    settings.model.syncbn_process_group_size
-                )
-                model = apex.parallel.convert_syncbn_model(
-                    model, process_group=process_group
-                )
-            else:
-                logger.warning(
-                    "Sync batch norm 'apex' defined, but training is performed "
-                    "on single GPU, hence using native PyTorch"
-                )
-        case _:
-            raise NotImplementedError(
-                f"SyncBn {settings.model.sync_bn} not implemented"
-            )
-
-    # Copy model to GPU
-    model = model.to(device)
-
-    if utils.distributed.is_primary_device():
-        logger.info(model)
-
-    logger.info(
-        "Number of trainable parameters: %s",
-        utils.models.get_number_of_trainable_parameters(model),
+    model = utils.distributed.prepare_model(
+        model,
+        has_batchnorm=True,
+        properties=settings.distributed,
     )
-    logger.info(
-        "Number of non-trainable parameters: %s",
-        utils.models.get_number_of_non_trainable_parameters(model),
-    )
-
-    logger.info("Building model done")
 
     # build optimizer
     # Should be done after moving the model to GPU
@@ -274,17 +192,6 @@ def _train(
         momentum=0.9,
         weight_decay=settings.model.wd,
     )
-
-    if settings.model.sync_bn == _settings.SyncBn.APEX:
-        if utils.distributed.is_multi_gpu():
-            optimizer = LARC(
-                optimizer=optimizer, trust_coefficient=0.001, clip=False
-            )
-        else:
-            logger.warning(
-                "Sync batch norm 'apex' defined, but training is performed "
-                "on single GPU, hence LARC is disabled"
-            )
 
     warmup_lr_schedule = np.linspace(
         settings.model.start_warmup,
@@ -318,14 +225,6 @@ def _train(
     lr_schedule = np.concatenate((warmup_lr_schedule, cosine_lr_schedule))
 
     logger.info("Building optimizer done")
-
-    # wrap model
-    if not settings.distributed.use_cpu:
-        model = nn.parallel.DistributedDataParallel(
-            model,
-            device_ids=[settings.distributed.local_rank],
-            find_unused_parameters=True,
-        )
 
     restored_variables = models.checkpoints.restart_from_checkpoint(
         path=settings.dump.checkpoints,
@@ -436,9 +335,7 @@ def _train(
     logger.info("Total training time: %s s", train_time)
 
 
-def _create_dataset(
-    settings: _settings.Settings, logger: logging.Logger
-) -> datasets.crop.Base:
+def _create_dataset(settings: _settings.Settings) -> datasets.crop.Base:
     if settings.data.use_mnist:
         return datasets.crop.MultiCropMnistDataset(
             data_path=settings.data.path,

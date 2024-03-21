@@ -39,6 +39,9 @@ def train(
     model.train()
 
     for epoch in range(epochs):
+        train_loader.sampler.set_epoch(epoch)
+        test_loader.sampler.set_epoch(epoch)
+
         running_loss = 0.0
 
         for i, (images, targets) in enumerate(train_loader):

@@ -124,31 +124,28 @@ def create_logger(
     # create log formatter
     log_formatter = LogFormatter(global_rank=global_rank, local_rank=local_rank)
 
-    # create file handler and set level to debug
-    if filepath is not None:
-        file_handler = logging.FileHandler(filepath, "a+")
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(log_formatter)
-
     # create console handler and set level to info
     # if not ``-v/--verbose`` passed.
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
     console_handler.setFormatter(log_formatter)
 
-    # create logger and set level to debug
-    logger = logging.getLogger()
-    logger.handlers = []
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False
+    handlers = [console_handler]
+
+    # create file handler and set level to debug
     if filepath is not None:
-        logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+        file_handler = logging.FileHandler(filepath, "a+")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(log_formatter)
 
-    # reset logger elapsed time
-    def reset_time():
-        log_formatter.start_time = time.time()
+        handlers.append(file_handler)
 
-    logger.reset_time = reset_time
+    # create logger and set level to debug
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.DEBUG if verbose else logging.INFO,
+        format=log_formatter,
+        handlers=handlers,
+    )
 
-    return logger
+    return logging.getLogger()

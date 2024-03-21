@@ -45,9 +45,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     a6.entry.gwl.main(
-        epochs=args.epochs,
         data_path=args.weather_data,
         gwl_path=args.gwl_data,
+        epochs=args.epochs,
+        architecture=args.architecture,
         select_dwd_area=args.select_dwd_area,
         testing=False,
         log_to_mlflow=args.enable_tracking,

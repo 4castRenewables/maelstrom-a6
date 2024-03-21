@@ -18,7 +18,7 @@ class ResNet(_resnet.ResNet):
         self,
         block,
         layers,
-        device: torch.device,
+        device: torch.device | None = None,
         in_channels: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -83,6 +83,9 @@ class ResNet(_resnet.ResNet):
             self.prototypes = None
 
         self._prepare(zero_init_residual=zero_init_residual)
+    
+    def set_device(self, device: torch.device) -> None:
+        self.device = device
 
     def forward_backbone(self, x: torch.Tensor) -> torch.Tensor:
         x = self.padding(x)
