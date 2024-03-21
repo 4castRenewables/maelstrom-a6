@@ -1,3 +1,4 @@
+import logging
 import pathlib
 
 import torch.utils.data
@@ -7,6 +8,8 @@ import a6.datasets as datasets
 import a6.models as models
 import a6.training as training
 import a6.utils as utils
+
+logger = logging.getLogger(__name__)
 
 
 def main(
@@ -63,8 +66,10 @@ def main(
         test_loader = utils.distributed.prepare_dataloader(
             test_set,
             batch_size=64 if not testing else 1,
+            drop_last=False,
             properties=properties,
         )
+
         logger.info(
             (
                 "Building data done with %s/%s train/test images loaded, "
@@ -90,7 +95,9 @@ def main(
             )
             has_batchnorm = False
         else:
-            model = models.resnet.Models[models.resnet.Architecture(architecture)](
+            model = models.resnet.Models[
+                models.resnet.Architecture(architecture)
+            ](
                 in_channels=train_set.n_channels,
                 n_classes=n_classes,
             )
@@ -107,6 +114,6 @@ def main(
             epochs=epochs,
             train_loader=train_loader,
             test_loader=test_loader,
-            device=device,
+            device=utils.distributed.get_device(properties),
             log_to_mlflow=log_to_mlflow,
         )

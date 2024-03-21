@@ -4,14 +4,11 @@ import yaml
 
 import a6.dcv2.settings as _settings
 import a6.dcv2.stats as stats
-import a6.utils as utils
 
 logger = logging.getLogger(__name__)
 
 
-def initialize(
-    settings: _settings.Settings, columns: list[str]
-) -> stats.Stats:
+def initialize(settings: _settings.Settings, columns: list[str]) -> stats.Stats:
     """Initialize dump paths, and dump and log settings.
 
     Notes
@@ -46,7 +43,7 @@ def initialize(
         columns,
     )
 
-    if utils.distributed.is_primary_device():
+    if _is_primary_device(settings):
         logger.info("============ Initialized ============")
         logger.info(
             "Settings:\n%s",
@@ -56,3 +53,6 @@ def initialize(
 
     return training_stats
 
+
+def _is_primary_device(settings: _settings.Settings) -> bool:
+    return settings.distributed.global_rank == 0

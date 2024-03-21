@@ -8,6 +8,7 @@ def test_main(era5_path, gwl_path):
         data_path=era5_path,
         gwl_path=gwl_path,
         select_dwd_area=False,
+        architecture="ignored-for-testing",
         testing=True,
         log_to_mlflow=False,
     )

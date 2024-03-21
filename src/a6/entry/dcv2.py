@@ -4,19 +4,18 @@
 # This source code is licensed under the license found
 # [here](https://github.com/facebookresearch/swav/blob/06b1b7cbaf6ba2a792300d79c7299db98b93b7f9/LICENSE)  # noqa: E501
 #
-import contextlib
 import io
 import logging
 import math
 import os
 import socket
 import time
+from collections.abc import Callable
 
 import mantik.mlflow
 import numpy as np
 import torch.backends.cudnn as cudnn
 import torch.distributed.elastic.multiprocessing.errors as errors
-import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
 import torch.utils.data
@@ -33,14 +32,12 @@ import a6.utils as utils
 import mlflow
 
 _timer = utils.benchmark.import_deep500()
-logger = loggin.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @errors.record
 def run_benchmark(raw_args: list[str] | None = None):
-    settings, training_stats = _parse_args_and_create_training_stats(
-        raw_args
-    )
+    settings, training_stats = _parse_args_and_create_training_stats(raw_args)
 
     hardware = "nvidia" if "CUDA_VERSION" in os.environ else "amd"
     logger.info("Assuming %s GPU hardware", hardware)
@@ -109,7 +106,10 @@ def run_benchmark(raw_args: list[str] | None = None):
             logger.info("Integrated Total Energy: %.2f Wh", np.sum(energy_int))
             f.write(f"integrated: {energy_int}")
 
-def _parse_args_and_create_training_stats(raw_args: list[str] | None = None) -> tuple[_settings.Settings, stats.Stats]:
+
+def _parse_args_and_create_training_stats(
+    raw_args: list[str] | None = None,
+) -> tuple[_settings.Settings, stats.Stats]:
     args = _parse.create_argparser().parse_args(raw_args)
     settings = _settings.Settings.from_args_and_env(args)
 
@@ -118,27 +118,30 @@ def _parse_args_and_create_training_stats(raw_args: list[str] | None = None) -> 
     )
     return settings, training_stats
 
+
 @errors.record
 def train_dcv2(raw_args: list[str] | None = None):
-    settings, training_stats = _parse_args_and_create_training_stats(
-        raw_args
-    )
+    settings, training_stats = _parse_args_and_create_training_stats(raw_args)
 
     with utils.distributed.setup(
         properties=settings.distributed,
         seed=settings.data.seed,
-        post_fn=_log_artifacts_if_successful,
+        post_fn=_log_artifacts_if_successful(settings),
     ):
         _train(
             settings=settings,
             training_stats=training_stats,
         )
 
-def _log_artifacts_if_successful() -> None:
-    if utils.distributed.is_primary_device():
-        # The following files are saved to disk in `a6.dcv2.cluster.py`
-        # NOTE: Only log plots due to large size of other files
-        mantik.mlflow.log_artifacts(settings.dump.plots)
+
+def _log_artifacts_if_successful(settings: _settings.Settings) -> Callable:
+    def inner():
+        if utils.distributed.is_primary_device():
+            # The following files are saved to disk in `a6.dcv2.cluster.py`
+            # NOTE: Only log plots due to large size of other files
+            mantik.mlflow.log_artifacts(settings.dump.plots)
+
+    return inner
 
 
 def _train(

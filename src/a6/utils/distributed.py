@@ -1,20 +1,25 @@
+import contextlib
 import dataclasses
 import logging
 import os
+import pathlib
 import random
 import socket
-import pathlib
-from typing import Callable
+import time
+from collections.abc import Callable
+from collections.abc import Iterator
 
+import mantik.mlflow
 import numpy as np
-import torch.nn as nn
 import torch.distributed
 import torch.multiprocessing
+import torch.nn as nn
 import torch.utils.data
 import torchvision.datasets
 
-import a6.utils.slurm as slurm
 import a6.utils.logging as utils_logging
+import a6.utils.models as models
+import a6.utils.slurm as slurm
 
 logger = logging.getLogger(__name__)
 
@@ -67,16 +72,8 @@ class EnvVars:
 def setup(
     seed: int = 42,
     properties: Properties | None = None,
-    logs_filepath: pathlib.Path | None = None,
     post_fn: Callable | None = None,
-    model: nn.Module | None = None,
-    model_has_batchnorm: bool = False,
-    dataset: torchvision.datasets.VisionDataset | None = None,
-    batch_size: int = 64,
-    num_workers: int = 0,
-    drop_last: bool = False,
-    worker_init_fn: Callable | None = None,
-) -> Properties:
+) -> Iterator[Properties]:
     start = time.time()
 
     if properties is None:
@@ -85,13 +82,12 @@ def setup(
     logger.info(
         (
             "Setting up distributed training on host %s (node %s), "
-            "global rank %s, local rank %s (torch.distributed.get_rank()=%s)"
+            "global rank %s, local rank %s"
         ),
         socket.gethostname(),
-        settings.distributed.node_id,
-        settings.distributed.global_rank,
-        settings.distributed.local_rank,
-        get_rank(settings.distributed),
+        properties.node_id,
+        properties.global_rank,
+        properties.local_rank,
     )
 
     utils_logging.create_logger(
@@ -104,8 +100,8 @@ def setup(
     if is_primary_device():
         utils_logging.log_env_vars()
 
-        stdout = utils.slurm.get_stdout_file()
-        stderr = utils.slurm.get_stderr_file()
+        stdout = slurm.get_stdout_file()
+        stderr = slurm.get_stderr_file()
         mantik.mlflow.start_run()
 
     logger.info(
@@ -126,23 +122,26 @@ def setup(
         runtime = time.time() - start
         logger.info("Total runtime: %s s", runtime)
 
-        if enable_tracking:
+        if properties.enable_tracking:
             mantik.mlflow.log_metric("total_runtime_s", runtime)
 
             _log_stdout_stderr(stdout=stdout, stderr=stderr)
-    
-    post_fn()
+
+    if post_fn is not None:
+        post_fn()
 
     if is_primary_device():
         mantik.mlflow.end_run()
 
     destroy()
 
+
 def _log_stdout_stderr(stdout: str | None, stderr: str | None) -> None:
     if stdout is not None:
         mantik.mlflow.log_artifact(stdout)
     if stderr is not None:
         mantik.mlflow.log_artifact(stderr)
+
 
 def prepare_model(
     model: nn.Module,
@@ -161,11 +160,11 @@ def prepare_model(
 
     logger.info(
         "Number of trainable parameters: %s",
-        utils.models.get_number_of_trainable_parameters(model),
+        models.get_number_of_trainable_parameters(model),
     )
     logger.info(
         "Number of non-trainable parameters: %s",
-        utils.models.get_number_of_non_trainable_parameters(model),
+        models.get_number_of_non_trainable_parameters(model),
     )
 
     if not properties.use_cpu:
@@ -177,7 +176,8 @@ def prepare_model(
 
     logger.info("Building model done")
 
-    return model, dataloader
+    return model
+
 
 def prepare_dataloader(
     dataset: torchvision.datasets.VisionDataset,
@@ -192,21 +192,25 @@ def prepare_dataloader(
         if properties.use_nccl
         else None
     )
+    shuffle = False if properties.world_size > 1 else True
+
+    if sampler is not None:
+        shuffle = False
+
     dataloader = torch.utils.data.DataLoader(
         dataset,
         sampler=sampler,
-        shuffle=False if properties.world_size > 1 else True,
+        shuffle=shuffle,
         batch_size=batch_size,
-        num_workers=workers,
+        num_workers=num_workers,
         pin_memory=True,
         drop_last=drop_last,
         worker_init_fn=worker_init_fn or set_dataloader_seeds,
     )
-    logger.info(
-        "Building data done, dataset size: %s samples", len(dataset)
-    )
+    logger.info("Building data done, dataset size: %s samples", len(dataset))
     logger.info("Batches per epoch: %s", len(dataloader))
     return dataloader
+
 
 def get_and_set_required_env_vars() -> EnvVars:
     """
