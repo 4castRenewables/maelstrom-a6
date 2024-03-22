@@ -73,6 +73,7 @@ def setup(
     seed: int = 42,
     properties: Properties | None = None,
     post_fn: Callable | None = None,
+    post_fn_kwargs: dict | None = None
 ) -> Iterator[Properties]:
     start = time.time()
 
@@ -128,7 +129,8 @@ def setup(
             _log_stdout_stderr(stdout=stdout, stderr=stderr)
 
     if post_fn is not None:
-        post_fn()
+        kwargs = post_fn_kwargs or {}
+        post_fn(**kwargs)
 
     if is_primary_device():
         mantik.mlflow.end_run()

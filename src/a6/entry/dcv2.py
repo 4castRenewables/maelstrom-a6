@@ -49,6 +49,7 @@ def run_benchmark(raw_args: list[str] | None = None):
             properties=settings.distributed,
             seed=settings.data.seed,
             post_fn=_log_artifacts_if_successful,
+            post_fn_kwargs={"settings": settings},
         ),
         energy_profiler() as measured_scope,
     ):
@@ -126,7 +127,8 @@ def train_dcv2(raw_args: list[str] | None = None):
     with utils.distributed.setup(
         properties=settings.distributed,
         seed=settings.data.seed,
-        post_fn=_log_artifacts_if_successful(settings),
+        post_fn=_log_artifacts_if_successful,
+        post_fn_kwargs={"settings": settings},
     ):
         _train(
             settings=settings,
@@ -135,13 +137,10 @@ def train_dcv2(raw_args: list[str] | None = None):
 
 
 def _log_artifacts_if_successful(settings: _settings.Settings) -> Callable:
-    def inner():
-        if utils.distributed.is_primary_device():
-            # The following files are saved to disk in `a6.dcv2.cluster.py`
-            # NOTE: Only log plots due to large size of other files
-            mantik.mlflow.log_artifacts(settings.dump.plots)
-
-    return inner
+    if utils.distributed.is_primary_device():
+        # The following files are saved to disk in `a6.dcv2.cluster.py`
+        # NOTE: Only log plots due to large size of other files
+        mantik.mlflow.log_artifacts(settings.dump.plots)
 
 
 def _train(

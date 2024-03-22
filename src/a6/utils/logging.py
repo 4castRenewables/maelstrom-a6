@@ -116,25 +116,25 @@ def create_logger(
     verbose: bool = False,
     filepath: pathlib.Path | None = None,
 ) -> logging.Logger:
-    """Create a logger.
+    """Adapt the root logging config.
 
     Use a different log file for each process.
 
     """
-    # create log formatter
+    level = logging.DEBUG if verbose else logging.INFO
     log_formatter = LogFormatter(global_rank=global_rank, local_rank=local_rank)
 
-    # create console handler and set level to info
-    # if not ``-v/--verbose`` passed.
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+    console_handler.setLevel(level)
     console_handler.setFormatter(log_formatter)
 
     handlers = [console_handler]
 
-    # create file handler and set level to debug
+    
+
     if filepath is not None:
-        file_handler = logging.FileHandler(filepath, "a+")
+        path = filepath.with_name(f"{filepath.stem}-rank-{global_rank}{filepath.suffix}")
+        file_handler = logging.FileHandler(path, "a+")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(log_formatter)
 
@@ -142,10 +142,8 @@ def create_logger(
 
     # create logger and set level to debug
     logging.basicConfig(
-        stream=sys.stdout,
-        level=logging.DEBUG if verbose else logging.INFO,
-        format=log_formatter,
+        level=level,
         handlers=handlers,
+        # Force overriding of existing handlers at runtime.
+        force=True,
     )
-
-    return logging.getLogger()
