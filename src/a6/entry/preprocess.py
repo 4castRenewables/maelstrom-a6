@@ -1,6 +1,7 @@
 import argparse
 import logging
 import pathlib
+import os
 
 import xarray as xr
 
@@ -9,9 +10,15 @@ import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
 import a6.utils as utils
 
-a6.utils.logging.log_to_stdout(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+WORKER_ID = int(os.getenv("SLURM_PROCID")) if "SLURM_PROCID" in os.environ else None
 
+utils.logging.create_logger(
+    global_rank=WORKER_ID,
+    local_rank=WORKER_ID,
+    verbose=True,
+)
+
+logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -45,6 +52,10 @@ def create_turbine_model_features(
     turbine_files = utils.paths.list_files(
         args.turbine_data_dir, pattern="**/*.nc", recursive=True
     )
+    
+    if WORKER_ID is not None and WORKER_ID >= len(turbine_files):
+        logger.warning("Exiting: no file to process")
+        return
 
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates()
     model_variables: _variables.Model = _variables.Model()
@@ -59,6 +70,9 @@ def create_turbine_model_features(
     outfiles = {}
 
     for i, turbine_path in enumerate(turbine_files):
+        if WORKER_ID is not None and i != WORKER_ID:
+            continue
+            
         logger.info(
             "Processing turbine %i/%i (path=%s)",
             i,
@@ -112,10 +126,11 @@ def create_turbine_model_features(
             logger.exception(
                 (
                     "Skipping: No intersecting time steps for "
-                    "turbine %s and given data"
+                    "turbine %s and given data, deleting directory"
                 ),
                 turbine_name,
             )
+            outfile_turbine.parent.rmdir()
             continue
 
         logger.info("Preprocessing surface level data")

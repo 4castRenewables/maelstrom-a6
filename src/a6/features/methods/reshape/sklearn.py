@@ -8,7 +8,7 @@ def transpose(*data: types.XarrayData) -> np.ndarray:
     """Transpose a given 1D dataset according to the sklearn interface."""
     if len(data) == 1:
         return _reshape(data[0])
-    return np.array(list(zip(*data)))
+    return np.array(list(zip(*data, strict=True)))
 
 
 def _reshape(data: types.XarrayData) -> np.ndarray:
