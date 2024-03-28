@@ -19,6 +19,7 @@ RUN apt-get update \
       build-essential \
       # Required by cartopy
       libgeos3.10.2 \
+      libopenmpi-dev \
       libgeos-dev \
       # Install opencv via apt to get required libraries
       python3-opencv \
@@ -44,13 +45,14 @@ WORKDIR /opt/a6
 RUN python${PYTHON_VERSION} -m venv /venv \
  && . /venv/bin/activate \
  && pip install --upgrade pip \
+ && poetry remove --group deep500 deep500 cupy-cuda12x \
  && poetry source add --priority=supplemental pytorch-rocm https://download.pytorch.org/whl/rocm5.6 \
  && poetry add \
     -vvv \
     --source pytorch-rocm \
     torch==$(poetry show torch | awk '/version/ { print $3 }') \
     torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
- && poetry install --only=main,notebooks
+ && poetry install --only=main,notebooks,mpi
 
 # Delete Python cache files
 WORKDIR /venv
