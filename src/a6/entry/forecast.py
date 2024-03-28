@@ -4,6 +4,7 @@ import datetime
 import itertools
 import logging
 import pathlib
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,12 +12,21 @@ import sklearn.ensemble as ensemble
 import sklearn.metrics
 import sklearn.model_selection
 import xarray as xr
+import torch
 
 import a6
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
+import a6.utils as utils
 
-a6.utils.logging.log_to_stdout(level=logging.DEBUG)
+WORKER_ID = int(os.getenv("SLURM_PROCID")) if "SLURM_PROCID" in os.environ else None
+
+utils.logging.create_logger(
+    global_rank=WORKER_ID,
+    local_rank=WORKER_ID,
+    verbose=False,
+)
+
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
@@ -27,6 +37,26 @@ parser.add_argument(
 parser.add_argument(
     "--preprocessed-data-dir",
     type=pathlib.Path,
+)
+parser.add_argument(
+    "--pca-kpca-path",
+    type=pathlib.Path,
+    default=None,
+)
+parser.add_argument(
+    "--pca-kpca-n-clusters",
+    type=int,
+    default=40,
+)
+parser.add_argument(
+    "--gwl-path",
+    type=pathlib.Path,
+    default=None,
+)
+parser.add_argument(
+    "--dcv2-path",
+    type=pathlib.Path,
+    default=None,
 )
 parser.add_argument(
     "--results-dir",
@@ -44,6 +74,7 @@ parser.add_argument(
     action=argparse.BooleanOptionalAction,
     default=False,
 )
+
 
 ForecastErrors = dict[pathlib.Path, xr.Dataset]
 
@@ -63,13 +94,38 @@ def simulate_errors(
     turbine_files = a6.utils.paths.list_files(
         args.turbine_data_dir, pattern="**/*.nc", recursive=True
     )
+    
+    if WORKER_ID is not None and WORKER_ID >= len(turbine_files):
+        logger.warning("Exiting: no file to process")
+        return
 
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates()
     turbine_variables: _variables.Turbine = a6.datasets.variables.Turbine()
+    
+    lswrs = [None]
+    
+    if args.pca_kpca_path is not None:
+        pca_kpca = xr.open_dataset(
+            args.pca_kpca_path
+        ).sel(
+            k=args.pca_kpca_n_clusters
+        )
+        lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
+        
+    if args.gwl_path is not None:
+        gwl = xr.open_dataset(args.gwl_path)
+        lswrs.append(gwl["GWL"])
+        
+    if args.dcv2_path is not None:
+        dcv2 = xr.open_dataset(args.dcv2_path)
+        lswrs.append(dcv2["DCv2"])
 
     result: ForecastErrors = {}
-
+    
     for i, turbine_path in enumerate(turbine_files):
+        if WORKER_ID is not None and i != WORKER_ID:
+            continue
+            
         logger.info(
             "Processing turbine %i/%i (path=%s)",
             i,
@@ -79,7 +135,7 @@ def simulate_errors(
 
         turbine_name = turbine_path.name.replace(".nc", "")
         outfile: pathlib.Path = (
-            args.results_dir / f"{turbine_name}_forecast_errors.nc"
+            args.results_dir / f"{turbine_name}-forecast-errors.nc"
         )
 
         if outfile.exists():
@@ -103,7 +159,17 @@ def simulate_errors(
         )
 
         logger.info("Reading preprocessed data")
-        turbine = xr.open_dataset(turbine_path)
+        
+        try:
+            turbine = xr.open_dataset(turbine_path)
+        except FileNotFoundError:
+            logger.exception(
+                "No preprocessed data for turbine %s found in %s",
+                turbine_name,
+                turbine_path,
+            )
+            continue
+            
         pl = xr.open_dataset(pl_path)
         ml = xr.open_dataset(ml_path)
         sfc = xr.open_dataset(sfc_path)
@@ -111,96 +177,128 @@ def simulate_errors(
         power_rating = turbine_variables.read_power_rating(turbine)
         logger.info("Extracted power rating %i", power_rating)
 
-        data = [sfc, ml] + [pl[var] for var in pl.data_vars]
-
-        logger.info(
-            "Preparing input data for variables %s", [d.name for d in data]
-        )
-
-        X = a6.features.methods.reshape.sklearn.transpose(*data)  # noqa: N806
-        y = a6.features.methods.reshape.sklearn.transpose(
-            turbine[turbine_variables.production]
-        )
-
-        (  # noqa: N806
-            X_train,
-            _,
-            y_train,
-            _,
-        ) = sklearn.model_selection.train_test_split(X, y, train_size=0.8)
-
-        logger.info(
-            "Train dataset size is %i hours (~%i days)",
-            y_train.size,
-            y_train.size / 24,
-        )
-
-        logger.info("Fitting model with GridSearchCV")
-
-        if args.testing:
-            param_grid = {"learning_rate": [0.1]}
-        else:
-            param_grid = {
-                "learning_rate": [0.03, 0.05, 0.07, 0.1],
-                "l2_regularization": [0.0, 1.0, 3.0, 5.0, 7.0],
-                "max_iter": [200, 300, 500],
-                "max_depth": [15, 37, 63, 81],
-                "min_samples_leaf": [23, 48, 101, 199],
-            }
-        n_jobs = -1 if args.parallel else int(a6.utils.get_cpu_count() / 2)
-
-        gs = sklearn.model_selection.GridSearchCV(
-            estimator=ensemble.HistGradientBoostingRegressor(
-                loss="squared_error"
-            ),
-            param_grid=param_grid,
-            scoring=sklearn.metrics.make_scorer(
-                a6.training.metrics.turbine.calculate_nrmse,
-                greater_is_better=False,
-                power_rating=power_rating,
-            ),
-            # 10-fold CV
-            cv=10,
-            refit=True,
-            n_jobs=n_jobs,
-        )
-        gs = gs.fit(X=X_train, y=y_train)
-
         start, end = min(turbine["time"].values), max(turbine["time"].values)
         dates = pd.date_range(start, end, freq="1d")
+        logger.info(
+            "Simulating forecast errors for LSWRS %s for date range %s-%s",
+            lswrs,
+            start,
+            end,
+        )
 
-        results: list[Errors] = [
-            _calculate_nmae_and_nrmse(
-                start=start,
-                end=end,
-                gs=gs,
-                weather_data=data,
-                turbine=turbine,
-                power_rating=power_rating,
-                turbine_variables=turbine_variables,
-                coordinates=coordinates,
+        forecast_errors = {}
+
+        for lswr in lswrs:
+            lswr_name = "none" if lswr is None else lswr.name
+            
+            logger.info("Handling LSWR %s", lswr_name)
+            
+            data = [ml[var] for var in ml.data_vars] + [sfc[var] for var in sfc.data_vars] + [pl[var] for var in pl.data_vars]
+            categorical_features = [False for _ in enumerate(data)]
+            
+            if lswr is not None:
+                lswr_labels = lswr.sel(time=turbine[coordinates.time], method="nearest")
+                data.append(lswr_labels)
+                categorical_features.append(True)
+                
+            logger.info(
+                "Preparing input data for variables %s", [d.name for d in data]
             )
-            for stard, end in itertools.pairwise(dates)
-        ]
+
+            X = a6.features.methods.reshape.sklearn.transpose(*data)  # noqa: N806
+            y = a6.features.methods.reshape.sklearn.transpose(
+                turbine[turbine_variables.production]
+            )
+
+            (  # noqa: N806
+                X_train,
+                _,
+                y_train,
+                _,
+            ) = sklearn.model_selection.train_test_split(X, y, train_size=1/3)
+
+            logger.info(
+                "Train dataset size is %i hours (~%i days)",
+                y_train.size,
+                y_train.size // 24,
+            )
+
+            
+
+            if args.testing:
+                param_grid = {"learning_rate": [0.1]}
+            else:
+                param_grid = {
+                    "learning_rate": [0.03, 0.05, 0.07, 0.1],
+                    "l2_regularization": [0.0, 1.0, 3.0, 5.0, 7.0],
+                    "max_iter": [200, 300, 500],
+                    "max_depth": [15, 37, 63, 81],
+                    "min_samples_leaf": [23, 48, 101, 199],
+                    "categorical_features": [categorical_features],
+                }
+            n_jobs = -1 if args.parallel else int(a6.utils.get_cpu_count() / 2)
+            
+            logger.info(
+                "Fitting model with GridSearchCV n_jobs=%s, param_grid=%s",
+                n_jobs,
+                param_grid,
+            )
+
+            gs = sklearn.model_selection.GridSearchCV(
+                estimator=ensemble.HistGradientBoostingRegressor(
+                    loss="squared_error"
+                ),
+                param_grid=param_grid,
+                scoring=sklearn.metrics.make_scorer(
+                    a6.training.metrics.turbine.calculate_nrmse,
+                    greater_is_better=False,
+                    power_rating=power_rating,
+                ),
+                # 10-fold CV
+                cv=10,
+                refit=True,
+                n_jobs=n_jobs,
+            )
+            gs = gs.fit(X=X_train, y=y_train.ravel())
+
+            results: list[Errors] = [
+                _calculate_nmae_and_nrmse(
+                    start=start,
+                    end=end,
+                    gs=gs,
+                    weather_data=data,
+                    turbine=turbine,
+                    power_rating=power_rating,
+                    turbine_variables=turbine_variables,
+                    coordinates=coordinates,
+                )
+                for start, end in itertools.pairwise(dates)
+            ]
+            
+            forecast_errors[lswr_name] = results
+
+        coords = {"time": dates[:-1], "lswr_method": list(forecast_errors.keys())}
+        dims = ["time", "lswr_method"]
 
         nmae_da = xr.DataArray(
-            [error.nmae for error in results],
-            coords={"time": dates[:-1]},
-            dims=["time"],
+            _unpack_errors_per_method(forecast_errors, attr="nmae"),
+            coords=coords,
+            dims=dims,
         )
         nrmse_da = xr.DataArray(
-            [error.nrmse for error in results],
-            coords={"time": dates[:-1]},
-            dims=["time"],
+            _unpack_errors_per_method(forecast_errors, attr="nrmse"),
+            coords=coords,
+            dims=dims,
         )
         errors = xr.Dataset(
             data_vars={"nmae": nmae_da, "nrmse": nrmse_da},
             coords=nmae_da.coords,
         )
-
+        
         logger.info("Saving simulated forecast errors to %s", outfile)
+        
         errors.to_netcdf(outfile)
-
+        
         result[outfile] = errors
 
     return result
@@ -223,7 +321,7 @@ def _calculate_nmae_and_nrmse(
     coordinates: _coordinates.Coordinates,
 ) -> Errors:
     window = slice(start, end)
-    logger.info("Evaluating model error for slice=%s", window)
+    logger.debug("Evaluating model error for %s", window)
 
     weather_forecast = [d.sel({coordinates.time: window}) for d in weather_data]
     X_forecast = a6.features.methods.reshape.sklearn.transpose(  # noqa: N806
@@ -255,3 +353,11 @@ def _calculate_nmae_and_nrmse(
         y_true=y_true, y_pred=y_pred, power_rating=power_rating
     )
     return Errors(nmae=nmae, nrmse=nrmse)
+
+def _unpack_errors_per_method(
+    errors: list[ForecastErrors], attr: str
+) -> list[list[float]]:
+    return [
+        [getattr(error, attr) for error in method]
+        for method in zip(*errors.values())
+    ]

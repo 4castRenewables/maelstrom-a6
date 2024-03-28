@@ -144,6 +144,15 @@ entry_points:
         type: string
       preprocessed_data_dir:
         type: string
+      pca_kpca_path:
+        type: string
+      pca_kpca_n_clusters:
+        type: int
+        default: 40
+      gwl_path:
+        type: string
+      dcv2_path:
+        type: string
       results_dir:
         type: string
       parallel:
@@ -153,6 +162,10 @@ entry_points:
       python /opt/a6/mlflow/forecast_errors.py
         --turbine-data-dir {turbine_data_dir}
         --preprocessed-data-dir {preprocessed_data_dir}
+        --pca-kpca-path {pca_kpca_path}
+        --pca-kpca-n-clusters {pca_kpca_n_clusters}
+        --gwl-path {gwl_path}
+        --dcv2-path {dcv2_path}
         --results-dir {results_dir}
         {parallel}
   gwl-classifier:
