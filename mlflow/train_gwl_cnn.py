@@ -1,4 +1,3 @@
-# invoke using apptainer run --cleanenv --nv -B /p/home/jusers/$USER/juwels/code/a6/:/opt/a6 /p/project/deepacf/maelstrom/emmerich1/a6-cuda.sif python /opt/a6/mlflow/train_gwl_cnn.py
 import argparse
 import pathlib
 
