@@ -131,3 +131,19 @@ def select_intersecting_time_steps(
     if return_only_left:
         return left.sel(select)
     return left.sel(select), right.sel(select)
+
+
+def select_for_date(
+    data: types.XarrayData,
+    *,
+    date: datetime.datetime,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> types.XarrayData:
+    return data.where(
+        (
+            (data[f'{coordinates.time}.year'] == date.year) 
+            & (data[f'{coordinates.time}.month'] == date.month) 
+            & (data[f'{coordinates.time}.day'] == date.day)
+        ),
+        drop=True,
+    )

@@ -19,14 +19,6 @@ import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
 import a6.utils as utils
 
-WORKER_ID = int(os.getenv("SLURM_PROCID")) if "SLURM_PROCID" in os.environ else None
-
-utils.logging.create_logger(
-    global_rank=WORKER_ID,
-    local_rank=WORKER_ID,
-    verbose=False,
-)
-
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
@@ -91,6 +83,26 @@ def simulate_errors(
     """
     args = parser.parse_args(raw_args)
 
+    if not args.parallel:
+        WORKER_ID = None
+        logger.info(
+            "'--no-parallel' passed, setting WORKER_ID=None to prevent "
+            "parallel processing of turbine data"
+        )
+    else:
+        WORKER_ID = int(os.getenv("SLURM_PROCID")) if "SLURM_PROCID" in os.environ else None
+        logging.info(
+            "'--parallel' passed, reading WORKER_ID=%s from SLURM_PROCID=%s ",
+            WORKER_ID,
+            os.getenv("SLURM_PROCID"),
+        )
+
+    utils.logging.create_logger(
+        global_rank=WORKER_ID,
+        local_rank=WORKER_ID,
+        verbose=False,
+    )
+
     turbine_files = a6.utils.paths.list_files(
         args.turbine_data_dir, pattern="**/*.nc", recursive=True
     )
@@ -141,9 +153,10 @@ def simulate_errors(
         if outfile.exists():
             logger.warning(
                 "Skipping %s since outfile already exists at %s",
-                turbine_path,
+                turbine_name,
                 outfile,
             )
+            continue
 
         turbine_path: pathlib.Path = (
             args.preprocessed_data_dir / f"{turbine_name}/turbine.nc"
@@ -178,9 +191,14 @@ def simulate_errors(
         logger.info("Extracted power rating %i", power_rating)
 
         start, end = min(turbine["time"].values), max(turbine["time"].values)
+
+        # Convert time stamps to dates and create date range
+        times_as_dates = a6.utils.times.time_steps_as_dates(turbine, coordinates=coordinates)
+        start, end = min(times_as_dates), max(times_as_dates)
         dates = pd.date_range(start, end, freq="1d")
+
         logger.info(
-            "Simulating forecast errors for LSWRS %s for date range %s-%s",
+            "Simulating forecast errors for LSWRS %s for date range %s to %s",
             lswrs,
             start,
             end,
@@ -197,7 +215,7 @@ def simulate_errors(
             categorical_features = [False for _ in enumerate(data)]
             
             if lswr is not None:
-                lswr_labels = lswr.sel(time=turbine[coordinates.time], method="nearest")
+                lswr_labels = lswr.sel(time=turbine[coordinates.time], method="pad")
                 data.append(lswr_labels)
                 categorical_features.append(True)
                 
@@ -223,10 +241,9 @@ def simulate_errors(
                 y_train.size // 24,
             )
 
-            
-
             if args.testing:
                 param_grid = {"learning_rate": [0.1]}
+                n_jobs = a6.utils.get_cpu_count() // 2
             else:
                 param_grid = {
                     "learning_rate": [0.03, 0.05, 0.07, 0.1],
@@ -236,7 +253,7 @@ def simulate_errors(
                     "min_samples_leaf": [23, 48, 101, 199],
                     "categorical_features": [categorical_features],
                 }
-            n_jobs = -1 if args.parallel else int(a6.utils.get_cpu_count() / 2)
+                n_jobs = a6.utils.get_cpu_count()
             
             logger.info(
                 "Fitting model with GridSearchCV n_jobs=%s, param_grid=%s",
@@ -261,23 +278,25 @@ def simulate_errors(
             )
             gs = gs.fit(X=X_train, y=y_train.ravel())
 
-            results: list[Errors] = [
-                _calculate_nmae_and_nrmse(
-                    start=start,
-                    end=end,
-                    gs=gs,
-                    weather_data=data,
-                    turbine=turbine,
-                    power_rating=power_rating,
-                    turbine_variables=turbine_variables,
-                    coordinates=coordinates,
-                )
-                for start, end in itertools.pairwise(dates)
-            ]
+            results: list[Errors] = a6.utils.parallelize.parallelize_with_futures(
+                _calculate_nmae_and_nrmse,
+                kwargs=[
+                    dict(
+                        date=date,
+                        gs=gs,
+                        weather_data=data,
+                        turbine=turbine,
+                        power_rating=power_rating,
+                        turbine_variables=turbine_variables,
+                        coordinates=coordinates,
+                    )
+                    for date in dates
+                ]
+            )
             
             forecast_errors[lswr_name] = results
 
-        coords = {"time": dates[:-1], "lswr_method": list(forecast_errors.keys())}
+        coords = {"time": dates, "lswr_method": list(forecast_errors.keys())}
         dims = ["time", "lswr_method"]
 
         nmae_da = xr.DataArray(
@@ -311,8 +330,7 @@ class Errors:
 
 
 def _calculate_nmae_and_nrmse(
-    start: datetime.datetime,
-    end: datetime.datetime,
+    date: datetime.datetime,
     gs: sklearn.model_selection.GridSearchCV,
     weather_data: list[xr.DataArray],
     turbine: xr.Dataset,
@@ -320,27 +338,25 @@ def _calculate_nmae_and_nrmse(
     turbine_variables: _variables.Turbine,
     coordinates: _coordinates.Coordinates,
 ) -> Errors:
-    window = slice(start, end)
-    logger.debug("Evaluating model error for %s", window)
+    logger.debug("Evaluating model error for %s", date)
 
-    weather_forecast = [d.sel({coordinates.time: window}) for d in weather_data]
+    weather_forecast = [a6.datasets.methods.select.select_for_date(d, date=date) for d in weather_data]
     X_forecast = a6.features.methods.reshape.sklearn.transpose(  # noqa: N806
         *weather_forecast
     )
 
-    turbine_sub = turbine.sel({coordinates.time: window})[
-        turbine_variables.production
-    ]
+    turbine_sub = a6.datasets.methods.select.select_for_date(
+        turbine, date=date
+    )[turbine_variables.production]
     y_true = a6.features.methods.reshape.sklearn.transpose(turbine_sub)
 
-    if y_true.size == 0:
+    if y_true.size < 6:
         logger.warning(
             (
-                "Emtpy production data for start=%s "
-                "end=%s, setting errors to NaN"
+                "Less than 6 time steps for production data for date=%s, "
+                "setting errors to NaN"
             ),
-            start,
-            end,
+            date,
         )
         return Errors(np.nan, np.nan)
 
