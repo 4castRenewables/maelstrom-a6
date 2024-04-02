@@ -1,7 +1,6 @@
 import argparse
 import dataclasses
 import datetime
-import itertools
 import logging
 import pathlib
 import os
@@ -115,6 +114,10 @@ def simulate_errors(
     turbine_variables: _variables.Turbine = a6.datasets.variables.Turbine()
     
     lswrs = [None]
+        
+    if args.gwl_path is not None:
+        gwl = xr.open_dataset(args.gwl_path)
+        lswrs.append(gwl["GWL"])
     
     if args.pca_kpca_path is not None:
         pca_kpca = xr.open_dataset(
@@ -123,10 +126,6 @@ def simulate_errors(
             k=args.pca_kpca_n_clusters
         )
         lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
-        
-    if args.gwl_path is not None:
-        gwl = xr.open_dataset(args.gwl_path)
-        lswrs.append(gwl["GWL"])
         
     if args.dcv2_path is not None:
         dcv2 = xr.open_dataset(args.dcv2_path)
@@ -209,7 +208,7 @@ def simulate_errors(
         for lswr in lswrs:
             lswr_name = "none" if lswr is None else lswr.name
             
-            logger.info("Handling LSWR %s", lswr_name)
+            logger.info("Handling LSWR method %s", lswr_name)
             
             data = [ml[var] for var in ml.data_vars] + [sfc[var] for var in sfc.data_vars] + [pl[var] for var in pl.data_vars]
             categorical_features = [False for _ in enumerate(data)]
@@ -340,11 +339,9 @@ def _calculate_nmae_and_nrmse(
 ) -> Errors:
     logger.debug("Evaluating model error for %s", date)
 
-    weather_forecast = [a6.datasets.methods.select.select_for_date(d, date=date) for d in weather_data]
-    X_forecast = a6.features.methods.reshape.sklearn.transpose(  # noqa: N806
-        *weather_forecast
-    )
-
+    # Need to select turbine before weather data,
+    # because methods applied on weather data may fail 
+    # if no turbine data are available for the given date.
     turbine_sub = a6.datasets.methods.select.select_for_date(
         turbine, date=date
     )[turbine_variables.production]
@@ -359,6 +356,11 @@ def _calculate_nmae_and_nrmse(
             date,
         )
         return Errors(np.nan, np.nan)
+
+    weather_forecast = [a6.datasets.methods.select.select_for_date(d, date=date) for d in weather_data]
+    X_forecast = a6.features.methods.reshape.sklearn.transpose(  # noqa: N806
+        *weather_forecast
+    )
 
     y_pred = gs.predict(X_forecast)
 

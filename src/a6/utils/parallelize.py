@@ -106,7 +106,7 @@ def parallelize_with_futures(
                 result = future.result()
             except Exception as e:
                 raise RuntimeError(
-                    f"Function call #{index} has failed with {kwargs[i]}"
+                    f"Function call #{index} has failed with input {kwargs[index]}"
                 ) from e
             else:
                 results.append(result)
