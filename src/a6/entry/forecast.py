@@ -24,40 +24,67 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--turbine-data-dir",
     type=pathlib.Path,
+    help="Directory of the turbine data are located, saved in netCDF format."
 )
 parser.add_argument(
     "--preprocessed-data-dir",
     type=pathlib.Path,
+    help="Directory of the preprocessed turbine and weather data for training the models."
 )
 parser.add_argument(
     "--pca-kpca-path",
     type=pathlib.Path,
     default=None,
+    help="Path to the file containing the PCA and kPCA LSWR labels."
 )
 parser.add_argument(
     "--pca-kpca-n-clusters",
     type=int,
     default=40,
+    choices=[29, 40],
+    help="Number of categories to use from the PCA-kPCA file."
 )
 parser.add_argument(
     "--gwl-path",
     type=pathlib.Path,
     default=None,
+    help="Path to the file containing the DWD GWL labels."
 )
 parser.add_argument(
     "--dcv2-path",
     type=pathlib.Path,
     default=None,
+    help="Path to the file containing the DCv2 LSWR labels."
+)
+parser.add_argument(
+    "--random",
+    type=bool,
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help=(
+        "Train the model with random input labels."
+        ""
+        "Enabling this option will neglect given DWD, PCA, kPCA, and DCv2 labels."
+    ),
 )
 parser.add_argument(
     "--results-dir",
     type=pathlib.Path,
+    help="Path to store the forecast error results."
 )
 parser.add_argument(
     "--parallel",
     type=bool,
     action=argparse.BooleanOptionalAction,
     default=True,
+    help="Parallelize workloads.",
+)
+parser.add_argument(
+    "--testing",
+    type=bool,
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help="Reduce the parameter space.",
 )
 parser.add_argument(
     "--testing",
@@ -68,6 +95,20 @@ parser.add_argument(
 
 
 ForecastErrors = dict[pathlib.Path, xr.Dataset]
+
+class RandomDataset:
+    """Mimicks an `xr.DataArray` with random LSWR categories."""
+
+    def __init__(self, n_categories: int)
+        self._n_categories = n_categories
+
+    @property
+    def name(self) -> str:
+        return "Random"
+    
+    def sel(self, time: xr.DataArray) -> xr.DataArray:
+        size = len(time)
+        return xr.DataArray(np.random.randint(self._n_categories, size=size))
 
 
 def simulate_errors(
@@ -114,22 +155,27 @@ def simulate_errors(
     turbine_variables: _variables.Turbine = a6.datasets.variables.Turbine()
     
     lswrs = [None]
+
+    if args.random:
+        random_labels = RandomDataset(n_categories=args.pca_kpca_n_clusters)
+        lswrs.append(random_labels)
+    # If `--random` is passed, don't train with GWL/PCA/kPCA/DCv2 labels.
+    else:
+        if args.gwl_path is not None:
+            gwl = xr.open_dataset(args.gwl_path)
+            lswrs.append(gwl["GWL"])
         
-    if args.gwl_path is not None:
-        gwl = xr.open_dataset(args.gwl_path)
-        lswrs.append(gwl["GWL"])
-    
-    if args.pca_kpca_path is not None:
-        pca_kpca = xr.open_dataset(
-            args.pca_kpca_path
-        ).sel(
-            k=args.pca_kpca_n_clusters
-        )
-        lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
-        
-    if args.dcv2_path is not None:
-        dcv2 = xr.open_dataset(args.dcv2_path)
-        lswrs.append(dcv2["DCv2"])
+        if args.pca_kpca_path is not None:
+            pca_kpca = xr.open_dataset(
+                args.pca_kpca_path
+            ).sel(
+                k=args.pca_kpca_n_clusters
+            )
+            lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
+            
+        if args.dcv2_path is not None:
+            dcv2 = xr.open_dataset(args.dcv2_path)
+            lswrs.append(dcv2["DCv2"])
 
     result: ForecastErrors = {}
     
@@ -206,7 +252,7 @@ def simulate_errors(
         forecast_errors = {}
 
         for lswr in lswrs:
-            lswr_name = "none" if lswr is None else lswr.name
+            lswr_name = "Default" if lswr is None else lswr.name
             
             logger.info("Handling LSWR method %s", lswr_name)
             

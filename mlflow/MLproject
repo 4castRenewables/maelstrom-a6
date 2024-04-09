@@ -153,6 +153,9 @@ entry_points:
         type: string
       dcv2_path:
         type: string
+      random:
+        type: string
+        default: --no-random
       results_dir:
         type: string
       parallel:
@@ -166,6 +169,7 @@ entry_points:
         --pca-kpca-n-clusters {pca_kpca_n_clusters}
         --gwl-path {gwl_path}
         --dcv2-path {dcv2_path}
+        {random}
         --results-dir {results_dir}
         {parallel}
   gwl-classifier:
