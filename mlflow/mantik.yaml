@@ -8,7 +8,7 @@ Environment:
     git pull
     cd $UC_WORKING_DIRECTORY
   Apptainer:
-    Path: /p/project/deepacf/maelstrom/$USER/a6-cuda.sif
+    Path: /p/project/deepacf/$USER/a6-cuda.sif
     Type: remote
     Options:
       - -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6

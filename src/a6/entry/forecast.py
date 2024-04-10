@@ -60,12 +60,18 @@ parser.add_argument(
     "--random",
     type=bool,
     action=argparse.BooleanOptionalAction,
-    default=False,
+    default=True,
     help=(
         "Train the model with random input labels."
         ""
         "Enabling this option will neglect given DWD, PCA, kPCA, and DCv2 labels."
     ),
+)
+parser.add_argument(
+    "--train-size",
+    type=int,
+    default=365,
+    help="Number of random days to use for the train set",
 )
 parser.add_argument(
     "--results-dir",
@@ -86,29 +92,9 @@ parser.add_argument(
     default=False,
     help="Reduce the parameter space.",
 )
-parser.add_argument(
-    "--testing",
-    type=bool,
-    action=argparse.BooleanOptionalAction,
-    default=False,
-)
 
 
 ForecastErrors = dict[pathlib.Path, xr.Dataset]
-
-class RandomDataset:
-    """Mimicks an `xr.DataArray` with random LSWR categories."""
-
-    def __init__(self, n_categories: int)
-        self._n_categories = n_categories
-
-    @property
-    def name(self) -> str:
-        return "Random"
-    
-    def sel(self, time: xr.DataArray) -> xr.DataArray:
-        size = len(time)
-        return xr.DataArray(np.random.randint(self._n_categories, size=size))
 
 
 def simulate_errors(
@@ -156,29 +142,41 @@ def simulate_errors(
     
     lswrs = [None]
 
-    if args.random:
-        random_labels = RandomDataset(n_categories=args.pca_kpca_n_clusters)
-        lswrs.append(random_labels)
-    # If `--random` is passed, don't train with GWL/PCA/kPCA/DCv2 labels.
-    else:
-        if args.gwl_path is not None:
-            gwl = xr.open_dataset(args.gwl_path)
-            lswrs.append(gwl["GWL"])
+    if args.gwl_path is not None:
+        gwl = xr.open_dataset(args.gwl_path)
+        lswrs.append(gwl["GWL"])
+    
+    if args.pca_kpca_path is not None:
+        pca_kpca = xr.open_dataset(
+            args.pca_kpca_path
+        ).sel(
+            k=args.pca_kpca_n_clusters
+        )
+        lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
         
-        if args.pca_kpca_path is not None:
-            pca_kpca = xr.open_dataset(
-                args.pca_kpca_path
-            ).sel(
-                k=args.pca_kpca_n_clusters
-            )
-            lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
-            
-        if args.dcv2_path is not None:
-            dcv2 = xr.open_dataset(args.dcv2_path)
-            lswrs.append(dcv2["DCv2"])
+    if args.dcv2_path is not None:
+        dcv2 = xr.open_dataset(args.dcv2_path)
+        lswrs.append(dcv2["DCv2"])
+
+    if args.random:
+        logger.info(
+            "Using randomized LSWR labels for training (n_categories=%i)",
+            args.pca_kpca_n_clusters,
+        )
+        dates = pd.date_range("2000-01-01", datetime.date.today(), freq="1D")
+        random_labels = xr.DataArray(
+            np.random.randint(args.pca_kpca_n_clusters, size=len(dates)),
+            coords={coordinates.time: dates},
+            dims=[coordinates.time],
+            name="Random",
+        )
+        lswrs.append(random_labels)
 
     result: ForecastErrors = {}
     
+    logger.info("Creating results directory if not exists at %s", args.results_dir)
+    args.results_dir.mkdir(parents=True, exist_ok=True)
+
     for i, turbine_path in enumerate(turbine_files):
         if WORKER_ID is not None and i != WORKER_ID:
             continue
@@ -235,18 +233,34 @@ def simulate_errors(
         power_rating = turbine_variables.read_power_rating(turbine)
         logger.info("Extracted power rating %i", power_rating)
 
-        start, end = min(turbine["time"].values), max(turbine["time"].values)
+        start, end = min(turbine[coordinates.time].values), max(turbine[coordinates.time].values)
 
         # Convert time stamps to dates and create date range
         times_as_dates = a6.utils.times.time_steps_as_dates(turbine, coordinates=coordinates)
         start, end = min(times_as_dates), max(times_as_dates)
         dates = pd.date_range(start, end, freq="1d")
 
+        # Train with minimum 50% of the number of days in the turbine data set,
+        # but with a maximum of 365 days.
+        train_size = min(0.5 * len(dates), args.train_size)
+
+        train_time_steps, test_time_steps = a6.features.methods.selection.train_test_split_dates(
+            turbine[coordinates.time],
+            # Turbine data has frequency of hours, hence multiply by 24
+            # to achieve train set size equivalent to 365 days.
+            train_size=int(train_size * 24),
+        )
+
         logger.info(
-            "Simulating forecast errors for LSWRS %s for date range %s to %s",
+            (
+                "Simulating forecast errors for LSWRS %s for date range "
+                "%s to %s with %i/%i train/test samples (hours)"
+            ),
             lswrs,
             start,
             end,
+            len(train_time_steps),
+            len(test_time_steps),
         )
 
         forecast_errors = {}
@@ -260,30 +274,33 @@ def simulate_errors(
             categorical_features = [False for _ in enumerate(data)]
             
             if lswr is not None:
-                lswr_labels = lswr.sel(time=turbine[coordinates.time], method="pad")
+                turbine_time_steps = turbine[coordinates.time]
+                lswr_labels = lswr.sel(time=turbine_time_steps, method="pad")
+                # Must override time coordinates of result, because due to "pad"
+                # duplicate indexes are returned (the same index for every 
+                # hour of the day).
+                lswr_labels[coordinates.time] = turbine_time_steps
                 data.append(lswr_labels)
                 categorical_features.append(True)
+
+            data_train = [d.sel({coordinates.time: train_time_steps}) for d in data]
+            data_test = [d.sel({coordinates.time: test_time_steps}) for d in data]
+
+            production = turbine[turbine_variables.production]
+            turbine_train = production.sel({coordinates.time: train_time_steps})
+            turbine_test = production.sel({coordinates.time: test_time_steps})
                 
             logger.info(
                 "Preparing input data for variables %s", [d.name for d in data]
             )
 
-            X = a6.features.methods.reshape.sklearn.transpose(*data)  # noqa: N806
-            y = a6.features.methods.reshape.sklearn.transpose(
-                turbine[turbine_variables.production]
-            )
-
-            (  # noqa: N806
-                X_train,
-                _,
-                y_train,
-                _,
-            ) = sklearn.model_selection.train_test_split(X, y, train_size=1/3)
+            X = a6.features.methods.reshape.sklearn.transpose(*data_train)  # noqa: N806
+            y = a6.features.methods.reshape.sklearn.transpose(turbine_train)
 
             logger.info(
                 "Train dataset size is %i hours (~%i days)",
-                y_train.size,
-                y_train.size // 24,
+                y.size,
+                y.size // 24,
             )
 
             if args.testing:
@@ -321,18 +338,18 @@ def simulate_errors(
                 refit=True,
                 n_jobs=n_jobs,
             )
-            gs = gs.fit(X=X_train, y=y_train.ravel())
+            gs = gs.fit(X=X, y=y.ravel())
 
             results: list[Errors] = a6.utils.parallelize.parallelize_with_futures(
                 _calculate_nmae_and_nrmse,
                 kwargs=[
                     dict(
                         date=date,
+                        test_time_steps=test_time_steps,
                         gs=gs,
-                        weather_data=data,
-                        turbine=turbine,
+                        weather_data=data_test,
+                        turbine=turbine_test,
                         power_rating=power_rating,
-                        turbine_variables=turbine_variables,
                         coordinates=coordinates,
                     )
                     for date in dates
@@ -341,8 +358,8 @@ def simulate_errors(
             
             forecast_errors[lswr_name] = results
 
-        coords = {"time": dates, "lswr_method": list(forecast_errors.keys())}
-        dims = ["time", "lswr_method"]
+        coords = {coordinates.time: dates, "lswr_method": list(forecast_errors.keys())}
+        dims = [coordinates.time, "lswr_method"]
 
         nmae_da = xr.DataArray(
             _unpack_errors_per_method(forecast_errors, attr="nmae"),
@@ -375,28 +392,32 @@ class Errors:
 
 
 def _calculate_nmae_and_nrmse(
-    date: datetime.datetime,
+    date: pd.Timestamp,
+    test_time_steps: xr.DataArray,
     gs: sklearn.model_selection.GridSearchCV,
     weather_data: list[xr.DataArray],
     turbine: xr.Dataset,
     power_rating: float,
-    turbine_variables: _variables.Turbine,
     coordinates: _coordinates.Coordinates,
 ) -> Errors:
     logger.debug("Evaluating model error for %s", date)
+
+    if date not in test_time_steps:
+        logger.info("Date %s not in test set, setting errors to NaN", date)
+        return Errors(np.nan, np.nan)
 
     # Need to select turbine before weather data,
     # because methods applied on weather data may fail 
     # if no turbine data are available for the given date.
     turbine_sub = a6.datasets.methods.select.select_for_date(
         turbine, date=date
-    )[turbine_variables.production]
+    )
     y_true = a6.features.methods.reshape.sklearn.transpose(turbine_sub)
 
-    if y_true.size < 6:
+    if y_true.size < 3:
         logger.warning(
             (
-                "Less than 6 time steps for production data for date=%s, "
+                "Less than 3 time steps for production data for date=%s, "
                 "setting errors to NaN"
             ),
             date,

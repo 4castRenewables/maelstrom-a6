@@ -80,6 +80,7 @@ def clean_production_data(
     1. Power production is higher than the power rating.
     2. Production is below 0.
     3. Production is NaN.
+    4. If `status` is present: `status` is not 0.0 (turbine is not stopped).
 
     """
     logger.debug(
@@ -96,19 +97,43 @@ def clean_production_data(
 def _remove_outliers(
     data: xr.Dataset, production: str, power_rating: int | float
 ) -> xr.Dataset:
-    return data.where(
-        (
-            # Find indexes where |P| < power_rating
-            (abs(data[production]) < 1.1 * power_rating)
-            &
-            # and such where P > 0
-            (data[production] > 0)
-            &
-            # and such where P is not NaN.
-            data[production].notnull()
-        ),
-        drop=True,
+    indexes = (
+        # Find indexes where |P| < power_rating
+        (abs(data[production]) < 1.05 * power_rating)
+        &
+        # and such where P > 0
+        (data[production] > 0)
+        &
+        # and such where P is not NaN.
+        data[production].notnull()
     )
+    if "status" in data.data_vars:
+        logger.info(
+            "'status' in production data, removing data where status is 0.0"
+        )
+        # If "status" is given, it can be either of
+        #   - `1.0` (turbine running) 
+        #   - `0.0` (turbine stopped)
+        #   - `NaN` (unknown)
+        # Hence, if known that the turbine was stopped (`status = 0.0`),
+        # we remove these time steps. (I.e. we select the time steps
+        # where the status is not `0.0``.)
+        indexes &= (data["status"] != 0.0)
+
+    result = data.where(indexes, drop=True)
+
+    before = data[production].size
+    after = result[production].size
+    samples_removed = before - after
+    percentage_removed = (samples_removed / before) * 100.0
+
+    logger.info(
+        "Removed %i samples (%.2f%%)",
+        samples_removed,
+        percentage_removed,
+    )
+
+    return result
 
 
 @utils.log_consumption

@@ -155,7 +155,10 @@ entry_points:
         type: string
       random:
         type: string
-        default: --no-random
+        default: --random
+      train_size:
+        type: int
+        default: 365
       results_dir:
         type: string
       parallel:
@@ -170,6 +173,7 @@ entry_points:
         --gwl-path {gwl_path}
         --dcv2-path {dcv2_path}
         {random}
+        --train-size {train_size}
         --results-dir {results_dir}
         {parallel}
   gwl-classifier:
