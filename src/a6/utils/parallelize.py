@@ -90,6 +90,7 @@ def _apply_args_and_kwargs(fn: Callable, args, kwargs):
     """Parallelize functions with args and kwargs."""
     return fn(*args, **kwargs)
 
+
 def parallelize_with_futures(
     func: Callable,
     kwargs: list[dict],
@@ -104,9 +105,10 @@ def parallelize_with_futures(
 
             try:
                 result = future.result()
-            except Exception as e:
+            except Exception as e:  # noqa: B902
                 raise RuntimeError(
-                    f"Function call #{index} has failed with input {kwargs[index]}"
+                    f"Function call #{index} has failed with "
+                    f"input {kwargs[index]}"
                 ) from e
             else:
                 results.append(result)

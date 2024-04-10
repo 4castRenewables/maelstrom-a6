@@ -4,10 +4,10 @@ import a6.utils.energy as energy
 import a6.utils.logging as logging
 import a6.utils.mantik as mantik
 import a6.utils.models as models
-import a6.utils.times as times
-import a6.utils.slurm as slurm
-import a6.utils.usage as usage
 import a6.utils.parallelize as parallelize
+import a6.utils.slurm as slurm
+import a6.utils.times as times
+import a6.utils.usage as usage
 from a6.utils.cpus import get_cpu_count
 from a6.utils.functional import Functional
 from a6.utils.functional import make_functional

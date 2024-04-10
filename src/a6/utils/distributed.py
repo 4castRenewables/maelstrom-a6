@@ -73,7 +73,7 @@ def setup(
     seed: int = 42,
     properties: Properties | None = None,
     post_fn: Callable | None = None,
-    post_fn_kwargs: dict | None = None
+    post_fn_kwargs: dict | None = None,
 ) -> Iterator[Properties]:
     start = time.time()
 

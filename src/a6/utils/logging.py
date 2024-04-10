@@ -130,10 +130,10 @@ def create_logger(
 
     handlers = [console_handler]
 
-    
-
     if filepath is not None:
-        path = filepath.with_name(f"{filepath.stem}-rank-{global_rank}{filepath.suffix}")
+        path = filepath.with_name(
+            f"{filepath.stem}-rank-{global_rank}{filepath.suffix}"
+        )
         file_handler = logging.FileHandler(path, "a+")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(log_formatter)

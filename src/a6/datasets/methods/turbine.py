@@ -112,13 +112,13 @@ def _remove_outliers(
             "'status' in production data, removing data where status is 0.0"
         )
         # If "status" is given, it can be either of
-        #   - `1.0` (turbine running) 
+        #   - `1.0` (turbine running)
         #   - `0.0` (turbine stopped)
         #   - `NaN` (unknown)
         # Hence, if known that the turbine was stopped (`status = 0.0`),
         # we remove these time steps. (I.e. we select the time steps
         # where the status is not `0.0``.)
-        indexes &= (data["status"] != 0.0)
+        indexes &= data["status"] != 0.0
 
     result = data.where(indexes, drop=True)
 

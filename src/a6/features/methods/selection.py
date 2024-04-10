@@ -1,13 +1,15 @@
-import pandas as pd
-import numpy as np
-import xarray as xr
-import random
 import logging
+import random
+
+import numpy as np
+import pandas as pd
+import xarray as xr
 
 logger = logging.getLogger(__name__)
 
 
 TrainTestSplit = tuple[list[pd.Timestamp], list[pd.Timestamp]]
+
 
 def train_test_split_dates(
     date_range: xr.DataArray,
@@ -63,21 +65,20 @@ def _select_continuous(
     )
 
     train = date_range[start:end]
-    test = xr.concat((date_range[:start], date_range[end:]), dim=date_range.dims[0])
+    test = xr.concat(
+        (date_range[:start], date_range[end:]), dim=date_range.dims[0]
+    )
 
     if len(train) == 0:
-        raise ValueError(
-            "Empty train dataset (start=%s, end=%s)",
-            start,
-            end
-        )
+        raise ValueError("Empty train dataset (start=%s, end=%s)", start, end)
     elif len(test) == 0:
         raise ValueError(
             "Empty test dataset (start=%s, end=%s) from date range %s",
             start,
-            end
+            end,
         )
     return train, test
+
 
 def _select_individual(
     date_range: xr.DataArray,
@@ -92,5 +93,7 @@ def _select_individual(
         train_size,
     )
     shuffled = np.random.permutation(len(date_range))
-    train_indexes, test_indexes = sorted(shuffled[:train_size]), sorted(shuffled[train_size:])
+    train_indexes, test_indexes = sorted(shuffled[:train_size]), sorted(
+        shuffled[train_size:]
+    )
     return date_range[train_indexes], date_range[test_indexes]

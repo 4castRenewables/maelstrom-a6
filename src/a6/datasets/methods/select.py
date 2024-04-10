@@ -141,9 +141,9 @@ def select_for_date(
 ) -> types.XarrayData:
     return data.where(
         (
-            (data[f'{coordinates.time}.year'] == date.year) 
-            & (data[f'{coordinates.time}.month'] == date.month) 
-            & (data[f'{coordinates.time}.day'] == date.day)
+            (data[f"{coordinates.time}.year"] == date.year)
+            & (data[f"{coordinates.time}.month"] == date.month)
+            & (data[f"{coordinates.time}.day"] == date.day)
         ),
         drop=True,
     )

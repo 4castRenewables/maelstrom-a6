@@ -1,7 +1,7 @@
 import argparse
 import logging
-import pathlib
 import os
+import pathlib
 
 import xarray as xr
 
@@ -10,7 +10,9 @@ import a6.datasets.coordinates as _coordinates
 import a6.datasets.variables as _variables
 import a6.utils as utils
 
-WORKER_ID = int(os.getenv("SLURM_PROCID")) if "SLURM_PROCID" in os.environ else None
+WORKER_ID = (
+    int(os.getenv("SLURM_PROCID")) if "SLURM_PROCID" in os.environ else None
+)
 
 utils.logging.create_logger(
     global_rank=WORKER_ID,
@@ -52,7 +54,7 @@ def create_turbine_model_features(
     turbine_files = utils.paths.list_files(
         args.turbine_data_dir, pattern="**/*.nc", recursive=True
     )
-    
+
     if WORKER_ID is not None and WORKER_ID >= len(turbine_files):
         logger.warning("Exiting: no file to process")
         return
@@ -72,7 +74,7 @@ def create_turbine_model_features(
     for i, turbine_path in enumerate(turbine_files):
         if WORKER_ID is not None and i != WORKER_ID:
             continue
-            
+
         logger.info(
             "Processing turbine %i/%i (path=%s)",
             i,
