@@ -24,8 +24,8 @@ if __name__ == "__main__":
 
     data = a6.datasets.EcmwfIfsHres(
         path=pathlib.Path(
-            # "/home/fabian/Documents/MAELSTROM/data/pca"
-            "/p/scratch/deepacf/maelstrom/maelstrom_data/a6/pl"
+            # "/home/fabian/Documents/data/pca"
+            "/p/scratch/deepacf/maelstrom_data/a6/pl"
         ),
         pattern="pl_*.nc",
         slice_time_dimension=True,

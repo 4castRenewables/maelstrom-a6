@@ -18,7 +18,7 @@ parameterset:
         tag: test
         _: era5_pl_2000_2023_12.nc
       - name: data_path
-        _: /p/scratch/deepacf/maelstrom/emmerich1/data/ecmwf_era5
+        _: /p/scratch/deepacf/emmerich1/data/ecmwf_era5
       - name: data_path
         tag: cscratch
         _: /p/cscratch/fs/cexalab/maelstrom/emmerich1/data/ecmwf_era5
@@ -225,10 +225,10 @@ parameterset:
            -v /scratch:/scratch
            -v /home/$USER:/home/$USER
       - name: image_path
-        _: /p/project/deepacf/maelstrom/emmerich1/a6-cuda.sif
+        _: /p/project/deepacf/emmerich1/a6-cuda.sif
       - name: image_path
         tag: dc-mi200
-        _: /p/project/deepacf/maelstrom/emmerich1/a6-rocm.sif
+        _: /p/project/deepacf/emmerich1/a6-rocm.sif
       - name: image_path
         tag: e4-a2
         _: /home/$USER/a6-cuda-11.sif
