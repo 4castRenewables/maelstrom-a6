@@ -283,14 +283,14 @@ def cluster_embeddings(
         if (
             # Plot for the first epoch
             epoch_comp == 1
-            # Below 100 epochs, plot every 25 epochs,
-            or (epoch_comp <= 100 and epoch_comp % 25 == 0)
-            # Plot every hundredth epoch
-            or epoch_comp % 100 == 0
+            # Below 100 epochs, plot every 20 epochs,
+            or (epoch_comp <= 100 and epoch_comp % 20 == 0)
+            # Plot every 50th epoch
+            or epoch_comp % 50 == 0
             # Plot for the last epoch
             or epoch_comp == settings.model.epochs
         ):
-            if settings.plot_results and utils.distributed.is_primary_device():
+            if settings.save_results and utils.distributed.is_primary_device():
                 save_start = time.time()
                 logger.info(
                     "Saving clustering data at epoch %i",
@@ -385,6 +385,8 @@ def cluster_embeddings(
                 round(percent_unassigned_samples, 2),
                 assignments.shape[-1],
             )
+            ssd_mean, ssd_std = _calculate_ssd_mean_and_std(distances)
+            logger.info("Mean SSD: %.4f +/- %.4f", ssd_mean, ssd_std)
             if settings.enable_tracking:
                 mantik.mlflow.log_metric(
                     "unassigned_samples",
@@ -394,10 +396,26 @@ def cluster_embeddings(
                 mantik.mlflow.log_metric(
                     "unassigned_samples_percent",
                     percent_unassigned_samples,
+                    step=epoch,
+                )
+                mantik.mlflow.log_metric(
+                    "ssd_mean",
+                    ssd_mean,
+                    step=epoch,
+                )
+                mantik.mlflow.log_metric(
+                    "ssd_std",
+                    ssd_std,
+                    step=epoch,
                 )
 
     return assignments
 
+def _calculate_ssd_mean_and_std(d: torch.Tensor):
+    ssd_per_head = (d.abs() ** 2).sum(dim=1)
+    mean = float(ssd_per_head.mean())
+    std = float(ssd_per_head.std())
+    return mean, std
 
 def _get_indices_sparse(data):
     cols = np.arange(data.size)

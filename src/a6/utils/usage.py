@@ -2,13 +2,14 @@ import logging
 import os
 import resource
 
+import mantik.mlflow
 import psutil
 import torch
 
 logger = logging.getLogger(__name__)
 
 
-def log_gpu_memory_usage(device: torch.device):
+def log_gpu_memory_usage(device: torch.device, epoch: int, track_to_mlflow: bool):
     available = _bytes_to_gb(
         torch.cuda.get_device_properties(device).total_memory
     )
@@ -19,7 +20,7 @@ def log_gpu_memory_usage(device: torch.device):
     max_reserved = _bytes_to_gb(torch.cuda.max_memory_reserved(device))
 
     logger.info(
-        "GPU memory allocated current %.5f GB, max %.5f GB",
+        "GPU memory reserved current %.5f GB, max %.5f GB",
         current_reserved,
         max_reserved,
     )
@@ -34,8 +35,19 @@ def log_gpu_memory_usage(device: torch.device):
         max_usage,
     )
 
+    if track_to_mlflow:
+        mantik.mlflow.log_metrics(
+            {
+                "gpu_mem_reserved_current_gb": current_reserved,
+                "gpu_mem_reserved_max_gb": max_reserved,
+                "gpu_mem_usage_current_gb": current_usage,
+                "gpu_mem_usage_max_gb": max_usage,
+            },
+            step=epoch,
+        )
 
-def log_cpu_memory_usage():
+
+def log_cpu_memory_usage(epoch: int, track_to_mlflow: bool):
     """Logs the current and maximum memory useage of this process."""
     current_usage = _bytes_to_gb(get_memory_usage())
     max_usage = _bytes_to_gb(get_max_memory_usage())
@@ -44,6 +56,16 @@ def log_cpu_memory_usage():
         current_usage,
         max_usage,
     )
+
+    if track_to_mlflow:
+        mantik.mlflow.log_metrics(
+            {
+                "cpu_mem_usage_current_gb": current_usage,
+                "cpu_mem_usage_max_gb": max_usage,
+            },
+            step=epoch,
+        )
+
 
 
 def _bytes_to_gb(value: float) -> float:
