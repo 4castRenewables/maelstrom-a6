@@ -9,7 +9,9 @@ import torch
 logger = logging.getLogger(__name__)
 
 
-def log_gpu_memory_usage(device: torch.device, epoch: int, track_to_mlflow: bool):
+def log_gpu_memory_usage(
+    device: torch.device, epoch: int, track_to_mlflow: bool
+):
     available = _bytes_to_gb(
         torch.cuda.get_device_properties(device).total_memory
     )
@@ -65,7 +67,6 @@ def log_cpu_memory_usage(epoch: int, track_to_mlflow: bool):
             },
             step=epoch,
         )
-
 
 
 def _bytes_to_gb(value: float) -> float:

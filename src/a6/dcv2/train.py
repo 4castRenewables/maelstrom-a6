@@ -253,10 +253,14 @@ def train(
         )
 
     if utils.distributed.is_primary_device():
-        utils.usage.log_cpu_memory_usage(epoch=epoch, track_to_mlflow=settings.enable_tracking)
+        utils.usage.log_cpu_memory_usage(
+            epoch=epoch, track_to_mlflow=settings.enable_tracking
+        )
 
         if not settings.distributed.use_cpu:
-            utils.usage.log_gpu_memory_usage(device, epoch=epoch, track_to_mlflow=settings.enable_tracking)
+            utils.usage.log_gpu_memory_usage(
+                device, epoch=epoch, track_to_mlflow=settings.enable_tracking
+            )
             logger.info(
                 "========= Memory Summary at epoch %s =======\n%s\n",
                 epoch,

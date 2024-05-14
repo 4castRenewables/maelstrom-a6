@@ -1,28 +1,30 @@
 """
-apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project/deepacf/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py
+apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project/deepacf/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py  # noqa: E501
 """
+import contextlib
 import pathlib
 import time
-import contextlib
-import joblib
 
+import joblib
+import mantik.mlflow
+import numpy as np
+import scipy.sparse
 import sklearn.cluster
 import sklearn.decomposition
 import sklearn.preprocessing
-import matplotlib.pyplot as plt
-import scipy.sparse
 import sklearn.utils.sparsefuncs
 import xarray as xr
-import mantik.mlflow
 
 import a6
 
 
 N_CLUSTERS = 40
 Ks = list(range(1, N_CLUSTERS + 1))
-ds = xr.open_dataset(pathlib.Path(
-    "/p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
-))
+ds = xr.open_dataset(
+    pathlib.Path(
+        "/p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
+    )
+)
 data_dir = pathlib.Path("/p/project/deepacf/emmerich1/data")
 
 pca_dir = data_dir / "pca"
@@ -31,15 +33,16 @@ pca_dir.mkdir(exist_ok=True, parents=True)
 kmeans_dir = data_dir / "kmeans"
 kmeans_dir.mkdir(exist_ok=True, parents=True)
 
+
 @contextlib.contextmanager
 def measure_time(message: str = ""):
     if message:
         print(message)
-        
+
     start = time.time()
-    
+
     yield
-    
+
     duration = time.time() - start
     minutes = int(duration // 60)
     seconds = int(duration % 60)
@@ -49,18 +52,22 @@ def measure_time(message: str = ""):
     else:
         print(f"Finished in {duration_str}")
 
+
 def calculate_ssd(k: int, data, type: str, n_pcs: int) -> float:
     km = sklearn.cluster.KMeans(n_clusters=k)
     km.fit(data)
-    
+
     joblib.dump(km, kmeans_dir / f"kmeans_{type}_n_pcs_{n_pcs}_{k=}.joblib")
-    
+
     return km.inertia_
 
 
 def transform_into_pc_space_and_standardize(pca, X, n_components: int):
     X = pca._validate_data(
-        X, accept_sparse=("csr", "csc"), dtype=[np.float64, np.float32], reset=False
+        X,
+        accept_sparse=("csr", "csc"),
+        dtype=[np.float64, np.float32],
+        reset=False,
     )
     if pca.mean_ is not None:
         if scipy.sparse.issparse(X):
@@ -69,14 +76,17 @@ def transform_into_pc_space_and_standardize(pca, X, n_components: int):
             X = X - pca.mean_
     X_transformed = X @ pca.components_[:n_components, :].T
     if pca.whiten:
-        X_transformed /= xp.sqrt(pca.explained_variance_[:n_components])
-    X_transformed = sklearn.preprocessing.StandardScaler().fit_transform(X_transformed)
+        X_transformed /= np.sqrt(pca.explained_variance_[:n_components])
+    X_transformed = sklearn.preprocessing.StandardScaler().fit_transform(
+        X_transformed
+    )
     return X_transformed
+
 
 with measure_time("Reading data"):
     data = (
         xr.open_dataset(
-            "/p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12_preprocssed_for_pca.nc"
+            "/p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12_preprocssed_for_pca.nc"  # noqa: E501
         )
         .to_dataarray()
         .values[0]
@@ -100,13 +110,15 @@ def transform_data(
     data,
 ):
     transformed = pca.fit_transform(data)
-    transformed = sklearn.preprocessing.StandardScaler().fit_transform(transformed)
+    transformed = sklearn.preprocessing.StandardScaler().fit_transform(
+        transformed
+    )
     return transformed
 
 
 def calculate_ssd_pca(pca, n_pcs: int):
     pca_tansformed_path = pca_dir / f"pca_{n_pcs}_pcs_transformed.joblib"
-    
+
     with measure_time(f"Transforming PCA result ({n_pcs=})"):
         transformed = read_from_disk_if_exists(
             path=pca_tansformed_path,
@@ -119,11 +131,14 @@ def calculate_ssd_pca(pca, n_pcs: int):
     with measure_time(f"Calculating SSDs for PCA ({n_pcs=})"):
         ssds = a6.utils.parallelize.parallelize_with_futures(
             calculate_ssd,
-            kwargs=[dict(k=k, data=transformed, type="pca", n_pcs=n_pcs) for k in Ks],
+            kwargs=[
+                dict(k=k, data=transformed, type="pca", n_pcs=n_pcs) for k in Ks
+            ],
         )
 
     return {k: ssd for k, ssd in zip(Ks, ssds, strict=True)}
-    
+
+
 def calculate_ssd_kpca(n_pcs: int):
     kpca_path = pca_dir / f"kpca_{n_pcs}_pcs.joblib"
     kpca_tansformed_path = pca_dir / f"kpca_{n_pcs}_pcs_transformed.joblib"
@@ -133,7 +148,7 @@ def calculate_ssd_kpca(n_pcs: int):
         method=sklearn.decomposition.KernelPCA,
         n_components=n_pcs,
     )
-    
+
     with measure_time(f"Transforming kPCA result ({n_pcs=})"):
         transformed = read_from_disk_if_exists(
             path=kpca_tansformed_path,
@@ -145,18 +160,19 @@ def calculate_ssd_kpca(n_pcs: int):
     with measure_time(f"Calculating SSDs for kPCA {n_pcs=}"):
         ssds = a6.utils.parallelize.parallelize_with_futures(
             calculate_ssd,
-            kwargs=[dict(k=k, data=transformed, type="kpca", n_pcs=n_pcs) for k in Ks],
+            kwargs=[
+                dict(k=k, data=transformed, type="kpca", n_pcs=n_pcs)
+                for k in Ks
+            ],
         )
 
     mantik.mlflow.log_metrics(
-        {
-            f"ssd_pca_k_{k}": ssd
-            for k, ssd in zip(Ks, ssds, strict=True)
-        },
+        {f"ssd_pca_k_{k}": ssd for k, ssd in zip(Ks, ssds, strict=True)},
         step=n_pcs,
     )
 
     return {k: ssd for k, ssd in zip(Ks, ssds, strict=True)}
+
 
 def calculate_ssds(method, method_name: str, n_pcs: int, **kwargs) -> dict:
     with measure_time(f"Calculating SSDs for {method_name}"):
@@ -177,6 +193,7 @@ def calculate_ssds(method, method_name: str, n_pcs: int, **kwargs) -> dict:
         )
 
     return result
+
 
 if __name__ == "__main__":
     n_pcs_kpca = 15
@@ -202,4 +219,7 @@ if __name__ == "__main__":
         n_pcs=n_pcs_kpca,
     )
 
-    joblib.dump({"ssds_pca": ssds_pca, "ssds_kpca": ssds_kpca}, data_dir / "scree-test-results.dict")
+    joblib.dump(
+        {"ssds_pca": ssds_pca, "ssds_kpca": ssds_kpca},
+        data_dir / "scree-test-results.dict",
+    )

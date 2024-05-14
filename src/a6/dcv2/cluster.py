@@ -411,11 +411,13 @@ def cluster_embeddings(
 
     return assignments
 
+
 def _calculate_ssd_mean_and_std(d: torch.Tensor):
     ssd_per_head = (d.abs() ** 2).sum(dim=1)
     mean = float(ssd_per_head.mean())
     std = float(ssd_per_head.std())
     return mean, std
+
 
 def _get_indices_sparse(data):
     cols = np.arange(data.size)

@@ -76,6 +76,7 @@ max-line-length = 80
 per-file-ignores = [
     "__init__.py:F401,E501",
     "src/a6/dcv2/cluster.py:N806",
+    "scripts/pca_k_means_scree_test.py:N803,N806",
 ]
 
 [tool.mypy]
