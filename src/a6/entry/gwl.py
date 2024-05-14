@@ -19,9 +19,12 @@ def main(
     architecture: str,
     select_dwd_area: bool = True,
     testing: bool = True,
+    use_cpu: bool = False,
     log_to_mlflow: bool = True,
 ) -> None:
-    with utils.distributed.setup() as properties:
+    with utils.distributed.setup(
+        properties=utils.distributed.Properties.from_env(use_cpu=use_cpu)
+    ) as properties:
         coordinates = datasets.coordinates.Coordinates()
 
         ds = datasets.dwd.get_dwd_era5_data(

@@ -122,7 +122,7 @@ def convert_fields_to_grayscale_images(
         min_max_values=min_max_values,
         filename_creator=filename_creator,
     )
-    utils.parallelize(
+    utils.parallelize.parallelize_with_multiprocessing(
         function=_convert_time_step_and_save_to_file,
         args_zipped=steps,
         single_arg=True,
