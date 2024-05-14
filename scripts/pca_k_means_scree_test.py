@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import scipy.sparse
 import sklearn.utils.sparsefuncs
 import xarray as xr
+import mantik.mlflow
 
 import a6
 
@@ -147,6 +148,14 @@ def calculate_ssd_kpca(n_pcs: int):
             kwargs=[dict(k=k, data=transformed, type="kpca", n_pcs=n_pcs) for k in Ks],
         )
 
+    mantik.mlflow.log_metrics(
+        {
+            f"ssd_pca_k_{k}": ssd
+            for k, ssd in zip(Ks, ssds, strict=True)
+        },
+        step=n_pcs,
+    )
+
     return {k: ssd for k, ssd in zip(Ks, ssds, strict=True)}
 
 def calculate_ssds(method, method_name: str, n_pcs: int, **kwargs) -> dict:
@@ -157,6 +166,16 @@ def calculate_ssds(method, method_name: str, n_pcs: int, **kwargs) -> dict:
             kwargs=[dict(n_pcs=n_pcs, **kwargs) for n_pcs in n_pcs_range],
         )
         result = {pcs: ssd for pcs, ssd in zip(n_pcs_range, ssds, strict=True)}
+
+    for k in Ks:
+        mantik.mlflow.log_metrics(
+            {
+                f"ssd_{method_name.lower()}_{pcs}": ssds_per_k[k]
+                for pcs, ssds_per_k in ssds.items()
+            },
+            step=k,
+        )
+
     return result
 
 if __name__ == "__main__":

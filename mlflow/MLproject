@@ -204,7 +204,11 @@ entry_points:
         --architecture {architecture}
         {select_dwd_area}
         {enable_tracking}
-  pca_kmeans_scree_test:
+  pca-kmeans-scree-test:
+    parameters:
+      dummy:
+        type: string
+        default: ignored
     command: python /opt/a6/scripts/pca_k_means_scree_test.py
   dcv2:
     parameters:
