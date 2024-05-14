@@ -205,7 +205,11 @@ entry_points:
         {select_dwd_area}
         {enable_tracking}
   pca-kmeans-scree-test:
-    command: python /opt/a6/scripts/pca_k_means_scree_test.py
+    parameters:
+      ignored:
+        type: string
+        default: ignored
+    command: python /opt/a6/scripts/pca_k_means_scree_test.py {ignored}
   dcv2:
     parameters:
       enable_tracking:
