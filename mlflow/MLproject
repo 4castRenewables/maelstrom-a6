@@ -204,6 +204,8 @@ entry_points:
         --architecture {architecture}
         {select_dwd_area}
         {enable_tracking}
+  pca_kmeans_scree_test:
+    command: python /opt/a6/scripts/pca_k_means_scree_test.py
   dcv2:
     parameters:
       enable_tracking:
