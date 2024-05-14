@@ -94,8 +94,9 @@ def _apply_args_and_kwargs(fn: Callable, args, kwargs):
 def parallelize_with_futures(
     func: Callable,
     kwargs: list[dict],
+    executor_type: concurrent.futures.Executor = concurrent.futures.ProcessPoolExecutor,
 ) -> list:
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with executor_type() as executor:
         futures = {executor.submit(func, **d): i for i, d in enumerate(kwargs)}
 
         results = []
