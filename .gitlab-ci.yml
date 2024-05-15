@@ -113,5 +113,5 @@ coverage:
   needs:
     - job: test-doc
       artifacts: true
-    - job: test-unit
-      artifacts: true
+  variables:
+    PY_COVERAGE_FAIL_UNDER: 80
