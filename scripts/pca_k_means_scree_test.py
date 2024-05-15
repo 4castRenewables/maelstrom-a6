@@ -1,12 +1,12 @@
 """
 apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project/deepacf/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py  # noqa: E501
 """
+import concurrent.futures
 import contextlib
+import logging
 import pathlib
 import time
-import logging
-import concurrent.futures
-from typing import Callable
+from collections.abc import Callable
 
 import joblib
 import mantik.mlflow
@@ -58,7 +58,13 @@ def measure_time(message: str = ""):
         logger.info("Finished in %s", duration_str)
 
 
-def read_from_disk_if_exists(path: pathlib.Path, method, fit: bool = False, data: np.ndarray | None = None, **kwargs):
+def read_from_disk_if_exists(
+    path: pathlib.Path,
+    method,
+    fit: bool = False,
+    data: np.ndarray | None = None,
+    **kwargs,
+):
     if path.exists():
         with measure_time(f"Loading {method} from disk at {path.as_posix()}"):
             return joblib.load(path)
@@ -77,6 +83,7 @@ def read_from_disk_if_exists(path: pathlib.Path, method, fit: bool = False, data
             joblib.dump(result, path)
             return result
 
+
 def calculate_ssd(k: int, data: np.ndarray, type: str, n_pcs: int) -> float:
     kmeans_path = kmeans_dir / f"kmeans_{type}_n_pcs_{n_pcs}_k_{k}.joblib"
 
@@ -89,10 +96,12 @@ def calculate_ssd(k: int, data: np.ndarray, type: str, n_pcs: int) -> float:
             data=data,
         )
 
-        return km.inertia_
+        return kmeans.inertia_
 
 
-def transform_into_pc_space_and_standardize(pca: sklearn.decomposition.PCA, X: np.ndarray, n_components: int):
+def transform_into_pc_space_and_standardize(
+    pca: sklearn.decomposition.PCA, X: np.ndarray, n_components: int
+):
     X = pca._validate_data(
         X,
         accept_sparse=("csr", "csc"),
@@ -117,7 +126,10 @@ def transform_data(
     kpca: sklearn.decomposition.KernelPCA,
     data: np.ndarray,
 ) -> np.ndarray:
-    logger.info("Transforming data into kernel PC space (n_pcs=%i)", kpca.eigenvalues_.shape[0])
+    logger.info(
+        "Transforming data into kernel PC space (n_pcs=%i)",
+        kpca.eigenvalues_.shape[0],
+    )
     transformed = kpca.transform(data)
     transformed = sklearn.preprocessing.StandardScaler().fit_transform(
         transformed
@@ -125,7 +137,9 @@ def transform_data(
     return transformed
 
 
-def calculate_ssd_pca(pca: sklearn.decomposition.PCA, n_pcs: int, data: np.ndarray):
+def calculate_ssd_pca(
+    pca: sklearn.decomposition.PCA, n_pcs: int, data: np.ndarray
+):
     pca_tansformed_path = pca_dir / f"pca_{n_pcs}_pcs_transformed.joblib"
 
     with measure_time(f"Transforming PCA result ({n_pcs=})"):
@@ -185,12 +199,16 @@ def calculate_ssd_kpca(n_pcs: int, data: np.ndarray):
     return {k: ssd for k, ssd in zip(Ks, ssds, strict=True)}
 
 
-def calculate_ssds(method: Callable, method_name: str, n_pcs: int, data: np.ndarray, **kwargs) -> dict:
+def calculate_ssds(
+    method: Callable, method_name: str, n_pcs: int, data: np.ndarray, **kwargs
+) -> dict:
     with measure_time(f"Calculating SSDs for {method_name}"):
         n_pcs_range = range(1, n_pcs + 1)
         ssds = a6.utils.parallelize.parallelize_with_futures(
             method,
-            kwargs=[dict(n_pcs=n_pcs, data=data, **kwargs) for n_pcs in n_pcs_range],
+            kwargs=[
+                dict(n_pcs=n_pcs, data=data, **kwargs) for n_pcs in n_pcs_range
+            ],
             executor_type=concurrent.futures.ProcessPoolExecutor,
         )
         result = {pcs: ssd for pcs, ssd in zip(n_pcs_range, ssds, strict=True)}

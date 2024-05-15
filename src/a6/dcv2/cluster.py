@@ -382,7 +382,10 @@ def cluster_embeddings(
 
             if n_unassigned_samples > 0:
                 logger.warning(
-                    "Number of unassigned samples: %s (%s%%), assignments.shape=%s",
+                    (
+                        "Number of unassigned samples: %s (%s%%), "
+                        "assignments.shape=%s"
+                    ),
                     n_unassigned_samples,
                     round(percent_unassigned_samples, 2),
                     assignments.shape[-1],
@@ -392,15 +395,15 @@ def cluster_embeddings(
             logger.info("Mean SSD: %.4f +/- %.4f", ssd_mean, ssd_std)
 
             if settings.enable_tracking:
-                    mantik.mlflow.log_metrics(
-                        {
-                            "unassigned_samples": n_unassigned_samples,
-                            "unassigned_samples_percent": percent_unassigned_samples,
-                            "ssd_mean": ssd_mean,
-                            "ssd_std": ssd_std,
-                        },
-                        step=epoch,
-                    )
+                mantik.mlflow.log_metrics(
+                    {
+                        "unassigned_samples": n_unassigned_samples,
+                        "unassigned_samples_percent": percent_unassigned_samples,  # noqa: E501
+                        "ssd_mean": ssd_mean,
+                        "ssd_std": ssd_std,
+                    },
+                    step=epoch,
+                )
 
     return assignments
 
