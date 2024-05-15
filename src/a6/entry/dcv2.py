@@ -284,15 +284,6 @@ def _train(
 
         # save checkpoints
         if utils.distributed.is_primary_device():
-            epoch_time = time.time() - epoch_start_time
-            logger.info("Epoch time: %s s", epoch_time)
-
-            if settings.enable_tracking:
-                mantik.mlflow.log_metrics(
-                    {"epoch_time_s": epoch_time},
-                    step=epoch,
-                )
-
             models.checkpoints.save_checkpoint(
                 model=model,
                 optimizer=optimizer,
@@ -301,6 +292,7 @@ def _train(
                 checkpoint_freq=settings.dump.checkpoint_freq,
                 target_epochs=settings.model.epochs,
             )
+
         torch.save(
             {
                 "local_memory_embeddings": local_memory_embeddings,
@@ -308,6 +300,7 @@ def _train(
             },
             mb_path,
         )
+
         if utils.distributed.is_primary_device():
             epoch_time = time.time() - epoch_start_time
             logger.info("Epoch time: %s s", epoch_time)
@@ -317,6 +310,7 @@ def _train(
                     {"epoch_time_s": epoch_time},
                     step=epoch,
                 )
+
         timer.end(_timer.TimeType.EPOCH)
 
     train_time = time.time() - train_time_start

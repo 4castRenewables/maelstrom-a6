@@ -379,35 +379,28 @@ def cluster_embeddings(
             percent_unassigned_samples = (
                 n_unassigned_samples / assignments.shape[-1] * 100
             )
-            logger.warning(
-                "Number of unassigned samples: %s (%s%%), assignments.shape=%s",
-                n_unassigned_samples,
-                round(percent_unassigned_samples, 2),
-                assignments.shape[-1],
-            )
+
+            if n_unassigned_samples > 0:
+                logger.warning(
+                    "Number of unassigned samples: %s (%s%%), assignments.shape=%s",
+                    n_unassigned_samples,
+                    round(percent_unassigned_samples, 2),
+                    assignments.shape[-1],
+                )
+
             ssd_mean, ssd_std = _calculate_ssd_mean_and_std(distances)
             logger.info("Mean SSD: %.4f +/- %.4f", ssd_mean, ssd_std)
+
             if settings.enable_tracking:
-                mantik.mlflow.log_metric(
-                    "unassigned_samples",
-                    n_unassigned_samples,
-                    step=epoch,
-                )
-                mantik.mlflow.log_metric(
-                    "unassigned_samples_percent",
-                    percent_unassigned_samples,
-                    step=epoch,
-                )
-                mantik.mlflow.log_metric(
-                    "ssd_mean",
-                    ssd_mean,
-                    step=epoch,
-                )
-                mantik.mlflow.log_metric(
-                    "ssd_std",
-                    ssd_std,
-                    step=epoch,
-                )
+                    mantik.mlflow.log_metrics(
+                        {
+                            "unassigned_samples": n_unassigned_samples,
+                            "unassigned_samples_percent": percent_unassigned_samples,
+                            "ssd_mean": ssd_mean,
+                            "ssd_std": ssd_std,
+                        },
+                        step=epoch,
+                    )
 
     return assignments
 
