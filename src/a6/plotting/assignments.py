@@ -9,7 +9,9 @@ import a6.plotting._colors as _colors
 
 
 def plot_abundance(
-    assignments: torch.Tensor, name: str, output_dir: str
+    assignments: torch.Tensor,
+    name: str = "abundance",
+    output_dir: pathlib.Path | None = None,
 ) -> None:
     labels = np.arange(
         int(assignments.min()), int(assignments.max()) + 1, 1, dtype=int
@@ -24,7 +26,9 @@ def plot_abundance(
         labels=labels,
         x_lims=x_lims,
         density=False,
-        outfile=pathlib.Path(output_dir) / f"{name}-total.pdf",
+        outfile=(
+            output_dir / f"{name}-total.pdf" if output_dir is not None else None
+        ),
     )
     _plot_histogram(
         assignments=assignments,
@@ -33,7 +37,11 @@ def plot_abundance(
         labels=labels,
         x_lims=x_lims,
         density=True,
-        outfile=pathlib.Path(output_dir) / f"{name}-relative.pdf",
+        outfile=(
+            output_dir / f"{name}-relative.pdf"
+            if output_dir is not None
+            else None
+        ),
     )
 
 
@@ -44,7 +52,7 @@ def _plot_histogram(
     labels: np.ndarray,
     x_lims: tuple[float, float],
     density: bool,
-    outfile: pathlib.Path,
+    outfile: pathlib.Path | None,
 ) -> None:
     _, ax = plt.subplots()
 
@@ -68,11 +76,14 @@ def _plot_histogram(
     for color, patch in zip(colors, patches):
         patch.set_facecolor(color)
 
-    plt.savefig(outfile)
+    if outfile is not None:
+        plt.savefig(outfile)
 
 
 def plot_appearance_per_week(
-    assignments: torch.Tensor, name: str, output_dir: str
+    assignments: torch.Tensor,
+    name: str = "abundance-per-week",
+    output_dir: pathlib.Path | None = None,
 ) -> None:
     fig, ax = plt.subplots()
 
@@ -90,7 +101,8 @@ def plot_appearance_per_week(
     ax.set_xlabel("Day of week")
     ax.set_ylabel("Week")
 
-    plt.savefig(pathlib.Path(output_dir) / f"{name}.pdf")
+    if output_dir is not None:
+        plt.savefig(output_dir / f"{name}.pdf")
 
 
 def _create_assignments_subset(assignments: torch.Tensor) -> torch.Tensor:

@@ -9,7 +9,7 @@ import a6.utils as utils
 def perform_grid_search(  # noqa: CFQ002
     model: types.Model,
     parameters: dict[str, list],
-    training_data: types.XarrayData,
+    training_data: list[types.XarrayData],
     target_data: types.XarrayData,
     cv: model_selection.BaseCrossValidator,
     groups: list[int],
@@ -26,7 +26,7 @@ def perform_grid_search(  # noqa: CFQ002
         n_jobs=utils.get_cpu_count(),
     )
     return gs.fit(
-        X=reshape.sklearn.transpose(training_data),
+        X=reshape.sklearn.transpose(*training_data),
         y=reshape.sklearn.transpose(target_data),
         groups=groups,
     )

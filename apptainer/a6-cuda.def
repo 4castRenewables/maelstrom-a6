@@ -1,17 +1,14 @@
 Bootstrap: docker-daemon
 From: a6-cuda:latest
 
-%environment
-    export PATH=/venv/bin:$PATH
-    # Silence git warning by MLflow
-    export GIT_PYTHON_REFRESH=quiet
-
 %test
-    export PATH=/usr/local/cuda-11.1/bin:/usr/local/bin:/venv/bin:${PATH}
     which python
     python --version
     pip list
-    python -c 'import a6, torch, torchvision, apex'
+    python -c 'import a6, torch, torchvision, ipykernel, memory_profiler'
+    python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
+    python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
+    python -m cfgrib selfcheck
 
 %startscript
     exec "$@"
@@ -24,4 +21,4 @@ From: a6-cuda:latest
 
 %labels
     Author Fabian Emmerich
-    Version cu11.7-py3.11
+    Version cu12.1-py3.11

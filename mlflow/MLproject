@@ -10,7 +10,7 @@ docker_env:
 entry_points:
   test:
     command:
-      python pca_and_kmeans.py
+      python /opt/a6/mlflow/pca_and_kmeans.py
   cluster:
     parameters:
       weather_data:
@@ -108,28 +108,160 @@ entry_points:
         --level {level}
         --turbine-data {turbine_data}
         --config {config}
+  concatenate:
+    parameters:
+      data_path:
+        type: string
+      pattern:
+        type: string
+        default: ml,pl,sfc
+    command: >
+      python /opt/a6/mlflow/concatenate_data_files.py
+        --data-path {data_path}
+        --pattern {pattern}
+  preprocess-turbine:
+    parameters:
+      pressure_level_data:
+        type: string
+      model_level_data:
+        type: string
+      surface_level_data:
+        type: string
+      turbine_data_dir:
+        type: string
+      output_dir:
+        type: string
+    command: >
+      python /opt/a6/mlflow/preprocess_turbine.py
+        --pressure-level-data {pressure_level_data}
+        --model-level-data {model_level_data}
+        --surface-level-data {surface_level_data}
+        --turbine-data-dir {turbine_data_dir}
+        --output-dir {output_dir}
+  forecast-errors:
+    parameters:
+      turbine_data_dir:
+        type: string
+      preprocessed_data_dir:
+        type: string
+      pca_kpca_path:
+        type: string
+      pca_kpca_n_clusters:
+        type: int
+        default: 40
+      gwl_path:
+        type: string
+      dcv2_path:
+        type: string
+      random:
+        type: string
+        default: --random
+      train_size:
+        type: int
+        default: 365
+      results_dir:
+        type: string
+      parallel:
+        type: string
+        default: --parallel
+    command: >
+      python /opt/a6/mlflow/forecast_errors.py
+        --turbine-data-dir {turbine_data_dir}
+        --preprocessed-data-dir {preprocessed_data_dir}
+        --pca-kpca-path {pca_kpca_path}
+        --pca-kpca-n-clusters {pca_kpca_n_clusters}
+        --gwl-path {gwl_path}
+        --dcv2-path {dcv2_path}
+        {random}
+        --train-size {train_size}
+        --results-dir {results_dir}
+        {parallel}
+  gwl-classifier:
+    parameters:
+      weather_data:
+        type: string
+        default: /p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc
+      gwl_data:
+        type: string
+        default: /opt/a6/src/tests/data/gwl.nc
+      architecture:
+        type: str
+        default: cnn
+      epochs:
+        type: int
+        default: 20
+      select_dwd_area:
+        type: string
+        default: --select-dwd-area
+      enable_tracking:
+        type: string
+        default: --enable-tracking
+    command: >
+      python /opt/a6/mlflow/train_gwl_cnn.py
+        --weather-data {weather_data}
+        --gwl-data {gwl_data}
+        --epochs {epochs}
+        --architecture {architecture}
+        {select_dwd_area}
+        {enable_tracking}
+  pca-kmeans-scree-test:
+    parameters:
+      ignored:
+        type: string
+        default: ignored
+    command: python /opt/a6/scripts/pca_k_means_scree_test.py {ignored}
   dcv2:
     parameters:
       enable_tracking:
         type: str
         default: --enable-tracking
+      save_results:
+        type: str
+        default: --save-results
+      plot_results:
+        type: str
+        default: --plot-results
       data_path:
         type: str
-        default: /p/project/deepacf/maelstrom/emmerich1/data/deepclusterv2/daily
+        default: /p/project/deepacf/emmerich1/data/deepclusterv2/daily
+      use_mnist:
+        type: str
+        default: --no-use-mnist
+      use_imagenet:
+        type: str
+        default: --no-use-imagenet
+      pattern:
+        type: str
+        default: None
+      drop_variables:
+        type: list[str]
+        default: None
+      levels:
+        type: list[int]
+        default: None
+      select_dwd_area:
+        type: str
+        default: --select-dwd-area
+      parallel_loading:
+        type: str
+        default: --no-parallel-loading
       dump_path:
         type: str
-        default: /p/scratch/deepacf/maelstrom/emmerich1/dcv2/dump
+        default: /p/scratch/deepacf/emmerich1/dcv2/dump
       nmb_crops:
-        type: int
+        type: list[int]
         default: 2
+      crops_for_assign:
+        type: list[int]
+        default: '0 1'
       size_crops:
-        type: int
-        default: 96
+        type: list[float]
+        default: 0.75
       min_scale_crops:
-       type: float
+       type: list[float]
        default: 0.05
       max_scale_crops:
-        type: float
+        type: list[float]
         default: 1.
       temperature:
         type: float
@@ -151,7 +283,7 @@ entry_points:
         default: 64
       base_lr:
         type: float
-        default: 0.3
+        default: 4.8
       final_lr:
         type: float
         default: 0.05
@@ -172,19 +304,23 @@ entry_points:
         default: resnet50
       sync_bn:
         type: str
-        default: apex
+        default: pytorch
     command: >
-      torchrun
+      python /opt/a6/mlflow/train_dcv2.py
         {enable_tracking}
-        --nnodes=${{SLURM_NNODES:-1}}
-        --nproc-per-node=1
-        --rdzv-backend=c10d
-        --rdzv-id=${{SLURM_JOB_ID:-$RANDOM}}
-        --rdzv-endpoint=$(hostname --ip-address):29500
-        train_dcv2.py
+        {save_results}
+        {plot_results}
         --data-path {data_path}
+        {use_mnist}
+        {use_imagenet}
+        --pattern {pattern}
+        --drop-variables {drop_variables}
+        --levels {levels}
+        {select_dwd_area}
+        {parallel_loading}
         --dump-path {dump_path}
         --nmb-crops {nmb_crops}
+        --crops-for-assign {crops_for_assign}
         --size-crops {size_crops}
         --min-scale-crops {min_scale_crops}
         --max-scale-crops {max_scale_crops}

@@ -1,0 +1,469 @@
+name:    ap6
+outpath: ap6-run
+comment: MAELSTROM AP6 benchmark jube script
+
+parameterset:
+  - name: trainingParameters
+    parameter:
+      - name: epochs
+        type: int
+        _: 10
+      - name: epochs
+        tag: test
+        type: int
+        _: 1
+      - name: data_file
+        _: era5_pl_1964_2023_12.nc
+      - name: data_file
+        tag: test
+        _: era5_pl_2000_2023_12.nc
+      - name: data_path
+        _: /p/scratch/deepacf/emmerich1/data/ecmwf_era5
+      - name: data_path
+        tag: cscratch
+        _: /p/cscratch/fs/cexalab/maelstrom/emmerich1/data/ecmwf_era5
+      - name: data_path
+        tag: e4-a2|e4-h100|e4-gh
+        _: /home/$USER
+  - name: globalParameters
+    parameter:
+      - name: systemname
+        tag: jwc
+        _: juwels-cluster
+      - name: systemname
+        tag: jwb
+        _: juwels-booster
+      - name: systemname
+        tag: dc-gpu|dc-h100|dc-mi200
+        _: jureca
+      - name: systemname
+        tag: e4-a2|e4-h100|e4-gh
+        _: e4
+  - name: executeset
+    init_with: platform.xml
+  - name: systemParameter
+    init_with: platform.xml
+    parameter:
+      - name: job_name
+        _: $jube_benchmark_name-$jube_benchmark_padid-$jube_wp_padid-$jube_step_name
+      - name: file_system
+        _: scratch
+      - name: file_system
+        tag: cscratch
+        _: cscratch
+      - name: nodes
+        _: 1
+      - name: nodes
+        tag: multi-node
+        _: "2,4,8"
+      - name: nodes
+        tag: multi-node+jwc+test
+        _: "2"
+      - name: nodes
+        tag: (e4-a2|e4-h100|e4-gh)+!test
+        _: 2
+      - name: gpus
+        _: "1,2,3"
+      # The App requires ~150GB per task, and jwc only provides 192G, jwb 512GB.
+      # Hence, we can only use 1 and 3 GPUs per node, respectively.
+      - name: gpus
+        tag: multi-node
+        _: 3
+      - name: gpus
+        tag: multi-node+jwc
+        _: 1
+      - name: gpus
+        tag: dc-mi200+!test
+        _: "1,2,4,8"
+      - name: gpus
+        tag: e4-a2+!test
+        _: "1,2"
+      - name: gres
+        tag: "!dc-mi200"
+        _: gpu:${gpus}
+      - name: tasks
+        mode: python
+        type: int
+        _: ${gpus}*${nodes}
+      - name: taskspernode
+        _: ${gpus}
+      - name: threadspertask
+        _: 1
+      - name: memory
+        tag: e4-a2|e4-h100|e4-gh
+        _: --mem=480G
+      - name: exclusive
+        tag: e4-a2|e4-h100|e4-gh
+        _: --exclusive
+      - name: srun_options
+        _: --ntasks-per-node=${taskspernode} $memory $exclusive
+      - name: timelimit
+        tag: "!test"
+        _: "06:00:00"
+      - name: timelimit
+        tag: test
+        _: "02:00:00"
+      - name: account
+        _: deepacf
+      - name: account
+        tag: dc-gpu|dc-h100|dc-mi200
+        _: exalab
+      - name: account
+        tag: e4-a2|e4-h100|e4-gh
+        _: maelstrom
+      - name: queue
+        tag: jwb+!test
+        _: booster
+      - name: queue
+        tag: jwb+test
+        _: develbooster
+      - name: queue
+        tag: jwc+!test
+        _: gpus
+      - name: queue
+        tag: jwc+test
+        _: develgpus
+      - name: queue
+        tag: dc-gpu+!test
+        _: dc-gpu
+      - name: queue
+        tag: dc-gpu+test
+        _: dc-gpu-devel
+      - name: queue
+        tag: dc-h100
+        _: dc-h100
+      - name: queue
+        tag: dc-mi200
+        _: dc-mi200
+      - name: queue
+        tag: e4-a2
+        _: i-gpu-a2
+      - name: queue
+        tag: e4-h100
+        _: a-gpu-h100
+      - name: queue
+        tag: e4-gh
+        _: t-gpu-gh200
+      - name: tmp_data_dir
+        _: /p/scratch/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
+      - name: tmp_data_dir
+        tag: e4-a2|e4-h100|e4-gh
+        _: /home/$USER/jube-benchmarks/$job_name
+      - name: master_port
+        _: "29500"
+      - name: master_addr
+        _: "127.0.0.1"
+      - name: master_addr
+        tag: (jwb|jwc)+multi-node
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i.juwels
+      - name: master_addr
+        tag: (dc-gpu|dc-h100|dc-mi200)+multi-node
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i.jureca
+      - name: master_addr
+        tag: (e4-a2|e4-h100|e4-gh)+multi-node
+        _: $$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1).e4red
+      - name: env_vars
+        # Notes:
+        #
+        # - srun doesn't inherit cpus-per-task from sbatch,
+        #   hence set `SRUN_CPUS_PER_TASK`.
+        #
+        # - We need to override `CUDA_VISIBLE_DEVICES` due to some weird issue
+        #   where srun sets it to `0,1` even if 4 GPUs are allocated.
+        _: |
+          export NCCL_DEBUG=INFO
+          export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+          export MASTER_ADDR="${master_addr}"
+          export MASTER_PORT="${master_port}"
+          export SRUN_CPUS_PER_TASK=$${SLURM_CPUS_PER_TASK}
+          export APPTAINERENV_CUDA_VISIBLE_DEVICES="$${CUDA_VISIBLE_DEVICES}"
+      - name: modules
+        tag: e4-a2|e4-h100
+        _: module load go-1.19/singularity-3.10.2
+      - name: preprocess
+        # Set separator to | to avoid parameterset
+        separator: |
+        _: |
+          ${env_vars}
+          mkdir -p ${tmp_data_dir}
+      - name: preprocess
+        mode: text
+        tag: e4-a2|e4-h100|e4-gh
+        separator: |
+        _: |
+          ${env_vars}
+          ${modules}
+          mkdir -p ${tmp_data_dir}
+          label=$$(/opt/share/scripts/powerdiscovery/getlabel.sh)
+          echo "POWERMEASUREMENT: Label = $$label"
+          /opt/share/scripts/powerdiscovery/getpower_bg.sh 1000 &
+      - name: postprocess
+        mode: text
+        tag: e4-a2|e4-h100|e4-gh
+        separator: |
+        _: |
+          kill -9 $$(cat ~/powerout.$$label.pid)
+          awk '{print "POWERMEASUREMENT: " $0}' ~/powerout.$$label.csv
+      - name: executable
+        _: apptainer
+      - name: executable
+        tag: e4-a2|e4-h100|e4-gh
+        _: singularity
+      - name: executable
+        tag: e4-gh
+        _: docker
+      - name: dir_bind
+        _: -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6
+      - name: dir_bind
+        tag: e4-a2|e4-h100
+        _: -B /home/$USER/code/a6:/opt/a6
+      - name: dir_bind
+        tag: e4-gh
+        _: >
+           -v /home/$USER/code/a6:/opt/a6
+           -v /data:/data
+           -v /scratch:/scratch
+           -v /home/$USER:/home/$USER
+      - name: image_path
+        _: /p/project/deepacf/emmerich1/a6-cuda.sif
+      - name: image_path
+        tag: dc-mi200
+        _: /p/project/deepacf/emmerich1/a6-rocm.sif
+      - name: image_path
+        tag: e4-a2
+        _: /home/$USER/a6-cuda-11.sif
+      - name: image_path
+        tag: e4-h100
+        _: /home/$USER/a6-cuda.sif
+      - name: image_path
+        tag: e4-gh
+        _: maelstrom-a6:latest
+      - name: executable_options
+        _: --nv
+      - name: executable_options
+        tag: dc-mi200
+        _: --rocm
+      - name: executable_options
+        tag: e4-gh
+        _: >
+           --gpus all
+           --privileged
+           --shm-size=1g
+           --ulimit memlock=-1
+           --name maelstrom-a6
+           --entrypoint ""
+           --network host
+           --env-file .env
+           --rm
+      - name: args_exec
+        # Set separator to | to avoid parameterset
+        separator: |
+        _: >
+           run
+           ${dir_bind}
+           ${executable_options}
+           ${image_path}
+           python /opt/a6/jube/run.py
+           --no-enable-tracking
+           --no-save-results
+           --no-plot-results
+           --data-path ${data_path}
+           --pattern ${data_file}
+           --dump-path ${tmp_data_dir}
+           --size-crops 0.8
+           --min-scale-crops 0.8
+           --nmb-prototypes 4
+           --nmb-clusters 40
+           --epochs ${epochs}
+           --batch-size 64
+
+patternset:
+   - name: perf_patterns
+     pattern:
+      - name: job_id
+        type: int
+        _: "SLURM_JOB_ID: ($jube_pat_nint)"
+      - name: node_ids
+        type: string
+        _: "SLURM_NODELIST: ($jube_pat_nwrd)"
+      - name: trainable_params
+        type: int
+        _: "Number of trainable parameters: ($jube_pat_nint)"
+      - name: non_trainable_params
+        type: int
+        _: "Number of non-trainable parameters: ($jube_pat_nint)"
+      - name: epoch
+        type: int
+        _: "Starting epoch ($jube_pat_nint)"
+      - name: batch_size
+        type: int
+        _: "Batch size: ($jube_pat_nint)"
+      - name: batches_per_epoch
+        type: int
+        _: "Batches per epoch: ($jube_pat_nint)"
+      - name: embeddings_init_time
+        type: float
+        _: "Embeddings initialization time: ($jube_pat_nfp)"
+      - name: cluster_step_time
+        type: float
+        _: "Cluster step time: ($jube_pat_nfp)"
+      - name: epoch_time
+        type: float
+        _: "Epoch time: ($jube_pat_nfp)"
+      - name: batch_time
+        type: float
+        _: "batch time avg: ($jube_pat_nfp)"
+      - name: batch_load_time
+        type: float
+        _: "data load time avg: ($jube_pat_nfp)"
+      - name: forward_time
+        type: float
+        _: "forward time avg: ($jube_pat_nfp)"
+      - name: loss_time
+        type: float
+        _: "loss time avg: ($jube_pat_nfp)"
+      - name: backward_time
+        type: float
+        _: "backward time avg: ($jube_pat_nfp)"
+      - name: embeddings_time
+        type: float
+        _: "embeddings time avg: ($jube_pat_nfp)"
+      - name: loss
+        type: float
+        _: "loss avg: ($jube_pat_nfp)"
+      - name: total_train_time
+        type: float
+        _: "Total training time: ($jube_pat_nfp)"
+      - name: total_runtime
+        type: float
+        _: "Total runtime: ($jube_pat_nfp)"
+      - name: cpu_mem
+        type: float
+        _: "CPU memory usage:.*max ($jube_pat_fp) GB"
+      - name: gpu_mem
+        type: float
+        _: "GPU memory usage:.*max ($jube_pat_fp) GB"
+      - name: total_integrated_energy
+        type: float
+        _: "Integrated Total Energy: ($jube_pat_fp) Wh"
+      - name: total_counter_energy
+        type: float
+        _: "Counter Total Energy: ($jube_pat_fp) Wh"
+      - name: max_power
+        type: float
+        _: "Max Power: ($jube_pat_fp) W"
+      - name: max_agg_power
+        type: float
+        _: "Max Aggregate Power: ($jube_pat_fp) W"
+      - name: mean_agg_power
+        type: float
+        _: "Mean Aggregate Power: ($jube_pat_fp) W"
+      - {name: label_pat, type: string, _: "POWERMEASUREMENT: Label = $jube_pat_wrd"}
+      - {name: time_pat, type: int, _: "POWERMEASUREMENT: $jube_pat_int,$jube_pat_nint,$jube_pat_nint"}
+      - {name: watt_pat, type: int, _: "POWERMEASUREMENT: $jube_pat_nint,$jube_pat_int,$jube_pat_nint"}
+      - {name: va_pat, type: int, _: "POWERMEASUREMENT: $jube_pat_nint,$jube_pat_nint,$jube_pat_int"}
+
+analyser:
+    name: analyse
+    reduce: false
+    use: perf_patterns
+    analyse:
+        step: submit
+        file:
+          - job.err
+          - job.out
+
+result:
+    use: analyse
+    table:
+      name: result
+      style: pretty
+      sort: iter_pat
+      column:
+        - {title: "JUBE ID", _: jube_benchmark_id}
+        - {title: "JUBE workpackage", _: jube_wp_id}
+        - {title: "Job ID", _: job_id}
+        - {title: "system", _: systemname}
+        - {title: "queue", _: queue}
+        - {title: "nodes", _: nodes}
+        - {title: "node IDs", _: node_ids}
+        - {title: "gpus", _: gpus}
+        - {title: "walltime [HH:MM:SS]", _: timelimit}
+        - {title: "file_system", _: file_system}
+        - {title: "data_path", _: data_path}
+        - {title: "data_file", _: data_file}
+        - {title: "epochs", _: epochs}
+        - {title: "last epoch ", _: epoch_last}
+        - {title: "trainable params", _: trainable_params_first}
+        - {title: "non-trainable params", _: non_trainable_params_first}
+        - {title: "batch size", _: batch_size_first}
+        - {title: "batches per epoch", _: batches_per_epoch_first}
+        - {title: "total runtime [s]", _: total_runtime_first}
+        - {title: "total training time [s]", _: total_train_time_first}
+        - {title: "first epoch time [s]", _: epoch_time_first}
+        - {title: "last epoch time [s]", _: epoch_time_last}
+        - {title: "best epoch time [s]", _: epoch_time_min}
+        - {title: "worst epoch time [s]", _: epoch_time_max}
+        - {title: "avg. epoch time [s]", _: epoch_time_avg}
+        - {title: "std. epoch time [s]", _: epoch_time_std}
+        - {title: "first batch time [s]", _: batch_time_first}
+        - {title: "last batch time [s]", _: batch_time_last}
+        - {title: "avg. batch time [s]", _: batch_time_avg}
+        - {title: "std. batch time [s]", _: batch_time_std}
+        - {title: "first batch load time [s]", _: batch_load_time_first}
+        - {title: "last batch load time [s]", _: batch_load_time_last}
+        - {title: "avg. batch load time [s]", _: batch_load_time_avg}
+        - {title: "std. batch load time [s]", _: batch_load_time_std}
+        - {title: "first foward time [s]", _: forward_time_first}
+        - {title: "last forward time [s]", _: forward_time_last}
+        - {title: "avg. forward time [s]", _: forward_time_avg}
+        - {title: "std. forward time [s]", _: forward_time_std}
+        - {title: "first loss time [s]", _: loss_time_first}
+        - {title: "last loss time [s]", _: loss_time_last}
+        - {title: "avg. loss time [s]", _: loss_time_avg}
+        - {title: "std. loss time [s]", _: loss_time_std}
+        - {title: "first backward time [s]", _: backward_time_first}
+        - {title: "last backward time [s]", _: backward_time_last}
+        - {title: "avg. backward time [s]", _: backward_time_avg}
+        - {title: "std. backward time [s]", _: backward_time_std}
+        - {title: "first embeddings time [s]", _: embeddings_time_first}
+        - {title: "last embeddings time [s]", _: embeddings_time_last}
+        - {title: "avg. embeddings time [s]", _: embeddings_time_avg}
+        - {title: "std. embeddings time [s]", _: embeddings_time_std}
+        - {title: "last loss", _: loss_last}
+        - {title: "min loss", _: loss_min}
+        - {title: "max loss", _: loss_max}
+        - {title: "Max CPU memory usage [GB]", _: cpu_mem_max}
+        - {title: "Max GPU memory usage [GB]", _: gpu_mem_max}
+        - {title: "Integrated total energy (all GPUs) [Wh]", _: total_integrated_energy}
+        - {title: "Counter total energy (all GPUs) [Wh]", _: total_counter_energy}
+        - {title: "Max power (per GPU) [W]", _: max_power_max}
+        - {title: "Max agg power (per GPU) [W]", _: max_agg_power_max}
+        - {title: "Mean agg power (per GPU) [W]", _: mean_agg_power}
+        - {title: "Node(s)",         _: label_pat}
+        - {title: "Timestamp start", _: time_pat_first}
+        - {title: "Timestamp end",   _: time_pat_last}
+        - {title: "Avg. Watts",      _: watt_pat_avg}
+        - {title: "Min. Watts",      _: watt_pat_min}
+        - {title: "Max. Watts",      _: watt_pat_max}
+        - {title: "Avg. VA",         _: va_pat_avg}
+        - {title: "Min. VA",         _: va_pat_min}
+        - {title: "Max. VA",         _: va_pat_max}
+
+step:
+  - name: submit
+    use:
+      - trainingParameters
+      - globalParameters
+      - systemParameter
+      - executeset
+      - from: platform.xml
+        _: jobfiles
+      - from: platform.xml
+        _: executesub
+    do:
+      done_file: $ready_file
+      error_file: $error_file
+      _: |
+        $modules
+        $submit $srun_options $submit_script

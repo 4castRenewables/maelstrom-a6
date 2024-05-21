@@ -13,6 +13,7 @@ XarrayData = TypeVar("XarrayData", xr.DataArray, xr.Dataset)
 DataND = TypeVar("DataND", np.ndarray, xr.DataArray, xr.Dataset, torch.Tensor)
 ClusterAlgorithm = TypeVar("ClusterAlgorithm", cluster.KMeans, hdbscan.HDBSCAN)
 Levels = TypeVar("Levels", int, Sequence[int], None)
+TimeSeries = TypeVar("TimeSeries", xr.DataArray, np.ndarray, Sequence)
 
 
 class MetricEstimator(Protocol):

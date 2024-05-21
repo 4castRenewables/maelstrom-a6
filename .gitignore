@@ -4,5 +4,9 @@ kernel.json
 dist/
 .checkpoints/
 ap6-run/
+*.pdf
+*.csv
 
 dcv2_dump/
+MNIST/
+Deep500-for-MAELSTROM/

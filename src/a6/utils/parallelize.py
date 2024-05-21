@@ -1,3 +1,4 @@
+import concurrent.futures
 import itertools
 import logging
 import multiprocessing
@@ -7,7 +8,7 @@ from collections.abc import Iterable
 logger = logging.getLogger(__name__)
 
 
-def parallelize(
+def parallelize_with_multiprocessing(
     function: Callable,
     args_zipped: Iterable,
     single_arg: bool = False,
@@ -88,3 +89,29 @@ def _starmap_with_kwargs(
 def _apply_args_and_kwargs(fn: Callable, args, kwargs):
     """Parallelize functions with args and kwargs."""
     return fn(*args, **kwargs)
+
+
+def parallelize_with_futures(
+    func: Callable,
+    kwargs: list[dict],
+    executor_type=concurrent.futures.ThreadPoolExecutor,
+) -> list:
+    with executor_type() as executor:
+        futures = {executor.submit(func, **d): i for i, d in enumerate(kwargs)}
+
+        results = []
+
+        for future in concurrent.futures.as_completed(futures):
+            index = futures[future]
+
+            try:
+                result = future.result()
+            except Exception as e:  # noqa: B902
+                raise RuntimeError(
+                    f"Function call #{index} has failed with "
+                    f"input {kwargs[index]}"
+                ) from e
+            else:
+                results.append(result)
+
+    return results

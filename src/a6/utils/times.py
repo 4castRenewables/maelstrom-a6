@@ -20,6 +20,27 @@ def get_time_step_intersection(
     return sorted(intersection)
 
 
+def time_steps_as_dates(
+    data: types.XarrayData,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> list[datetime.datetime]:
+    """Convert the time steps to `datetime.datetime` with YYYY-MM-DD."""
+    return [
+        datetime.datetime(d.year, d.month, d.day)
+        for d in time_steps_as_datetimes(data)
+    ]
+
+
+def time_steps_as_datetimes(
+    data: types.XarrayData,
+    coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
+) -> list[datetime.datetime]:
+    """Convert the time steps to `datetime.datetime`."""
+    return [
+        numpy_datetime64_to_datetime(s) for s in data[coordinates.time].values
+    ]
+
+
 def numpy_datetime64_to_datetime(date: np.datetime64) -> datetime.datetime:
     """Convert numpy.datetime64 to Python's datetime."""
     ts = pd.Timestamp(date)

@@ -9,14 +9,16 @@ import torch
 
 import a6.plotting._colors as _colors
 
+logger = logging.getLogger(__name__)
+
 
 def plot_embeddings_using_tsne(
     embeddings: torch.Tensor,
     crop_index: int,
     assignments: torch.Tensor,
     centroids: torch.Tensor,
-    name: str,
-    output_dir: str,
+    name: str = "embeddings",
+    output_dir: pathlib.Path | None = None,
 ) -> None:
     """Plot the embeddings of DCv2 using t-SNE.
 
@@ -30,11 +32,12 @@ def plot_embeddings_using_tsne(
             Used for coloring each sample in the plot.
         centroids (torch.Tensor): The indexes of the centroids.
         name (str): Name of the figure
-        output_dir (str): Path where to save the figure.
+        output_dir (pathlib.Path): Path where to save the figure.
 
     """
+
     start = time.time()
-    logging.info("Creating plot for embeddings")
+    logger.info("Creating plot for embeddings")
 
     _, ax = plt.subplots()
 
@@ -48,19 +51,27 @@ def plot_embeddings_using_tsne(
     ax.scatter(x, y, c=colors, s=1)
     ax.scatter(x_centroids, y_centroids, c="red", s=20, marker="x")
 
-    plt.savefig(pathlib.Path(output_dir) / f"{name}-crops-{crop_index}.pdf")
+    if output_dir is not None:
+        plt.savefig(output_dir / f"{name}-crops-{crop_index}.pdf")
 
-    logging.info("Finished embeddings plot in %s seconds", time.time() - start)
+    logger.info("Finished embeddings plot in %s seconds", time.time() - start)
 
 
 def _fit_tsne(
     embeddings: torch.Tensor, centroids: torch.Tensor
 ) -> Iterator[tuple[tuple[float, float], tuple[float, float]]]:
     start = time.time()
-    logging.info("Fitting t-SNE")
+    logger.info("Fitting t-SNE")
 
     result = openTSNE.TSNE().fit(embeddings.cpu())
 
-    logging.info("Finished fitting t-SNE in %s seconds", time.time() - start)
+    logger.info("Finished fitting t-SNE in %s seconds", time.time() - start)
+
+    logger.info(
+        "embeddings: %s centroids: %s result: %s",
+        embeddings.size(),
+        centroids,
+        result.shape,
+    )
 
     return zip(*result), zip(*result[centroids])

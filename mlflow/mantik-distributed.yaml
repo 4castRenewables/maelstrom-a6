@@ -1,0 +1,40 @@
+UnicoreApiUrl: https://zam2125.zam.kfa-juelich.de:9112/JUWELS/rest/core
+Environment:
+  PreRunCommandOnLoginNode: |
+    cd /p/home/jusers/$USER/juwels/code/a6
+    git fetch
+    git checkout 29-plot-autocorrelation-and-transition-matrix
+    git status
+    git pull
+    cd $UC_WORKING_DIRECTORY
+  Apptainer:
+    Path: /p/project/deepacf/$USER/a6-cuda.sif
+    Type: remote
+    Options:
+      - -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6
+      - --nv
+  Variables:
+    # Tasks per node must be equivalent to the number of GPUs per node.
+    SLURM_NTASKS_PER_NODE: '3'
+    SLURM_CPUS_PER_TASK: '1'
+    # OMP_NUM_THREAS must be equivalent to SLURM_CPUS_PER_TASK
+    OMP_NUM_THREADS: '1'
+    MASTER_ADDR: '$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i.juwels'
+    MASTER_PORT: '29500'
+    SRUN_CPUS_PER_TASK: '${SLURM_CPUS_PER_TASK}'
+    # When using tasks, srun doesn't properly set the CUDA_VISIBLE_DEVICES
+    # to the number of allocated GPUS inside the container, hence we set it manually.
+    APPTAINERENV_CUDA_VISIBLE_DEVICES: '${CUDA_VISIBLE_DEVICES}'
+Resources:
+  Runtime: 1h
+  Queue: develbooster
+  Nodes: 2
+  GPUsPerNode: 3
+  #NodeConstraints: largedata
+Exclude:
+  - "*.sif"
+  - "*.sh"
+  # Below files are available since the entire folder is mounted.
+  - "*.py"
+  - "cluster.yaml"
+  - "grid-search.yaml"

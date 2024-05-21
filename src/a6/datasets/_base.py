@@ -63,6 +63,14 @@ class Dataset:
         else:
             self.paths = utils.list_files(path=path, pattern=pattern)
 
+            if not self.paths:
+                logger.warning(
+                    "No files found %s in with pattern %s",
+                    path,
+                    pattern,
+                )
+        logger.info("Reading dataset from files %s", self.paths)
+
         self._slice_time_dimension = slice_time_dimension
         self._slice_time_dimension_after = slice_time_dimension_after
         self._parallel = parallel_loading
@@ -104,7 +112,11 @@ class Dataset:
                 drop_variables,
             )
             return self._data
-        return self._to_xarray(levels=levels, drop_variables=drop_variables)
+        as_xarray = self._to_xarray(
+            levels=levels, drop_variables=drop_variables
+        )
+        logger.info("Converted data to xarray.Dataset %s", as_xarray)
+        return as_xarray
 
     def _was_already_converted(
         self, levels: types.Levels, drop_variables: list[str] | None
@@ -126,18 +138,20 @@ class Dataset:
                 drop_variables=drop_variables
             )
 
-        if self._postprocessing is not None:
-            return self._postprocessing(ds)
-
         if levels is not None:
-            logger.debug("Selecting level %s", levels)
-            return ds.sel(level=levels)
+            logger.debug("Selecting levels %s", levels)
+            ds = ds.sel(level=levels)
+
+        if self._postprocessing is not None:
+            logger.info("Applying postprocessing %s", self._postprocessing)
+            return self._postprocessing(ds)
         return ds
 
     def _open_single_dataset(
         self, drop_variables: list[str] | None
     ) -> xr.Dataset:
         [path] = self.paths
+        logger.info("Opening single file dataset from %s", path)
         dataset = xr.open_dataset(
             path,
             engine=self._engine,
@@ -148,6 +162,11 @@ class Dataset:
     def _open_multiple_temporally_monotonous_datasets(
         self, drop_variables: list[str] | None
     ):
+        logger.info(
+            "Opening multi-file dataset from %s with preprocessing %s",
+            self.paths,
+            self._preprocessing,
+        )
         return xr.open_mfdataset(
             self.paths,
             engine=self._engine,
@@ -161,14 +180,14 @@ class Dataset:
             drop_variables=drop_variables,
         )
 
-    def _preprocess_dataset(self, dataset: xr.Dataset) -> xr.Dataset:
+    def _preprocess_dataset(self, ds: xr.Dataset) -> xr.Dataset:
         if self._slice_time_dimension:
-            dataset = self._slice_first_twelve_hours(dataset)
+            ds = self._slice_first_twelve_hours(ds)
         if self._preprocessing is not None:
-            return self._preprocessing(dataset)
-        return dataset
+            return self._preprocessing(ds)
+        return ds
 
-    def _slice_first_twelve_hours(self, dataset: xr.Dataset) -> xr.Dataset:
+    def _slice_first_twelve_hours(self, ds: xr.Dataset) -> xr.Dataset:
         """Cut an hourly dataset after the first 12 hours.
 
         This is necessary to overwrite older model runs with newer ones.
@@ -178,7 +197,7 @@ class Dataset:
 
         """
         return methods.slicing.slice_dataset(
-            dataset,
+            ds,
             dimension=self._concat_dim,
             slice_until=self._slice_time_dimension_after,
             non_functional=True,

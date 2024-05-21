@@ -12,15 +12,15 @@ def get_number_of_nodes() -> int:
     return int(os.getenv("SLURM_NNODES", 1))
 
 
-def get_node_id():
-    return int(os.getenv("SLURM_NODEID", 0))
+def get_node_id() -> str:
+    return os.getenv("SLURM_NODEID", "0")
 
 
 def get_slurm_job_id() -> str:
-    return os.getenv("SLURM_JOB_ID")
+    return os.getenv("SLURM_JOB_ID", "unknown")
 
 
-def get_slurm_env_vars() -> dict[str, str]:
+def get_slurm_env_vars() -> dict[str, str | None]:
     return {
         "SLURM_JOB_ID": get_slurm_job_id(),
         "SLURM_JOB_NAME": os.getenv("SLURM_JOB_NAME"),

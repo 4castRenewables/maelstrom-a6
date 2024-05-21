@@ -1,6 +1,8 @@
+import datetime
 import functools
 import logging
 import os
+import pathlib
 import sys
 import time
 
@@ -83,4 +85,65 @@ def log_env_vars() -> None:
     logger.info(
         "%s",
         "\n".join(f"{k}: {str(v)}" for k, v in env_vars_sorted.items()),
+    )
+
+
+class LogFormatter(logging.Formatter):
+    def __init__(self, global_rank: int, local_rank: int):
+        super().__init__()
+        self.start_time = time.time()
+        self.rank = global_rank
+        self.local_rank = local_rank
+
+    def format(self, record):
+        elapsed_seconds = round(record.created - self.start_time)
+
+        prefix = "RANK {} (LOCAL {}) - {} - {} - {}".format(
+            self.rank,
+            self.local_rank,
+            record.levelname,
+            time.strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.timedelta(seconds=elapsed_seconds),
+        )
+        message = record.getMessage()
+        message = message.replace("\n", "\n" + " " * (len(prefix) + 3))
+        return f"{prefix} - {message}" if message else ""
+
+
+def create_logger(
+    global_rank: int,
+    local_rank: int,
+    verbose: bool = False,
+    filepath: pathlib.Path | None = None,
+) -> logging.Logger:
+    """Adapt the root logging config.
+
+    Use a different log file for each process.
+
+    """
+    level = logging.DEBUG if verbose else logging.INFO
+    log_formatter = LogFormatter(global_rank=global_rank, local_rank=local_rank)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(level)
+    console_handler.setFormatter(log_formatter)
+
+    handlers = [console_handler]
+
+    if filepath is not None:
+        path = filepath.with_name(
+            f"{filepath.stem}-rank-{global_rank}{filepath.suffix}"
+        )
+        file_handler = logging.FileHandler(path, "a+")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(log_formatter)
+
+        handlers.append(file_handler)
+
+    # create logger and set level to debug
+    logging.basicConfig(
+        level=level,
+        handlers=handlers,
+        # Force overriding of existing handlers at runtime.
+        force=True,
     )

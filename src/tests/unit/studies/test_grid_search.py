@@ -34,6 +34,7 @@ def test_perform_forecast_model_grid_search(pl_ds):
         model=model,
         parameters=parameters,
         weather=weather,
+        variables=["r", "t", "u", "v"],
         turbine=turbine,
         log_to_mantik=False,
     )

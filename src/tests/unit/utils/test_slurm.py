@@ -6,4 +6,4 @@ def test_get_node_id():
     with testing.env.env_vars_set({"SLURM_NODEID": "2"}):
         result = slurm.get_node_id()
 
-    assert result == 2
+    assert result == "2"

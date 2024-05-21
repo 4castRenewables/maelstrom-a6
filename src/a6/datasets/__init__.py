@@ -1,6 +1,10 @@
-import a6.datasets.coordinates
-import a6.datasets.dimensions
+import a6.datasets.coordinates as coordinates
+import a6.datasets.crop as crop
+import a6.datasets.dimensions as dimensions
+import a6.datasets.dwd as dwd
 import a6.datasets.methods as methods
-import a6.datasets.variables
+import a6.datasets.torch as torch
+import a6.datasets.transforms as transforms
+import a6.datasets.variables as variables
 from a6.datasets.ecmwf_ifs_hres import EcmwfIfsHres
 from a6.datasets.era5 import Era5

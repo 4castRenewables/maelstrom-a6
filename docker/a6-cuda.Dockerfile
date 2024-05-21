@@ -1,125 +1,109 @@
-# This image is just for testing the installation.
-# It builds much faster than the Apptainer image due to caching.
+# CUDA version for Nvidia A2
+#ARG CUDA_VERSION=11.8.0
+# Default CUDA version
+ARG CUDA_VERSION=12.1.0
+ARG PYTHON_VERSION=3.11
 
-ARG CUDA_VERSION=11.7.1
-
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as builder
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu22.04 as builder
 
 ARG CUDA_VERSION
-ARG PYTHON_VERSION=3.11
-ARG PYTORCH_VERSION=2.1.0
-ARG TORCHVISION_VERSION=0.16.0
-ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
-
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/opt/conda/bin:${PATH}
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-
-SHELL ["/bin/bash", "-c"]
-
-# See https://github.com/NVIDIA/nvidia-docker/issues/1631
-RUN apt-key del 7fa2af80 \
- && apt-key del 3bf863cc \
- && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub \
- && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+ARG PYTHON_VERSION
 
 RUN apt-get update \
+ && apt-get install -y software-properties-common \
+ && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
       ca-certificates \
-      wget \
       curl \
       # Installs gcc, required by HDBSCAN
       build-essential \
       # Required by cartopy
-      libgeos-3.8.0 \
-      libgeos-dev
+      libgeos3.10.2 \
+      libgeos-dev \
+      libopenmpi-dev \
+      # Install opencv via apt to get required libraries
+      python3-opencv \
+      python${PYTHON_VERSION} \
+      python${PYTHON_VERSION}-dev \
+      python${PYTHON_VERSION}-venv
 
-# Install conda (miniconda)
-RUN wget \
-      --quiet \
-      -O miniconda.sh \
-      https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
- && chmod +x miniconda.sh \
- && bash miniconda.sh -b -p /opt/conda
+RUN python${PYTHON_VERSION} -m ensurepip --upgrade
+RUN pip${PYTHON_VERSION} --help
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python -
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python${PYTHON_VERSION} -
 ENV PATH=/opt/poetry/bin:${PATH}
+ENV POETRY_VIRTUALENVS_CREATE=false
 
-# Create and activate conda environment
-RUN conda config --add channels conda-forge \
- && conda install conda-pack \
- && conda update pip setuptools \
- && conda create --name a6 python=${PYTHON_VERSION}
-
-# Install PyTorch and apex
-RUN conda install -n a6 \
-        -c pytorch -c conda-forge \
-        pytorch=${PYTORCH_VERSION} \
-        torchvision=${TORCHVISION_VERSION} \
-        cudatoolkit=${CUDA_VERSION}
-RUN conda install -n a6 -c conda-forge nvidia-apex
-
-# Use conda-pack to create a standalone env in /venv and install vissl
-RUN conda-pack -n a6 -o /opt/env.tar.gz \
- && mkdir /venv \
- && tar -xzf /opt/env.tar.gz -C /venv \
+RUN python${PYTHON_VERSION} -m venv /venv \
  && . /venv/bin/activate \
- && conda-unpack
+ && pip install --upgrade pip
 
-COPY README.md/ /opt/a6/
+COPY README.md /opt/a6/
 COPY pyproject.toml /opt/a6/
 COPY poetry.lock /opt/a6/
 COPY src/a6/ /opt/a6/src/a6
+COPY Deep500-for-MAELSTROM/ /opt/a6/Deep500-for-MAELSTROM
 
-# Must install a6 after unpacking since conda doesn't allow to pack
-# packages installed in editable mode.
 WORKDIR /opt/a6
+
 RUN . /venv/bin/activate \
- && POETRY_VIRTUALENVS_CREATE=false poetry install --only=main
+ && poetry export -f requirements.txt --output requirements.txt \
+ && pip install -r requirements.txt \
+ # Below code for updating torch is only required for CUDA 11.7
+ #&& poetry source add --priority=supplemental pytorch-cuda118 https://download.pytorch.org/whl/cu118 \
+ #&& poetry add \
+ #   -vvv \
+ #   --source pytorch-cuda118 \
+ #   torch==$(poetry show torch | awk '/version/ { print $3 }') \
+ #   torchvision==$(poetry show torchvision | awk '/version/ { print $3 }') \
+ && poetry install -vvv --only=main,notebooks,deep500,mpi
+
 
 # Delete Python cache files
 WORKDIR /venv
 RUN find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu22.04
 
-ARG CUDA_VERSION
+ARG PYTHON_VERSION
 
-ARG PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/venv/bin:${PATH}
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:/usr/local/bin:/venv/bin:${PATH}
+ARG PATH=/venv/bin:${PATH}
+ENV PATH=/venv/bin:${PATH}
 
 ENV GIT_PYTHON_REFRESH=quiet
 
-# VISSL conda env and repo
+# Copy venv and repo
 COPY --from=builder /venv /venv
 COPY --from=builder /opt/a6 /opt/a6
 
-# See https://github.com/NVIDIA/nvidia-docker/issues/1631
-RUN apt-key del 7fa2af80 \
- && apt-key del 3bf863cc \
- && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub \
- && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-
-# Install opencv via apt to get required libraries
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends  \
       # Installs gcc, required by HDBSCAN
       build-essential \
       # Required by cartopy
-      libgeos-3.8.0 \
+      libgeos3.10.2 \
       libgeos-dev \
+      libopenmpi-dev \
+      # Install opencv via apt to get required libraries
       python3-opencv \
+      python${PYTHON_VERSION} \
+      python${PYTHON_VERSION}-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-RUN which python \
- && python --version \
- && pip list \
- && python -c 'import a6, apex, torch, torchvision' \
- && python -m cfgrib selfcheck
+# Check if all packages successfully installed by importing
+RUN which python
+RUN python --version
+RUN pip list
+RUN python -c 'import a6, mantik, torch, torchvision, ipykernel, memory_profiler'
+RUN python -c 'import deep500'
+RUN python -c 'import torch.distributed.distributed_c10d as c10d; assert c10d._NCCL_AVAILABLE, "NCCL not available"'
+RUN python -c 'from torch._C._distributed_c10d import ProcessGroupNCCL'
+RUN python -m cfgrib selfcheck
+RUN python -m eccodes selfcheck
 
 ENTRYPOINT ["python"]

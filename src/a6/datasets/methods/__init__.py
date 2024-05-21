@@ -1,4 +1,11 @@
-import a6.datasets.methods.convert
-import a6.datasets.methods.select
-import a6.datasets.methods.slicing
-import a6.datasets.methods.turbine
+import a6.datasets.methods.convert as convert
+import a6.datasets.methods.identity as identity
+import a6.datasets.methods.layers as layers
+import a6.datasets.methods.mask as mask
+import a6.datasets.methods.normalization as normalization
+import a6.datasets.methods.save as save
+import a6.datasets.methods.select as select
+import a6.datasets.methods.slicing as slicing
+import a6.datasets.methods.statistics as statistics
+import a6.datasets.methods.transform as transform
+import a6.datasets.methods.turbine as turbine

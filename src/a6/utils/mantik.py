@@ -9,6 +9,8 @@ from collections.abc import Callable
 import mlflow
 
 
+logger = logging.getLogger(__name__)
+
 _TRACKING_ENV_VAR = "TRACK_TO_MANTIK"
 _CURRENT_EPOCH_ENV_VAR = "CURRENT_EPOCH"
 _CPU_USAGE_ENV_VAR = "CPU_USAGE_ENABLED"
@@ -82,7 +84,7 @@ def call_mlflow_method(func: Callable, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except mlflow.exceptions.MlflowException as e:
-        logging.exception(  # noqa: G200
+        logger.exception(  # noqa: G200
             (
                 "Calling MLflow method %s with args %s and kwargs %s "
                 "has failed: %s"

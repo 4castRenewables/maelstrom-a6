@@ -5,10 +5,11 @@ import hdbscan
 
 import a6
 
-logger = logging.getLogger(__name__)
-a6.utils.log_to_stdout()
 
 if __name__ == "__main__":
+    a6.utils.log_to_stdout()
+    logger = logging.getLogger(__name__)
+
     kernel_size = 11
     kernel_mode = "mean"
 
@@ -23,8 +24,8 @@ if __name__ == "__main__":
 
     data = a6.datasets.EcmwfIfsHres(
         path=pathlib.Path(
-            # "/home/fabian/Documents/MAELSTROM/data/pca"
-            "/p/scratch/deepacf/maelstrom/maelstrom_data/a6/pl"
+            # "/home/fabian/Documents/data/pca"
+            "/p/scratch/deepacf/maelstrom_data/a6/pl"
         ),
         pattern="pl_*.nc",
         slice_time_dimension=True,

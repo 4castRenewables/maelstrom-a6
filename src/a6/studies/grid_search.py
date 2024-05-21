@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from collections.abc import Hashable
 
 import sklearn.model_selection as model_selection
 import xarray as xr
@@ -7,7 +8,7 @@ import xarray as xr
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods.turbine as _turbine
 import a6.datasets.variables as _variables
-import a6.features.methods.wind as wind
+import a6.features.methods as methods
 import a6.training as training
 import a6.types as types
 import a6.utils as utils
@@ -21,6 +22,7 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
     model: type[types.Model],
     parameters: dict[str, list],
     weather: xr.Dataset,
+    variables: list[Hashable],
     turbine: xr.Dataset,
     coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     turbine_variables: _variables.Turbine = _variables.Turbine(),
@@ -28,6 +30,8 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
     log_to_mantik: bool = False,
 ) -> model_selection.GridSearchCV:
     """Perform grid search for a forecasting model."""
+    variables = set(variables)
+
     if log_to_mantik:
         mlflow.sklearn.autolog(log_models=False)
 
@@ -42,9 +46,17 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
         turbine_variables=turbine_variables,
         coordinates=coordinates,
     )
-    weather = wind.calculate_wind_speed(variables=model_variables).apply_to(
-        weather
-    )
+    weather = (
+        methods.wind.calculate_wind_speed(variables=model_variables)
+        >> methods.wind.calculate_wind_direction_angle(
+            variables=model_variables
+        )
+        >> methods.variables.drop_variables(
+            names=[model_variables.u, model_variables.v]
+        )
+        >> methods.time.calculate_fraction_of_day(coordinates=coordinates)
+        >> methods.time.calculate_fraction_of_year(coordinates=coordinates)
+    ).apply_to(weather)
 
     cv = model_selection.LeaveOneGroupOut()
     groups = training.Groups(
@@ -54,18 +66,29 @@ def perform_forecast_model_grid_search(  # noqa: CFQ002
     )
     scorers = training.metrics.turbine.Scorers(power_rating)
 
-    logger.debug(
-        "Performing grid search for %s with parameters %s "
-        "and cross validation %s with groups %s",
+    # Remove u+v from train variables and add wind speed,
+    # fraction_of_day and fraction_of_year
+    train_variables = (variables - {model_variables.u, model_variables.v}) | {
+        model_variables.wind_speed,
+        "fraction_of_day",
+        "fraction_of_year",
+    }
+
+    logger.info(
+        (
+            "Performing grid search for %s with parameters %s "
+            "and input variables %s"
+        ),
         model,
         parameters,
-        cv,
-        groups,
+        train_variables,
     )
+    logger.debug("Grid search groups: %s", groups)
+
     gs = training.grid_search.perform_grid_search(
         model=model(),
         parameters=parameters,
-        training_data=weather[model_variables.wind_speed],
+        training_data=[weather[var] for var in train_variables],
         target_data=turbine[turbine_variables.production],
         cv=cv,
         groups=groups.labels,

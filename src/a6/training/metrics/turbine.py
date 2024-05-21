@@ -1,4 +1,3 @@
-import numpy as np
 import sklearn.metrics as metrics
 
 import a6.types as types
@@ -46,9 +45,7 @@ def calculate_nrmse(
     y_true: types.Data, y_pred: types.Data, power_rating: float
 ) -> float:
     """Calculate the normalized root-mean-square error of a wind turbine."""
-    return calculate_rmse(y_true=y_true, y_pred=y_pred) / power_rating
-
-
-def calculate_rmse(y_true: types.Data, y_pred: types.Data) -> float:
-    """Calculate the root-mean-square error of a wind turbine."""
-    return np.sqrt(metrics.mean_squared_error(y_true=y_true, y_pred=y_pred))
+    return (
+        metrics.mean_squared_error(y_true=y_true, y_pred=y_pred, squared=False)
+        / power_rating
+    )

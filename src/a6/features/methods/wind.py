@@ -15,7 +15,8 @@ def calculate_wind_speed(
     variables: _variables.Model = _variables.Model(),
 ) -> types.DataND:
     """Calculate the wind speed."""
-    logger.debug("Calculating wind speed using %s", variables)
+    logger.debug("Calculating wind speed for %s using %s", data, variables)
+    logger.debug("data[variables.u] = %s", data[variables.u])
     data[variables.wind_speed] = np.sqrt(
         data[variables.u] ** 2 + data[variables.v] ** 2
     )

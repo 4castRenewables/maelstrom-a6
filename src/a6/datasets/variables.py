@@ -33,8 +33,16 @@ class Model:
     v: str = "v"
     wind_speed: str = "spd"
     wind_direction: str = "dir"
+    sp: str = "sp"
     t: str = "t"
     r: str = "r"
     q: str = "q"
     z: str = "z"
     geopotential_height: str = "z_h"
+
+
+@dataclasses.dataclass(frozen=True)
+class GWL:
+    """Variables of a GWL dataset."""
+
+    gwl: str = "GWL"
