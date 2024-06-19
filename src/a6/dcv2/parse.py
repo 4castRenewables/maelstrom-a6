@@ -342,7 +342,7 @@ def create_argparser() -> argparse.ArgumentParser:
         "--base-lr", default=4.8, type=float, help="base learning rate"
     )
     parser.add_argument(
-        "--final-lr", type=float, default=0.05, help="final learning rate"
+        "--final-lr", type=float, default=0.0048, help="final learning rate"
     )
     parser.add_argument(
         "--freeze-prototypes-niters",

@@ -32,12 +32,6 @@ def get_dwd_era5_data(
             latitudes=coordinates.latitude,
             use_sqrt=True,
         )
-        >> features.methods.geopotential.calculate_geopotential_height(
-            variables=variables,
-        )
-        >> features.methods.variables.drop_variables(
-            names=[variables.z] + drop_variables
-        )
     )
 
     logger.info(
