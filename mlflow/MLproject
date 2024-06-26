@@ -180,7 +180,7 @@ entry_points:
     parameters:
       weather_data:
         type: string
-        default: /p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc
+        default: /p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc
       gwl_data:
         type: string
         default: /opt/a6/src/tests/data/gwl.nc
@@ -223,7 +223,7 @@ entry_points:
         default: --no-plot-results
       data_path:
         type: str
-        default: /p/project/deepacf/emmerich1/data/deepclusterv2/daily
+        default: /p/project1/deepacf/emmerich1/data/deepclusterv2/daily
       use_mnist:
         type: str
         default: --no-use-mnist
@@ -247,7 +247,7 @@ entry_points:
         default: --no-parallel-loading
       dump_path:
         type: str
-        default: /p/scratch/deepacf/emmerich1/dcv2/dump
+        default: /p/scratch1/deepacf/emmerich1/dcv2/dump
       nmb_crops:
         type: list[int]
         default: '2 6'

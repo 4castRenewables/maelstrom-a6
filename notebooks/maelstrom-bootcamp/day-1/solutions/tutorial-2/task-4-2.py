@@ -3,7 +3,7 @@ import utils
 import xarray as xr
 
 
-ds = xr.open_dataset("/p/project/training2223/a6/data/wind_turbine.nc")
+ds = xr.open_dataset("/p/project1/training2223/a6/data/wind_turbine.nc")
 
 # Get a subset of the first 60 time steps in the timeseries.
 ds_subset = ds.isel(time=slice(None, 60))

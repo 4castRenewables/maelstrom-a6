@@ -2,7 +2,7 @@ import pandas as pd
 import xarray as xr
 
 
-ds = xr.open_dataset("/p/project/training2223/a6/data/wind_turbine.nc")
+ds = xr.open_dataset("/p/project1/training2223/a6/data/wind_turbine.nc")
 
 # A
 # Get latitude and longitude and look it up on Google Maps or OpenStreetMap.

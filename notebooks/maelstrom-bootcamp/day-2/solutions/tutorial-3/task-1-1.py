@@ -1,7 +1,7 @@
 import xarray as xr
 
 
-turbine = xr.open_dataset("/p/project/training2223/a6/data/wind_turbine.nc")
+turbine = xr.open_dataset("/p/project1/training2223/a6/data/wind_turbine.nc")
 
 
 # Remove outliers by selecting only specific indexes

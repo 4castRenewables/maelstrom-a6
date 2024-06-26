@@ -1,5 +1,5 @@
 """
-apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project/deepacf/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py  # noqa: E501
+apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project1/deepacf/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py  # noqa: E501
 """
 import concurrent.futures
 import contextlib
@@ -28,10 +28,10 @@ N_CLUSTERS = int(os.getenv("N_CLUSTERS_KMEANS", 40))
 Ks = list(range(1, N_CLUSTERS + 1))
 ds = xr.open_dataset(
     pathlib.Path(
-        "/p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
+        "/p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
     )
 )
-data_dir = pathlib.Path("/p/project/deepacf/emmerich1/data")
+data_dir = pathlib.Path("/p/project1/deepacf/emmerich1/data")
 
 pca_dir = data_dir / "pca"
 pca_dir.mkdir(exist_ok=True, parents=True)
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 
     data_path = os.getenv(
         "PREPROCESSED_DATA_PATH",
-        "/p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12_preprocessed_for_pca.nc",  # noqa: E501
+        "/p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12_preprocessed_for_pca.nc",  # noqa: E501
     )
 
     with measure_time("Reading data"):

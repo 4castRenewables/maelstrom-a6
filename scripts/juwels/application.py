@@ -12,9 +12,9 @@ a6.utils.log_to_stdout()
 # Should not need to be changed.
 os.environ[
     a6.parallel.slurm.SINGULARITY_IMAGE_ENV_VAR
-] = "/p/scratch/deepacf/emmerich1/jupyter-a6/jupyter-kernel.sif"
+] = "/p/scratch1/deepacf/emmerich1/jupyter-a6/jupyter-kernel.sif"
 data_path = (
-    "/p/scratch/deepacf/maelstrom_data/4cast-application6"
+    "/p/scratch1/deepacf/maelstrom_data/4cast-application6"
     "/ml/temperature_level_128_daily_averages_2017_2020.nc"
 )
 
