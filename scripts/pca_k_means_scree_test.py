@@ -31,12 +31,13 @@ ds = xr.open_dataset(
         "/p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
     )
 )
-data_dir = pathlib.Path("/p/project1/deepacf/emmerich1/data")
+data_dir_project = pathlib.Path("/p/project1/deepacf/emmerich1/data")
+data_dir_scratch = pathlib.Path("/p/scratch1/deepacf/emmerich1/data")
 
-pca_dir = data_dir / "pca"
+pca_dir = data_dir_scratch / "pca"
 pca_dir.mkdir(exist_ok=True, parents=True)
 
-kmeans_dir = data_dir / "kmeans"
+kmeans_dir = data_dir_project / "kmeans"
 kmeans_dir.mkdir(exist_ok=True, parents=True)
 
 
@@ -260,7 +261,7 @@ if __name__ == "__main__":
 
         joblib.dump(
             ssds_pca,
-            data_dir / "scree-test-results-pca.dict",
+            data_dir_project / "scree-test-results-pca.dict",
         )
 
         for k in Ks:
@@ -284,7 +285,7 @@ if __name__ == "__main__":
 
         joblib.dump(
             ssds_kpca,
-            data_dir / "scree-test-results-kpca.dict",
+            data_dir_project / "scree-test-results-kpca.dict",
         )
 
         for k in Ks:

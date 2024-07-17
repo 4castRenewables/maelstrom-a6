@@ -225,7 +225,7 @@ parameterset:
            -v /scratch:/scratch
            -v /home/$USER:/home/$USER
       - name: image_path
-        _: /p/project11/deepacf/emmerich1/a6-cuda.sif
+        _: /p/project1/deepacf/emmerich1/a6-cuda.sif
       - name: image_path
         tag: dc-mi200
         _: /p/project1/deepacf/emmerich1/a6-rocm.sif
