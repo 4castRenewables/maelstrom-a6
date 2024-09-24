@@ -3,7 +3,7 @@ import pathlib
 import xarray as xr
 
 # Create a sorted list of the files in the given path.
-path = pathlib.Path("/p/project/training2223/a6/data/ml")
+path = pathlib.Path("/p/project1/training2223/a6/data/ml")
 paths = sorted(path.glob("ml_2020010*.nc"))
 
 

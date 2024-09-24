@@ -2,8 +2,8 @@ import pandas as pd
 import xarray as xr
 
 
-ds = xr.open_dataset("/p/project/training2223/a6/data/ml/ml_20200101_00.nc")
-ds2 = xr.open_dataset("/p/project/training2223/a6/data/ml/ml_20200101_12.nc")
+ds = xr.open_dataset("/p/project1/training2223/a6/data/ml/ml_20200101_00.nc")
+ds2 = xr.open_dataset("/p/project1/training2223/a6/data/ml/ml_20200101_12.nc")
 
 print(f"The second dataset's time coordinate: {ds2['time']}")
 

@@ -1,11 +1,11 @@
 import xarray as xr
 
 weather = xr.open_dataset(
-    "/p/project/training2223/a6/data/"
+    "/p/project1/training2223/a6/data/"
     "ml_level_133_2017_2020_closest_grid_point.nc"
 )
 turbine = xr.open_dataset(
-    "/p/project/training2223/a6/data/wind_turbine_cleaned_resampled.nc"
+    "/p/project1/training2223/a6/data/wind_turbine_cleaned_resampled.nc"
 )
 
 # Create sets of the time steps to allow set theory operations.

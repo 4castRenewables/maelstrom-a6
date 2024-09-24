@@ -3,7 +3,7 @@ from datetime import datetime
 import xarray as xr
 
 
-ds = xr.open_dataset("/p/project/training2223/a6/data/ml/ml_20200101_00.nc")
+ds = xr.open_dataset("/p/project1/training2223/a6/data/ml/ml_20200101_00.nc")
 
 # A
 # The coordinates and dimensions of the dataset can be separately accessed.

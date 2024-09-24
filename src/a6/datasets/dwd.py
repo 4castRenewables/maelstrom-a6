@@ -19,25 +19,15 @@ def get_dwd_era5_data(
     # given data path is a folder with netCDF files.
     logger.warning("Assuming xarray.Dataset from netCDF files")
     coordinates = datasets.coordinates.Coordinates()
-    variables = datasets.variables.Model()
     drop_variables = drop_variables or []
 
     preprocessing = (
-        (
-            datasets.methods.select.select_dwd_area(coordinates=coordinates)
-            if select_dwd_area
-            else datasets.methods.identity.identity()
-        )
-        >> features.methods.weighting.weight_by_latitudes(
-            latitudes=coordinates.latitude,
-            use_sqrt=True,
-        )
-        >> features.methods.geopotential.calculate_geopotential_height(
-            variables=variables,
-        )
-        >> features.methods.variables.drop_variables(
-            names=[variables.z] + drop_variables
-        )
+        datasets.methods.select.select_dwd_area(coordinates=coordinates)
+        if select_dwd_area
+        else datasets.methods.identity.identity()
+    ) >> features.methods.weighting.weight_by_latitudes(
+        latitudes=coordinates.latitude,
+        use_sqrt=True,
     )
 
     logger.info(

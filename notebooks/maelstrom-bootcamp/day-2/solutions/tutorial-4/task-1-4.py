@@ -5,7 +5,7 @@ import utils
 import xarray as xr
 
 ds = xr.open_dataset(
-    "/p/project/training2223/a6/data/"
+    "/p/project1/training2223/a6/data/"
     "ml_level_137_temperature_daily_mean_jan_2020.nc"
 )
 transformed = utils.perform_pca_and_transform_into_pc_space(

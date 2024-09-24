@@ -432,6 +432,7 @@ def is_primary_device() -> bool:
 def destroy() -> None:
     logger.info("Destroying process group")
     torch.distributed.destroy_process_group()
+    logger.info("Process group successfully destroyed")
 
 
 def gather_from_all_ranks(tensor: torch.Tensor) -> torch.Tensor:

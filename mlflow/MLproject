@@ -180,7 +180,7 @@ entry_points:
     parameters:
       weather_data:
         type: string
-        default: /p/project/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc
+        default: /p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc
       gwl_data:
         type: string
         default: /opt/a6/src/tests/data/gwl.nc
@@ -220,10 +220,10 @@ entry_points:
         default: --save-results
       plot_results:
         type: str
-        default: --plot-results
+        default: --no-plot-results
       data_path:
         type: str
-        default: /p/project/deepacf/emmerich1/data/deepclusterv2/daily
+        default: /p/project1/deepacf/emmerich1/data/deepclusterv2/daily
       use_mnist:
         type: str
         default: --no-use-mnist
@@ -241,28 +241,28 @@ entry_points:
         default: None
       select_dwd_area:
         type: str
-        default: --select-dwd-area
+        default: --no-select-dwd-area
       parallel_loading:
         type: str
         default: --no-parallel-loading
       dump_path:
         type: str
-        default: /p/scratch/deepacf/emmerich1/dcv2/dump
+        default: /p/scratch1/deepacf/emmerich1/dcv2/dump
       nmb_crops:
         type: list[int]
-        default: 2
+        default: '2 6'
       crops_for_assign:
         type: list[int]
         default: '0 1'
       size_crops:
         type: list[float]
-        default: 0.75
+        default: '1.0 0.4'
       min_scale_crops:
        type: list[float]
-       default: 0.05
+       default: '0.14 0.05'
       max_scale_crops:
         type: list[float]
-        default: 1.
+        default: '1.0 0.14'
       temperature:
         type: float
         default: 0.1
@@ -271,13 +271,13 @@ entry_points:
         default: 128
       nmb_prototypes:
         type: int
-        default: 3
+        default: 4
       nmb_clusters:
         type: int
         default: 40
       epochs:
         type: int
-        default: 1
+        default: 1200
       batch_size:
         type: int
         default: 64
@@ -286,7 +286,7 @@ entry_points:
         default: 4.8
       final_lr:
         type: float
-        default: 0.05
+        default: 0.0048
       freeze_prototypes_niters:
         type: int
         default: 300000

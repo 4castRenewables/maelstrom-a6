@@ -70,11 +70,11 @@ repos:
           - flake8-logging-format
           - pep8-naming
 
-  - repo: local
-    hooks:
-      - id: jupyter-nb-clear-output
-        name: jupyter-nb-clear-output
-        stages: [commit]
-        language: system
-        files: \.ipynb$
-        entry: poetry run jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
+  #  - repo: local
+  #    hooks:
+  #      - id: jupyter-nb-clear-output
+  #        name: jupyter-nb-clear-output
+  #        stages: [commit]
+  #        language: system
+  #        files: \.ipynb$
+  #        entry: poetry run jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace

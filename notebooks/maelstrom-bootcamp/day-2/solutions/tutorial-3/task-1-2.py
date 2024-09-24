@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 
-turbine = xr.open_dataset("/p/project/training2223/a6/data/wind_turbine.nc")
+turbine = xr.open_dataset("/p/project1/training2223/a6/data/wind_turbine.nc")
 turbine_cleaned = xr.open_dataset(
-    "/p/project/training2223/a6/data/wind_turbine_cleaned.nc"
+    "/p/project1/training2223/a6/data/wind_turbine_cleaned.nc"
 )
 
 # A

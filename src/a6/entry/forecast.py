@@ -43,7 +43,7 @@ parser.add_argument(
     "--pca-kpca-n-clusters",
     type=int,
     default=40,
-    choices=[29, 40],
+    choices=[30, 40],
     help="Number of categories to use from the PCA-kPCA file.",
 )
 parser.add_argument(

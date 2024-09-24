@@ -2,7 +2,7 @@ import xarray as xr
 
 
 turbine_cleaned = xr.open_dataset(
-    "/p/project/training2223/a6/data/wind_turbine_cleaned.nc"
+    "/p/project1/training2223/a6/data/wind_turbine_cleaned.nc"
 )
 
 # Resample to an hourly time series and take the mean for each hour.
