@@ -181,9 +181,11 @@ def calculate_ssd_kpca(n_pcs: int, data: np.ndarray):
             transformed = kpca.fit_transform(data)
             joblib.dump(kpca, kpca_path)
             del kpca
-    
+
         with measure_time("Normalizing data"):
-            transformed = sklearn.preprocessing.StandardScaler().fit_transform(transformed)
+            transformed = sklearn.preprocessing.StandardScaler().fit_transform(
+                transformed
+            )
             joblib.dump(transformed, kpca_tansformed_path)
 
     with measure_time(f"Calculating SSDs for kPCA {n_pcs=}"):
@@ -195,7 +197,13 @@ def calculate_ssd_kpca(n_pcs: int, data: np.ndarray):
 
 
 def calculate_ssds(
-    method: Callable, method_name: str, n_pcs: int, data: np.ndarray, n_pcs_start: int = 1, parallelize: bool = True, **kwargs
+    method: Callable,
+    method_name: str,
+    n_pcs: int,
+    data: np.ndarray,
+    n_pcs_start: int = 1,
+    parallelize: bool = True,
+    **kwargs,
 ) -> dict:
     n_pcs_range = range(n_pcs_start, n_pcs + 1)
 
@@ -204,14 +212,14 @@ def calculate_ssds(
             ssds = a6.utils.parallelize.parallelize_with_futures(
                 method,
                 kwargs=[
-                    dict(n_pcs=n_pcs, data=data, **kwargs) for n_pcs in n_pcs_range
+                    dict(n_pcs=n_pcs, data=data, **kwargs)
+                    for n_pcs in n_pcs_range
                 ],
                 executor_type=concurrent.futures.ProcessPoolExecutor,
             )
     else:
         ssds = [
-            method(n_pcs=n_pcs, data=data, **kwargs)
-            for n_pcs in n_pcs_range
+            method(n_pcs=n_pcs, data=data, **kwargs) for n_pcs in n_pcs_range
         ]
 
     return {pcs: ssd for pcs, ssd in zip(n_pcs_range, ssds, strict=True)}

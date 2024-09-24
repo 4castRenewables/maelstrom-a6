@@ -22,7 +22,9 @@ turbine_data_dir = "/p/home/jusers/emmerich1/juwels/data/production"
 surface_level_data = (
     "/p/project1/deepacf/emmerich1/data/ecmwf_ifs/sfc_2017_2020.nc"
 )
-model_level_data = "/p/project1/deepacf/emmerich1/data/ecmwf_ifs/ml_2017_2020.nc"
+model_level_data = (
+    "/p/project1/deepacf/emmerich1/data/ecmwf_ifs/ml_2017_2020.nc"
+)
 pressure_level_data = (
     "/p/project1/deepacf/emmerich1/data/ecmwf_ifs/pl_2017_2020.nc"
 )
