@@ -21,11 +21,6 @@ logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--turbine-data-dir",
-    type=pathlib.Path,
-    help="Directory of the turbine data are located, saved in netCDF format.",
-)
-parser.add_argument(
     "--preprocessed-data-dir",
     type=pathlib.Path,
     help=(
@@ -34,17 +29,17 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--pca-kpca-path",
+    "--pca-path",
     type=pathlib.Path,
     default=None,
-    help="Path to the file containing the PCA and kPCA LSWR labels.",
+    help="Path to the file containing the PCA LSWR labels.",
 )
 parser.add_argument(
-    "--pca-kpca-n-clusters",
+    "--pca-n-clusters",
     type=int,
     default=40,
     choices=[30, 40],
-    help="Number of categories to use from the PCA-kPCA file.",
+    help="Number of categories to use from the PCA file.",
 )
 parser.add_argument(
     "--gwl-path",
@@ -66,7 +61,7 @@ parser.add_argument(
     help=(
         "Train the model with random input labels."
         ""
-        "Enabling this option will neglect given DWD, PCA, kPCA, and "
+        "Enabling this option will neglect given DWD, PCA, and "
         "DCv2 labels."
     ),
 )
@@ -136,11 +131,10 @@ def simulate_errors(
         verbose=False,
     )
 
-    turbine_files = a6.utils.paths.list_files(
-        args.turbine_data_dir, pattern="**/*.nc", recursive=True
-    )
+    preprocessed_data_dir = pathlib.Path(args.preprocessed_data_dir)
+    turbine_dirs = list(path for path in preprocessed_data_dir.glob("*") if path.is_dir())
 
-    if WORKER_ID is not None and WORKER_ID >= len(turbine_files):
+    if WORKER_ID is not None and WORKER_ID >= len(turbine_dirs):
         logger.warning("Exiting: no file to process")
         return
 
@@ -149,28 +143,28 @@ def simulate_errors(
 
     lswrs = [None]
 
-    if args.gwl_path is not None:
-        gwl = xr.open_dataset(args.gwl_path)
-        lswrs.append(gwl["GWL"])
-
-    if args.pca_kpca_path is not None:
-        pca_kpca = xr.open_dataset(args.pca_kpca_path).sel(
-            k=args.pca_kpca_n_clusters
-        )
-        lswrs.extend([pca_kpca["PCA"], pca_kpca["kPCA"]])
-
     if args.dcv2_path is not None:
         dcv2 = xr.open_dataset(args.dcv2_path)
         lswrs.append(dcv2["DCv2"])
 
+    if args.pca_path is not None:
+        pca = xr.open_dataset(args.pca_path).sel(
+            k=args.pca_n_clusters
+        )
+        lswrs.append(pca["PCA"])
+
+    if args.gwl_path is not None:
+        gwl = xr.open_dataset(args.gwl_path)
+        lswrs.append(gwl["GWL"])
+
     if args.random:
         logger.info(
             "Using randomized LSWR labels for training (n_categories=%i)",
-            args.pca_kpca_n_clusters,
+            args.pca_n_clusters,
         )
         dates = pd.date_range("2000-01-01", datetime.date.today(), freq="1D")
         random_labels = xr.DataArray(
-            np.random.randint(args.pca_kpca_n_clusters, size=len(dates)),
+            np.random.randint(args.pca_n_clusters, size=len(dates)),
             coords={coordinates.time: dates},
             dims=[coordinates.time],
             name="Random",
@@ -184,18 +178,18 @@ def simulate_errors(
     )
     args.results_dir.mkdir(parents=True, exist_ok=True)
 
-    for i, turbine_path in enumerate(turbine_files):
+    for i, path in enumerate(turbine_dirs):
         if WORKER_ID is not None and i != WORKER_ID:
             continue
 
         logger.info(
             "Processing turbine %i/%i (path=%s)",
             i,
-            len(turbine_files),
-            turbine_path,
+            len(turbine_dirs),
+            path,
         )
 
-        turbine_name = turbine_path.name.replace(".nc", "")
+        turbine_name = path.name
         outfile: pathlib.Path = (
             args.results_dir / f"{turbine_name}-forecast-errors.nc"
         )
@@ -208,18 +202,10 @@ def simulate_errors(
             )
             continue
 
-        turbine_path: pathlib.Path = (
-            args.preprocessed_data_dir / f"{turbine_name}/turbine.nc"
-        )
-        pl_path: pathlib.Path = (
-            args.preprocessed_data_dir / f"{turbine_name}/pl.nc"
-        )
-        ml_path: pathlib.Path = (
-            args.preprocessed_data_dir / f"{turbine_name}/ml.nc"
-        )
-        sfc_path: pathlib.Path = (
-            args.preprocessed_data_dir / f"{turbine_name}/sfc.nc"
-        )
+        turbine_path: pathlib.Path = path / "turbine.nc"
+        pl_path: pathlib.Path = path / "pl.nc"
+        ml_path: pathlib.Path = path / "ml.nc"
+        sfc_path: pathlib.Path = path / "sfc.nc"
 
         logger.info("Reading preprocessed data")
 
@@ -405,9 +391,11 @@ def simulate_errors(
             coords=nmae_da.coords,
         )
 
-        logger.info("Saving simulated forecast errors to %s", outfile)
-
-        errors.to_netcdf(outfile)
+        if args.testing:
+            logger.warning("Skipping saving of file %s due to --testing enabled", outfile.as_posix())
+        else:
+            logger.info("Saving simulated forecast errors to %s", outfile.as_posix())
+            errors.to_netcdf(outfile)
 
         result[outfile] = errors
 

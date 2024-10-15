@@ -180,19 +180,11 @@ def create_turbine_model_features(
             >> a6.features.methods.wind.calculate_wind_direction_angle(
                 variables=model_variables
             )
-            >> a6.features.methods.time.calculate_fraction_of_day(
-                coordinates=coordinates
-            )
-            >> a6.features.methods.time.calculate_fraction_of_year(
-                coordinates=coordinates
-            )
             >> a6.datasets.methods.select.select_variables(
                 variables=[
                     model_variables.wind_speed,
                     model_variables.wind_direction,
                     model_variables.r,
-                    "fraction_of_year",
-                    "fraction_of_day",
                 ]
             )
             >> a6.datasets.methods.save.to_netcdf(path=outfile_pl)

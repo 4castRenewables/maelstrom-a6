@@ -32,7 +32,7 @@ ds = xr.open_dataset(
     )
 )
 data_dir_project = pathlib.Path("/p/project1/deepacf/emmerich1/data")
-data_dir_scratch = pathlib.Path("/p/scratch1/deepacf/emmerich1/data")
+data_dir_scratch = pathlib.Path("/p/scratch/deepacf/emmerich1/data")
 
 pca_dir = data_dir_scratch / "pca"
 pca_dir.mkdir(exist_ok=True, parents=True)
@@ -124,20 +124,6 @@ def transform_into_pc_space_and_standardize(
     return X_transformed
 
 
-def transform_data(
-    kpca: sklearn.decomposition.KernelPCA,
-    X: np.ndarray,
-) -> np.ndarray:
-    logger.info(
-        "Transforming data into kernel PC space (n_pcs=%i)",
-        kpca.eigenvalues_.shape[0],
-    )
-    transformed = kpca.transform(X)
-    transformed = sklearn.preprocessing.StandardScaler().fit_transform(
-        transformed
-    )
-    return transformed
-
 
 def calculate_ssd_pca(
     pca: sklearn.decomposition.PCA, n_pcs: int, data: np.ndarray
@@ -164,36 +150,6 @@ def calculate_ssd_pca(
 
     return {k: ssd for k, ssd in zip(Ks, ssds, strict=True)}
 
-
-def calculate_ssd_kpca(n_pcs: int, data: np.ndarray):
-    kpca_path = pca_dir / f"kpca_{n_pcs}_pcs.joblib"
-    kpca_tansformed_path = pca_dir / f"kpca_{n_pcs}_pcs_transformed.joblib"
-
-    logger.info("Calculating SSDs for kPCA (n_pcs=%i)", n_pcs)
-
-    if kpca_tansformed_path.exists():
-        logger.info("Reading kPCA-transformed data from disk")
-        transformed = joblib.load(kpca_tansformed_path)
-    else:
-        kpca = sklearn.decomposition.KernelPCA(n_components=n_pcs)
-
-        with measure_time(f"Fitting kPCA ({n_pcs=}) and transforming data"):
-            transformed = kpca.fit_transform(data)
-            joblib.dump(kpca, kpca_path)
-            del kpca
-
-        with measure_time("Normalizing data"):
-            transformed = sklearn.preprocessing.StandardScaler().fit_transform(
-                transformed
-            )
-            joblib.dump(transformed, kpca_tansformed_path)
-
-    with measure_time(f"Calculating SSDs for kPCA {n_pcs=}"):
-        ssds = [
-            calculate_ssd(k=k, data=transformed, type="kpca", n_pcs=n_pcs)
-            for k in Ks
-        ]
-    return {k: ssd for k, ssd in zip(Ks, ssds, strict=True)}
 
 
 def calculate_ssds(
@@ -233,9 +189,7 @@ if __name__ == "__main__":
     )
 
     # Below PCs cover 80% of the total variance.
-    n_pcs_kpca = int(os.getenv("N_PCS_KPCA", 32))
     n_pcs_pca = int(os.getenv("N_PCS_PCA", 80))
-    n_pcs_kpca_start = int(os.getenv("N_PCS_KPCA_START", 1))
     n_pcs_pca_start = int(os.getenv("N_PCS_PCA_START", 1))
 
     data_path = os.getenv(
@@ -246,62 +200,36 @@ if __name__ == "__main__":
     with measure_time("Reading data"):
         data = xr.open_dataset(data_path).to_dataarray().values[0]
 
-    if "RUN_KPCA" not in os.environ:
-        # For PCA, transformation can always be done with full PCA.
-        # Thus, we load precomputed PCA with 500 components from disk.
-        n_pcs_pca_full = 500
-        pca_path = pca_dir / f"pca_{n_pcs_pca_full}_pcs.joblib"
-        pca = read_from_disk_if_exists(
-            path=pca_path,
-            method=sklearn.decomposition.PCA,
-            n_components=n_pcs_pca_full,
-            fit=True,
-            data=data,
-        )
-        ssds_pca = calculate_ssds(
-            method=calculate_ssd_pca,
-            method_name="PCA",
-            n_pcs=n_pcs_pca,
-            n_pcs_start=n_pcs_pca_start,
-            pca=pca,
-            data=data,
-        )
+    # For PCA, transformation can always be done with full PCA.
+    # Thus, we load precomputed PCA with 500 components from disk.
+    n_pcs_pca_full = 500
+    pca_path = pca_dir / f"pca_{n_pcs_pca_full}_pcs.joblib"
+    pca = read_from_disk_if_exists(
+        path=pca_path,
+        method=sklearn.decomposition.PCA,
+        n_components=n_pcs_pca_full,
+        fit=True,
+        data=data,
+    )
+    ssds_pca = calculate_ssds(
+        method=calculate_ssd_pca,
+        method_name="PCA",
+        n_pcs=n_pcs_pca,
+        n_pcs_start=n_pcs_pca_start,
+        pca=pca,
+        data=data,
+    )
 
-        joblib.dump(
-            ssds_pca,
-            data_dir_project / "scree-test-results-pca.dict",
-        )
+    joblib.dump(
+        ssds_pca,
+        data_dir_project / "scree-test-results-pca.dict",
+    )
 
-        for k in Ks:
-            mantik.mlflow.log_metrics(
-                {
-                    f"ssd_pca_{pcs}": ssds_per_k[k]
-                    for pcs, ssds_per_k in ssds_pca.items()
-                },
-                step=k,
-            )
-    else:
-        ssds_kpca = calculate_ssds(
-            method=calculate_ssd_kpca,
-            method_name="kPCA",
-            n_pcs=n_pcs_kpca,
-            n_pcs_start=n_pcs_kpca_start,
-            data=data,
-            # Parallelizing while using the entire dataset exceeds 512GB memory.
-            parallelize=False,
+    for k in Ks:
+        mantik.mlflow.log_metrics(
+            {
+                f"ssd_pca_{pcs}": ssds_per_k[k]
+                for pcs, ssds_per_k in ssds_pca.items()
+            },
+            step=k,
         )
-
-        joblib.dump(
-            ssds_kpca,
-            data_dir_project / "scree-test-results-kpca.dict",
-        )
-
-        for k in Ks:
-            mantik.mlflow.log_metrics(
-                {
-                    f"ssd_kpca_{pcs}": ssds_per_k[k]
-                    for pcs, ssds_per_k in ssds_kpca.items()
-                },
-                step=k,
-            )
-            time.sleep(0.1)

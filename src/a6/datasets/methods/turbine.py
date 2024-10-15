@@ -60,6 +60,7 @@ def clean_production_data(
     data: xr.Dataset,
     power_rating: int | float,
     variables: _variables.Turbine = _variables.Turbine(),
+    name: str = "Unknown",
 ) -> xr.Dataset:
     """Clean the production data by removing outliers.
 
@@ -89,17 +90,17 @@ def clean_production_data(
         power_rating,
     )
     return _remove_outliers(
-        production=variables.production, power_rating=power_rating
+        production=variables.production, power_rating=power_rating, name=name
     ).apply_to(data)
 
 
 @utils.make_functional
 def _remove_outliers(
-    data: xr.Dataset, production: str, power_rating: int | float
+    data: xr.Dataset, production: str, power_rating: int | float, name: str = "Unknown"
 ) -> xr.Dataset:
     indexes = (
         # Find indexes where |P| < power_rating
-        (abs(data[production]) < 1.05 * power_rating)
+        (abs(data[production]) < power_rating)
         &
         # and such where P > 0
         (data[production] > 0)
@@ -128,9 +129,11 @@ def _remove_outliers(
     percentage_removed = (samples_removed / before) * 100.0
 
     logger.info(
-        "Removed %i samples (%.2f%%)",
+        "Removed %i samples (%.2f%%) for turbine %s (attrs=%s)",
         samples_removed,
         percentage_removed,
+        name,
+        data.attrs,
     )
 
     return result
@@ -167,6 +170,6 @@ def resample_to_hourly_resolution(
 ) -> xr.Dataset:
     logger.debug("Resampling production data to hourly time resolution")
     # Resample to an hourly time series and take the mean for each hour.
-    data = data.resample({coordinates.time: "1h"}).mean()
+    data = data.resample({coordinates.time: "1h"}, skipna=True).mean(skipna=True)
     # Remove NaNs that resulted from the resampling.
     return data.where(data[variables.production].notnull(), drop=True)
