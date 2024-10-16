@@ -1,5 +1,6 @@
 import datetime
 
+import numpy as np
 import xarray as xr
 
 import a6.datasets.methods.turbine as turbine
@@ -42,19 +43,27 @@ def test_clean_production_data():
 
 def test_resample_to_hourly_resolution():
     production = _create_dataset(
-        values=[100, 1000, 500],
+        values=[100, np.NaN, 1000, 500, 1, 1, 1, 1, 1, 1],
         dates=[
-            datetime.datetime(2022, 1, 1, 0),
-            datetime.datetime(2022, 1, 1, 0, 30),
-            datetime.datetime(2022, 1, 1, 1),
+            datetime.datetime(2022, 1, 1, 0, 10),
+            datetime.datetime(2022, 1, 1, 0, 20),
+            datetime.datetime(2022, 1, 1, 1, 0),
+            datetime.datetime(2022, 1, 1, 1, 10),
+            datetime.datetime(2022, 1, 1, 2, 10),
+            datetime.datetime(2022, 1, 1, 2, 20),
+            datetime.datetime(2022, 1, 1, 2, 30),
+            datetime.datetime(2022, 1, 1, 2, 40),
+            datetime.datetime(2022, 1, 1, 2, 50),
+            datetime.datetime(2022, 1, 1, 3, 0),
         ],
     )
 
     expected = _create_dataset(
-        values=[550, 500],
+        values=[((100 + 1000) / 2) * 6, 500 * 6, 1 * 6],
         dates=[
             datetime.datetime(2022, 1, 1, 0),
             datetime.datetime(2022, 1, 1, 1),
+            datetime.datetime(2022, 1, 1, 2),
         ],
     )
 
