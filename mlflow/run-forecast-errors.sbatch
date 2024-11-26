@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH -A deepacf
+#SBATCH -A hclimrep
 #SBATCH -p batch
-#SBATCH --time=01:10:00
-#SBATCH --nodes=12
+#SBATCH --time=07:00:00
+#SBATCH --nodes=10
 #SBATCH --ntasks-per-node=4
 #SBATCH --cpus-per-task=12
 
@@ -11,15 +11,15 @@
 export SRUN_CPUS_PER_TASK=12
 
 srun apptainer run \
-    -B ${HOME}/code/a6:/opt/a6 \
-    /p/project1/deepacf/emmerich1/a6-cuda.sif \
+    -B /p/home/jusers/emmerich1/juwels/code/a6:/opt/a6 \
+    /p/project/hclimrep/emmerich1/a6-cuda.sif \
     python /opt/a6/mlflow/forecast_errors.py \
       --preprocessed-data-dir /p/home/jusers/emmerich1/juwels/data/production-preprocessed \
-      --pca-path /p/project1/deepacf/emmerich1/data/pca_kmeans_lswrs_30_40.nc \
+      --pca-path /p/project/hclimrep/emmerich1/data/pca_kmeans_lswrs_30_40.nc \
       --pca-n-clusters 30 \
       --gwl-path /opt/a6/src/tests/data/gwl.nc \
-      --dcv2-path /p/project1/deepacf/emmerich1/data/dcv2-lswrs.nc \
+      --dcv2-path /p/project/hclimrep/emmerich1/data/dcv2-lswrs.nc \
       --random \
       --train-size 365 \
-      --results-dir /p/project/deepacf/emmerich1/data/forecast-errors \
+      --results-dir /p/project/hclimrep/emmerich1/data/forecast-errors \
       --parallel
