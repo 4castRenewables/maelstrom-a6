@@ -59,7 +59,7 @@ def test_resample_to_hourly_resolution():
     )
 
     expected = _create_dataset(
-        values=[((100 + 1000) / 2) * 6, 500 * 6, 1 * 6],
+        values=[((100 + 1000) / 2), 500, 1],
         dates=[
             datetime.datetime(2022, 1, 1, 0),
             datetime.datetime(2022, 1, 1, 1),

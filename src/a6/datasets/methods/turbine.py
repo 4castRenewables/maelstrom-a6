@@ -176,6 +176,5 @@ def resample_to_hourly_resolution(
     data = data.resample(
         {coordinates.time: "1h"}, closed="right", skipna=True
     ).mean(skipna=True)
-    data[variables.production] *= 6
     # Remove NaNs that resulted from the resampling.
     return data.where(data[variables.production].notnull(), drop=True)
