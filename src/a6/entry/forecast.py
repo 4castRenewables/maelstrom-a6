@@ -69,7 +69,13 @@ parser.add_argument(
     "--train-size",
     type=int,
     default=365,
-    help="Number of random days to use for the train set",
+    help="Number of maximum random days to use for the train set",
+)
+parser.add_argument(
+    "--iters",
+    type=int,
+    default=5,
+    help="Number of iterations to pick random days for each turbine to augment predictions",
 )
 parser.add_argument(
     "--results-dir",
@@ -190,17 +196,6 @@ def simulate_errors(
         )
 
         turbine_name = path.name
-        outfile: pathlib.Path = (
-            args.results_dir / f"{turbine_name}-forecast-errors.nc"
-        )
-
-        if outfile.exists():
-            logger.warning(
-                "Skipping %s since outfile already exists at %s",
-                turbine_name,
-                outfile,
-            )
-            continue
 
         turbine_path: pathlib.Path = path / "turbine.nc"
         pl_path: pathlib.Path = path / "pl.nc"
@@ -237,167 +232,182 @@ def simulate_errors(
         start, end = min(times_as_dates), max(times_as_dates)
         dates = pd.date_range(start, end, freq="1d")
 
-        # Train with minimum 50% of the number of days in the turbine data set,
+        # Train with minimum 70% of the number of days in the turbine data set,
         # but with a maximum of 365 days.
-        train_size = min(0.5 * len(dates), args.train_size)
-
-        (
-            train_time_steps,
-            test_time_steps,
-        ) = a6.features.methods.selection.train_test_split_dates(
-            turbine[coordinates.time],
-            # Turbine data has frequency of hours, hence multiply by 24
-            # to achieve train set size equivalent to 365 days.
-            train_size=int(train_size * 24),
-        )
-
-        logger.info(
-            (
-                "Simulating forecast errors for LSWRS %s for date range "
-                "%s to %s with %i/%i train/test samples (hours)"
-            ),
-            lswrs,
-            start,
-            end,
-            len(train_time_steps),
-            len(test_time_steps),
-        )
+        train_size = min(0.7 * len(dates), args.train_size)
 
         forecast_errors = {}
 
-        for lswr in lswrs:
-            lswr_name = "Default" if lswr is None else lswr.name
-
-            logger.info("Handling LSWR method %s", lswr_name)
-
-            data = (
-                [ml[var] for var in ml.data_vars]
-                + [sfc[var] for var in sfc.data_vars]
-                + [pl[var] for var in pl.data_vars]
-            )
-            categorical_features = [False for _ in enumerate(data)]
-
-            if lswr is not None:
-                turbine_time_steps = turbine[coordinates.time]
-                lswr_labels = lswr.sel(time=turbine_time_steps, method="pad")
-                # Must override time coordinates of result, because due to "pad"
-                # duplicate indexes are returned (the same index for every
-                # hour of the day).
-                lswr_labels[coordinates.time] = turbine_time_steps
-                data.append(lswr_labels)
-                categorical_features.append(True)
-
-            data_train = [
-                d.sel({coordinates.time: train_time_steps}) for d in data
-            ]
-            data_test = [
-                d.sel({coordinates.time: test_time_steps}) for d in data
-            ]
-
-            production = turbine[turbine_variables.production]
-            turbine_train = production.sel({coordinates.time: train_time_steps})
-            turbine_test = production.sel({coordinates.time: test_time_steps})
-
-            logger.info(
-                "Preparing input data for variables %s", [d.name for d in data]
+        for iteration in range(args.iters):
+            outfile: pathlib.Path = (
+                args.results_dir / f"{turbine_name}-forecast-errors-{iteration}.nc"
             )
 
-            X = a6.features.methods.reshape.sklearn.transpose(  # noqa: N806
-                *data_train
-            )  # noqa: N806
-            y = a6.features.methods.reshape.sklearn.transpose(turbine_train)
+            if outfile.exists():
+                logger.warning(
+                    "Skipping %s since outfile already exists at %s",
+                    turbine_name,
+                    outfile,
+                )
+                continue
 
-            logger.info(
-                "Train dataset size is %i hours (~%i days)",
-                y.size,
-                y.size // 24,
+            for lswr in lswrs:
+                lswr_name = "Default" if lswr is None else lswr.name
+
+                logger.info("Handling LSWR method %s", lswr_name)
+
+                (
+                    train_time_steps,
+                    test_time_steps,
+                ) = a6.features.methods.selection.train_test_split_dates(
+                    turbine[coordinates.time],
+                    # Turbine data has frequency of hours, hence multiply by 24
+                    # to achieve train set size equivalent to 365 days.
+                    train_size=int(train_size * 24),
+                )
+
+                logger.info(
+                    (
+                        "[Iteration %i/%i] Simulating forecast errors for LSWR %s for date range "
+                        "%s to %s with %i/%i train/test samples (hours)"
+                    ),
+                    iteration,
+                    args.iters,
+                    lswr_name,
+                    start,
+                    end,
+                    len(train_time_steps),
+                    len(test_time_steps),
+                )
+
+                data = (
+                    [ml[var] for var in ml.data_vars]
+                    + [sfc[var] for var in sfc.data_vars]
+                    + [pl[var] for var in pl.data_vars]
+                )
+                categorical_features = [False for _ in enumerate(data)]
+
+                if lswr is not None:
+                    turbine_time_steps = turbine[coordinates.time]
+                    lswr_labels = lswr.sel(time=turbine_time_steps, method="pad")
+                    # Must override time coordinates of result, because due to "pad"
+                    # duplicate indexes are returned (the same index for every
+                    # hour of the day).
+                    lswr_labels[coordinates.time] = turbine_time_steps
+                    data.append(lswr_labels)
+                    categorical_features.append(True)
+
+                data_train = [
+                    d.sel({coordinates.time: train_time_steps}) for d in data
+                ]
+                data_test = [
+                    d.sel({coordinates.time: test_time_steps}) for d in data
+                ]
+
+                production = turbine[turbine_variables.production]
+                turbine_train = production.sel({coordinates.time: train_time_steps})
+                turbine_test = production.sel({coordinates.time: test_time_steps})
+
+                logger.info(
+                    "Preparing input data for variables %s", [d.name for d in data]
+                )
+
+                X = a6.features.methods.reshape.sklearn.transpose(  # noqa: N806
+                    *data_train
+                )  # noqa: N806
+                y = a6.features.methods.reshape.sklearn.transpose(turbine_train)
+
+                logger.info(
+                    "Train dataset size is %i hours (~%i days)",
+                    y.size,
+                    y.size // 24,
+                )
+
+                if args.testing:
+                    param_grid = {"learning_rate": [0.1]}
+                    n_jobs = a6.utils.get_cpu_count() // 2
+                else:
+                    param_grid = {
+                        "learning_rate": [0.03, 0.05, 0.07, 0.1],
+                        "l2_regularization": [0.0, 1.0, 3.0, 5.0, 7.0],
+                        "max_iter": [200, 300, 500],
+                        "max_depth": [15, 37, 63, 81],
+                        "min_samples_leaf": [23, 48, 101, 199],
+                        "categorical_features": [categorical_features],
+                    }
+                    n_jobs = a6.utils.get_cpu_count()
+
+                logger.info(
+                    "Fitting model with GridSearchCV n_jobs=%s, param_grid=%s",
+                    n_jobs,
+                    param_grid,
+                )
+
+                gs = sklearn.model_selection.GridSearchCV(
+                    estimator=ensemble.HistGradientBoostingRegressor(
+                        loss="squared_error"
+                    ),
+                    param_grid=param_grid,
+                    scoring=sklearn.metrics.make_scorer(
+                        a6.training.metrics.turbine.calculate_nrmse,
+                        greater_is_better=False,
+                        power_rating=power_rating,
+                    ),
+                    # 10-fold CV
+                    cv=10,
+                    refit=True,
+                    n_jobs=n_jobs,
+                )
+                gs = gs.fit(X=X, y=y.ravel())
+
+                results: list[
+                    Errors
+                ] = a6.utils.parallelize.parallelize_with_futures(
+                    _calculate_nmae_and_nrmse,
+                    kwargs=[
+                        dict(
+                            date=date,
+                            test_time_steps=test_time_steps,
+                            gs=gs,
+                            weather_data=data_test,
+                            turbine=turbine_test,
+                            power_rating=power_rating,
+                            coordinates=coordinates,
+                        )
+                        for date in dates
+                    ],
+                )
+
+                forecast_errors[lswr_name] = results
+
+            coords = {
+                coordinates.time: dates,
+                "lswr_method": list(forecast_errors.keys()),
+            }
+            dims = [coordinates.time, "lswr_method"]
+
+            nmae_da = xr.DataArray(
+                _unpack_errors_per_method(forecast_errors, attr="nmae"),
+                coords=coords,
+                dims=dims,
+            )
+            nrmse_da = xr.DataArray(
+                _unpack_errors_per_method(forecast_errors, attr="nrmse"),
+                coords=coords,
+                dims=dims,
+            )
+            errors = xr.Dataset(
+                data_vars={"nmae": nmae_da, "nrmse": nrmse_da},
+                coords=nmae_da.coords,
             )
 
             if args.testing:
-                param_grid = {"learning_rate": [0.1]}
-                n_jobs = a6.utils.get_cpu_count() // 2
+                logger.warning("Skipping saving of file %s due to --testing enabled", outfile.as_posix())
             else:
-                param_grid = {
-                    "learning_rate": [0.03, 0.05, 0.07, 0.1],
-                    "l2_regularization": [0.0, 1.0, 3.0, 5.0, 7.0],
-                    "max_iter": [200, 300, 500],
-                    "max_depth": [15, 37, 63, 81],
-                    "min_samples_leaf": [23, 48, 101, 199],
-                    "categorical_features": [categorical_features],
-                }
-                n_jobs = a6.utils.get_cpu_count()
+                logger.info("Saving simulated forecast errors to %s", outfile.as_posix())
+                errors.to_netcdf(outfile)
 
-            logger.info(
-                "Fitting model with GridSearchCV n_jobs=%s, param_grid=%s",
-                n_jobs,
-                param_grid,
-            )
-
-            gs = sklearn.model_selection.GridSearchCV(
-                estimator=ensemble.HistGradientBoostingRegressor(
-                    loss="squared_error"
-                ),
-                param_grid=param_grid,
-                scoring=sklearn.metrics.make_scorer(
-                    a6.training.metrics.turbine.calculate_nrmse,
-                    greater_is_better=False,
-                    power_rating=power_rating,
-                ),
-                # 10-fold CV
-                cv=10,
-                refit=True,
-                n_jobs=n_jobs,
-            )
-            gs = gs.fit(X=X, y=y.ravel())
-
-            results: list[
-                Errors
-            ] = a6.utils.parallelize.parallelize_with_futures(
-                _calculate_nmae_and_nrmse,
-                kwargs=[
-                    dict(
-                        date=date,
-                        test_time_steps=test_time_steps,
-                        gs=gs,
-                        weather_data=data_test,
-                        turbine=turbine_test,
-                        power_rating=power_rating,
-                        coordinates=coordinates,
-                    )
-                    for date in dates
-                ],
-            )
-
-            forecast_errors[lswr_name] = results
-
-        coords = {
-            coordinates.time: dates,
-            "lswr_method": list(forecast_errors.keys()),
-        }
-        dims = [coordinates.time, "lswr_method"]
-
-        nmae_da = xr.DataArray(
-            _unpack_errors_per_method(forecast_errors, attr="nmae"),
-            coords=coords,
-            dims=dims,
-        )
-        nrmse_da = xr.DataArray(
-            _unpack_errors_per_method(forecast_errors, attr="nrmse"),
-            coords=coords,
-            dims=dims,
-        )
-        errors = xr.Dataset(
-            data_vars={"nmae": nmae_da, "nrmse": nrmse_da},
-            coords=nmae_da.coords,
-        )
-
-        if args.testing:
-            logger.warning("Skipping saving of file %s due to --testing enabled", outfile.as_posix())
-        else:
-            logger.info("Saving simulated forecast errors to %s", outfile.as_posix())
-            errors.to_netcdf(outfile)
-
-        result[outfile] = errors
+            result[outfile] = errors
 
     return result
 
