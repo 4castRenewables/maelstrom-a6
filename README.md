@@ -41,6 +41,12 @@ For local development, `torch-cpu` can be installed:
 poetry run pip install -r requirements-cpu.txt
 ```
 
+### Using deep500
+
+To use deep500, clone the forked repo:
+
+`git clone https://github.com/sashkboos/Deep500-for-MAELSTROM.git`
+
 ### Version conflicts
 
 The versions of pytorch and torchvision _must_ match in all of these files:
@@ -60,7 +66,7 @@ Otherwise, different versions might get installed, which will lead to conflicts.
    ```commandline
    source .env
    ```
-   - **Imporant note:** Make sure to copy the `.env.example` file to a file with a `.env`
+   - **Important note:** Make sure to copy the `.env.example` file to a file with a `.env`
    extension. Such files will be ignored by git (see `.gitignore`). Otherwise, you
    will risk to commit your credentials to the git repository.
    - *Note:* Make sure to set the correct `MLFLOW_EXPERIMENT_ID` environment variable to
