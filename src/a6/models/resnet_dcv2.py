@@ -88,6 +88,7 @@ class ResNet(_resnet.ResNet):
         self.device = device
 
     def forward_backbone(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.float()
         x = self.padding(x)
 
         x = self.conv1(x)
