@@ -27,7 +27,7 @@ def _create_request_body(year: int) -> dict:
         "pressure_level": ["300", "500", "700", "850", "950"],
         "data_format": "netcdf",
         "download_format": "unarchived",
-        "area": [70, 25, 35, 30],
+        "area": [70, -25, 35, 30],
     }
 
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     client = cdsapi.Client()
     requests = {
         base / f"era5-{year}.nc": _create_request_body(year)
-        for year in range(1952, 1954)
+        for year in range(1964, 2024)
     }
 
     _download_data(requests=requests, client=client)
