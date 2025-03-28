@@ -11,3 +11,8 @@ dcv2_dump/
 MNIST/
 Deep500-for-MAELSTROM/
 *.shp
+slurm-*
+mlruns/
+dcv2-runs/
+ap6-runs/
+jube-debug.log

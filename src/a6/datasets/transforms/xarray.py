@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import torch
 import torchvision
@@ -5,6 +7,8 @@ import xarray as xr
 
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods as methods
+
+logger = logging.getLogger(__name__)
 
 
 def default(
@@ -68,5 +72,7 @@ def concatenate_levels_to_channels(
             f"Sample at index {time_index} ({time_step[coordinates.time]}) "
             f"has NaNs: {result}"
         )
+        
+    result = torch.from_numpy(result)
+    return result
 
-    return torch.from_numpy(result)

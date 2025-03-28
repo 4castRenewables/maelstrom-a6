@@ -8,9 +8,12 @@ import copy
 import json
 import logging
 import pathlib
+import os
+import random
 from collections.abc import Iterable
 from typing import TypeAlias
 
+import numpy as np
 import torch
 import torchvision.datasets
 import torchvision.transforms
@@ -20,11 +23,14 @@ from PIL import Image
 import a6.datasets.coordinates as _coordinates
 import a6.datasets.methods as methods
 import a6.datasets.transforms as transforms
+import a6.utils as utils
 
 logger = logging.getLogger(__name__)
 
 SizeCropsRelative: TypeAlias = list[float | tuple[float, float]]
 SizeCropsSpecific: TypeAlias = list[int | tuple[int, int]]
+
+SCRATCH_CACHE_PATH = pathlib.Path(os.getenv("SCRATCH_CACHE_PATH", "/p/scratch/hclimrep/emmerich1/dcv2-cache"))
 
 
 class Base(torchvision.datasets.VisionDataset):
@@ -278,6 +284,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
         size_crops: SizeCropsRelative,
         min_scale_crops: list[float],
         max_scale_crops: list[float],
+        properties: utils.distributed.Properties,
         return_index: bool = False,
         coordinates: _coordinates.Coordinates = _coordinates.Coordinates(),
     ):
@@ -289,6 +296,7 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             max_scale_crops=max_scale_crops,
             return_index=return_index,
         )
+        self.properties = properties
 
         size_crops = convert_relative_to_absolute_crop_size(
             size_crops,
@@ -304,8 +312,13 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
 
         self._coordinates = coordinates
         self._n_channels = len(dataset.data_vars) * len(self._levels)
+        self._n_samples = len(self.dataset[self._coordinates.time])
 
         self.return_index = return_index
+        
+        logger.warning("Using hardcoded mean and std")
+        self.dataset.attrs["mean"] = np.array([4068.6406083246875, 58.35326517098126, 215.70760272366317, 1.51609675454249, 0.3109998554387338, 10911.245969063122, 52.25343288147043, 211.99592312419082, 2.5570463567944137, 0.36901169949415347, 22581.61603552422, 40.25082819866179, 205.94927464640372, 4.149989567955227, 0.15663029605424383, 41907.35168427303, 39.60244702890849, 193.58533978873206, 6.53097192792056, -0.21536430746096508, 68807.56262119031, 47.70790994668945, 173.71843389710608, 9.83044861044658, -0.8951796709049458], dtype=np.float32)
+        self.dataset.attrs["std"] = np.array([816.5053619620027, 9.953517166867583, 29.790486964929347, 2.1614067252391784, 1.7820332677541437, 1735.9673024747547, 7.162484858760588, 29.168840626773857, 2.381025146041065, 1.79743389447395, 3332.186270494078, 6.479570415825202, 28.19466838737613, 2.6445024038128446, 2.150712236267011, 5972.335262260381, 6.501943290072545, 26.43232692480711, 3.443815037822571, 2.8440661279396595, 9616.531183077455, 6.9669614912800375, 23.029783522062644, 4.847781690765136, 3.95991836841181], dtype=np.float32)
 
         if "mean" in self.dataset.attrs:
             mean = self.dataset.attrs["mean"]
@@ -345,23 +358,38 @@ class MultiCropXarrayDataset(Base, torchvision.datasets.VisionDataset):
             std=std,
             to_tensor=False,
         )
+        self.cache: dict[int, torch.Tensor] = {}
 
     def __len__(self) -> int:
-        return len(self.dataset[self._coordinates.time])
+        return self._n_samples
 
     def __getitem__(
         self, index: int
     ) -> list[torch.Tensor] | tuple[list[torch.Tensor], int]:
-        sample = transforms.xarray.concatenate_levels_to_channels(
-            self.dataset,
-            time_index=index,
-            levels=self._levels,
-            coordinates=self._coordinates,
-        )
+        if index in self.cache:
+            sample = self.cache[index]
+        else:
+            cache_file = SCRATCH_CACHE_PATH / f"sample-index-{index}.pt"
+            if cache_file.exists():
+                sample = torch.load(cache_file)
+            else:
+                sample = transforms.xarray.concatenate_levels_to_channels(
+                    self.dataset,
+                    time_index=index,
+                    levels=self._levels,
+                    coordinates=self._coordinates,
+                )
+                torch.save(sample, cache_file.as_posix())
+                    
+            # Limit cache size to 22.000 samples
+            if len(self.cache) > 22_000:
+                self.cache.popitem()
+            self.cache[index] = sample
+            
         multi_crops = list(
             map(lambda transform: transform(sample), self.transforms)
         )
-
+        
         if self.return_index:
             return multi_crops, index
         return multi_crops

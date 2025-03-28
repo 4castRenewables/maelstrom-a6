@@ -19,6 +19,7 @@ import torch.distributed.elastic.multiprocessing.errors as errors
 import torch.nn.parallel
 import torch.optim
 import torch.utils.data
+import xarray as xr
 
 import a6.datasets as datasets
 import a6.dcv2.cluster as cluster
@@ -355,13 +356,19 @@ def _create_dataset(settings: _settings.Settings) -> datasets.crop.Base:
         # If a data pattern is given, it is assumed that the
         # given data path is a folder with netCDF files.
         logger.warning("Assuming xarray.Dataset from netCDF files")
-        ds = datasets.dwd.get_dwd_era5_data(
-            path=settings.data.path,
-            pattern=settings.data.pattern,
-            levels=settings.data.levels,
-            parallel_loading=settings.data.parallel_loading,
-            select_dwd_area=settings.data.select_dwd_area,
-        )
+        # NOTE: Uncomment below code if cache files are not present
+        # ds = datasets.dwd.get_dwd_era5_data(
+        #     path=settings.data.path,
+        #     pattern=settings.data.pattern,
+        #     levels=settings.data.levels,
+        #     parallel_loading=settings.data.parallel_loading,
+        #     select_dwd_area=settings.data.select_dwd_area,
+        # )
+        # logger.info("Converting to float32")
+        # NOTE: when loading the dataset in order to create the cache files, float32 has to be ensured
+        # ds = ds.astype("float32")
+        # logger.info("Conversion finished")
+        ds = xr.open_dataset(settings.data.path / settings.data.pattern)
         return datasets.crop.MultiCropXarrayDataset(
             data_path=settings.data.path,
             dataset=ds,
@@ -370,6 +377,7 @@ def _create_dataset(settings: _settings.Settings) -> datasets.crop.Base:
             min_scale_crops=settings.preprocessing.min_scale_crops,
             max_scale_crops=settings.preprocessing.max_scale_crops,
             return_index=True,
+            properties=settings.distributed,
         )
     logger.warning("Assuming image dataset")
     return datasets.crop.MultiCropDataset(

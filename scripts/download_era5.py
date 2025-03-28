@@ -15,19 +15,19 @@ def _create_request_body(year: int) -> dict:
         "product_type": ["reanalysis"],
         "variable": [
             "geopotential",
-            "relative_humidity",
-            "temperature",
-            "u_component_of_wind",
-            "v_component_of_wind",
+            # "relative_humidity",
+            # "temperature",
+            # "u_component_of_wind",
+            # "v_component_of_wind",
         ],
         "year": [str(year)],
         "month": [f"{i:02d}" for i in range(1, 13)],
         "day": [f"{i:02d}" for i in range(1, 32)],
         "time": ["12:00"],
-        "pressure_level": ["300", "500", "700", "850", "950"],
+        "pressure_level": ["500"],
         "data_format": "netcdf",
         "download_format": "unarchived",
-        "area": [70, -25, 35, 30],
+        "area": [70, -70, 25, 50],
     }
 
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     base = Path(sys.argv[1])
     client = cdsapi.Client()
     requests = {
-        base / f"era5-{year}.nc": _create_request_body(year)
+        base / f"era5-{year}-12-UTC-500-hPa-geopotential.nc": _create_request_body(year)
         for year in range(1964, 2024)
     }
 

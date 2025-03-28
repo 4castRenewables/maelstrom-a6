@@ -23,16 +23,30 @@ import a6
 
 logger = logging.getLogger(__name__)
 
+if os.getenv("TESTING", "false") == "true":
+    n_clusters = 2
+    n_pcs = 2
+else:
+    n_clusters = 40
+    n_pcs = 80
 
-N_CLUSTERS = int(os.getenv("N_CLUSTERS_KMEANS", 40))
-Ks = list(range(1, N_CLUSTERS + 1))
-ds = xr.open_dataset(
-    pathlib.Path(
-        "/p/project/hclimrep/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
-    )
-)
+preprocessed_for_pca = "1964-2023-12UTC-300-500-700-850-950-hPa-z-r-t-u-v-deseasonalized-preprocessed-for-pca.nc"
+pca_file = "pca_500_pcs.joblib"
+n_pcs_full = 500
+
+# Below PCs cover 95% of the total variance.
+n_pcs_pca = int(os.getenv("N_PCS_PCA", n_pcs))
+n_pcs_pca_start = int(os.getenv("N_PCS_PCA_START", 1))
+
+Ks = list(range(1, n_clusters + 1))
+
 data_dir_project = pathlib.Path("/p/project/hclimrep/emmerich1/data")
 data_dir_scratch = pathlib.Path("/p/scratch/hclimrep/emmerich1/data")
+
+data_path = os.getenv(
+    "PREPROCESSED_DATA_PATH",
+    f"{data_dir_project}/ecmwf_era5/{preprocessed_for_pca}",  # noqa: E501
+)
 
 pca_dir = data_dir_scratch / "pca"
 pca_dir.mkdir(exist_ok=True, parents=True)
@@ -188,26 +202,15 @@ if __name__ == "__main__":
         verbose=False,
     )
 
-    # Below PCs cover 80% of the total variance.
-    n_pcs_pca = int(os.getenv("N_PCS_PCA", 80))
-    n_pcs_pca_start = int(os.getenv("N_PCS_PCA_START", 1))
-
-    data_path = os.getenv(
-        "PREPROCESSED_DATA_PATH",
-        "/p/project/hclimrep/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12_preprocessed_for_pca.nc",  # noqa: E501
-    )
-
     with measure_time("Reading data"):
         data = xr.open_dataset(data_path).to_dataarray().values[0]
 
     # For PCA, transformation can always be done with full PCA.
     # Thus, we load precomputed PCA with 500 components from disk.
-    n_pcs_pca_full = 500
-    pca_path = pca_dir / f"pca_{n_pcs_pca_full}_pcs.joblib"
     pca = read_from_disk_if_exists(
-        path=pca_path,
+        path=pca_dir / pca_file,
         method=sklearn.decomposition.PCA,
-        n_components=n_pcs_pca_full,
+        n_components=n_pcs_full,
         fit=True,
         data=data,
     )

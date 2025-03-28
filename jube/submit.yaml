@@ -21,10 +21,7 @@ parameterset:
         type: int
         _: 1
       - name: data_file
-        _: 1964-2023-12UTC-300-500-700-850-950-hPa-z-r-t-u-v-deseasonalized-rolling-60-days.nc
-      - name: data_file
-        tag: test
-        _: 1964-12UTC-300-500-700-850-950-hPa-z-r-t-u-v-deseasonalized-rolling-60-days.nc
+        _: 1964-2023-12UTC-300-500-700-850-950-hPa-z-r-t-u-v-deseasonalized.nc
   - name: globalParameters
     parameter:
       - name: systemname
@@ -39,15 +36,17 @@ parameterset:
     init_with: platform.xml
     parameter:
       - name: job_name
-        _: $jube_benchmark_name-k-$k-epochs-$epochs
+        _: k-$k-$jube_benchmark_name
       - name: account
         _: hclimrep
       - name: nodes
         _: 1
       # The App requires ~150GB per task, and jwc only provides 192G, jwb 512GB.
       # Hence, we can only use 1 and 3 GPUs per node, respectively.
+      # NOTE: If cached files are used, all 4 GPUs can be used.
+      # A single tensor has ~3MB, so ~22.000 samples use ~66 GB per worker
       - name: gpus
-        _: 3
+        _: 4
       - name: gpus
         tag: jwc
         _: 1
@@ -62,13 +61,15 @@ parameterset:
       - name: threadspertask
         _: 1
       - name: srun_options
-        _: --ntasks-per-node=${taskspernode}
+        _: --ntasks-per-node=${taskspernode} --cpus-per-task=12
       - name: timelimit
         tag: "!test"
         _: "24:00:00"
       - name: timelimit
         tag: test
         _: "01:00:00"
+      - name: queue
+        _: booster
       - name: queue
         tag: test
         _: develbooster
@@ -85,7 +86,7 @@ parameterset:
       - name: master_addr
         _: "127.0.0.1"
       - name: tmp_data_dir
-        _: /p/scratch/$account/$USER/dcv2-runs/k-$k-epochs-$epochs
+        _: /p/scratch/$account/$USER/dcv2-runs/k-$k
       - name: env_vars
         # Notes:
         #
@@ -97,7 +98,7 @@ parameterset:
         _: |
           export NCCL_DEBUG=INFO
           export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
-          export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)i.juwels
+          export MASTER_ADDR="127.0.0.1"
           export MASTER_PORT="29500"
           export SRUN_CPUS_PER_TASK=$${SLURM_CPUS_PER_TASK}
           export APPTAINERENV_CUDA_VISIBLE_DEVICES="$${CUDA_VISIBLE_DEVICES}"
@@ -127,8 +128,8 @@ parameterset:
            --nmb-crops 2 6
            --crops-for-assign 0 1
            --size-crops 1.0 0.4
-           --min-scale-crops 0.14 0.05
-           --max-scale-crops 1.0 0.14
+           --min-scale-crops 0.5 0.14
+           --max-scale-crops 1.0 0.5
            --nmb-prototypes 3
            --nmb-clusters ${k}
            --epochs ${epochs}
