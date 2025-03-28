@@ -8,17 +8,18 @@ parameterset:
       - name: epochs
         type: int
         _: 10
-      - name: epochs
+      - name: k
+        type: int
+        mode: python
+        _: '",".join(str(i) for i in range(2, 42, 2))'
+      - name: k
         tag: test
         type: int
-        _: 1
+        _: 30
       - name: data_file
-        _: era5_pl_1964_2023_12.nc
-      - name: data_file
-        tag: test
-        _: era5_pl_2000_2023_12.nc
+        _: 1964-2023-12UTC-300-500-700-850-950-hPa-z-r-t-u-v-deseasonalized.nc
       - name: data_path
-        _: /p/scratch1/deepacf/emmerich1/data/ecmwf_era5
+        _: /p/project/hclimrep/emmerich1/data/ecmwf_era5
       - name: data_path
         tag: cscratch
         _: /p/cscratch/fs/cexalab/maelstrom/emmerich1/data/ecmwf_era5
@@ -55,23 +56,14 @@ parameterset:
         _: 1
       - name: nodes
         tag: multi-node
-        _: "2,4,8"
-      - name: nodes
-        tag: multi-node+jwc+test
-        _: "2"
+        _: 2
       - name: nodes
         tag: (e4-a2|e4-h100|e4-gh)+!test
         _: 2
-      - name: gpus
-        _: "1,2,3"
-      # The App requires ~150GB per task, and jwc only provides 192G, jwb 512GB.
+      # Without caching, the App requires ~150GB per task, and jwc only provides 192G, jwb 512GB.
       # Hence, we can only use 1 and 3 GPUs per node, respectively.
       - name: gpus
-        tag: multi-node
-        _: 3
-      - name: gpus
-        tag: multi-node+jwc
-        _: 1
+        _: 4
       - name: gpus
         tag: dc-mi200+!test
         _: "1,2,4,8"
@@ -85,18 +77,19 @@ parameterset:
         mode: python
         type: int
         _: ${gpus}*${nodes}
-      - name: taskspernode
-        _: ${gpus}
-      - name: threadspertask
-        _: 1
       - name: memory
         tag: e4-a2|e4-h100|e4-gh
         _: --mem=480G
       - name: exclusive
         tag: e4-a2|e4-h100|e4-gh
         _: --exclusive
+      - name: cpus_per_task
+        _: 12
+      - name: cpus_per_task
+        tag: jwc
+        _: 10
       - name: srun_options
-        _: --ntasks-per-node=${taskspernode} $memory $exclusive
+        _: --ntasks-per-node=${gpus} --cpus-per-task=${cpus_per_task} $memory $exclusive
       - name: timelimit
         tag: "!test"
         _: "06:00:00"
@@ -104,7 +97,7 @@ parameterset:
         tag: test
         _: "02:00:00"
       - name: account
-        _: deepacf
+        _: hclimrep
       - name: account
         tag: dc-gpu|dc-h100|dc-mi200
         _: exalab
@@ -145,7 +138,7 @@ parameterset:
         tag: e4-gh
         _: t-gpu-gh200
       - name: tmp_data_dir
-        _: /p/scratch1/cexalab/maelstrom/$USER/jube-benchmarks/$job_name
+        _: /p/scratch/hclimrep/$USER/dcv2-runs/${k}
       - name: tmp_data_dir
         tag: e4-a2|e4-h100|e4-gh
         _: /home/$USER/jube-benchmarks/$job_name
@@ -225,10 +218,10 @@ parameterset:
            -v /scratch:/scratch
            -v /home/$USER:/home/$USER
       - name: image_path
-        _: /p/project1/deepacf/emmerich1/a6-cuda.sif
+        _: /p/project1/hclimrep/emmerich1/a6-cuda.sif
       - name: image_path
         tag: dc-mi200
-        _: /p/project1/deepacf/emmerich1/a6-rocm.sif
+        _: /p/project1/hclimrep/emmerich1/a6-rocm.sif
       - name: image_path
         tag: e4-a2
         _: /home/$USER/a6-cuda-11.sif
@@ -263,17 +256,19 @@ parameterset:
            ${dir_bind}
            ${executable_options}
            ${image_path}
-           python /opt/a6/jube/run.py
+           python /opt/a6/mlflow/train_dcv2.py
            --no-enable-tracking
-           --no-save-results
            --no-plot-results
            --data-path ${data_path}
            --pattern ${data_file}
            --dump-path ${tmp_data_dir}
-           --size-crops 0.8
-           --min-scale-crops 0.8
-           --nmb-prototypes 4
-           --nmb-clusters 40
+           --nmb-crops 2 6
+           --crops-for-assign 0 1
+           --size-crops 1.0 0.4
+           --min-scale-crops 0.5 0.14
+           --max-scale-crops 1.0 0.5
+           --nmb-prototypes 3
+           --nmb-clusters ${k}
            --epochs ${epochs}
            --batch-size 64
 
