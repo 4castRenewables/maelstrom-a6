@@ -7,7 +7,7 @@ parameterset:
     parameter:
       - name: epochs
         type: int
-        _: 10
+        _: 800
       - name: k
         type: int
         mode: python
@@ -91,8 +91,7 @@ parameterset:
       - name: srun_options
         _: --ntasks-per-node=${gpus} --cpus-per-task=${cpus_per_task} $memory $exclusive
       - name: timelimit
-        tag: "!test"
-        _: "06:00:00"
+        _: "24:00:00"
       - name: timelimit
         tag: test
         _: "02:00:00"

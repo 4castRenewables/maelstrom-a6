@@ -1,5 +1,5 @@
 """
-apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project1/deepacf/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py  # noqa: E501
+apptainer run --cleanenv --env OPENBLAS_NUM_THREADS=1 -B /p/home/jusers/$USER/juwels/code/a6:/opt/a6 /p/project/hclimrep/$USER/a6-cuda.sif python /opt/a6/scripts/pca_k_means_scree_test.py  # noqa: E501
 """
 import concurrent.futures
 import contextlib
@@ -26,13 +26,8 @@ logger = logging.getLogger(__name__)
 
 N_CLUSTERS = int(os.getenv("N_CLUSTERS_KMEANS", 40))
 Ks = list(range(1, N_CLUSTERS + 1))
-ds = xr.open_dataset(
-    pathlib.Path(
-        "/p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12.nc"
-    )
-)
-data_dir_project = pathlib.Path("/p/project1/deepacf/emmerich1/data")
-data_dir_scratch = pathlib.Path("/p/scratch1/deepacf/emmerich1/data")
+data_dir_project = pathlib.Path("/p/project/hclimrep/emmerich1/data")
+data_dir_scratch = pathlib.Path("/p/scratch/hclimrep/emmerich1/data")
 
 pca_dir = data_dir_scratch / "pca"
 pca_dir.mkdir(exist_ok=True, parents=True)
@@ -240,11 +235,11 @@ if __name__ == "__main__":
 
     data_path = os.getenv(
         "PREPROCESSED_DATA_PATH",
-        "/p/project1/deepacf/emmerich1/data/ecmwf_era5/era5_pl_1964_2023_12_preprocessed_for_pca.nc",  # noqa: E501
+        "/p/project/hclimrep/emmerich1/data/ecmwf_era5/1964-2023-12UTC-300-500-700-850-950-hPa-z-r-t-u-v-deseasonalized-preprocessed-for-pca.nc",  # noqa: E501
     )
 
     with measure_time("Reading data"):
-        data = xr.open_dataset(data_path).to_dataarray().values[0]
+        data = xr.open_dataset(data_path).astype("float32").to_dataarray().values[0]
 
     if "RUN_KPCA" not in os.environ:
         # For PCA, transformation can always be done with full PCA.
