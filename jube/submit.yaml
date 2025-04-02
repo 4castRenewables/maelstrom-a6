@@ -11,7 +11,7 @@ parameterset:
       - name: k
         type: int
         mode: python
-        _: '",".join(str(i) for i in range(2, 42, 2))'
+        _: '",".join(str(i) for i in range(2, 41))'
       - name: k
         tag: test
         type: int
